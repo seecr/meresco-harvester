@@ -168,10 +168,12 @@ logger.error('Iets om te zeuren')
 		</dc></metadata>""").metadata
 		self.assertEquals('Groeneveld', mapping.join(metadata.dc.creator))
 		self.assertEquals('sub1; sub2', mapping.join(metadata.dc.subject))
-
+		
 	def testAssertion(self):
 		datamap = Mapping('mappingId')
 		datamap.code = """
+upload.fields['time'] = gmtime()
+upload.fields['formattedTime'] = strftime('%Y', gmtime())
 doAssert(1==1)
 doAssert(1==2, "1 not equal 2")
 upload.fields['charset']=u'utf-8'
