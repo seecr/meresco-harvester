@@ -30,7 +30,6 @@ from cq2utils import binderytools
 from cq2utils import wrappers
 from urlparse import urljoin
 from urllib import urlencode
-from time import gmtime, strftime
 from saharaobject import SaharaObject
 
 import vcard, classification
@@ -225,8 +224,6 @@ class Mapping(SaharaObject):
 			'vcard':vcard,
 			'classification':classification,
 			'xmlEscape': xmlEscape,
-			'gmtime': gmtime,
-			'strftime': strftime,
 			'__builtins__':builtinscopy})
 			upload.ensureStrings()
 		except DataMapAssertionException, ex:
