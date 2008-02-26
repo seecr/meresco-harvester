@@ -59,14 +59,13 @@ if [ "$INSTALL_PYTHON" == "Y" ]; then
 		mv /tmp/distutils.cfg /usr/lib/python2.4/distutils/distutils.cfg
 		$basedir/install_amara_1.1.7.sh
 	elif isDebian ; then 	
-		$PM_INSTALL python2.4 python2.4-dev python-xml 
+		$PM_INSTALL python2.4 python2.4-dev python-xml
 		# The link to python should be done in the following way.
 		# Else python-central can't find the correct default_version.
 		(cd /usr/bin; ln -sf python2.4 python)
 		aptitude_install http://ftp.nl.debian.org/debian/ testing non-free python-profiler
 		$basedir/install_4suite.sh
 		$basedir/install_amara_1.1.7.sh
-	
 	elif isFedora ; then
 		$PM_INSTALL python python-devel python-4Suite-XML python-amara
 	fi
@@ -74,17 +73,40 @@ else
 	message "Skipping installation of Python."
 fi
 
+if [ "$INSTALL_AMARA" == "Y" ]; then
+	message "Installing the Amara toolkit."
+	if isFedora ; then
+		$PM_INSTALL python-amara
+	else
+		$basedir/install_amara_1.1.7.sh
+	fi
+else
+	message "Skipping installation of the Amara toolkit."
+fi
+
+if [ "$INSTALL_4SUITE" == "Y" ]; then
+	message "Installing the 4 Suite toolkit."
+	if isSuse ; then
+		mv /usr/lib/python2.4/distutils/distutils.cfg /tmp
+		$basedir/install_4suite.sh
+		mv /tmp/distutils.cfg /usr/lib/python2.4/distutils/distutils.cfg
+	elif isDebian ; then 	
+		$basedir/install_4suite.sh
+	elif isFedora ; then
+		$PM_INSTALL python-4Suite-XML
+	fi
+else
+	message "Skipping installation of the 4 Suite toolkit."
+fi
+
 if [ "$INSTALL_APACHE" == "Y" ]; then
 	message "Installing Apache."
 	if isSuSE ; then
 		which apache2ctl && apache2ctl -l | grep worker || $PM_INSTALL apache2-worker
-		test -d /usr/include/apache2 || $PM_INSTALL apache2-devel
-		which make || $PM_INSTALL make
-		which gcc || $PM_INSTALL gcc
 	elif isDebian ; then 	
-		$PM_INSTALL apache2-dev flex make gcc apache2-mpm-worker bzip2 tar
+		$PM_INSTALL apache2-mpm-worker
 	elif isFedora ; then
-		$PM_INSTALL httpd httpd-devel mod_ssl flex make gcc
+		$PM_INSTALL httpd mod_ssl
 		mv /usr/sbin/httpd /usr/sbin/httpd.prefork
 		ln -s /usr/sbin/httpd.worker /usr/sbin/httpd
 	fi
@@ -92,11 +114,19 @@ else
 	message "Skipping installation of Apache."
 fi
 
+# call the install for modpython
 if [ "$INSTALL_MOD_PYTHON" == "Y" ]; then
 	message "Installing mod_python 3.2.10."
 	sh $basedir/install_mod_python_3.2.10.sh
 else
 	message "Skipping installation of mod_python 3.2.10."
+fi
+
+# install make and gcc for compiling the suidwrappers
+if [ "$INSTALL_COMPILER" == "Y" ]; then
+	message "Installing gcc and make."
+	which make || $PM_INSTALL make
+	which gcc || $PM_INSTALL gcc
 fi
 
 # compile the suidwrappers slowfoot uses for account creation
@@ -106,3 +136,9 @@ fi
   make
   ./fixperms.sh
 )
+
+# create the slowfoot group
+if [ "$CREATE_SLOWFOOT_GROUP" == "Y" ] ; then
+	message "Creating the group 'slowfoot'"
+	cat /etc/group | grep slowfoot || /usr/sbin/groupadd slowfoot
+fi

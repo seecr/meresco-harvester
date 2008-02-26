@@ -13,6 +13,7 @@ SAHARA_SERVERNAME=""
 SAHARA_HTTPS_PORT=""
 SAHARA_HTTP_PORT=""
 OPEN_FIREWALL="N"
+INSTALL_MOD_PYTHON_TOOLS="N"
 
 message 'This will install and configure SAHARA, containing all necessary
 components. Some steps in this installation may require your confirmation or
@@ -59,6 +60,12 @@ CREATE_SLOWFOOT_GROUP=$USERINPUT
 
 ask_question "Install Python?" "N" Y N
 INSTALL_PYTHON=$USERINPUT
+
+ask_question "Install the Amara toolkit?" "N" Y N
+INSTALL_AMARA=$USERINPUT
+ask_question "Install the 4 Suite toolkit?" "N" Y N
+INSTALL_4SUITE=$USERINPUT
+
 ask_question "Install Apache?" "N" Y N
 INSTALL_APACHE=$USERINPUT
 
@@ -78,15 +85,31 @@ fi
 ask_question "Append setting PYHTONPATH to your .bashrc?" "N" Y N
 MODIFY_BASHRC=$USERINPUT
 
+ask_question "Install gcc and make?" "N" Y N
+INSTALL_COMPILER=$USERINPUT
+
 ask_question "Install mod_python 3.2.10?" "N" Y N
 INSTALL_MOD_PYTHON=$USERINPUT
+
+if [ "$INSTALL_MOD_PYTHON" == "Y" ]; then
+	ask_question "Install additional tools needed to install mod_python?" "N" Y N
+	INSTALL_MOD_PYTHON_TOOLS=$USERINPUT
+	ask_question "Enable mod_python in Apache after install?" "N" Y N
+	ENABLE_MOD_PYTHON=$USERINPUT
+
+fi
 
 cat << EOF > $INSTALL_OPTIONS_FILE
 # created $(date)
 export INSTALL_APACHE=$INSTALL_APACHE
 export INSTALL_PYTHON=$INSTALL_PYTHON
 export INSTALL_MOD_PYTHON=$INSTALL_MOD_PYTHON
+export INSTALL_AMARA=$INSTALL_AMARA
+export INSTALL_4SUITE=$INSTALL_4SUITE
 
+export ENABLE_MOD_PYTHON=$ENABLE_MOD_PYTHON
+export INSTALL_MOD_PYTHON_TOOLS=$INSTALL_MOD_PYTHON_TOOLS
+export INSTALL_COMPILER=$INSTALL_COMPILER
 export MODIFY_BASHRC=$MODIFY_BASHRC
 export OPEN_FIREWALL=$OPEN_FIREWALL
 export CQ2_DEP_DIR=$SAHARA_HOME_DIR/lib

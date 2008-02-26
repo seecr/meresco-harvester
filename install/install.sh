@@ -72,8 +72,6 @@ cp $SAHARA_SLOWFOOT_DIR/sitecustomize.py /usr/lib/python2.4/site-packages
 # Create a slowfoot usergroup. This group is used to group users of slowfoot 
 # together and provide file access.
 if [ "$CREATE_SLOWFOOT_GROUP" == "Y" ] ; then
-	cat /etc/group | grep slowfoot || /usr/sbin/groupadd slowfoot
-	
 	# Add user sahara to the slowfoot group.
 	/usr/sbin/usermod -G slowfoot sahara
 else
@@ -120,9 +118,9 @@ then
 		# Disable all cache modules
 		if [ $(find /etc/apache2/mods-enabled/ -name "*cache*" |  wc -l) -gt 0 ]; then
 			messageWithEnter "WARNING: You have enabled cache modules for apache:
-	$(find /etc/apache2/mods-enabled/ -name "*cache*")
-	This will interfere with the proper functioning of Sahara.
-	Please disable these modules."
+$(find /etc/apache2/mods-enabled/ -name "*cache*")
+This will interfere with the proper functioning of Sahara.
+Please disable these modules."
 		fi
 	elif isSuSE ; then
 		echo "LoadModule rewrite_module  /usr/lib/apache2-worker/mod_rewrite.so" > /etc/apache2/conf.d/mod_rewrite.conf  

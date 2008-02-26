@@ -28,6 +28,30 @@
 source $(dirname $0)/functions.sh
 isroot
 
+if [ "$INSTALL_MOD_PYTHON_TOOLS" == "Y" ]; then
+	message "Installing tools to build mod_python."
+	TOOLS=""
+	for command in make gcc flex tar gzip wget
+	do
+		which $command > /dev/null || TOOLS="$command $TOOLS"
+	done
+	if [ "$TOOLS" == "" ]; then
+		message "All required tools have already been installed."
+	else
+		message "Installing $TOOLS"
+		$PM_INSTALL $TOOLS
+	fi
+
+	message "Installing development environment for apache2"
+	if isSuSE ; then
+		test -d /usr/include/apache2 || $PM_INSTALL apache2-devel
+	elif isDebian ; then 	
+		$PM_INSTALL apache2-dev
+	elif isFedora ; then
+		$PM_INSTALL httpd-devel
+	fi
+fi
+
 if ! hasPythonModule mod_python ; then
 	message "Installing mod_python"
 	(
@@ -50,16 +74,18 @@ else
 	message "mod_python found"
 fi
 
-if isSuSE ; then
-	message "Enabling mod_python"
-	echo "LoadModule python_module	/usr/lib/apache2-worker/mod_python.so" > /etc/apache2/conf.d/mod_python.conf
-elif isFedora ; then
-	message "Enabling mod_python"
-	echo "LoadModule python_module  modules/mod_python.so" > /etc/httpd/conf.d/000-modules.conf
-elif isDebian ; then
-	if [ ! -f /etc/apache2/mods-enabled/mod_python.load ]; then
+if [ "$ENABLE_MOD_PYTHON" == "Y" ]; then
+	if isSuSE ; then
 		message "Enabling mod_python"
-		echo "LoadModule python_module /usr/lib/apache2/modules/mod_python.so" > /etc/apache2/mods-available/mod_python.load
-		ln -sf /etc/apache2/mods-available/mod_python.load /etc/apache2/mods-enabled/mod_python.load
+		echo "LoadModule python_module	/usr/lib/apache2-worker/mod_python.so" > /etc/apache2/conf.d/mod_python.conf
+	elif isFedora ; then
+		message "Enabling mod_python"
+		echo "LoadModule python_module  modules/mod_python.so" > /etc/httpd/conf.d/000-modules.conf
+	elif isDebian ; then
+		if [ ! -f /etc/apache2/mods-enabled/mod_python.load ]; then
+			message "Enabling mod_python"
+			echo "LoadModule python_module /usr/lib/apache2/modules/mod_python.so" > /etc/apache2/mods-available/mod_python.load
+			ln -sf /etc/apache2/mods-available/mod_python.load /etc/apache2/mods-enabled/mod_python.load
+		fi
 	fi
 fi
