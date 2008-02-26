@@ -28,8 +28,7 @@ source $(dirname $0)/functions.sh
 isroot
 
 if ! hasPythonModule Ft  ; then
-	echo "*
-* Installing Ft"
+	message "Installing Ft"
 	(
 	cd /tmp
 	wget "ftp://ftp.4suite.org/pub/4Suite/4Suite-XML-1.0.2.tar.bz2"
@@ -38,6 +37,5 @@ if ! hasPythonModule Ft  ; then
 	python setup.py install
 	)
 else
-	echo "*
-* Ft found"
+	message "Ft found"
 fi

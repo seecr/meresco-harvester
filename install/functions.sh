@@ -53,6 +53,11 @@ function message {
 $1" | sed 's/^/* /'
 }
 
+function messageWithEnter {
+	message "$1"
+	read -p "Press [ENTER] to continue"
+}
+
 function isroot {
  if [ "`id -u`" != "0" ]
  then
@@ -160,4 +165,52 @@ function addListenLine {
 	echo "$oldconfig" > $portsconf
 	echo "Listen $port" >> $portsconf
 }
+
+
+
+USERINPUT=""
+
+function show_question {
+  USERINPUT=""
+
+  local question="$1"
+  if [ "$2" != "" ]; then  
+    question="$question [$2]:"
+  else
+    question="$question "
+  fi
+
+  read -p "$question" USERINPUT
+  if [ "$USERINPUT" == "" ]; then
+    USERINPUT=$2
+  fi
+}
+
+function ask_question {
+  question=$1
+  default=$2
+
+  valid=""
+  if [ $# -ge 3 ]; then
+    shift 2
+    valid=[$(echo $@ | tr ' ' ',')]
+    question="$question ($(echo $@ | tr ' ' '/'))"
+  fi
+
+  question_answered="N"
+  while [ $question_answered == "N" ]
+  do
+    show_question "$question" "$default"
+    if [ "$valid" != "" ]; then
+      case $USERINPUT in
+        $valid) question_answered="Y";;
+        *) question_answered="N";;
+      esac
+    else
+      question_answered="Y"
+    fi
+  done
+}
+
+
 
