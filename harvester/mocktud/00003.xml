@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+<responseDate>2004-12-29T13:19:27Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc">http://repository.tudelft.nl/oai</request>
+<ListRecords>
+<record>
+<header status="deleted">
+<identifier>oai:tudelft.nl:107087</identifier>
+<datestamp>2003-12-19T12:45:41Z</datestamp>
+</header>
+</record>
+</ListRecords>
+</OAI-PMH>

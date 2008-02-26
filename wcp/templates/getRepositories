@@ -1,0 +1,44 @@
+<%
+from cq2utils import binderytools
+
+type('text/xml; charset=utf-8')
+domainId = args.domainId
+repositoryGroupId = args.repositoryGroupId
+groups = asxml(url('/'+domainId+'.domain')).domain.repositoryGroupId
+exists = filter(lambda g:g == repositoryGroupId, groups)
+if repositoryGroupId and not exists:
+  include('/saharageterror?errorCode=idDoesNotExist')
+else:
+  #
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+  include('/saharagetTime')
+%> 
+ <request>
+  <verb>GetRepositories</verb>
+  <domainId><% escape_xml(domainId) %></domainId><%
+  if repositoryGroupId:
+    allGroups = [ repositoryGroupId ]
+%>
+    <repositoryGroupId><% escape_xml(repositoryGroupId) %></repositoryGroupId><%
+  else:
+    allGroups = groups
+  #
+%>
+ </request>
+ <GetRepositories>
+<%
+  for groupId in allGroups:
+    repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
+    for repositoryId in repositories:
+      repositoryXml = asxml(url('/' + domainId + '.' + repositoryId + '.repository')).repository
+%>
+  <%=repositoryXml.xml()%>
+<%
+  #
+%>
+ </GetRepositories>
+</saharaget><%
+#
+%>

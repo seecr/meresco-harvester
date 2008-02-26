@@ -1,0 +1,45 @@
+<%
+type('text/xml; charset=utf-8')
+if not str(args.identifier).startswith('error'):
+%><?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2006-02-16T08:24:52Z</responseDate>
+<request verb="GetRecord" metadataPrefix="<%escape_xml(args.metadataPrefix)%>" identifier="oai:wo.uvt.nl:154493">http://arno.uvt.nl/oai/wo.uvt.nl.cgi</request>
+
+<GetRecord>
+<record>
+<header>
+<identifier><%escape_xml(args.identifier)%></identifier>
+<datestamp>2005-02-22</datestamp>
+<setSpec>facft:FRW</setSpec>
+<setSpec>keur:yes</setSpec>
+<setSpec>keur</setSpec>
+<setSpec>withfulltext:yes</setSpec>
+<setSpec>withfulltext</setSpec>
+</header>
+
+<metadata metadataPrefix="<%=args.metadataPrefix%>">
+<oaidc:dc xmlns:oaidc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+<dc:creator>Vranken, J.B.M.</dc:creator>
+<dc:identifier>http://dbiref.uvt.nl/iPort?request=full_record&amp;db=wo&amp;language=eng&amp;query=154493</dc:identifier>
+<dc:format>application/pdf</dc:format>
+<dc:date>1992</dc:date>
+<dc:source>Tijdschrift voor Privaatrecht (1992) p.665-670</dc:source>
+<dc:title>Iets over de verhouding van rechter en wetgever</dc:title>
+<dc:type>Article / Letter to the editor</dc:type>
+<dc:rights>(c) Universiteit van Tilburg</dc:rights>
+</oaidc:dc>
+</metadata>
+</record>
+</GetRecord>
+
+</OAI-PMH>
+<%
+else:
+%><?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<responseDate>2006-03-28T15:19:57Z</responseDate>
+<request verb="GetRecord" metadataPrefix="oai_dc" identifier="3">http://library.wur.nl/oai</request>
+<error code="idDoesNotExist">value of Identifier is illegal in this repository</error></OAI-PMH>

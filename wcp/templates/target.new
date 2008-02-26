@@ -1,0 +1,30 @@
+<%
+from cq2utils import binderytools
+
+f = asform(input)
+name = f.name
+domain = xml
+
+if name == '':
+  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=No%20name%20given.')
+else:
+  targetid = uuid()
+  new_target = binderytools.bind_string("<targetId>%s</targetId>"%targetid).targetId
+
+  domain.domain.xml_append(new_target)
+
+  target(filepath(domain.domain.id + '.domain'))
+  req.write(domain.xml())
+
+
+  target(filepath(targetid + ".target"))
+%><?xml version="1.0"?>
+<target>
+  <id><%=targetid%></id>
+  <name><%escape_xml(name)%></name>
+  <targetType><%=f.targetType%></targetType>
+</target>
+<%
+  redirect(uri(path='/page/target.edit/' + targetid + '.target', query={'referrerDomain':domain.domain.id}))
+#
+%>

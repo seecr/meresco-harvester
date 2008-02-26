@@ -1,0 +1,86 @@
+<p>
+<h3>Harvester Status.</h3>
+</p>
+<%
+theUrl = url('/getStatus?domainId=%s&repositoryGroupId=%s&repositoryId=%s' %(args.domainId, args.repositoryGroupId, args.repositoryId))
+
+statuses = asxml(theUrl).saharaget.GetStatus.status
+
+%>
+<table class="event">
+<tr class="eventheader">
+<td>RepositoryGroup</td>
+<td>Repository</td>
+<td>Last successful harvest</td>
+<td>Total records</td>
+<td>Harvested<br>Uploaded<br>Deleted</td>
+<td>#Errors</td>
+<td></td>
+</tr>
+<%
+for status in statuses:
+  total = 0
+  total += int(str(status.total) or '0')
+  errorsnr = int(str(status.totalerrors))
+  style = errorsnr and 'style="font-weight:bold"' or ''
+%>
+<tr>
+<td <%=style%>><% escape_xml(status.repositoryGroupId) %></td>
+<td <%=style%>><% escape_html(status.repositoryId) %></td>
+<td <%=style%>><% escape_html(status.lastHarvestDate) %></td>
+<td><% escape_html(status.total) %></td>
+<td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
+<td><% escape_html(status.totalerrors) %></td>
+<%
+  if errorsnr:
+%>
+<td><a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>">Errors</a></td>
+<%
+  else:
+%>
+<td>&nbsp;</td>
+<% 
+  #
+%>
+</tr>
+<%
+#
+%>
+</table>
+<br>
+
+<p>
+<h3>Harvester Errors.</h3>
+</p>
+<table class="event">
+<%
+for status in statuses:
+  repositoryId = status.repositoryId
+  errorsnr = int(str(status.totalerrors))
+  if errorsnr:
+    #
+%>
+<tr class="eventinfo">
+<td><a name="<%= repositoryId %>" href="#top_<%= repositoryId %>"><%= repositoryId %></a></td>
+<td>Last successful harvest</td>
+<td><%= status.lastHarvestDate %></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>Nr. of errors since:</td>
+<td><b><%= errorsnr %></b></td>
+</tr>
+<%
+    if hasattr(status.recenterrors, 'error'):
+      for error in status.recenterrors.error:
+        #
+%>
+  <tr class="eventerror">
+    <td>&nbsp;</td>
+    <td class="alt"><%= error.date %></td>
+    <td class="alt"><% escape_html(error.split('|')[-1]) %></td>
+  </tr>
+<%
+#
+%>
+</table>

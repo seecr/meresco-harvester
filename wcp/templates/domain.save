@@ -1,0 +1,24 @@
+<%
+domain = asform(input)
+old_domain = xml
+
+target(filepath(domain.id + '.domain'))
+%><?xml version="1.0"?>
+<domain>
+  <id><%escape_xml(domain.id)%></id>
+  <description><%escape_xml(domain.description)%></description>
+<%
+for repositoryGroupId in old_domain.domain.repositoryGroupId:
+  req.write(repositoryGroupId.xml())
+#
+for targetId in old_domain.domain.targetId:
+  req.write(targetId.xml())
+#
+for mappingId in old_domain.domain.mappingId:
+  req.write(mappingId.xml())
+#
+%>
+</domain>
+<%
+redirect('/page/domain.edit/' + domain.id + '.domain')
+%>

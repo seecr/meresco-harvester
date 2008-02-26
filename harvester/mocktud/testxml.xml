@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+<responseDate>
+2004-12-29T13:19:27Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc">
+http://repository.tudelft.nl/oai</request>
+<ListRecords>
+<record>
+<header>
+<identifier>
+oai:tudelft.nl:007087</identifier>
+<datestamp>
+2003-12-19T12:45:41Z</datestamp>
+</header>
+<metadata>
+<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+<dc:title>
+Semi-analytical long-arc satellite orbit computation and the estimation of time-varying gravity parameters</dc:title>
+<dc:creator>
+Bruinsma, S.L.</dc:creator>
+<dc:subject>
+orbit computation</dc:subject>
+<dc:subject>
+perturbation modelling</dc:subject>
+<dc:subject>
+parameter estimation</dc:subject>
+<dc:description>
+Abstract not available.</dc:description>
+<dc:publisher>
+Delft University Press</dc:publisher>
+<dc:contributor>
+Wakker, K.F., prof. ir. (promotor)</dc:contributor>
+<dc:date>
+2003-01-21</dc:date>
+<dc:type>
+Dissertation</dc:type>
+<dc:type>
+Reviewed</dc:type>
+<dc:type>
+Final</dc:type>
+<dc:format>
+application/pdf, http://content.library.tudelft.nl/intradoc-cgi/nph-idc_cgi.exe/ae_bruinsma_20030121.pdf?IdcService=GET_FILE&amp;dID=8802&amp;dDocName=007087</dc:format>
+<dc:format>
+15728635 bytes</dc:format>
+<dc:identifier>
+http://content.library.tudelft.nl/intradoc-cgi/nph-idc_cgi.exe/ae_bruinsma_20030121.pdf?IdcService=GET_FILE&amp;dID=8802&amp;dDocName=007087</dc:identifier>
+<dc:identifier>
+ISBN 90-407-2370-2</dc:identifier>
+<dc:language>
+en</dc:language>
+<dc:rights>
+(c) 2003 S.L. Bruinsma</dc:rights>
+</oai_dc:dc>
+</metadata>
+</record>
+<record>
+<header>
+<identifier>
+oai:tudelft.nl:007192</identifier>
+<datestamp>
+2003-12-19T12:42:47Z</datestamp>
+</header>
+<metadata>
+<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+<dc:title>
+Automation in Architectural Photogrammetry: Line-Photogrammetry for the Reconstruction from Single and Multiple Images</dc:title>
+<dc:creator>
+Van den Heuvel, F.A.</dc:creator>
+<dc:subject>
+photogrammetry</dc:subject>
+<dc:subject>
+close-range</dc:subject>
+<dc:subject>
+computer vision</dc:subject>
+<dc:subject>
+architecture</dc:subject>
+<dc:subject>
+camera calibration</dc:subject>
+<dc:subject>
+image orientation</dc:subject>
+<dc:subject>
+object reconstruction</dc:subject>
+<dc:description>
+</dc:description>
+<dc:publisher>
+NCG, Netherlands Geodetic Commission, Delft</dc:publisher>
+<dc:contributor>
+Vosselman, M.G., prof.dr.ir. (promotor)</dc:contributor>
+<dc:date>
+2003-09-15</dc:date>
+<dc:type>
+Dissertation</dc:type>
+<dc:type>
+Reviewed</dc:type>
+<dc:type>
+Final</dc:type>
+<dc:format>
+application/pdf, http://content.library.tudelft.nl/intradoc-cgi/nph-idc_cgi.exe/ae_heuvel_20030915.pdf?IdcService=GET_FILE&amp;dID=8800&amp;dDocName=007192</dc:format>
+<dc:format>
+20129050 bytes</dc:format>
+<dc:identifier>
+http://content.library.tudelft.nl/intradoc-cgi/nph-idc_cgi.exe/ae_heuvel_20030915.pdf?IdcService=GET_FILE&amp;dID=8800&amp;dDocName=007192</dc:identifier>
+<dc:identifier>
+ISBN 90-6132-281-2</dc:identifier>
+<dc:language>
+en</dc:language>
+<dc:rights>
+(c) 2003 F.A. van den Heuvel</dc:rights>
+</oai_dc:dc>
+</metadata>
+</record>
+<resumptionToken cursor="0" completeListSize="113">TestToken</resumptionToken></ListRecords></OAI-PMH>

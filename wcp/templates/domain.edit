@@ -1,0 +1,231 @@
+<%
+req.req.headers_out['Cache-control'] = 'no-cache'
+domain = xml.domain
+if not session.get('isAdmin','') and session.get('domain', '') != domain.id:
+  raise Exception('Illegal use')
+#
+isAdmin = session.get('isAdmin', '')
+%>
+
+<p class="head">Domain Administration</p>
+
+<%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
+
+<form method="post" action="/domain.save/<%= domain.id %>.domain">
+ <fieldset><legend class="subhead">Domain: <%= domain.id %></legend>
+  <table>
+   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domain.id%>"><%=domain.id%></td></tr>
+   <tr>
+    <td>Description:</td><td><input size="60" type="text" name="description" value="<%=domain.description%>"></td>
+    <td><input type="submit" name="action" class="butt" value="Save" accesskey="s"></td>
+   </tr>
+  </table>
+ </fieldset>
+</form>
+
+
+
+<fieldset><legend class="subhead">Repository Groups</legend>
+ <form action='/repositoryGroup.new/<%= domain.id %>.domain' method='post'>
+  <fieldset><legend>Create new group</legend>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="id" type="text" class="zkveld" value=""></td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Repository Group"></td>
+    </tr>
+   </table>
+  </fieldset>
+ </form>
+
+ <fieldset><legend>Existing groups (id)</legend>
+  <table width="100%" border="0" cellspacing="4" cellpadding="0">
+<%
+for groupId in domain.repositoryGroupId:
+  #
+  name = asxml(url('/' + domain.id + '.' + groupId + '.repositoryGroup')).repositoryGroup.name
+%>
+   <tr>
+    <td width="60%"><%=name%> (<%= groupId %>)</td>
+    <td>
+     <a href="/page/repositoryGroup.edit/<%= domain.id %>.<%= groupId %>.repositoryGroup">
+      <img src="/images/edit.png" border="0"> Edit / View
+     </a>
+    </td>
+    <td>
+     <a href="/page/areYouSure/show?<%=
+       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=repositoryGroup&id=' + groupId,
+       'filename':name
+      })%>">
+       <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
+     </a>
+    </td>
+   </tr>
+<%
+#
+%>
+  </table>
+ </fieldset>
+</fieldset>
+
+
+
+<br>
+<fieldset><legend class="subhead">Targets</legend>
+<%
+if isAdmin:
+%>
+ <form action='/target.new/<%= domain.id %>.domain' method='post'>
+  <fieldset><legend>Create new target</legend>
+   <table width="320" border="0" cellspacing="4" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="name" type="text" class="zkveld" value=""></td>
+     <td width="60">Type:&nbsp;</td>
+     <td>
+      <select name="targetType">
+       <option value="sse">SURFnet Search Engine</option>
+       <option value="teddy">Teddy Search Engine</option>
+       <option value="filesystem">File System</option>
+       <option value="composite">Multiple Targets</option>
+      </select>
+     </td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Target"></td>
+    </tr>
+   </table>
+  </fieldset>
+ </form>
+
+<%
+# end ifAdmin
+%>
+ <fieldset><legend>Existing targets</legend>
+  <table width="100%" border="0" cellspacing="4" cellpadding="0">
+<%
+def idAndName(id):
+  return id, asxml(url('/xml/'+id+'.target')).target.name
+
+for id,name in map(idAndName, domain.targetId):
+  #
+%>
+   <tr>
+    <td width="60%"><%=name%></td>
+    <td>
+     <a href="/page/target.edit/<%=id%>.target?referrerDomain=<%=domain.id%>">
+      <img src="/images/edit.png" border="0"> <%=isAdmin and 'Edit / View' or 'View'%>
+     </a>
+    </td>
+<%
+  if isAdmin:
+%>
+    <td>
+     <a href="/page/areYouSure/show?<%=
+       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=target&id=' + id,
+       'filename':name
+       })%>">
+      <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
+     </a>
+    </td>
+<%
+  # end ifAdmin
+%>
+   </tr>
+<%
+#
+%>
+  </table>
+ </fieldset>
+</fieldset>
+
+
+
+
+<br>
+<fieldset><legend class="subhead">Mappings</legend>
+<%
+if isAdmin:
+%>
+ <form action='/mapping.new/<%= domain.id %>.domain' method='post'>
+  <fieldset><legend>Create new mapping</legend>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="name" type="text" class="zkveld" value=""></td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Mapping"></td>
+    </tr>
+   </table>
+  </fieldset>
+ </form>
+<%
+#
+%>
+ <fieldset><legend>Existing mappings</legend>
+  <table width="100%" border="0" cellspacing="4" cellpadding="0">
+<%
+def idAndNameForMapping(id):
+  return id, asxml(url('/xml/'+id+'.mapping')).mapping.name
+
+for id,name in map(idAndNameForMapping, domain.mappingId):
+  #
+%>
+   <tr>
+    <td width="60%"><%=name%></td>
+    <td>
+     <a href="/page/mapping.edit/<%=id%>.mapping?referrerDomain=<%=domain.id%>">
+      <img src="/images/edit.png" border="0"> <%=isAdmin and 'Edit / View' or 'View'%>
+     </a>
+    </td>
+<%
+  if isAdmin:
+%>
+    <td>
+     <a href="/page/areYouSure/show?<%=
+       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=mapping&id=' + id,
+       'filename':name
+       })%>">
+      <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
+     </a>
+    </td>
+<%
+  #
+%>
+    <td>
+     <a href="/page/testmapping/<%=id%>.mapping?referrerDomain=<%=domain.id%>">
+      <img src="/images/exec.png" border="0"> Test
+     </a>
+    </td>
+   </tr>
+<%
+#
+%>
+  </table>
+ </fieldset>
+</fieldset>
+
+
+
+
+<br>
+<fieldset><legend class="subhead">Status</legend>
+<ul>
+ <li>
+ <a href="/page/showHarvesterStatus/show?domainId=<%= domain.id %>">Harvester status of this domain</a>
+ </li>
+ <li>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domain.id %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
+ </li>
+ <li>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domain.id %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
+ </li>
+</ul>
+</fieldset>
+
+<%
+if isAdmin:
+%>
+<p>
+ <a href="/page/domains/show">Back to Domains & Users</a>
+</p>
+<%
+#
+%>

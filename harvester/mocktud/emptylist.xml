@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-01-12T14:34:49Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc">http://doc.utwente.nl/cgi-bin/arno/oai/soft</request>
+
+<error code="noRecordsMatch">The combination of the values of arguments results in an empty set</error>
+
+</OAI-PMH> 

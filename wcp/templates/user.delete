@@ -1,0 +1,15 @@
+<%
+from account import deleteAccount, AccountException
+users = xml.users
+user = getattr(users, str(args.user), None)
+error = ''
+if user != None:
+  try:
+    deleteAccount(str(args.user))
+    users.xml_remove_child(user._delegatee)
+    target(filepath('users.xml'))
+    print >> req, xml.xml()
+  except AccountException, e:
+    error = str(e)
+redirect('/page/domains/show?'+urlencode({'error':error}))
+%>

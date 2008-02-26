@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-09-08T20:14:37Z</responseDate>
+<request verb="ListRecords" metadataPrefix="imsmd_rootv1p2p1">http://dklpcz1.itbe.utwente.nl/cgi-bin/arno/oai/lorenet</request>
+
+<ListRecords>
+<record><header><identifier>oai:lorenet:147</identifier><datestamp>2005-09-07</datestamp></header>
+<metadata><imsmd:lom xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1">
+      <imsmd:general>
+        <imsmd:title>
+
+          <imsmd:langstring xml:lang="en">a title</imsmd:langstring>
+        </imsmd:title>
+        <imsmd:language>en</imsmd:language>
+        <imsmd:description>
+          <imsmd:langstring xml:lang="en">a description</imsmd:langstring>
+        </imsmd:description>
+        <imsmd:keyword>
+
+          <imsmd:langstring xml:lang="en">A keyword</imsmd:langstring>
+        </imsmd:keyword>
+        <imsmd:coverage>
+          <imsmd:langstring xml:lang="en">A coverage entry</imsmd:langstring>
+        </imsmd:coverage>
+      </imsmd:general>
+      <imsmd:lifecycle>
+        <imsmd:contribute>
+
+          <imsmd:role>
+            <imsmd:source>
+              <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+            </imsmd:source>
+            <imsmd:value>
+              <imsmd:langstring xml:lang="x-none">Publisher</imsmd:langstring>
+            </imsmd:value>
+          </imsmd:role>
+
+          <imsmd:centity>
+            <imsmd:vcard>BEGIN:vCard
+VERSION:3.0
+FN:Frank Dawson
+ORG:Lotus Development Corporation
+ADR;TYPE=WORK,POSTAL,PARCEL:;;6544 Battleford Drive ;Raleigh;NC;27613-3502;U.S.A.
+TEL;TYPE=VOICE,MSG,WORK:+1-919-676-9515
+TEL;TYPE=FAX,WORK:+1-919-676-9564
+EMAIL;TYPE=INTERNET,PREF:Frank_Dawson@Lotus.com
+EMAIL;TYPE=INTERNET:fdawson@earthlink.net
+URL:http://home.earthlink.net/~fdawson
+END:vCard</imsmd:vcard>
+          </imsmd:centity>
+          <imsmd:date>
+            <imsmd:datetime>2005-05-12</imsmd:datetime>
+          </imsmd:date>
+        </imsmd:contribute>
+        <imsmd:contribute>
+
+          <imsmd:role>
+            <imsmd:source>
+              <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+            </imsmd:source>
+            <imsmd:value>
+              <imsmd:langstring xml:lang="x-none">Author</imsmd:langstring>
+            </imsmd:value>
+          </imsmd:role>
+
+          <imsmd:centity>
+            <imsmd:vcard>BEGIN:VCARD
+VERSION:3.0
+N:Smith;John;W.
+FN:John W. Smith
+ORG: Athabasca University
+END:VCARD</imsmd:vcard>
+          </imsmd:centity>
+          <imsmd:date>
+            <imsmd:datetime>2005-01-10</imsmd:datetime>
+          </imsmd:date>
+        </imsmd:contribute>
+        <imsmd:contribute>
+
+          <imsmd:role>
+            <imsmd:source>
+              <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+            </imsmd:source>
+            <imsmd:value>
+              <imsmd:langstring xml:lang="x-none">Technical Implementer</imsmd:langstring>
+            </imsmd:value>
+          </imsmd:role>
+
+          <imsmd:centity>
+            <imsmd:vcard>BEGIN:vCard
+VERSION:3.0
+FN:Tim Howes
+ORG:Netscape Communications Corp.
+ADR;TYPE=WORK:;;501 E. Middlefield Rd.;Mountain View; CA; 94043;U.S.A.
+TEL;TYPE=VOICE,MSG,WORK:+1-415-937-3419
+TEL;TYPE=FAX,WORK:+1-415-528-4164
+EMAIL;TYPE=INTERNET:howes@netscape.com
+END:vCard</imsmd:vcard>
+          </imsmd:centity>
+          <imsmd:date>
+            <imsmd:datetime>2005-03-02</imsmd:datetime>
+          </imsmd:date>
+        </imsmd:contribute>
+      </imsmd:lifecycle>
+
+      <imsmd:technical>
+        <imsmd:format>text/html</imsmd:format>
+      </imsmd:technical>
+      <imsmd:educational>
+        <imsmd:learningresourcetype>
+          <imsmd:source>
+            <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+          </imsmd:source>
+
+          <imsmd:value>
+            <imsmd:langstring xml:lang="x-none">Experiment</imsmd:langstring>
+          </imsmd:value>
+        </imsmd:learningresourcetype>
+      </imsmd:educational>
+      <imsmd:rights>
+        <imsmd:description>
+          <imsmd:langstring xml:lang="en">Rights description</imsmd:langstring>
+
+        </imsmd:description>
+      </imsmd:rights>
+      <imsmd:relation>
+        <imsmd:kind>
+          <imsmd:source>
+            <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+          </imsmd:source>
+          <imsmd:value>
+
+            <imsmd:langstring xml:lang="x-none">References</imsmd:langstring>
+          </imsmd:value>
+        </imsmd:kind>
+        <imsmd:resource>
+          <imsmd:description>
+            <imsmd:langstring xml:lang="en">A referenced article description</imsmd:langstring>
+          </imsmd:description>
+        </imsmd:resource>
+
+      </imsmd:relation>
+      <imsmd:relation>
+        <imsmd:kind>
+          <imsmd:source>
+            <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+          </imsmd:source>
+          <imsmd:value>
+            <imsmd:langstring xml:lang="x-none">IsBasedOn</imsmd:langstring>
+
+          </imsmd:value>
+        </imsmd:kind>
+        <imsmd:resource>
+          <imsmd:description>
+            <imsmd:langstring xml:lang="en">Based on article description</imsmd:langstring>
+          </imsmd:description>
+        </imsmd:resource>
+      </imsmd:relation>
+
+      <imsmd:classification>
+        <imsmd:purpose>
+          <imsmd:source>
+            <imsmd:langstring xml:lang="en">LOMv1.0</imsmd:langstring>
+          </imsmd:source>
+          <imsmd:value>
+            <imsmd:langstring xml:lang="x-none">Idea</imsmd:langstring>
+          </imsmd:value>
+
+        </imsmd:purpose>
+        <imsmd:keyword>
+          <imsmd:langstring xml:lang="en">A classification keyword with the purpose 'Idea'</imsmd:langstring>
+        </imsmd:keyword>
+      </imsmd:classification>
+    </imsmd:lom>
+</metadata></record></ListRecords>
+
+</OAI-PMH>

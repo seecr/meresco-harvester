@@ -1,0 +1,12 @@
+<%
+header['Cache-control'] = 'no-cache'
+header['Pragma'] = 'no-cache'
+header['Expires'] = '0'
+%>
+<form method="POST" action="/save">
+  <input type="hidden" name="editor" value="edit">
+  name:<input type="text" name="name" value="<%escape_html(args.name)%>">
+  <input type="submit" name="action" value="save" accesskey="s">
+  <br>
+  <textarea rows="30" cols="120" name="text"><%escape_html(text)%></textarea>
+</form>

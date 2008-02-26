@@ -1,0 +1,41 @@
+<%
+searchEngineTarget = asform(input)
+
+target(filepath(searchEngineTarget.id + '.target'))
+%><?xml version="1.0"?>
+<target>
+  <id><%escape_xml(searchEngineTarget.id)%></id>
+  <name><%escape_xml(searchEngineTarget.name)%></name>
+  <username><%escape_xml(searchEngineTarget.username)%></username>
+  <port><%escape_xml(searchEngineTarget.port)%></port>
+  <targetType><%=searchEngineTarget.targetType%></targetType>
+<%
+for delegate in searchEngineTarget.delegate:
+%>
+  <delegate><%=delegate%></delegate>
+<%
+#
+%>
+<%
+if searchEngineTarget.targetType == 'sse':
+%>
+  <path><%escape_xml(searchEngineTarget.path)%></path>
+  <password><%escape_xml(searchEngineTarget.password)%></password>
+  <baseurl><%escape_xml(searchEngineTarget.baseurl)%></baseurl>
+<%
+elif searchEngineTarget.targetType == 'teddy':
+%>
+  <hostname><%escape_xml(searchEngineTarget.hostname)%></hostname>
+  <privateKey><%escape_xml(searchEngineTarget.privateKey)%></privateKey>
+  <command><%escape_xml(searchEngineTarget.command)%></command>
+<%
+elif searchEngineTarget.targetType == 'filesystem':
+%>
+  <path><%escape_xml(searchEngineTarget.path)%></path>
+<%
+#
+%>
+</target>
+<%
+redirect('/page/target.edit/' + searchEngineTarget.id + '.target?referrerDomain=' + searchEngineTarget.referrerDomain )
+%>

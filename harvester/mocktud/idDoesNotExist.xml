@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-04-28T12:48:13Z</responseDate>
+<request verb="GetRecord" metadataPrefix="oai_dc" identifier="oai:uvapub:1234567890">http://dare.uva.nl/cgi/arno/oai/uvapub</request>
+
+<error code="idDoesNotExist">The value of the identifier argument is unknown or illegal in this repository</error>
+
+</OAI-PMH>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-01-05T15:58:25Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc" set="withfulltext:yes">http://arno.unimaas.nl/oai/dare.cgi</request>
+
+<ListRecords>
+<record><header><identifier>oai:dare:3326</identifier><datestamp>2005-01-03</datestamp><setSpec>withfulltext:yes</setSpec></header>
+<metadata><oaidc:dc xmlns:oaidc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:title>Europese Klassiekers: Photo Production Ltd. v. Securicor Transport Ltd.: exoneratieclausules en de 'doctrine of fundamental breach'</dc:title><dc:creator>Hardy, R.R.R.</dc:creator><dc:subject>Private law, Civil Procedure</dc:subject><dc:description>Het Engelse recht heeft, evenals het Nederlandse recht, methoden ontwikkeld om de geldigheid van exoneratieclausules te beoordelen. Een methode die vooral in de jaren zestig en zeventig door de Engelse rechter werd gehanteerd was de 'doctrine of fundamental breach' (leer van de wezenlijke tekortkoming). De oorsprong van de leer is gelegen in het zeevervoersrecht, maar zij is later ook op andere contracten toegepast. De vraag die uiteindelijk de discussie ging beheersen had niet zozeer betrekking op de geoorloofdheid van deze uitbreiding tot andere dan vervoersovereenkomsten, als wel op de kwalificatie van de leer als zodanig. De uitspraak in de hier besproken zaak 'Photo Production Ltd. v. Securicor Transport Ltd.' biedt uitkomst over de status van de 'doctrine of fundamental breach'.</dc:description><dc:publisher>University Maastricht. FdR. Privaatrecht</dc:publisher><dc:identifier>http://arno.unimaas.nl/show.cgi?fid=997</dc:identifier><dc:format>application/pdf</dc:format><dc:date>2004</dc:date><dc:rights>University Maastricht, 2004</dc:rights><dc:type>Article - letter to the editor</dc:type></oaidc:dc>
+
+</metadata></record></ListRecords>
+
+</OAI-PMH>

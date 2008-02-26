@@ -1,0 +1,137 @@
+<%
+from cq2utils.amaraextension import getElements
+from cq2utils.wrappers import wrapp
+%>
+
+<p class="head">Domains Administration</p>
+
+<p>
+ <fieldset><legend class="subhead">Domains</legend>
+
+<%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
+  <form action='/domain.new' method='post'>
+   <fieldset><legend>Create new domain</legend>
+    <table width="320" border="0" cellspacing="0" cellpadding="0">
+     <tr>
+      <td width="60">Name:&nbsp;</td>
+      <td width="200"><input name="id" type="text" class="zkveld" value=""></td>
+      <td width="40"><input name="submit" type="submit" class="butt" value="Create"></td>
+     </tr>
+    </table>
+   </fieldset>
+  </form>
+
+
+
+  <fieldset><legend>Existing domains</legend>
+   <table border="0" cellspacing="4" cellpadding="0">
+<%
+def nameFile(fname):
+  return fname[:-len('.domain')], fname
+
+for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
+  #
+%>
+    <tr>
+     <td><%=id%></td>
+     <td>
+      <a href="/page/domain.edit/<%=file%>">
+       <img src="/images/edit.png" border="0"> Edit / View
+      </a>
+     </td>
+    </tr>
+<%
+#
+%>
+   </table>
+  </fieldset>
+ </fieldset>
+</p>
+
+
+
+
+<p>
+ <fieldset><legend class="subhead">Users</legend>
+  <form action='/user.new/users.xml' method='post'>
+   <fieldset><legend>Create new user</legend>
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+     <tr>
+      <td width="60">Username:&nbsp;</td>
+      <td width="200"><input name="username" type="text" class="zkveld" value=""></td>
+     </tr>
+     <tr>
+      <td width="60">Domain:&nbsp;</td>
+      <td width="200"><input name="domain" type="text" class="zkveld" value=""></td>
+     </tr>
+     <tr>
+      <td width="60">Password:&nbsp;</td>
+      <td width="200"><input name="password1" type="password" class="zkveld" value=""></td>
+     </tr>
+     <tr>
+      <td width="60">Password(repeat):&nbsp;</td>
+      <td width="200"><input name="password2" type="password" class="zkveld" value=""></td>
+     </tr>
+     <tr>
+      <td colspan="2" style="text-align: right;"><input name="submit" type="submit" class="butt" value="Create"></td>
+     </tr>
+    </table>
+   </fieldset>
+  </form>
+
+
+  <fieldset><legend>Existing users</legend>
+   <table width="100%" border="0" cellspacing="4" cellpadding="0">
+<%
+users = asxml(url('/users.xml')).users
+for user in getElements(users):
+  user = wrapp(user)
+%>
+    <tr>
+     <td>
+      <fieldset><legend>User: <% escape_html(user.name) %></legend>
+       <table width="100%">
+        <tr>
+         <td width="15%"><b>Full name:</b></td>
+         <td width="35%"><b><% escape_html(user.name) %></b></td>
+         <td width="15%">Organization:</td>
+         <td width="35%"><% escape_html(user.organization) %></td>
+        </tr>
+        <tr>
+         <td><b>Username:</b></td>
+         <td><b><% escape_html(user.localName) %></b></td>
+         <td>Telephone:</td>
+         <td><% escape_html(user.telephone) %></td>
+        </tr>
+        <tr>
+         <td><b>Domain:</b></td>
+         <td><b><% escape_html(user.domain) %></b></td>
+         <td>E-mail:</td>
+         <td><% escape_html(user.email) %></td>
+        </tr>
+        <tr>
+         <td valign="top">Notes:</td>
+         <td colspan="3" ><pre><% escape_html(user.notes) %></pre></td>
+        </tr>
+       </table>
+       <p style="text-align: right;">
+       <a href="/page/user.edit/users.xml?user=<%= user.localName %>">
+        <img src="/images/edit.png" border="0"> Edit / View
+       </a>
+       &nbsp;
+       <a class="butt" href="/page/areYouSure/show?<%= 
+         urlencode({'ok':'/user.delete/users.xml?user=' + user.localName,
+         'filename':user.localName
+         })%>">
+        <img src="/images/delete.jpg" border="0"> Delete
+       </a>
+       </p>
+      </fieldset>
+<%
+#
+%>
+   </table>
+  </fieldset>
+ </fieldset>
+</fieldset>
+</p>

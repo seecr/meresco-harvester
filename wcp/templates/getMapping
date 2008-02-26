@@ -1,0 +1,34 @@
+<%
+domainId = args.domainId
+mappingId = args.mappingId
+
+mappings = asxml(url('/' + domainId + '.domain')).domain.mappingId
+exists = False
+for m in mappings:
+  if m == mappingId:
+    exists = True
+    break
+
+if not exists:
+  include('/saharageterror?errorCode=idDoesNotExist')
+else:
+  type('text/xml; charset=utf-8')
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+  include('/saharagetTime')
+%>
+ <request>
+  <verb>GetMapping</verb>
+  <domainId><% escape_xml(domainId) %></domainId>
+  <mappingId><% escape_xml(mappingId) %></mappingId>
+ </request>
+ <GetMapping>
+<%
+  m = asxml(url('/' + mappingId + '.mapping'))
+  m.mapping.xml(req)
+%>
+ </GetMapping>
+</saharaget><%
+#
+%>

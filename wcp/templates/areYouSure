@@ -1,0 +1,8 @@
+<p>
+<h3>Deleting <i><%=args.filename%></i></h3>
+Are you sure you want to delete it?<br>
+<br>
+<a href="<%=referer%>"><b>Cancel</b></a>
+<span style="padding-left: 4em;"/>
+<a href="<%=args.ok%>"><b>Ok</b></a>
+</p>

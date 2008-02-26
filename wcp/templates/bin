@@ -1,0 +1,9 @@
+<%
+if args.name.endswith('.pdf'):
+  type('application/pdf')
+elif args.name.endswith('.doc'):
+  type('application/msword')
+else:
+  type('image/jpeg')
+#
+%><%=text%>

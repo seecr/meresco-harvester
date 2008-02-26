@@ -1,0 +1,10 @@
+<%
+repository = xml.repository
+inputquery = { 'verb':'ListRecords', 'metadataPrefix':repository.metadataPrefix }
+if repository.set: 
+  inputquery['set']=repository.set
+inputurl = repository.baseurl + '?' + urlencode(inputquery)
+mapping = repository.mappingId + '.mapping'
+
+redirect('/onlinemapping?' + urlencode({'mapping':mapping, 'inputurl':inputurl}))
+%>

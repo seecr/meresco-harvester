@@ -1,0 +1,24 @@
+<%
+type('text/plain')
+prepareHeaders('private')
+from onlineharvest import OnlineHarvest
+from mapping import Mapping
+f = asform(input)
+%>
+Gebruikte url:
+<%=f.inputurl%>
+
+Gebruikte mapping:
+<%
+harvest = OnlineHarvest(req)
+
+mappingXml = asxml(url('/' + args.mapping)).mapping
+mapping = Mapping(mappingXml.id)
+mapping.code = str(mappingXml.code)
+mapping.name = mappingXml.name
+%><%=mapping.name%>
+
+<%
+xmlurl = str(f.inputurl)
+harvest.performMapping(mapping,xmlurl)
+%>

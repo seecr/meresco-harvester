@@ -1,0 +1,3 @@
+<%
+import time
+%>  <responseDate><%=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()) %></responseDate>

@@ -1,0 +1,44 @@
+<%
+domainId = args.domainId
+
+import os
+logdir = '/home/sahara/harvester/log'
+def listIds(repositoryId):
+  idfile = os.path.join(logdir, domainId, repositoryId + '.ids')
+  if os.path.isfile(idfile):
+    try:
+      f = open(idfile)
+      for id in map(str.strip, filter(None, f)):
+%><identifier><%escape_xml(id)%></identifier>
+<%
+      #
+    finally:
+      f.close()
+  #
+
+repositoryGroupId = args.repositoryGroupId
+groups = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
+exists = filter(lambda g:g == repositoryGroupId, groups)
+if not exists:
+  include('/saharageterror?errorCode=idDoesNotExist')
+else:
+  type('text/xml; charset=utf-8')
+  repositories = asxml(url('/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')).repositoryGroup.repositoryId
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+  include('/saharagetTime')
+%> 
+  <request>
+    <verb>GetIdentifiers</verb>
+    <domainId><% escape_xml(domainId) %></domainId>
+    <repositoryGroupId><% escape_xml(repositoryGroupId) %></repositoryGroupId>
+  </request>
+  <GetIdentifiers>
+<%
+  for repositoryId in repositories:
+    listIds(repositoryId)
+  #
+%>
+  </GetIdentifiers>
+</saharaget>

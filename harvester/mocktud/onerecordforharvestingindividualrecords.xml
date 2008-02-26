@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-04-28T12:16:27Z</responseDate>
+<request verb="GetRecord" metadataPrefix="oai_dc" identifier="oai:rep:12345">http://dare.uva.nl/cgi/arno/oai/uvapub</request>
+
+<GetRecord>
+	<record>
+		<header>
+			<identifier>oai:rep:12345</identifier>
+			<datestamp>2005-04-18</datestamp>
+		</header>
+		<metadata>
+			<oaidc:dc xmlns:oaidc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+				<dc:creator>Meertens, R.W.</dc:creator>
+				<dc:creator>Pligt, J. van der</dc:creator>
+				<dc:contributor>Thierry, Hk.</dc:contributor>
+				<dc:contributor>Evers, A.</dc:contributor>
+				<dc:contributor>, S.</dc:contributor>
+				<dc:identifier>http://dare.uva.nl/record/161</dc:identifier>
+				<dc:subject>Social psychology</dc:subject>
+				<dc:publisher>Swets &amp;amp; Zeitlinger</dc:publisher>
+				<dc:date>1989</dc:date>
+				<dc:title>Sociale psychologie tot het jaar 2000</dc:title>
+				<dc:type>Part of book - chapter</dc:type>
+				<dc:rights>(c) Universiteit van Amsterdam</dc:rights>
+			</oaidc:dc>
+		</metadata>
+	</record>
+</GetRecord>
+</OAI-PMH>

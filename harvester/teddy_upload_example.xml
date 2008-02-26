@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<documents>
+	<document id="test_1">
+		<part name="fields" type="text/xml">
+			<fields>
+				<field name="field_1">value_1</field>
+			</fields>
+		</part>
+	</document>
+</documents>

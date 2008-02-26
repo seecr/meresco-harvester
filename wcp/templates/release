@@ -1,0 +1,23 @@
+<p class="head">Sahara release notes</p>
+
+<p class="subhead">
+2.0 Sahara release for pre-production for EduRep and DAREnet
+</p>
+
+<ul>
+<li>Login/account management and authentication more secure</li>
+<li>Introduced domains and repositorygroups</li>
+<li>Administration split over multiple screens</li>
+<li>Admin account</li>
+<li>Accounts can manage one domain</li>
+<li>Target types for FAST FDS and Lucene</li>
+<li>Secured all access via SSL</li>
+<li>Secure SAHARA Get Web interfaces for portals</li>
+</ul>
+
+<p class="subhead">
+1.0 Sahara release in production for LOREnet
+<ul>
+<li>Harvester based on the DAREnet harvester.</li>
+</ul>
+</p>

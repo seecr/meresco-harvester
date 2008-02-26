@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xs:element name="saharaget">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="responseDate"/>
+        <xs:element ref="request"/>
+        <xs:choice>
+          <xs:element ref="GetIdentifiers"/>
+          <xs:element ref="GetMapping"/>
+          <xs:element ref="GetRepositories"/>
+          <xs:element ref="GetRepository"/>
+          <xs:element ref="GetRepositoryGroups"/>
+          <xs:element ref="GetTarget"/>
+          <xs:element ref="error"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="responseDate" type="xs:NMTOKEN"/>
+  <xs:element name="request">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="mapping"/>
+        <xs:element ref="repository"/>
+        <xs:element ref="repositoryGroup"/>
+        <xs:element ref="target"/>
+        <xs:element ref="domain"/>
+        <xs:element ref="verb"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="domain" type="xs:NCName"/>
+  <xs:element name="verb" type="xs:NCName"/>
+  <xs:element name="GetIdentifiers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="identifier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="identifier" type="xs:anyURI"/>
+  <xs:element name="GetMapping">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="mapping"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetRepositories">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="repository"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetRepository">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="repository"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetRepositoryGroups">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="repositoryGroup"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetTarget">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="target"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="error">
+    <xs:complexType mixed="true">
+      <xs:attribute name="code" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="mapping">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="id"/>
+        <xs:element ref="name"/>
+        <xs:element ref="code"/>
+        <xs:element ref="description"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="code" type="xs:string"/>
+  <xs:element name="description" type="xs:string"/>
+  <xs:element name="target">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="id"/>
+        <xs:element ref="name"/>
+        <xs:element ref="baseurl"/>
+        <xs:element ref="password"/>
+        <xs:element ref="path"/>
+        <xs:element ref="port"/>
+        <xs:element ref="username"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="baseurl" type="xs:NCName"/>
+  <xs:element name="password" type="xs:NCName"/>
+  <xs:element name="path" type="xs:string"/>
+  <xs:element name="port" type="xs:integer"/>
+  <xs:element name="username" type="xs:NCName"/>
+  <xs:element name="repositoryGroup">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="key"/>
+        <xs:element ref="name"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="repository">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="key"/>
+        <xs:element ref="mapping"/>
+        <xs:element ref="target"/>
+        <xs:element ref="action"/>
+        <xs:element ref="collection"/>
+        <xs:element ref="harvest"/>
+        <xs:element ref="metadataPrefix"/>
+        <xs:element ref="set"/>
+        <xs:element ref="url"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="action">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="collection" type="xs:NCName"/>
+  <xs:element name="harvest" type="xs:boolean"/>
+  <xs:element name="metadataPrefix" type="xs:NCName"/>
+  <xs:element name="set" type="xs:NCName"/>
+  <xs:element name="url" type="xs:anyURI"/>
+  <xs:element name="name">
+    <xs:complexType mixed="true">
+      <xs:attribute ref="xml:lang"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="id" type="xs:string"/>
+  <xs:element name="key" type="xs:NCName"/>
+</xs:schema>

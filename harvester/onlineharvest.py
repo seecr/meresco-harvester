@@ -1,0 +1,80 @@
+## begin license ##
+#
+#    "Sahara" consists of two subsystems, namely an OAI-harvester and a web-control panel.
+#    "Sahara" is developed for SURFnet by:
+#        Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006,2007 SURFnet B.V. http://www.surfnet.nl
+#
+#    This file is part of "Sahara"
+#
+#    "Sahara" is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    "Sahara" is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with "Sahara"; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
+
+from harvester import Harvester
+from cq2utils import binderytools
+from cq2utils.wrappers import wrapp
+from mapping import TestRepository,DataMapAssertionException
+from eventlogger import StreamEventLogger
+
+class OnlineHarvest:
+	def __init__(self, outputstream):
+		self._output = outputstream
+		self.eventlogger = StreamEventLogger(self._output)
+	
+	def performMapping(self, mapping, urlString):
+		doAssertions=True
+		xml = wrapp(binderytools.bind_uri(urlString))
+		records = xml.OAI_PMH.ListRecords.record
+		for record in records:
+			try:
+				upload = mapping.createEmptyUpload(TestRepository, record.header, record.metadata)
+				if record.header.status == "deleted":
+					self.writeDelete(upload)
+				else:
+					upload = mapping.createUpload(TestRepository, record.header, record.metadata, self.eventlogger, doAssertions)
+					if upload != None:
+						self.writeUpload(upload)
+			except DataMapAssertionException, ex:
+				self.writeLine('AssertionError: '+str(ex))
+			
+	def _writeId(self, anUpload):
+		self.writeLine('')
+		self.writeLine('upload.id='+anUpload.id)
+	
+	def writeDelete(self, anUpload):
+		self._writeId(anUpload)
+		self.writeLine('DELETED')
+	
+	def writeUpload(self, anUpload):
+		self._writeId(anUpload)
+		self.writeLine('-v- upload.fields -v-')
+		for k,v in anUpload.fields.items():
+			self.writeLine('  '+k+'='+v)
+		self.writeLine('-^- upload.fields -^-')
+		for partname, part in anUpload.parts.items():
+			self.writeLine('-v- part %s -v-' % partname)
+			self.writeLine(part)
+			self.writeLine('-^- part -^-')
+			
+				
+	def writeLine(self, line):
+		self._output.write(line + '\n')
+		self._output.flush()
+		
+#	def harvest(self, repositorykey, resumptionToken = None, mockRequest = None):
+#		repository = getRepository(repositorykey)
+#		repository.ssetarget =  self.ssetarget
+#		harvester = Harvester(repository, None)

@@ -1,0 +1,26 @@
+<%
+type('text/plain')
+%>About Slowfoot
+
+(c) 2005 Seek You Too bv
+
+What is Slowfoot?
+
+Introduction
+Slowfoot is an integration system for web-based applications. It provides a framework to connect existing components and complete applications in order to let them collaborate as needed. The means of communication between the systems are Internet based protocols such as HTTP, XML, OAI-PMH, SOAP, SSL, etc. Slowfoot connects applications by connecting their inputs and outputs and adapting protocols and formats as needed.
+
+Design
+By design, Slowfoot is a minimal system that leaves actual processing to the applications and components. In other words, it doesn't capture different technologies, rendering them unusable by other system, but instead connects to all kinds of systems already deployed by your organisation or offered as services by others.
+
+Ideas behind
+The idea behind Slowfoot is that the world is plentyful of data, but never in the right place and never in the right format. Hence what is needed are two things: data transportation and data conversion. That's what Slowfoot does very wel. And its is easy to configure and program too!
+
+The next driving idea behind Slowfoot is what we call 'Shifting Expertise'. Traditional systems usually have a very strict seperation in what end users are able to do (mostly almost nothing) and what must be done by the experts (mostly very costly). A Slowfoot system, once installed can be changed by end-users, up to their own level of expertise. At their own wish, at any point, they may hand it over to their own more technical staff, who in turn decide to call in the experts at the point where they feel their own expertise falls short.  Thus, Slowfoot systems let their owners decide when to call in the help of other, no matter what the task at hand is.  
+
+Idea behind the name
+Another driving force behind the architecture of Slowfoot is the idea that many problems can be solved by 
+A) using existing software better, 
+B) using less software. 
+In IT, many complex problems are solved by adding complexity. Slowfoot solves problems by reducing complexity, and using less software instead of more. Slowfoot's spirit is one of not being afraid if complex sofwtare, and the belief that problems can be solved by throwing away software when not needed. Relax, look at what you already have and what you could do without it. Slowfoot stand of taking little steps, slowly but securely, and solve your problems in a relaxed way.
+
+Developed by Seek You Too BV

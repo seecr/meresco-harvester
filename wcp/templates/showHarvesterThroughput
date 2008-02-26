@@ -1,0 +1,60 @@
+<%
+from throughputanalyser import ThroughputAnalyser
+
+if args.repositoryId:
+	caption = args.repositoryId
+	objectType = 'repository'
+elif args.repositoryGroupId:
+	caption = args.repositoryGroupId
+	objectType = 'repository group'
+else:
+	caption = args.domainId
+	objectType = 'domain'
+
+import time
+days = args.since == 'lastweek' and 7 or 31
+dateSince = time.strftime("%Y-%m-%d", time.localtime(time.time() - days * 3600 * 24))
+%>
+
+<p>
+<h3><%= "Harvester throughput for the '%s' %s for the past %i days." % (caption, objectType, days) %></h3>
+</p>
+
+<%
+#Determine all repository names.
+repositoryNames = []
+getArgs = {	'verb': 'GetRepositoryGroups', 'domainId': args.domainId}
+groups = asxml(url('/saharaget?' + urlencode(getArgs))).saharaget.GetRepositoryGroups.repositoryGroup
+
+for repositoryGroup in groups:
+	if not args.repositoryGroupId or args.repositoryGroupId == repositoryGroup.id:
+		for repositoryId in repositoryGroup.repositoryId:
+			if not args.repositoryId or args.repositoryId == repositoryId:
+				repositoryNames.append(repositoryId)
+
+
+analyser = ThroughputAnalyser('/home/sahara/harvester/log/' + args.domainId)
+report = analyser.analyse(repositoryNames, dateSince)
+%>
+<table>
+	<tr>
+		<td>Timespan (hh:mm:ss):</td>
+		<td align="right"><%= report.hmsString() %></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>Number of records:</td>
+		<td align="right"><%= report.records %></td>
+		<td>processed</td>
+	</tr>
+	<tr>
+		<td>Throughput (record/sec):</td>
+		<td align="right"><%= report.recordsPerSecond() %></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>Extrapolated for 24 hours:</td>
+		<td align="right"><%= report.recordsPerDay() %></td>
+		<td></td>
+	</tr>
+</table> 

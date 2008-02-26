@@ -1,0 +1,254 @@
+<%
+req.req.headers_out['Cache-Control'] = 'no-cache'
+
+from tools import getDomainId
+from cq2utils.timeslot import Timeslot
+
+repositoryFile = args.name
+groupId = args.referrerGroup
+domainId = getDomainId(req.uri)
+if not session.get('isAdmin','') and session.get('domain', '') != domainId:
+  raise Exception('Illegal use')
+#
+domainXml = asxml(url('/xml/'+ domainId + '.domain'))
+
+def targetTuple(targetId):
+  return asxml(url('/xml/'+ targetId + '.target')).target.name, targetId
+
+def mappingTuple(mappingId):
+  return asxml(url('/xml/'+ mappingId + '.mapping')).mapping.name, mappingId
+
+targets = []
+for targetId in domainXml.domain.targetId:
+  targets.append(targetTuple(targetId))
+
+mappings = []
+for mappingId in domainXml.domain.mappingId:
+  mappings.append(mappingTuple(mappingId))
+
+%>
+
+<script language="javascript">
+
+function submitForm(submitName) {
+	var submitButton = document.getElementById(submitName);
+	submitButton.click()
+}
+
+</script>
+
+<p class="head">Repository Administration</p>
+<form method="post" name="repositorySave" action="/repository.save/<%= repositoryFile %>?referrerGroup=<%= groupId %>">
+<%
+repo = xml.repository
+%>
+  <fieldset><legend class="subhead">Repository: <%=repo.id%></legend>
+    <table>
+      <tr><td>Id:</td>
+          <td><input type="hidden" name="repositoryGroupId" value="<%=repo.repositoryGroupId%>"><input size="5"  type="hidden" name="id" value="<%=repo.id%>"><%=repo.id%></td></tr>
+      <tr><td>Baseurl:</td><td><input size="50" type="text" name="baseurl" value="<%=repo.baseurl%>"></td></tr>
+      <tr><td>Set:</td><td><input size="50" type="text" name="set" value="<%=repo.set%>"></td></tr>
+      <tr><td>Metadata Prefix:</td><td><input size="50" type="text" name="metadataPrefix" value="<%=repo.metadataPrefix%>"></td></tr>
+
+      <tr>
+        <td>Mapping:</td>
+        <td>
+          <select name="mappingId">
+<%
+mappingId = str(getattr(repo,'mappingId',''))
+%>
+          <option value="" <%=mappingId == '' and 'selected' or ''%>></option>
+<%
+for name,id in mappings:
+%>
+          <option value="<%=id%>" <%=mappingId == id and 'selected' or ''%>><%escape_html(name)%></option>
+<%
+# end mappings
+%>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Target:</td>
+        <td>
+          <select name="targetId">
+<%
+targetId = str(getattr(repo,'targetId',''))
+%>
+          <option value="" <%=targetId == '' and 'selected' or ''%>></option>
+<%
+for name,id in targets:
+%>
+          <option value="<%=id%>" <%=targetId == id and 'selected' or ''%>><%escape_html(name)%></option>
+<%
+# end targets
+%>
+          </select>
+        </td>
+      </tr>
+
+      <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=repo.collection%>"></td></tr>
+
+
+		<tr>
+        <td>Harvest:</td>
+        <td><input type="checkbox" name="use" value="true" <%= repo.use and 'checked'%>></td>
+      </tr>
+      <tr>
+        <td>Next action:</td>
+        <td>
+          <select name="repositoryAction">
+            <option value="" <%= repo.action == '' and 'selected' or ''%>>-</option>
+            <option value="clear" <%= repo.action == 'clear' and 'selected' or ''%>>Clear</option>
+            <option value="refresh" <%= repo.action == 'refresh' and 'selected' or ''%>>Refresh</option>
+          </select>
+        </td>
+      </tr>
+
+
+<%
+
+def renderDropdown(index, selectName, aTupleList, selectedValue, wildcardName=''):
+	#
+%>
+	<select name="<%= selectName %>_<%= index %>">
+<%
+	#
+	if wildcardName != '':
+		#
+%>
+	    <option value="*" <%=selectedValue=='*' and 'selected' or ''%>><%= wildcardName %></option>
+<%
+	#
+
+ 	for key,value in aTupleList:
+		#
+%>
+			<option value="<%=key%>" <%=selectedValue==key and 'selected' or ''%>><%=value%></option>
+<%
+	#
+%>			
+			</select>
+<%
+#
+
+def renderTimeslot(index, aTimeslot):
+	#
+	weeks = map(lambda x:(str(x),x), range(1,54))
+	hours = map(lambda x:(str(x),x), range(25))
+	weekdays = [('0','Monday'),('1','Tuesday'),('2','Wednesday'),('3','Thursday'),('4','Friday'),('5','Saturday'),('6','Sunday')]
+
+	req.write('<td>')
+	renderDropdown(index, 'shopclosedWeek', weeks, aTimeslot.beginweek, 'Any week')
+	req.write('</td><td>')
+	renderDropdown(index, 'shopclosedWeekDay', weekdays, aTimeslot.beginday, 'Any day')
+	req.write('</td><td>')
+	req.write('from')
+	renderDropdown(index, 'shopclosedBegin', hours, aTimeslot.beginhour)
+	req.write(':00 hrs ')
+	req.write('</td><td>')
+	req.write(' until')
+	renderDropdown(index, 'shopclosedEnd', hours, aTimeslot.endhour)
+	req.write(':00 hrs')
+	req.write('</td>')	
+	if index != 0:
+		req.write("""
+		<td align="right">
+			<input type="image" src="/images/delete.jpg" name="deleteTimeslot_%(index)s" id="deleteTimeslot_%(index)s">
+			<a href="javascript:submitForm('deleteTimeslot_%(index)s')">delete</a>
+		</td>""" % locals())
+		if not aTimeslot.valid():
+			req.write('<td><p class="error">Invalid timeslot specification, will be ignored.</p></td>')
+#
+%>
+    </table>
+  
+	<p>
+  <fieldset><legend class="subhead">Closing hours</legend>
+    <table>
+
+<%
+req.write('<tr>')
+for i in ['Week', 'Day', 'Begin', 'End', '']:
+  req.write('<th>%s</th>' % i)
+req.write('</tr>')
+index = 0
+for shopclosed in repo.shopclosed:
+	index = index + 1
+	closed=Timeslot(shopclosed)
+	#
+%>
+	<tr>
+		<% renderTimeslot(index,closed)%>
+	</tr>
+<%
+#
+
+%>
+
+<input type="hidden" name="numberOfTimeslots" value="<%= index %>">
+	<tr><td colspan="6"></td></tr>
+	<tr><td class="horline" colspan="6"></td></tr>
+	<tr><td colspan="6"></td></tr>
+	<tr>
+		<% renderTimeslot(0, Timeslot('*:*:0:0-*:*:0:0'))%> 
+		<td><input type="submit" class="butt" value="Add" accesskey="a" name="addTimeslot"></td>
+	</tr>
+</table>
+</fieldset>
+
+	<p style="text-align: right;">
+   <input type="submit" name="action" class="butt" value="Save" accesskey="s">
+  </p>
+  </fieldset>
+	</p>
+
+</p>
+
+</form>
+
+
+
+<p>
+ <fieldset><legend class="subhead">Status</legend>
+  <ul>
+   <li>
+    <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&repositoryId=<%= repo.id %>">
+   Harvester status of this repository
+    </a>
+   </li>
+	 <li>
+    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryId=<%= repo.id %>&since=lastweek">
+   Harvester throughput for this repository for the past 7 days.
+    </a>
+   </li>
+	 <li>
+    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryId=<%= repo.id %>&since=lastmonth">
+   Harvester throughput for this repository for the past 31 days.
+    </a>
+   </li>
+  </ul>
+ </fieldset>
+</p>
+
+
+<p>
+ <fieldset><legend class="subhead">Useful links</legend>
+  <ul>
+   <li>
+	 <a target="_blank" href="<%=repo.baseurl%>?verb=ListMetadataFormats">
+     List all metadata formats.
+    </a>
+   </li>
+	<li>
+    <a href="/testrepository/<%= repositoryFile %>">
+     Test mapping
+    </a>
+   </li>
+  </ul>
+  <i>(You may need to save first.)</i>
+ </fieldset>
+<p>
+<a href="/page/repositoryGroup.edit/<%=domainId%>.<%=groupId%>.repositoryGroup">Back to repositorygroup</a>
+</p>

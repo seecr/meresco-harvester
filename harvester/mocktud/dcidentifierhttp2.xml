@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+<responseDate>
+2004-12-29T13:19:27Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc">
+http://repository.tudelft.nl/oai</request>
+<ListRecords>
+<record>
+<header>
+<identifier>
+oai:tudelft.nl:007087</identifier>
+<datestamp>
+2003-12-19T12:45:41Z</datestamp>
+</header>
+<metadata>
+<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+<dc:title>
+Semi-analytical long-arc satellite orbit computation and the estimation of time-varying gravity parameters</dc:title>
+<dc:creator>
+Bruinsma, S.L.</dc:creator>
+<dc:subject>
+orbit computation</dc:subject>
+<dc:subject>
+perturbation modelling</dc:subject>
+<dc:subject>
+parameter estimation</dc:subject>
+<dc:description>
+Abstract not available.</dc:description>
+<dc:publisher>
+Delft University Press</dc:publisher>
+<dc:contributor>
+Wakker, K.F., prof. ir. (promotor)</dc:contributor>
+<dc:date>
+2003-01-21</dc:date>
+<dc:type>
+Dissertation</dc:type>
+<dc:type>
+Reviewed</dc:type>
+<dc:type>
+Final</dc:type>
+<dc:format>
+application/pdf, http://hallo</dc:format>
+<dc:format>
+15728635 bytes</dc:format>
+<dc:language>
+en</dc:language>
+<dc:identifier>123456789</dc:identifier>
+<dc:identifier>http://somewhere.on.the.internet.nl/</dc:identifier>
+<dc:rights>
+(c) 2003 S.L. Bruinsma</dc:rights>
+</oai_dc:dc>
+</metadata>
+</record>
+</ListRecords></OAI-PMH>

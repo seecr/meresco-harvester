@@ -1,0 +1,30 @@
+<%
+from slowfoot import account
+f = asform(input)
+username = f.username
+password = f.password
+
+if not f.username:
+  redirect('/')
+
+users = asxml(url('/users.xml')).users
+
+from md5 import md5
+domain = None
+user = getattr(users, str(username))
+domain = user.domain
+
+try:
+  account.login(str(username), str(password)) 
+  session['username'] = str(username)
+  session['domain'] = str(domain)
+  session['isAdmin'] = username == 'admin'
+  session.save()
+  redirect('/')
+except account.AccountException, e:
+  session['username'] = ''
+  session['domain'] = ''
+  session['isAdmin'] = False
+  session.save()
+  redirect(referer.split('?')[0] + '?login=invalid&referer=' + f.referer)
+%>

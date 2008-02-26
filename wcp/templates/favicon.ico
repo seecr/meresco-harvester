@@ -1,0 +1,1 @@
+<%type('image/gif')%><%=open(filepath('cq2favicon.ico')).read()%>

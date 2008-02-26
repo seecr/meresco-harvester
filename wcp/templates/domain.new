@@ -1,0 +1,23 @@
+<%
+f = asform(input)
+id = f.id
+
+from os import path
+from tools import checkName
+
+if id == '':
+  redirect('/page/domains/show?error=No%20name%20given.')
+elif not checkName(id):
+  redirect('/page/domains/show?error=Name%20is%20not%20valid.%20Only%20use%20alphanumeric%20characters.')
+elif path.isfile(filepath(id + ".domain")):
+  redirect('/page/domains/show?error=The%20domain%20already%20exists.')
+else:
+  target(filepath(id + ".domain"))
+%><?xml version="1.0"?>
+<domain>
+  <id><%escape_xml(id)%></id>
+</domain>
+<%
+  redirect('/page/domain.edit/' + id + '.domain')
+#
+%>

@@ -1,0 +1,5 @@
+<% 
+for key, value in req.headers_in.items():
+%><%=key%>: <%=value%>|<%
+#
+%>

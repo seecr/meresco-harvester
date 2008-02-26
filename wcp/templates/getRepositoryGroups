@@ -1,0 +1,24 @@
+<%
+domainId = args.domainId
+type('text/xml; charset=utf-8')
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+include('/saharagetTime')
+%>
+ <request>
+  <verb>GetRepositoryGroups</verb>
+  <domainId><% escape_xml(domainId) %></domainId>
+ </request>
+ <GetRepositoryGroups>
+<%
+group = asxml(url('/' + domainId + '.domain')).domain
+for id in group.repositoryGroupId:
+  repositoryGroup = asxml(url('/' + domainId + '.' + id + '.repositoryGroup')).repositoryGroup
+%>
+  <% repositoryGroup.xml(req) %>
+<%
+# for
+%>
+ </GetRepositoryGroups>
+</saharaget>

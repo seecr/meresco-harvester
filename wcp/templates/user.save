@@ -1,0 +1,34 @@
+<%
+users = asxml(url('/users.xml')).users
+from cq2utils.amaraextension import getElements
+from cq2utils.wrappers import wrapp
+f = asform(input)
+#break wrapper knowledge
+#user._delegatee.domain = unicode(f.domain)
+#user = getattr(users.users, str(f.user))
+target(filepath('users.xml'))
+%><?xml version ="1.0" encoding="UTF-8"?>
+<users>
+<%
+for user in getElements(users):
+  username = user.localName
+  user = wrapp(user)
+  if username == f.user:
+    user = f
+  #
+%>
+<<%escape_xml(username)%>>
+  <name><%escape_xml(user.name)%></name>
+  <organization><%escape_xml(user.organization)%></organization>
+  <telephone><%escape_xml(user.telephone)%></telephone>
+  <email><%escape_xml(user.email)%></email>
+  <domain><%escape_xml(user.domain)%></domain>
+  <notes><%escape_xml(user.notes)%></notes>
+</<%escape_xml(username)%>>
+<%
+#
+%>
+</users>
+<%
+redirect('/page/domains/show')
+%>

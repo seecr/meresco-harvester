@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+
+<responseDate>2005-01-07T15:53:19Z</responseDate>
+<request verb="ListRecords" metadataPrefix="oai_dc" identifier="oai:so:41383">http://doc.utwente.nl/cgi-bin/arno/oai/so</request>
+
+<ListRecords>
+<record><header><identifier>oai:so:41383</identifier><datestamp>2004-12-09</datestamp><setSpec>withfulltext:yes</setSpec></header>
+<metadata><oaidc:dc xmlns:oaidc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:creator>Sundramoorthy, V</dc:creator><dc:creator>Scholten, J.</dc:creator><dc:creator>Jansen, P.G.</dc:creator><dc:creator>Hartel, P.H.</dc:creator><dc:identifier>http://purl.org/utwente/41383</dc:identifier><dc:format>application/pdf, http://purl.org/utwente/fid/1140</dc:format><dc:publisher>IEEE Computer Society Press, Los Alamitos, California</dc:publisher><dc:title>Service discovery at home</dc:title><dc:type>Article in monograph - proceedings</dc:type><dc:type>Final</dc:type><dc:type>Reviewed</dc:type><dc:rights>(c) Universiteit of Twente</dc:rights></oaidc:dc>
+</metadata></record>
+</ListRecords>
+
+</OAI-PMH>

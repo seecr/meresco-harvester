@@ -1,0 +1,71 @@
+<%
+import time, rfc822
+later = time.time() + (60 * 2) # 2 minutes expiry
+now = time.time()
+req.headers_out['Expires'] = rfc822.formatdate(later)
+req.headers_out['Last-modified'] = rfc822.formatdate(now)
+
+domainId = args.domainId
+repositoryId = args.repositoryId
+repositoryGroupId = args.repositoryGroupId
+
+import os
+from repositorystatus import RepositoryStatus
+logdir = '/home/sahara/harvester/log'
+
+def writeStatus(repositoryId, repositoryGroupId):
+  rs = RepositoryStatus()
+  statsfile = os.path.join(logdir, domainId, repositoryId + '.events')
+  if os.path.isfile(statsfile):
+    try:
+      f = open(statsfile)
+%><status repositoryId="<%= repositoryId %>" repositoryGroupId="<%= repositoryGroupId %>"><%
+      rs.innerXml(f, req)
+      req.write("</status>")
+    finally:
+      f.close()
+#
+
+exists = True
+if repositoryId:
+  exists = os.path.isfile(req.document_root() + '/data/' + domainId + '.' + repositoryId + '.repository')
+elif repositoryGroupId:
+  exists = os.path.isfile(req.document_root() + '/data/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')
+
+if not exists:
+  include('/saharageterror?errorCode=idDoesNotExist')
+else:
+  type('text/xml; charset=utf-8')
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+  include('/saharagetTime')
+%> 
+  <request>
+    <verb>GetStatus</verb>
+    <domainId><% escape_xml(domainId) %></domainId><%
+  if repositoryId:
+%>
+    <repositoryId><% escape_xml(repositoryId) %></repositoryId><%
+  elif repositoryGroupId:
+%>
+    <repositoryGroupId><% escape_xml(repositoryGroupId) %></repositoryGroupId><%
+  #
+%>
+  </request>
+  <GetStatus>
+<%
+  #
+  if not repositoryId and repositoryGroupId:
+    allGroupIds = [ repositoryGroupId ]
+  else:
+    allGroupIds = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
+  for groupId in allGroupIds:
+    repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
+    for repId in repositories:
+      if not repositoryId or repositoryId == repId:
+        writeStatus(repId, groupId)
+  #
+%>
+  </GetStatus>
+</saharaget>

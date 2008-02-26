@@ -1,0 +1,35 @@
+<%
+from cq2utils import binderytools
+from tools import checkName
+
+f = asform(input)
+id = f.id
+domain = xml
+fileName = "%s.%s.repositoryGroup"%(domain.domain.id,id)
+
+if id == '':
+  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=No%20name%20given.')
+elif not checkName(id):
+  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=Name%20is%20not%20valid.%20Only%20use%20alphanumeric%20characters.')
+elif os.path.isfile(filepath(fileName)):
+  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=Deze%20id%20bestaat%20al.')
+else:
+  new_repositoryGroup = binderytools.bind_string("<repositoryGroupId>%s</repositoryGroupId>"%id).repositoryGroupId
+
+  domain.domain.xml_append(new_repositoryGroup)
+
+  target(filepath(domain.domain.id + '.domain'))
+  req.write(domain.xml())
+
+
+  target(filepath(fileName))
+%><?xml version="1.0"?>
+<repositoryGroup>
+  <id><%escape_xml(id)%></id>
+  <name xml:lang="nl"/>
+  <name xml:lang="en"/>
+</repositoryGroup>
+<%
+  redirect('/page/repositoryGroup.edit/' + fileName)
+#
+%>

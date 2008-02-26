@@ -1,0 +1,40 @@
+<%
+domainId = args.domainId
+repositoryId = args.repositoryId
+exists = False
+groups = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
+for groupId in groups:
+  #
+  if exists:
+    break
+  repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
+  for repo in repositories:
+    if repo == repositoryId:
+      exists = True
+      break
+
+if not exists:
+  include('/saharageterror?errorCode=idDoesNotExist')
+else:
+  #
+  type('text/xml; charset=utf-8')
+%><?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+<%
+  include('/saharagetTime')
+%> 
+ <request>
+  <verb>GetRepository</verb>
+  <domainId><% escape_xml(domainId) %></domainId>
+  <repositoryId><% escape_xml(repositoryId) %></repositoryId>
+ </request>
+ <GetRepository>
+<%
+  repositoryXml = asxml(url('/' + domainId + '.' + repositoryId + '.repository')).repository
+%>
+  <%=repositoryXml.xml()%>
+ </GetRepository>
+</saharaget>
+<%
+#
+%>
