@@ -27,6 +27,13 @@
 source $(dirname $0)/functions.sh
 isroot
 
+which bzip2 || $PM_INSTALL bzip2
+
+if [ "$INSTALL_COMPILER" == "Y" ]; then
+	which make || $PM_INSTALL make
+	which gcc || $PM_INSTALL gcc
+fi
+
 if ! hasPythonModule Ft  ; then
 	message "Installing Ft"
 	(
