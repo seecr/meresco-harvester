@@ -38,7 +38,7 @@ nillogger = NilEventLogger()
 execcode = DEFAULT_DC_CODE = """
 #Map template
 #
-#Fields: 
+#Fields:
 # input.metadata = Metadata object
 # input.header = Header object
 # input.repository = Repository object
@@ -50,12 +50,12 @@ execcode = DEFAULT_DC_CODE = """
 # join(collection) joins items in a collection seperated by '; '
 # logger.logLine(event, comments, [id=...]) Logs a line.
 # doAssert(expression, comments) perform an assertion. The comments are optional
-# urljoin(baseurl, path) Joins the base url with the path. 
+# urljoin(baseurl, path) Joins the base url with the path.
 #     urljoin('http://example.org/a/b','/c/d') --> 'http://example.org/c/d'
 #     urljoin('http://example.org/a/b','c/d') --> 'http://example.org/a/c/d'
 #     urljoin('http://example.org/a/b','http://c.org/d') --> 'http://c.org/d'
 #     urljoin('http://example.org/a/b/','c/d') --> 'http://example.org/a/b/c/d'
-# urlencode( <dict> of <tuplelist> ) Encode a sequence of two-element tuples or dictionary 
+# urlencode( <dict> of <tuplelist> ) Encode a sequence of two-element tuples or dictionary
 #     into a URL query string.
 #     urlencode({'a':'b', 'c':'d'}) --> 'a=b&c=d'
 #     urlencode([('a','b'), ('c','d')]) --> 'a=b&c=d'
@@ -95,162 +95,165 @@ upload.fields['title'] = upload.fields.get('meta_dc.title','')
 """
 
 def parse_xml(aString):
-	return wrappers.wrapp(binderytools.bind_string(aString))
+    return wrappers.wrapp(binderytools.bind_string(aString))
 
 def read(filename):
-	file = open(filename)
-	try:
-		return file.read()
-	finally:
-		file.close()
+    file = open(filename)
+    try:
+        return file.read()
+    finally:
+        file.close()
 
 def assertObligatoryFields(uploadfields):
-	keys = uploadfields.keys()
-	return 'title' in keys and 'data' in keys and 'charset' in keys
-	
+    keys = uploadfields.keys()
+    return 'title' in keys and 'data' in keys and 'charset' in keys
+
 def noimport(name, globals, locals, fromlist):
-	raise DataMapException('Import not allowed')
-	
+    raise DataMapException('Import not allowed')
+
 class DataMapException(Exception):
-	pass
+    pass
 
 class DataMapAssertionException(Exception):
-	pass
+    pass
 
 class DataMapSkip(Exception):
-	pass
+    pass
 
 class TestRepository:
-	id = 'repository.id'
-	repositoryGroupId = 'repository.institute'
-	baseurl = 'http://repository.example.org/oai'
-	set = 'some.set'
-	collection = 'testcollection'
-	metadataPrefix = 'md'
-	
+    id = 'repository.id'
+    repositoryGroupId = 'repository.institute'
+    baseurl = 'http://repository.example.org/oai'
+    set = 'some.set'
+    collection = 'testcollection'
+    metadataPrefix = 'md'
+
 def isUrl(aString):
-	return aString.startswith('http:') or aString.startswith('https:') or aString.startswith('ftp:')
-	
+    return aString.startswith('http:') or aString.startswith('https:') or aString.startswith('ftp:')
+
 def join(collection):
-	result = []
-	for item in collection:
-		result.append(str(item))
-	return '; '.join(result)
+    result = []
+    for item in collection:
+        result.append(str(item))
+    return '; '.join(result)
 
 def doAssert(aBoolean, message="Assertion failed"):
-	if not aBoolean:
-		raise DataMapAssertionException(message)
+    if not aBoolean:
+        raise DataMapAssertionException(message)
 
 def doNotAssert(aBoolean, message="This should not happen"):
-	pass
-	
+    pass
+
 class Input:
-	def __init__(self, header=None, metadata=None, repository=None, log=None):
-		self.header = header
-		self.metadata = metadata
-		self.repository = repository
-		self.log = log
-	
+    def __init__(self, header=None, metadata=None, about=None, repository=None, log=None):
+        self.header = header
+        self.metadata = metadata
+        self.about = about
+        self.repository = repository
+        self.log = log
+
 class UploadDict(dict):
-	def __setitem__(self, key, value):
-		return dict.__setitem__(self, key, str(value))
-		
+    def __setitem__(self, key, value):
+        return dict.__setitem__(self, key, str(value))
+
 
 class Upload:
-	def __init__(self):
-		self.fulltexturl = None
-		self._properties = {}
-		self.fields = UploadDict()
-		self.parts = UploadDict()
-		self.id = ''
-		
-	def init(self, repository, header, metadata):
-		self.id = repository.id + ':' + header.identifier
-		self.header = header
-		self.repository = repository
-		self.metadata = metadata
+    def __init__(self):
+        self.fulltexturl = None
+        self._properties = {}
+        self.fields = UploadDict()
+        self.parts = UploadDict()
+        self.id = ''
 
-	def _monkeyProofKey(self, aString):
-		return filter(lambda x:not x.isspace(), aString).lower()
+    def init(self, repository, header, metadata, about):
+        self.id = repository.id + ':' + header.identifier
+        self.header = header
+        self.repository = repository
+        self.metadata = metadata
+        self.about = about
 
-	def setProperty(self, key, value):
-		self._properties[self._monkeyProofKey(key)] = value
+    def _monkeyProofKey(self, aString):
+        return filter(lambda x:not x.isspace(), aString).lower()
 
-	def getProperty(self, key):
-		value = ''
-		try:
-			value = self._properties[self._monkeyProofKey(key)]
-		except KeyError:
-			pass
-		return value
+    def setProperty(self, key, value):
+        self._properties[self._monkeyProofKey(key)] = value
 
-	def ensureStrings(self):
-		if self.id:
-			self.id = str(self.id)
-		
+    def getProperty(self, key):
+        value = ''
+        try:
+            value = self._properties[self._monkeyProofKey(key)]
+        except KeyError:
+            pass
+        return value
+
+    def ensureStrings(self):
+        if self.id:
+            self.id = str(self.id)
+
 class Mapping(SaharaObject):
-	def __init__(self, mappingId):
-		SaharaObject.__init__(self,['name', 'description', 'code'])
-		self.id = mappingId
+    def __init__(self, mappingId):
+        SaharaObject.__init__(self,['name', 'description', 'code'])
+        self.id = mappingId
 
-	def setCode(self, aString):
-		self.code = aString
+    def setCode(self, aString):
+        self.code = aString
 
-	def createEmptyUpload(self, repository, header, metadata):
-		# TJ/JJ this should be refactored into Upload. 30-8-2006
-		upload = Upload()
-		upload.init(repository, header, metadata)
-		return upload
-		
+    def createEmptyUpload(self, repository, header, metadata, about):
+        # TJ/JJ this should be refactored into Upload. 30-8-2006
+        upload = Upload()
+        upload.init(repository, header, metadata, about)
+        return upload
 
-	def createUpload(self, repository, header, metadata, logger=nillogger, doAsserts=False):
-		logger = logger
-		builtinscopy = __builtins__.copy()
-		builtinscopy['__import__']=noimport
-		upload = self.createEmptyUpload(repository, header, metadata)
 
-		assertionMethod = doAsserts and doAssert or doNotAssert
-		
-		try:
-			exec(self.code, {'input':Input(header,metadata,repository),
-			'upload':upload,
-			'isUrl':isUrl,
-			'join':join,
-			'urljoin':urljoin,
-			'urlencode':urlencode,
-			'doAssert':assertionMethod,
-			'logger': logger,
-			'skipRecord': self.skipSimple,
-			'vcard':vcard,
-			'classification':classification,
-			'xmlEscape': xmlEscape,
-			'__builtins__':builtinscopy})
-			upload.ensureStrings()
-		except DataMapAssertionException, ex:
-			logger.error(comments='Assertion: ' + str(ex), id=upload.id)
-			raise ex
-		except DataMapSkip, e:
-			logger.logLine('SKIP', id=upload.id, comments=str(e))
-			return None
-		return upload
-		
-	def skipSimple(self, comment):
-		raise DataMapSkip(comment)
+    def createUpload(self, repository, header, metadata, about, logger=nillogger, doAsserts=False):
+        logger = logger
+        builtinscopy = __builtins__.copy()
+        builtinscopy['__import__']=noimport
+        upload = self.createEmptyUpload(repository, header, metadata, about)
 
-	def execcode(self):
-		return self.code
-	
-	def isValid(self):
-		try:
-			self.validate()
-			return True
-		except:
-			return False
-			
-	def validate(self):
-		header = parse_xml("""<header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header>""")
-		metadata = parse_xml("""<metadata><dc><identifier>test:identifier</identifier></dc></metadata>""")
-		upload = self.createUpload(TestRepository(), header,metadata)
-		if not assertObligatoryFields(upload.fields):
-			raise DataMapException('The keys: title, data, charset are mandatory')
-		
+        assertionMethod = doAsserts and doAssert or doNotAssert
+
+        try:
+            exec(self.code, {'input':Input(header,metadata,about,repository),
+            'upload':upload,
+            'isUrl':isUrl,
+            'join':join,
+            'urljoin':urljoin,
+            'urlencode':urlencode,
+            'doAssert':assertionMethod,
+            'logger': logger,
+            'skipRecord': self.skipSimple,
+            'vcard':vcard,
+            'classification':classification,
+            'xmlEscape': xmlEscape,
+            '__builtins__':builtinscopy})
+            upload.ensureStrings()
+        except DataMapAssertionException, ex:
+            logger.error(comments='Assertion: ' + str(ex), id=upload.id)
+            raise ex
+        except DataMapSkip, e:
+            logger.logLine('SKIP', id=upload.id, comments=str(e))
+            return None
+        return upload
+
+    def skipSimple(self, comment):
+        raise DataMapSkip(comment)
+
+    def execcode(self):
+        return self.code
+
+    def isValid(self):
+        try:
+            self.validate()
+            return True
+        except:
+            return False
+
+    def validate(self):
+        header = parse_xml("""<header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header>""")
+        metadata = parse_xml("""<metadata><dc><identifier>test:identifier</identifier></dc></metadata>""")
+        about = parse_xml("""<about/>""")
+        upload = self.createUpload(TestRepository(), header,metadata,about)
+        if not assertObligatoryFields(upload.fields):
+            raise DataMapException('The keys: title, data, charset are mandatory')
+

@@ -36,98 +36,99 @@ NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
 def p(anObject):
-	sys.stdout.write(str(anObject)+'\n')
-	sys.stdout.flush()
+    sys.stdout.write(str(anObject)+'\n')
+    sys.stdout.flush()
 
 class Harvester:
-	def __init__(self, repository, logpath, mockRequest = None, mockLogger = None):
-		self._repository = repository
-		self._logger = mockLogger or HarvesterLog(logpath, repository.id)
-		self._eventlogger = self._logger.eventLogger()
-		self._oairequest = mockRequest or OAIRequest(self._repository.url)
-		self._uploader = repository.createUploader(self._eventlogger)
-		self._mapper = repository.mapping()
-		self._MAXTIME= 30*60 # 30 minutes
-		
-	def getRecord(self, id):
-		return self._oairequest.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
+    def __init__(self, repository, logpath, mockRequest = None, mockLogger = None):
+        self._repository = repository
+        self._logger = mockLogger or HarvesterLog(logpath, repository.id)
+        self._eventlogger = self._logger.eventLogger()
+        self._oairequest = mockRequest or OAIRequest(self._repository.url)
+        self._uploader = repository.createUploader(self._eventlogger)
+        self._mapper = repository.mapping()
+        self._MAXTIME= 30*60 # 30 minutes
 
-	def uploaderInfo(self):
-		return self._uploader.info()
-	
-	def listRecords(self, server, from_, token, set):
-		if token:
-			return server.listRecords(resumptionToken=token)
-		elif from_:
-			if set:
-				return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
-			return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
-		elif set:
-			return server.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
-		return server.listRecords(metadataPrefix=self._repository.metadataPrefix)
+    def getRecord(self, id):
+        return self._oairequest.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
 
-	def fetchRecords(self, server, from_, token, total):
-		harvestedRecords = 0
-		uploadedRecords = 0
-		deletedRecords = 0
-		self._logger.begin()
-		records = self.listRecords(server, from_, token, self._repository.set)
-		self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
-		for record in records:
-			harvestedRecords += 1
-			uploadcount, deletecount = self.uploadRecord(record.header, record.metadata)
-			uploadedRecords += uploadcount
-			deletedRecords += deletecount
-			self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
-		newtoken = getattr(records.parentNode, 'resumptionToken', None)
-		self._logger.done()
-		return uploadedRecords == harvestedRecords, newtoken
-		
-	def uploadRecord(self, header, metadata):
-		upload = self._mapper.createEmptyUpload(self._repository, header, metadata)
-		
-		if header.status == "deleted":
-			self._uploader.delete(upload)
-			self._logger.logDeletedID(upload.id)
-			uploadresult = (0,1)
-		else:
-			upload = self._mapper.createUpload(self._repository, header, metadata, logger=self._eventlogger)
-			if upload:
-				self._uploader.send(upload)
-				self._logger.logID(upload.id)
-				uploadresult = (1,0)
-			else:
-				uploadresult = (0,0)
-		return uploadresult
+    def uploaderInfo(self):
+        return self._uploader.info()
 
-	def _harvestLoop(self):
-		
-		try:
-			self._logger.startRepository(self._oairequest.identify().repositoryName)
-			result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
-			self._logger.endRepository(newtoken)
-		except:
-			self._logger.endWithException()
-			raise
+    def listRecords(self, server, from_, token, set):
+        if token:
+            return server.listRecords(resumptionToken=token)
+        elif from_:
+            if set:
+                return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+            return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+        elif set:
+            return server.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+        return server.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
-	def _harvest(self):
-		try:
-			self._logger.eventLogger().logLine('STARTHARVEST',self.uploaderInfo(),id=self._repository.id)
-			self._eventlogger.logLine("INFO", "Mappingname '%s'"%self._mapper.name, id=self._repository.id)
-			self._uploader.start()
-			try:
-				self._harvestLoop()
-			finally:
-				self._uploader.stop()
-		finally:
-			self._logger.eventLogger().logLine('ENDHARVEST','',id=self._repository.id)
-			
-	def harvest(self):
-		try:
-			if self._logger.hasWork():
-				self._harvest()
-				return HARVESTED
-			else:
-				return NOTHING_TO_DO
-		finally:
-			self._logger.close()
+    def fetchRecords(self, server, from_, token, total):
+        harvestedRecords = 0
+        uploadedRecords = 0
+        deletedRecords = 0
+        self._logger.begin()
+        records = self.listRecords(server, from_, token, self._repository.set)
+        self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
+        for record in records:
+            harvestedRecords += 1
+            uploadcount, deletecount = self.uploadRecord(record.header, record.metadata,
+            record.about)
+            uploadedRecords += uploadcount
+            deletedRecords += deletecount
+            self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
+        newtoken = getattr(records.parentNode, 'resumptionToken', None)
+        self._logger.done()
+        return uploadedRecords == harvestedRecords, newtoken
+
+    def uploadRecord(self, header, metadata, about):
+        upload = self._mapper.createEmptyUpload(self._repository, header, metadata, about)
+
+        if header.status == "deleted":
+            self._uploader.delete(upload)
+            self._logger.logDeletedID(upload.id)
+            uploadresult = (0,1)
+        else:
+            upload = self._mapper.createUpload(self._repository, header, metadata, about, logger=self._eventlogger)
+            if upload:
+                self._uploader.send(upload)
+                self._logger.logID(upload.id)
+                uploadresult = (1,0)
+            else:
+                uploadresult = (0,0)
+        return uploadresult
+
+    def _harvestLoop(self):
+
+        try:
+            self._logger.startRepository(self._oairequest.identify().repositoryName)
+            result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
+            self._logger.endRepository(newtoken)
+        except:
+            self._logger.endWithException()
+            raise
+
+    def _harvest(self):
+        try:
+            self._logger.eventLogger().logLine('STARTHARVEST',self.uploaderInfo(),id=self._repository.id)
+            self._eventlogger.logLine("INFO", "Mappingname '%s'"%self._mapper.name, id=self._repository.id)
+            self._uploader.start()
+            try:
+                self._harvestLoop()
+            finally:
+                self._uploader.stop()
+        finally:
+            self._logger.eventLogger().logLine('ENDHARVEST','',id=self._repository.id)
+
+    def harvest(self):
+        try:
+            if self._logger.hasWork():
+                self._harvest()
+                return HARVESTED
+            else:
+                return NOTHING_TO_DO
+        finally:
+            self._logger.close()

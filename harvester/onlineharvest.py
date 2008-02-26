@@ -30,50 +30,50 @@ from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
 
 class OnlineHarvest:
-	def __init__(self, outputstream):
-		self._output = outputstream
-		self.eventlogger = StreamEventLogger(self._output)
-	
-	def performMapping(self, mapping, urlString):
-		doAssertions=True
-		xml = wrapp(binderytools.bind_uri(urlString))
-		records = xml.OAI_PMH.ListRecords.record
-		for record in records:
-			try:
-				upload = mapping.createEmptyUpload(TestRepository, record.header, record.metadata)
-				if record.header.status == "deleted":
-					self.writeDelete(upload)
-				else:
-					upload = mapping.createUpload(TestRepository, record.header, record.metadata, self.eventlogger, doAssertions)
-					if upload != None:
-						self.writeUpload(upload)
-			except DataMapAssertionException, ex:
-				self.writeLine('AssertionError: '+str(ex))
-			
-	def _writeId(self, anUpload):
-		self.writeLine('')
-		self.writeLine('upload.id='+anUpload.id)
-	
-	def writeDelete(self, anUpload):
-		self._writeId(anUpload)
-		self.writeLine('DELETED')
-	
-	def writeUpload(self, anUpload):
-		self._writeId(anUpload)
-		self.writeLine('-v- upload.fields -v-')
-		for k,v in anUpload.fields.items():
-			self.writeLine('  '+k+'='+v)
-		self.writeLine('-^- upload.fields -^-')
-		for partname, part in anUpload.parts.items():
-			self.writeLine('-v- part %s -v-' % partname)
-			self.writeLine(part)
-			self.writeLine('-^- part -^-')
-			
-				
-	def writeLine(self, line):
-		self._output.write(line + '\n')
-		self._output.flush()
-		
+    def __init__(self, outputstream):
+        self._output = outputstream
+        self.eventlogger = StreamEventLogger(self._output)
+
+    def performMapping(self, mapping, urlString):
+        doAssertions=True
+        xml = wrapp(binderytools.bind_uri(urlString))
+        records = xml.OAI_PMH.ListRecords.record
+        for record in records:
+            try:
+                upload = mapping.createEmptyUpload(TestRepository, record.header, record.metadata, record.about)
+                if record.header.status == "deleted":
+                    self.writeDelete(upload)
+                else:
+                    upload = mapping.createUpload(TestRepository, record.header, record.metadata, record.about, self.eventlogger, doAssertions)
+                    if upload != None:
+                        self.writeUpload(upload)
+            except DataMapAssertionException, ex:
+                self.writeLine('AssertionError: '+str(ex))
+
+    def _writeId(self, anUpload):
+        self.writeLine('')
+        self.writeLine('upload.id='+anUpload.id)
+
+    def writeDelete(self, anUpload):
+        self._writeId(anUpload)
+        self.writeLine('DELETED')
+
+    def writeUpload(self, anUpload):
+        self._writeId(anUpload)
+        self.writeLine('-v- upload.fields -v-')
+        for k,v in anUpload.fields.items():
+            self.writeLine('  '+k+'='+v)
+        self.writeLine('-^- upload.fields -^-')
+        for partname, part in anUpload.parts.items():
+            self.writeLine('-v- part %s -v-' % partname)
+            self.writeLine(part)
+            self.writeLine('-^- part -^-')
+
+
+    def writeLine(self, line):
+        self._output.write(line + '\n')
+        self._output.flush()
+
 #	def harvest(self, repositorykey, resumptionToken = None, mockRequest = None):
 #		repository = getRepository(repositorykey)
 #		repository.ssetarget =  self.ssetarget

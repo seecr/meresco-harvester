@@ -32,74 +32,74 @@ from cq2utils.wrappers import wrapp
 import os
 
 class OnlineHarvestTest(unittest.TestCase):
-	def setUp(self):
-		self.mock_createUpload_exception = ''
-		self._testpath = os.path.realpath(os.path.curdir)
-	
-	def testRealMapping(self):
-		output = StringIO()
-		mapping = Mapping('mappingId')
-		mapping.code = DEFAULT_DC_CODE
-		data = 'file://%s/mocktud/00002.xml' % self._testpath
-		harvest = OnlineHarvest(output)
-		harvest.performMapping(mapping, data)
-		self.assertEquals(3,output.getvalue().count('upload.id='))
+    def setUp(self):
+        self.mock_createUpload_exception = ''
+        self._testpath = os.path.realpath(os.path.curdir)
 
-	def testMapping(self):
-		output = StringIO()
-		mapping = self
-		data = 'file://%s/mocktud/00002.xml' % self._testpath
-		harvest = OnlineHarvest(output)
-		harvest.performMapping(mapping, data)
-		self.assertEquals(True, self.createUpload_args['doAssertions'])
-		
-	def testMappingWithDeletedRecord(self):
-		output = StringIO()
-		mapping = Mapping('mappingId')
-		mapping.code = DEFAULT_DC_CODE
-		data = 'file://%s/mocktud/00003.xml' % self._testpath
-		harvest = OnlineHarvest(output)
-		harvest.performMapping(mapping, data)
-		self.assertEquals("upload.id=repository.id:oai:tudelft.nl:107087\nDELETED", output.getvalue().strip())
-		
-	def testMappingRaisesDataMapAssertionException(self):
-		output = StringIO()
-		mapping = self
-		self.mock_createUpload_exception=DataMapAssertionException('O no, it\'s a snake!!')
-		data = 'file://%s/mocktud/00002.xml' % self._testpath
-		harvest = OnlineHarvest(output)
-		harvest.performMapping(mapping, data)
-		self.assertEquals(2,output.getvalue().count('upload.id='))
-		
-	def testMappingRaisesException(self):
-		output = StringIO()
-		mapping = self
-		self.mock_createUpload_exception=Exception('Mushroom, mushroom')
-		data = 'file://%s/mocktud/00002.xml' % self._testpath
-		harvest = OnlineHarvest(output)
-		try:
-			harvest.performMapping(mapping, data)
-			self.fail()
-		except Exception, ex:
-			self.assertEquals('Mushroom, mushroom',str(ex))
-		self.assertEquals('',output.getvalue())
-		
+    def testRealMapping(self):
+        output = StringIO()
+        mapping = Mapping('mappingId')
+        mapping.code = DEFAULT_DC_CODE
+        data = 'file://%s/mocktud/00002.xml' % self._testpath
+        harvest = OnlineHarvest(output)
+        harvest.performMapping(mapping, data)
+        self.assertEquals(3,output.getvalue().count('upload.id='))
 
-		
-	#mocking
-	def createUpload(self, repository, header, metadata, logger=None, doAssertions=False):
-		self.createUpload_args={'doAssertions':doAssertions}
-		if self.mock_createUpload_exception:
-			ex = self.mock_createUpload_exception
-			self.mock_createUpload_exception = None
-			raise ex
-		upload = Upload()
-		return upload
-	
-	def createEmptyUpload(self, repository, header, metadata):
-		upload = Upload()
-		upload.init(repository, header, metadata)
-		return upload
+    def testMapping(self):
+        output = StringIO()
+        mapping = self
+        data = 'file://%s/mocktud/00002.xml' % self._testpath
+        harvest = OnlineHarvest(output)
+        harvest.performMapping(mapping, data)
+        self.assertEquals(True, self.createUpload_args['doAssertions'])
 
-		
+    def testMappingWithDeletedRecord(self):
+        output = StringIO()
+        mapping = Mapping('mappingId')
+        mapping.code = DEFAULT_DC_CODE
+        data = 'file://%s/mocktud/00003.xml' % self._testpath
+        harvest = OnlineHarvest(output)
+        harvest.performMapping(mapping, data)
+        self.assertEquals("upload.id=repository.id:oai:tudelft.nl:107087\nDELETED", output.getvalue().strip())
+
+    def testMappingRaisesDataMapAssertionException(self):
+        output = StringIO()
+        mapping = self
+        self.mock_createUpload_exception=DataMapAssertionException('O no, it\'s a snake!!')
+        data = 'file://%s/mocktud/00002.xml' % self._testpath
+        harvest = OnlineHarvest(output)
+        harvest.performMapping(mapping, data)
+        self.assertEquals(2,output.getvalue().count('upload.id='))
+
+    def testMappingRaisesException(self):
+        output = StringIO()
+        mapping = self
+        self.mock_createUpload_exception=Exception('Mushroom, mushroom')
+        data = 'file://%s/mocktud/00002.xml' % self._testpath
+        harvest = OnlineHarvest(output)
+        try:
+            harvest.performMapping(mapping, data)
+            self.fail()
+        except Exception, ex:
+            self.assertEquals('Mushroom, mushroom',str(ex))
+        self.assertEquals('',output.getvalue())
+
+
+
+    #mocking
+    def createUpload(self, repository, header, metadata, about, logger=None, doAssertions=False):
+        self.createUpload_args={'doAssertions':doAssertions}
+        if self.mock_createUpload_exception:
+            ex = self.mock_createUpload_exception
+            self.mock_createUpload_exception = None
+            raise ex
+        upload = Upload()
+        return upload
+
+    def createEmptyUpload(self, repository, header, metadata, about):
+        upload = Upload()
+        upload.init(repository, header, metadata, about)
+        return upload
+
+
 if __name__ == '__main__': unittest.main()
