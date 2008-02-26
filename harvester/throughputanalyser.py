@@ -31,6 +31,7 @@ from datetime import datetime
 NUMBERS_RE = re.compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 from itertools import imap, ifilter
 from cgi import escape as escapeXml
+from os.path import isfile
 
 def parseToTime(dateString):
 	dateList = list((strptime(dateString.split(".")[0],"%Y-%m-%d %H:%M:%S"))[:6])
@@ -79,8 +80,12 @@ class ThroughputAnalyser:
 		return report
 		
 	def _analyseRepository(self, repositoryName, dateSince):
-		events = open(os.path.join(self.eventpath, repositoryName + '.events'))
+		reportfile = os.path.join(self.eventpath, repositoryName + '.events')
+
 		records, seconds = 0, 0.0
+		if not isfile(reportfile):
+			return records, seconds
+		events = open(reportfile)
 		try:
 			split = lambda l:map(str.strip, l.split('\t'))
 			begintime = None

@@ -106,7 +106,12 @@ class ThroughputAnalyserTest(unittest.TestCase):
 			self.assertEquals(0, records)
 			self.assertEquals(0.0, seconds)
 			
-		
+	def testReportOnEmptyEventsFile(self):
+		t = ThroughputAnalyser(eventpath = self.testdir)
+		records, seconds = t._analyseRepository('repo1', '2006-08-31')
+                self.assertEquals(0, records)
+                self.assertEquals(0, seconds)
+
 	def testReport(self):
 		report = ThroughputReport()
 		report.add(100000,10000.0)
