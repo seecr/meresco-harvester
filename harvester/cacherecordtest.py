@@ -33,16 +33,16 @@ from cq2utils import binderytools
 from cq2utils.wrappers import wrapp
 
 class CacheRecordTest(unittest.TestCase):
-	def testGetPartlyXML(self):
-		xml = """<?xml version="1.0" encoding="UTF-8"?>
+    def testGetPartlyXML(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <ListRecords>
 <record>
-	<header>1</header>
+    <header>1</header>
 </record>
-	<record><header>2</header></record>
+    <record><header>2</header></record>
 </ListRecords>"""
-		w = wrapp(binderytools.bind_string(xml))
-		records = w.ListRecords.record
-		self.assertEquals('<record>\n\t<header>1</header>\n</record>',records.xml())
-		self.assertEquals('<record>\n\t<header>1</header>\n</record>',records[0].xml())
-		self.assertEquals('<record><header>2</header></record>',records[1].xml())
+        w = wrapp(binderytools.bind_string(xml))
+        records = w.ListRecords.record
+        self.assertEquals('<record>\n    <header>1</header>\n</record>',records.xml())
+        self.assertEquals('<record>\n    <header>1</header>\n</record>',records[0].xml())
+        self.assertEquals('<record><header>2</header></record>',records[1].xml())

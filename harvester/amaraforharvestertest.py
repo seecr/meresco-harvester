@@ -28,12 +28,12 @@ from cq2utils import binderytools
 
 class AmaraForHarvesterTest(unittest.TestCase):
 
-	def testParsingOfNodeWithLocalInName(self):
-		binderytools.bind_string('<a><local/></a>')
+    def testParsingOfNodeWithLocalInName(self):
+        binderytools.bind_string('<a><local/></a>')
 
-	def testParsingOfNodeWithLocalInAttribute(self):
-		binderytools.bind_string('<a><b local="yes"/></a>')
+    def testParsingOfNodeWithLocalInAttribute(self):
+        binderytools.bind_string('<a><b local="yes"/></a>')
 
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

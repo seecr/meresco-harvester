@@ -25,21 +25,21 @@
 ## end license ##
 
 class SaharaObject:
-	
-	def __init__(self, attr, listattr = []):
-		self._attr = attr
-		self._listattr = listattr
-		self._initAttributes()
-		self._saharaget = None
-	
-	def _initAttributes(self):
-		for attr in self._attr + self._listattr:
-			setattr(self, attr, None)
-			
-	def fill(self, saharaget, xml):
-		for attr in self._attr:
-			setattr(self, attr, str(getattr(xml, attr, None)))
-		for attr in self._listattr:
-			setattr(self, attr, map(str, getattr(xml, attr, None)))
-		self._saharaget = saharaget
+    
+    def __init__(self, attr, listattr = []):
+        self._attr = attr
+        self._listattr = listattr
+        self._initAttributes()
+        self._saharaget = None
+    
+    def _initAttributes(self):
+        for attr in self._attr + self._listattr:
+            setattr(self, attr, None)
+            
+    def fill(self, saharaget, xml):
+        for attr in self._attr:
+            setattr(self, attr, str(getattr(xml, attr, None)))
+        for attr in self._listattr:
+            setattr(self, attr, map(str, getattr(xml, attr, None)))
+        self._saharaget = saharaget
 

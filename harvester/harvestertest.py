@@ -94,7 +94,7 @@ class HarvesterTest(unittest.TestCase):
 
     def LIVE_test_LIVE_Data(self):
         server = self.createServer('http://arno.uvt.nl/~arno/arno-1.2/oai/wo.uvt.nl.cgi')
-        record = server.getRecord(identifier=	'oai:wo.uvt.nl:155002', metadataPrefix='oai_dc')
+        record = server.getRecord(identifier=    'oai:wo.uvt.nl:155002', metadataPrefix='oai_dc')
         print record.header.identifier
         print record.metadata.dc.title
 

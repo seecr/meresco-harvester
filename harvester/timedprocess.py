@@ -32,37 +32,37 @@ import os, sys
 from threading import Timer
 
 class TimedProcess:
-	def __init__(self):
-		self._wasTimeout = False
-		self._wasSuccess = False
-		self._pid = -1
-		self._signal=9
-			
-	def wasSuccess(self):
-		return self._wasSuccess
+    def __init__(self):
+        self._wasTimeout = False
+        self._wasSuccess = False
+        self._pid = -1
+        self._signal=9
+            
+    def wasSuccess(self):
+        return self._wasSuccess
 
-	def wasTimeout(self):
-		return self._wasTimeout
-	
-	def setTimedOut(self):
-		self._wasTimeout = True
-		self._wasSuccess = False
-		
-	def terminate(self):
-		if self._pid != -1:
-			os.kill(self._pid, self._signal)
-		self._wasTimeout = True
-		self.timer.cancel()
+    def wasTimeout(self):
+        return self._wasTimeout
+    
+    def setTimedOut(self):
+        self._wasTimeout = True
+        self._wasSuccess = False
+        
+    def terminate(self):
+        if self._pid != -1:
+            os.kill(self._pid, self._signal)
+        self._wasTimeout = True
+        self.timer.cancel()
 
-	def executeScript(self, args, timeout, signal=9):
-		self._signal = signal
-		self._pid = os.spawnvp(os.P_NOWAIT, sys.executable,
-			[sys.executable] + args)
-		self.timer = Timer(timeout, self.terminate)
-		self.timer.start()
-		os.waitpid(self._pid, 0)
+    def executeScript(self, args, timeout, signal=9):
+        self._signal = signal
+        self._pid = os.spawnvp(os.P_NOWAIT, sys.executable,
+            [sys.executable] + args)
+        self.timer = Timer(timeout, self.terminate)
+        self.timer.start()
+        os.waitpid(self._pid, 0)
 
-		if not self._wasTimeout:
-			self.timer.cancel()
-			self._wasSuccess = True
-			self._wasTimeout = False
+        if not self._wasTimeout:
+            self.timer.cancel()
+            self._wasSuccess = True
+            self._wasTimeout = False

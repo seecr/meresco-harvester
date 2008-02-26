@@ -32,38 +32,38 @@ from virtualuploader import VirtualUploader, UploaderFactory
 from target import Target
 
 class CompositeUploader(VirtualUploader):
-	
-	def __init__(self, aTarget, aLogger, aCollection):
-		VirtualUploader.__init__(self, aLogger)
-		self._collection = aCollection
-		self._target = aTarget
-		self._delegates = self._getDelegates()
-		
-	def _getDelegates(self):
-		result = []
-		factory = UploaderFactory()
-		for id in self._target.delegate:
-			target = self._target._saharaget.getTarget(self._target.domainId, id)
-			uploader = factory.createUploader(target, self._logger, self._collection)
-			result.append(uploader)
-		return result
-	
-	def start(self):
-		for delegate in self._delegates:
-			delegate.start()
-	
-	def stop(self):
-		for delegate in self._delegates:
-			delegate.stop()
-		
-	def send(self, anUpload):
-		for delegate in self._delegates:
-			delegate.send(anUpload)
-	
-	def delete(self, uploadId):
-		for delegate in self._delegates:
-			delegate.delete(uploadId)
-	
-	def info(self):
-		result = []
-		return "Composite Uploader: " + str(result)
+    
+    def __init__(self, aTarget, aLogger, aCollection):
+        VirtualUploader.__init__(self, aLogger)
+        self._collection = aCollection
+        self._target = aTarget
+        self._delegates = self._getDelegates()
+        
+    def _getDelegates(self):
+        result = []
+        factory = UploaderFactory()
+        for id in self._target.delegate:
+            target = self._target._saharaget.getTarget(self._target.domainId, id)
+            uploader = factory.createUploader(target, self._logger, self._collection)
+            result.append(uploader)
+        return result
+    
+    def start(self):
+        for delegate in self._delegates:
+            delegate.start()
+    
+    def stop(self):
+        for delegate in self._delegates:
+            delegate.stop()
+        
+    def send(self, anUpload):
+        for delegate in self._delegates:
+            delegate.send(anUpload)
+    
+    def delete(self, uploadId):
+        for delegate in self._delegates:
+            delegate.delete(uploadId)
+    
+    def info(self):
+        result = []
+        return "Composite Uploader: " + str(result)

@@ -34,63 +34,63 @@ from target import Target
 from mapping import Mapping
 
 class SaharaGet:
-	def __init__(self, saharaurl, doSetActionDone=True):
-		self.doSetActionDone = doSetActionDone
-		self.saharaurl = saharaurl
-		
-	def getRepository(self, domainId, repositoryId):
-		response = self._get(verb = 'GetRepository',
-									domainId = domainId,
-									repositoryId = repositoryId)
-		xml = response.saharaget.GetRepository.repository
-		repository = Repository(domainId, repositoryId)
-		repository.fill(self, xml)
-		repository._copyOldStuff()
-		return repository
-	
-	def getTarget(self, domainId, targetId):
-		response = self._get(verb = 'GetTarget',
-									domainId = domainId,
-									targetId = targetId)
-		xml = response.saharaget.GetTarget.target
-		target = Target(targetId)
-		target.fill(self, xml)
-		target.domainId = domainId
-		return target
-	
-	def getMapping(self, domainId, mappingId):
-		response = self._get(verb = 'GetMapping',
-									domainId = domainId,
-									mappingId = mappingId)
-		xml = response.saharaget.GetMapping.mapping
-		mapping = Mapping(mappingId)
-		mapping.fill(self, xml)
-		return mapping
-	
-	def getRepositoryIds(self, domainId):
-		response = self._get(verb = 'GetRepositories',
-									domainId = domainId)
-		repositories = response.saharaget.GetRepositories.repository
-		result = []
-		for repository in repositories:
-			result.append(str(repository.id))
-		return result
-	
-	def repositoryActionDone(self, domainId, repositoryId):
-		if self.doSetActionDone:
-			saharageturl = '%s/setactiondone?' % self.saharaurl + \
-				urlencode({'domainId': domainId, 'repositoryId': repositoryId})
-			binderytools.bind_uri(saharageturl)
+    def __init__(self, saharaurl, doSetActionDone=True):
+        self.doSetActionDone = doSetActionDone
+        self.saharaurl = saharaurl
+        
+    def getRepository(self, domainId, repositoryId):
+        response = self._get(verb = 'GetRepository',
+                                    domainId = domainId,
+                                    repositoryId = repositoryId)
+        xml = response.saharaget.GetRepository.repository
+        repository = Repository(domainId, repositoryId)
+        repository.fill(self, xml)
+        repository._copyOldStuff()
+        return repository
+    
+    def getTarget(self, domainId, targetId):
+        response = self._get(verb = 'GetTarget',
+                                    domainId = domainId,
+                                    targetId = targetId)
+        xml = response.saharaget.GetTarget.target
+        target = Target(targetId)
+        target.fill(self, xml)
+        target.domainId = domainId
+        return target
+    
+    def getMapping(self, domainId, mappingId):
+        response = self._get(verb = 'GetMapping',
+                                    domainId = domainId,
+                                    mappingId = mappingId)
+        xml = response.saharaget.GetMapping.mapping
+        mapping = Mapping(mappingId)
+        mapping.fill(self, xml)
+        return mapping
+    
+    def getRepositoryIds(self, domainId):
+        response = self._get(verb = 'GetRepositories',
+                                    domainId = domainId)
+        repositories = response.saharaget.GetRepositories.repository
+        result = []
+        for repository in repositories:
+            result.append(str(repository.id))
+        return result
+    
+    def repositoryActionDone(self, domainId, repositoryId):
+        if self.doSetActionDone:
+            saharageturl = '%s/setactiondone?' % self.saharaurl + \
+                urlencode({'domainId': domainId, 'repositoryId': repositoryId})
+            binderytools.bind_uri(saharageturl)
 
-	def _get(self, **kwargs):
-		response = self._read(**kwargs)
-		if str(response.saharaget.error.code):
-			raise SaharaGetException(str(response.saharaget.error))
-		return response
-		
-	def _read(self, **kwargs):
-		saharageturl = '%s/saharaget?%s' % (self.saharaurl, urlencode(kwargs))
-		return wrapp(binderytools.bind_uri(saharageturl))
-		
+    def _get(self, **kwargs):
+        response = self._read(**kwargs)
+        if str(response.saharaget.error.code):
+            raise SaharaGetException(str(response.saharaget.error))
+        return response
+        
+    def _read(self, **kwargs):
+        saharageturl = '%s/saharaget?%s' % (self.saharaurl, urlencode(kwargs))
+        return wrapp(binderytools.bind_uri(saharageturl))
+        
 class SaharaGetException(Exception):
-	pass
+    pass

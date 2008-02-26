@@ -34,36 +34,36 @@ import re
 tokenRE=re.compile(".*<resumptionToken.*>(?P<token>.*)</resumptionToken>.*")
 
 def fetchPage(url, filename, token=None):
-	args = {'verb':'ListRecords', 'metadataPrefix':'oai_dc'}
-	
-	if token:
-		filename = filename + "." + token
-		args['resumptionToken'] = token
-		del(args['metadataPrefix'])
-	
-	filename = filename + ".xml"
-	file = open(filename, 'w+')
-	try:
-		newToken = None
-		newUrl = url + "?" + urllib.urlencode(args)
-		print newUrl
-		stream = urllib2.urlopen(newUrl)
-		asString = stream.read()
-		matchResult = tokenRE.match(asString[-10000:])
-		if matchResult:
-			newToken = matchResult.groupdict()['token']
-		file.write(asString)
-	finally:
-		file.close()
-	return newToken
+    args = {'verb':'ListRecords', 'metadataPrefix':'oai_dc'}
+    
+    if token:
+        filename = filename + "." + token
+        args['resumptionToken'] = token
+        del(args['metadataPrefix'])
+    
+    filename = filename + ".xml"
+    file = open(filename, 'w+')
+    try:
+        newToken = None
+        newUrl = url + "?" + urllib.urlencode(args)
+        print newUrl
+        stream = urllib2.urlopen(newUrl)
+        asString = stream.read()
+        matchResult = tokenRE.match(asString[-10000:])
+        if matchResult:
+            newToken = matchResult.groupdict()['token']
+        file.write(asString)
+    finally:
+        file.close()
+    return newToken
 
 def main(url, filename):
-	done = False
-	token = None
-	while not done:
-		token = fetchPage(url, filename, token)
-		if token == None:
-			break
-		
+    done = False
+    token = None
+    while not done:
+        token = fetchPage(url, filename, token)
+        if token == None:
+            break
+        
 if __name__ == "__main__":
-	main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2])

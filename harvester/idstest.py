@@ -29,54 +29,54 @@ from mytestcase import MyTestCase
 from ids import Ids
 
 class IdsTest(MyTestCase):
-	def tearDown(self):
-		ids = getattr(self, 'ids', None)
-		if ids: ids.close()
-		MyTestCase.tearDown(self)
-		
-	def testAddOne(self):
-		self.ids = Ids(self.testdir, 'idstest')
-		self.ids.add('id:1')
-		self.assertEquals(1, self.ids.total())
-		
-	def testAddTwice(self):
-		self.ids = Ids(self.testdir, 'idstest')
-		self.ids.add('id:1')
-		self.ids.add('id:1')
-		self.assertEquals(1, self.ids.total())
-		
-	def testInit(self):
-		self.writeTestIds('one',['id:1'])
-		self.ids = Ids(self.testdir, 'one')
-		self.assertEquals(1, self.ids.total())
-		self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-		self.ids = Ids(self.testdir, 'three')
-		self.assertEquals(3, self.ids.total())
-		
-	def testRemoveExistingId(self):
-		self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-		self.ids = Ids(self.testdir, 'three')
-		self.ids.remove('id:1')
-		self.assertEquals(2, self.ids.total())
-		self.ids.close()
-		self.assertEquals(2, len(open(self.testdir + '/three.ids').readlines()))
-		
-	def testRemoveExistingId(self):
-		self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-		self.ids = Ids(self.testdir, 'three')
-		self.ids.remove('id:4')
-		self.assertEquals(3, self.ids.total())
-		self.ids.close()
-		self.assertEquals(3, len(open(self.testdir + '/three.ids').readlines()))
-		
-		
-	def writeTestIds(self, name, ids):
-		w = open(self.testdir+ '/' + name + '.ids', 'w')
-		try:
-			for anId in ids:
-				w.write(anId + '\n')
-		finally:
-			w.close()
+    def tearDown(self):
+        ids = getattr(self, 'ids', None)
+        if ids: ids.close()
+        MyTestCase.tearDown(self)
+        
+    def testAddOne(self):
+        self.ids = Ids(self.testdir, 'idstest')
+        self.ids.add('id:1')
+        self.assertEquals(1, self.ids.total())
+        
+    def testAddTwice(self):
+        self.ids = Ids(self.testdir, 'idstest')
+        self.ids.add('id:1')
+        self.ids.add('id:1')
+        self.assertEquals(1, self.ids.total())
+        
+    def testInit(self):
+        self.writeTestIds('one',['id:1'])
+        self.ids = Ids(self.testdir, 'one')
+        self.assertEquals(1, self.ids.total())
+        self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
+        self.ids = Ids(self.testdir, 'three')
+        self.assertEquals(3, self.ids.total())
+        
+    def testRemoveExistingId(self):
+        self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
+        self.ids = Ids(self.testdir, 'three')
+        self.ids.remove('id:1')
+        self.assertEquals(2, self.ids.total())
+        self.ids.close()
+        self.assertEquals(2, len(open(self.testdir + '/three.ids').readlines()))
+        
+    def testRemoveExistingId(self):
+        self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
+        self.ids = Ids(self.testdir, 'three')
+        self.ids.remove('id:4')
+        self.assertEquals(3, self.ids.total())
+        self.ids.close()
+        self.assertEquals(3, len(open(self.testdir + '/three.ids').readlines()))
+        
+        
+    def writeTestIds(self, name, ids):
+        w = open(self.testdir+ '/' + name + '.ids', 'w')
+        try:
+            for anId in ids:
+                w.write(anId + '\n')
+        finally:
+            w.close()
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

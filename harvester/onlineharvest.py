@@ -74,7 +74,7 @@ class OnlineHarvest:
         self._output.write(line + '\n')
         self._output.flush()
 
-#	def harvest(self, repositorykey, resumptionToken = None, mockRequest = None):
-#		repository = getRepository(repositorykey)
-#		repository.ssetarget =  self.ssetarget
-#		harvester = Harvester(repository, None)
+#    def harvest(self, repositorykey, resumptionToken = None, mockRequest = None):
+#        repository = getRepository(repositorykey)
+#        repository.ssetarget =  self.ssetarget
+#        harvester = Harvester(repository, None)

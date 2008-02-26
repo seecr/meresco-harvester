@@ -41,75 +41,75 @@ from sets import Set
 from mapping import Upload
 
 def readIds(filename):
-	ids = Set()
-	f = open(filename)
-	try:
-		for id in filter(None, map(strip,f)):
-			ids.add(id)
-		return ids
-	finally:
-		f.close()
+    ids = Set()
+    f = open(filename)
+    try:
+        for id in filter(None, map(strip,f)):
+            ids.add(id)
+        return ids
+    finally:
+        f.close()
 
 def writeIds(filename, ids):
-	f = open(filename,'w')
-	try:
-		for id in ids:
-			f.write(id)
-			f.write('\n')
-	finally:
-		f.close()
+    f = open(filename,'w')
+    try:
+        for id in ids:
+            f.write(id)
+            f.write('\n')
+    finally:
+        f.close()
 
 
 class DeleteIds:
-	def __init__(self, repository, logpath):
-		self.logpath = logpath
-		self.repository = repository
-		self.logger = EventLogger(os.path.join(logpath,'deleteids.log'))
-		self.filename = idfilename(self.logpath,self.repository.id)
-		self.markLogger = True
-					
-	def ids(self):
-		return readIds(self.filename)
-		
-	def delete(self, trials = 3):
-		uploader = self.repository.createUploader(self.logger)
-		uploader.start()
-		try:
-			trials = min(10, max(1, trials))
-			for i in range(trials):
-				remaining = self._delete(uploader)
-				if not remaining:
-					break
-		finally:
-			uploader.stop()
-	
-	def deleteFile(self, filename):
-		self.filename = filename
-		self.markLogger = False
-		self.delete()
-		
-	def _delete(self, uploader):
-		ids = self.ids()
-		done = Set()
-		exceptions = []
-		try:
-			for id in ids:
-				try:
-					anUpload = Upload()
-					anUpload.id = id
-					uploader.delete(anUpload)
-					done.add(id)
-				except UploaderException, e:
-					exceptions.append((id,e))
-			return ids - done
-		finally:
-			self._finish(ids - done)
-			
-	def _finish(self, remainingIDs):
-		writeIds(self.filename, remainingIDs)
-		if self.markLogger and not remainingIDs:
-			logger = HarvesterLog(self.logpath,self.repository.id)
-			try:
-				logger.markDeleted()
-			finally:
-				logger.close()
+    def __init__(self, repository, logpath):
+        self.logpath = logpath
+        self.repository = repository
+        self.logger = EventLogger(os.path.join(logpath,'deleteids.log'))
+        self.filename = idfilename(self.logpath,self.repository.id)
+        self.markLogger = True
+                    
+    def ids(self):
+        return readIds(self.filename)
+        
+    def delete(self, trials = 3):
+        uploader = self.repository.createUploader(self.logger)
+        uploader.start()
+        try:
+            trials = min(10, max(1, trials))
+            for i in range(trials):
+                remaining = self._delete(uploader)
+                if not remaining:
+                    break
+        finally:
+            uploader.stop()
+    
+    def deleteFile(self, filename):
+        self.filename = filename
+        self.markLogger = False
+        self.delete()
+        
+    def _delete(self, uploader):
+        ids = self.ids()
+        done = Set()
+        exceptions = []
+        try:
+            for id in ids:
+                try:
+                    anUpload = Upload()
+                    anUpload.id = id
+                    uploader.delete(anUpload)
+                    done.add(id)
+                except UploaderException, e:
+                    exceptions.append((id,e))
+            return ids - done
+        finally:
+            self._finish(ids - done)
+            
+    def _finish(self, remainingIDs):
+        writeIds(self.filename, remainingIDs)
+        if self.markLogger and not remainingIDs:
+            logger = HarvesterLog(self.logpath,self.repository.id)
+            try:
+                logger.markDeleted()
+            finally:
+                logger.close()

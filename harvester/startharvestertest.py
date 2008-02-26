@@ -32,13 +32,13 @@ import unittest, tempfile, os, shutil
 import startharvester
 
 class StartHarvesterTest(unittest.TestCase):
-	def setUp(self):
-		self.tempdir = tempfile.gettempdir()
-		self.testdir = self.tempdir + '/startharvestertest'
-		os.path.isdir(self.testdir) and shutil.rmtree(self.testdir)
-		os.makedirs(self.testdir)
-		
-	def testHarvest(self):
-		#startharvester.harvest('sahararep1',logpath=self.testdir)
-		pass
+    def setUp(self):
+        self.tempdir = tempfile.gettempdir()
+        self.testdir = self.tempdir + '/startharvestertest'
+        os.path.isdir(self.testdir) and shutil.rmtree(self.testdir)
+        os.makedirs(self.testdir)
+        
+    def testHarvest(self):
+        #startharvester.harvest('sahararep1',logpath=self.testdir)
+        pass
 

@@ -31,81 +31,81 @@ import tempfile
 from cStringIO import StringIO
 
 class RepositoryStatusTest(unittest.TestCase):
-	def setUp(self):
-		self.repositoryStatus = RepositoryStatus()
-	
-	def testZero(self):
-		self.assertEquals('', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('', self.repositoryStatus.harvested)
-		self.assertEquals('', self.repositoryStatus.uploaded)
-		self.assertEquals('', self.repositoryStatus.deleted)
-		self.assertEquals('', self.repositoryStatus.total)
-		self.assertEquals(0, len(self.repositoryStatus.errors))
-		
-	def testAddSucces(self):
-		self.repositoryStatus.addSucces('2006-03-13 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
-		self.assertEquals('2006-03-13T12:13:14Z', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('200', self.repositoryStatus.harvested)
-		self.assertEquals('199', self.repositoryStatus.uploaded)
-		self.assertEquals('1', self.repositoryStatus.deleted)
-		self.assertEquals('1542', self.repositoryStatus.total)
-		self.assertEquals(0, len(self.repositoryStatus.errors))
-	
-	def testAddSuccesDates(self):
-		self.repositoryStatus.addSucces('2006-03-01 12:13:14.456','Harvested/Uploaded/Deleted/Total: 300/297/3/1100')
-		self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
-		self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('200', self.repositoryStatus.harvested)
-		self.assertEquals('199', self.repositoryStatus.uploaded)
-		self.assertEquals('1', self.repositoryStatus.deleted)
-		self.assertEquals('1542', self.repositoryStatus.total)
-		self.assertEquals(0, len(self.repositoryStatus.errors))
-	
-	def testAddOnlyErrors(self):
-		self.repositoryStatus.addError('2006-03-01 12:13:14.456','Sorry, but the VM has crashed.')
-		self.assertEquals('', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('', self.repositoryStatus.harvested)
-		self.assertEquals('', self.repositoryStatus.uploaded)
-		self.assertEquals('', self.repositoryStatus.deleted)
-		self.assertEquals('', self.repositoryStatus.total)
-		self.assertEquals(1, len(self.repositoryStatus.errors))
-		self.assertEquals(('2006-03-01T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
-	
-	def testAddTwoErrors(self):
-		self.repositoryStatus.addError('2006-03-01 12:13:14.456','Sorry, but the VM has crashed.')
-		self.repositoryStatus.addError('2006-03-02 12:13:14.456','java.lang.NullPointerException.')
-		self.assertEquals('', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('', self.repositoryStatus.harvested)
-		self.assertEquals('', self.repositoryStatus.uploaded)
-		self.assertEquals('', self.repositoryStatus.deleted)
-		self.assertEquals('', self.repositoryStatus.total)
-		self.assertEquals(2, len(self.repositoryStatus.errors))
-		self.assertEquals(('2006-03-01T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
-		self.assertEquals(('2006-03-02T12:13:14Z','java.lang.NullPointerException.'), self.repositoryStatus.errors[1])
-	
-	def testAddErrorsAfterSucces(self):
-		self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
-		self.repositoryStatus.addError('2006-03-04 12:13:14.456','Sorry, but the VM has crashed.')
-		self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('200', self.repositoryStatus.harvested)
-		self.assertEquals('199', self.repositoryStatus.uploaded)
-		self.assertEquals('1', self.repositoryStatus.deleted)
-		self.assertEquals('1542', self.repositoryStatus.total)
-		self.assertEquals(1, len(self.repositoryStatus.errors))
-		self.assertEquals(('2006-03-04T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
-	
-	def testAddErrorsBeforeSucces(self):
-		self.repositoryStatus.addError('2006-03-02 12:13:14.456','Sorry, but the VM has crashed.')
-		self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
-		self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
-		self.assertEquals('200', self.repositoryStatus.harvested)
-		self.assertEquals('199', self.repositoryStatus.uploaded)
-		self.assertEquals('1', self.repositoryStatus.deleted)
-		self.assertEquals('1542', self.repositoryStatus.total)
-		self.assertEquals(0, len(self.repositoryStatus.errors))
-	
-	def testIntegration(self):
-		streamIn = StringIO("""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
+    def setUp(self):
+        self.repositoryStatus = RepositoryStatus()
+    
+    def testZero(self):
+        self.assertEquals('', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('', self.repositoryStatus.harvested)
+        self.assertEquals('', self.repositoryStatus.uploaded)
+        self.assertEquals('', self.repositoryStatus.deleted)
+        self.assertEquals('', self.repositoryStatus.total)
+        self.assertEquals(0, len(self.repositoryStatus.errors))
+        
+    def testAddSucces(self):
+        self.repositoryStatus.addSucces('2006-03-13 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
+        self.assertEquals('2006-03-13T12:13:14Z', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('200', self.repositoryStatus.harvested)
+        self.assertEquals('199', self.repositoryStatus.uploaded)
+        self.assertEquals('1', self.repositoryStatus.deleted)
+        self.assertEquals('1542', self.repositoryStatus.total)
+        self.assertEquals(0, len(self.repositoryStatus.errors))
+    
+    def testAddSuccesDates(self):
+        self.repositoryStatus.addSucces('2006-03-01 12:13:14.456','Harvested/Uploaded/Deleted/Total: 300/297/3/1100')
+        self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
+        self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('200', self.repositoryStatus.harvested)
+        self.assertEquals('199', self.repositoryStatus.uploaded)
+        self.assertEquals('1', self.repositoryStatus.deleted)
+        self.assertEquals('1542', self.repositoryStatus.total)
+        self.assertEquals(0, len(self.repositoryStatus.errors))
+    
+    def testAddOnlyErrors(self):
+        self.repositoryStatus.addError('2006-03-01 12:13:14.456','Sorry, but the VM has crashed.')
+        self.assertEquals('', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('', self.repositoryStatus.harvested)
+        self.assertEquals('', self.repositoryStatus.uploaded)
+        self.assertEquals('', self.repositoryStatus.deleted)
+        self.assertEquals('', self.repositoryStatus.total)
+        self.assertEquals(1, len(self.repositoryStatus.errors))
+        self.assertEquals(('2006-03-01T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
+    
+    def testAddTwoErrors(self):
+        self.repositoryStatus.addError('2006-03-01 12:13:14.456','Sorry, but the VM has crashed.')
+        self.repositoryStatus.addError('2006-03-02 12:13:14.456','java.lang.NullPointerException.')
+        self.assertEquals('', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('', self.repositoryStatus.harvested)
+        self.assertEquals('', self.repositoryStatus.uploaded)
+        self.assertEquals('', self.repositoryStatus.deleted)
+        self.assertEquals('', self.repositoryStatus.total)
+        self.assertEquals(2, len(self.repositoryStatus.errors))
+        self.assertEquals(('2006-03-01T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
+        self.assertEquals(('2006-03-02T12:13:14Z','java.lang.NullPointerException.'), self.repositoryStatus.errors[1])
+    
+    def testAddErrorsAfterSucces(self):
+        self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
+        self.repositoryStatus.addError('2006-03-04 12:13:14.456','Sorry, but the VM has crashed.')
+        self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('200', self.repositoryStatus.harvested)
+        self.assertEquals('199', self.repositoryStatus.uploaded)
+        self.assertEquals('1', self.repositoryStatus.deleted)
+        self.assertEquals('1542', self.repositoryStatus.total)
+        self.assertEquals(1, len(self.repositoryStatus.errors))
+        self.assertEquals(('2006-03-04T12:13:14Z','Sorry, but the VM has crashed.'), self.repositoryStatus.errors[0])
+    
+    def testAddErrorsBeforeSucces(self):
+        self.repositoryStatus.addError('2006-03-02 12:13:14.456','Sorry, but the VM has crashed.')
+        self.repositoryStatus.addSucces('2006-03-03 12:13:14.456','Harvested/Uploaded/Deleted/Total: 200/199/1/1542')
+        self.assertEquals('2006-03-03T12:13:14Z', self.repositoryStatus.lastSuccesDate)
+        self.assertEquals('200', self.repositoryStatus.harvested)
+        self.assertEquals('199', self.repositoryStatus.uploaded)
+        self.assertEquals('1', self.repositoryStatus.deleted)
+        self.assertEquals('1542', self.repositoryStatus.total)
+        self.assertEquals(0, len(self.repositoryStatus.errors))
+    
+    def testIntegration(self):
+        streamIn = StringIO("""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
 [2005-08-21 20:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 4/3/2/10
 [2005-08-22 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/16
 [2005-08-22 20:00:00.456]\tERROR\t[repositoryId]\tError 2
@@ -115,9 +115,9 @@ class RepositoryStatusTest(unittest.TestCase):
 [2005-08-24 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/20
 [2005-08-24 20:00:00.456]\tERROR\t[repositoryId]\tError With Scary Characters < & > " '
 """)
-		streamOut = StringIO()
-		self.repositoryStatus.main(streamIn, streamOut)
-		self.assertEquals("""<?xml version="1.0"?>
+        streamOut = StringIO()
+        self.repositoryStatus.main(streamIn, streamOut)
+        self.assertEquals("""<?xml version="1.0"?>
 <status>
   <lastHarvestDate>2005-08-24T00:00:00Z</lastHarvestDate>
   <harvested>8</harvested>
@@ -129,12 +129,12 @@ class RepositoryStatusTest(unittest.TestCase):
     <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
   </recenterrors>
 </status>""", streamOut.getvalue())
-		
-	def testZero(self):
-		streamIn = StringIO()
-		streamOut = StringIO()
-		self.repositoryStatus.main(streamIn, streamOut)
-		self.assertEquals("""<?xml version="1.0"?>
+        
+    def testZero(self):
+        streamIn = StringIO()
+        streamOut = StringIO()
+        self.repositoryStatus.main(streamIn, streamOut)
+        self.assertEquals("""<?xml version="1.0"?>
 <status>
   <lastHarvestDate></lastHarvestDate>
   <harvested></harvested>
@@ -146,4 +146,4 @@ class RepositoryStatusTest(unittest.TestCase):
 </status>""", streamOut.getvalue())
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

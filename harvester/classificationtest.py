@@ -30,74 +30,74 @@ import classification
 LOM = "<lom>%s</lom>"
 
 CLASSIFICATION = """<classification>
-	<purpose>
-		<source>
-			<langstring xml:lang="x-none">TPv1.0.2_anders</langstring>
-		</source>
-		<value>
-			<langstring xml:lang="nl">%s</langstring>
-		</value>
-	</purpose>
-	%s
+    <purpose>
+        <source>
+            <langstring xml:lang="x-none">TPv1.0.2_anders</langstring>
+        </source>
+        <value>
+            <langstring xml:lang="nl">%s</langstring>
+        </value>
+    </purpose>
+    %s
 </classification>"""
 
 TAXONPATH = """<taxonpath>%s</taxonpath>"""
 
 TAXON = """<taxon>
-	<id>%s</id>
-	<entry>
-	<langstring xml:lang="nl">%s</langstring>
-	</entry>
+    <id>%s</id>
+    <entry>
+    <langstring xml:lang="nl">%s</langstring>
+    </entry>
 </taxon>"""
 
 class ClassificationTest(unittest.TestCase):
-	def node(self, xmlString):
-		return binderytools.bind_string(xmlString).classification
-	
-	def nodes(self, xmlString):
-		return binderytools.bind_string(xmlString).lom.classification
-	
-	def testClassificationSinglePathSingleTAXON(self):
-		node = self.node(CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("382", "Bouw") ))
-		classificationResult = classification.fromNode(node)
-		self.assertEquals("discipline:/Bouw", classificationResult.flattenEntry())
-		self.assertEquals("discipline:/382", classificationResult.flattenId())
-		
-	def testClassificationSinglePathMultipleTAXONs(self):
-		TAXON382 = TAXON % ("382", "Bouw")
-		TAXON383 = TAXON % ("383", "Dakbedekking")
-		singlePathMultipleTAXONs = CLASSIFICATION % ("discipline", TAXONPATH % (TAXON382 + TAXON383))
+    def node(self, xmlString):
+        return binderytools.bind_string(xmlString).classification
+    
+    def nodes(self, xmlString):
+        return binderytools.bind_string(xmlString).lom.classification
+    
+    def testClassificationSinglePathSingleTAXON(self):
+        node = self.node(CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("382", "Bouw") ))
+        classificationResult = classification.fromNode(node)
+        self.assertEquals("discipline:/Bouw", classificationResult.flattenEntry())
+        self.assertEquals("discipline:/382", classificationResult.flattenId())
+        
+    def testClassificationSinglePathMultipleTAXONs(self):
+        TAXON382 = TAXON % ("382", "Bouw")
+        TAXON383 = TAXON % ("383", "Dakbedekking")
+        singlePathMultipleTAXONs = CLASSIFICATION % ("discipline", TAXONPATH % (TAXON382 + TAXON383))
 
-		node = self.node(singlePathMultipleTAXONs)
-		classificationResult = classification.fromNode(node)
-		
-		self.assertEquals("discipline:/Bouw/Dakbedekking; discipline:/Bouw", classificationResult.flattenEntry())
-		
-		self.assertEquals("discipline:/382/383; discipline:/382", classificationResult.flattenId())
-	
-	def testClassificationMultiplePaths(self):
-		path1 = TAXONPATH % TAXON % ("704", "Installatietechniek")
-		path2 = TAXONPATH % TAXON % ("3172", "Tabs en spaties    	")
-		path3 = TAXONPATH % TAXON % ("2479", "Branche")
-		multiplePaths = CLASSIFICATION % ("discipline", path1 + path2 + path3)
-		
-		node = self.node(multiplePaths)
-		classificationResult = classification.fromNode(node)
-		
-		self.assertEquals("discipline:/Installatietechniek; discipline:/Tabs en spaties; discipline:/Branche", classificationResult.flattenEntry())
-		
-	def testClassificationMultipleClassifications(self):
-		classification1 = CLASSIFICATION % ("education level", TAXONPATH % TAXON % ("xxx", "xxxxxx"))
-		classification2 = CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("704", "Installatietechniek"))
-		classification3 = CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("3172", "Tabs en spaties    	"))
-		
-		classifications = self.nodes(LOM % (classification1 + classification2 + classification3))
-		classificationResult = classification.aggregate(classifications)
-		
-		self.assertEquals("discipline:/Installatietechniek; discipline:/Tabs en spaties", classificationResult.flattenEntry("discipline"))
-		self.assertEquals(["discipline", "education level"], classificationResult.getPurposes())
-		self.assertEquals("", classificationResult.flattenEntry("not existing"))
-	
-	
+        node = self.node(singlePathMultipleTAXONs)
+        classificationResult = classification.fromNode(node)
+        
+        self.assertEquals("discipline:/Bouw/Dakbedekking; discipline:/Bouw", classificationResult.flattenEntry())
+        
+        self.assertEquals("discipline:/382/383; discipline:/382", classificationResult.flattenId())
+    
+    def testClassificationMultiplePaths(self):
+        path1 = TAXONPATH % TAXON % ("704", "Installatietechniek")
+        path2 = TAXONPATH % TAXON % ("3172", "Tabs en spaties        ")
+        path3 = TAXONPATH % TAXON % ("2479", "Branche")
+        multiplePaths = CLASSIFICATION % ("discipline", path1 + path2 + path3)
+        
+        node = self.node(multiplePaths)
+        classificationResult = classification.fromNode(node)
+        
+        self.assertEquals("discipline:/Installatietechniek; discipline:/Tabs en spaties; discipline:/Branche", classificationResult.flattenEntry())
+        
+    def testClassificationMultipleClassifications(self):
+        classification1 = CLASSIFICATION % ("education level", TAXONPATH % TAXON % ("xxx", "xxxxxx"))
+        classification2 = CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("704", "Installatietechniek"))
+        classification3 = CLASSIFICATION % ("discipline", TAXONPATH % TAXON % ("3172", "Tabs en spaties        "))
+        
+        classifications = self.nodes(LOM % (classification1 + classification2 + classification3))
+        classificationResult = classification.aggregate(classifications)
+        
+        self.assertEquals("discipline:/Installatietechniek; discipline:/Tabs en spaties", classificationResult.flattenEntry("discipline"))
+        self.assertEquals(["discipline", "education level"], classificationResult.getPurposes())
+        self.assertEquals("", classificationResult.flattenEntry("not existing"))
+    
+    
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

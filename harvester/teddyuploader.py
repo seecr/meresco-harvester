@@ -37,66 +37,66 @@ STANDARD_FIELD_LINE = """<field name="%s">%s</field>"""
 NO_TOKENIZE_FIELD_LINE = """<field name="%s" tokenize="false">%s</field>"""
 
 class TeddyUploader(VirtualUploader):
-	
-	def __init__(self, aTarget, aLogger, aCollection):
-		VirtualUploader.__init__(self, aLogger)
-		self._collection = aCollection
-		self._target = aTarget
-		self._growlClient = None
-	
-	def start(self):
-		self._sshlayer = sshclient.open(self._target.hostname, self._target.port, self._target.username, self._target.privateKey, self._target.command)
-		
-		self._growlClient = growlclient.GrowlClient(self._sshlayer)
-		self._growlClient.start()
-	
-	def stop(self):
-		self._growlClient.stop()
-		EOF = '\4'
-		self._sshlayer.write(EOF)
-		self._growlClient.waitForServerStop()
-		self._sshlayer.close()
-		#TODO future improvement:
-		#os.kill(self.pipe.pid, signal.SIGTERM) where self.pipe is a ref. to the original ssh-process. This demands some refactoring.
-		
-	def send(self, anUpload):
-		anId = anUpload.id
-		self.logLine('UPLOAD.SEND', 'START', id = anId)
-		self._growlClient.startDocument(anId)
-		
-		fields = self._prepareFieldList(anUpload)
-		stream = self._growlClient.startPart("fields", "text/xml")
-		self._writeFields(stream, fields, anUpload.getProperty('sortfields'))
-		self._growlClient.stopPart()
-		for partname, partvalue in anUpload.parts.items():
-			stream = self._growlClient.startPart(partname, "text/plain")
-			stream.write(xmlEscape(partvalue))
-			self._growlClient.stopPart()
-		self._growlClient.stopDocument()
-		self.logLine('UPLOAD.SEND', 'END', id = anId)
-	
-	def delete(self, anUpload):
-		self.logDelete(anUpload.id)
-		self._growlClient.delete(anUpload.id)
-	
-	def info(self):
-		return 'Uploader connected to: %s:%s (%s), collection: %s'%(self._target.baseurl, self._target.port, self._target.username, self._collection)
-	
-	def _prepareFieldList(self, anUpload):
-		fields = []
-		for k,v in anUpload.fields.items():
-			value = v
-			if not isinstance(v, list):
-				value = [v]
-				
-			for item in value:
-				fields.append((xmlEscape(k), xmlEscape(item)))
-		fields.append(('collection', xmlEscape(self._collection)))
-		return fields
+    
+    def __init__(self, aTarget, aLogger, aCollection):
+        VirtualUploader.__init__(self, aLogger)
+        self._collection = aCollection
+        self._target = aTarget
+        self._growlClient = None
+    
+    def start(self):
+        self._sshlayer = sshclient.open(self._target.hostname, self._target.port, self._target.username, self._target.privateKey, self._target.command)
+        
+        self._growlClient = growlclient.GrowlClient(self._sshlayer)
+        self._growlClient.start()
+    
+    def stop(self):
+        self._growlClient.stop()
+        EOF = '\4'
+        self._sshlayer.write(EOF)
+        self._growlClient.waitForServerStop()
+        self._sshlayer.close()
+        #TODO future improvement:
+        #os.kill(self.pipe.pid, signal.SIGTERM) where self.pipe is a ref. to the original ssh-process. This demands some refactoring.
+        
+    def send(self, anUpload):
+        anId = anUpload.id
+        self.logLine('UPLOAD.SEND', 'START', id = anId)
+        self._growlClient.startDocument(anId)
+        
+        fields = self._prepareFieldList(anUpload)
+        stream = self._growlClient.startPart("fields", "text/xml")
+        self._writeFields(stream, fields, anUpload.getProperty('sortfields'))
+        self._growlClient.stopPart()
+        for partname, partvalue in anUpload.parts.items():
+            stream = self._growlClient.startPart(partname, "text/plain")
+            stream.write(xmlEscape(partvalue))
+            self._growlClient.stopPart()
+        self._growlClient.stopDocument()
+        self.logLine('UPLOAD.SEND', 'END', id = anId)
+    
+    def delete(self, anUpload):
+        self.logDelete(anUpload.id)
+        self._growlClient.delete(anUpload.id)
+    
+    def info(self):
+        return 'Uploader connected to: %s:%s (%s), collection: %s'%(self._target.baseurl, self._target.port, self._target.username, self._collection)
+    
+    def _prepareFieldList(self, anUpload):
+        fields = []
+        for k,v in anUpload.fields.items():
+            value = v
+            if not isinstance(v, list):
+                value = [v]
+                
+            for item in value:
+                fields.append((xmlEscape(k), xmlEscape(item)))
+        fields.append(('collection', xmlEscape(self._collection)))
+        return fields
 
-	def _writeFields(self, aStream, fields, sortfields):
-		aStream.write('<fields>')
-		for (k,v) in fields:
-			line = k in sortfields and NO_TOKENIZE_FIELD_LINE or STANDARD_FIELD_LINE
-			aStream.write(line % (k, v))
-		aStream.write("</fields>")
+    def _writeFields(self, aStream, fields, sortfields):
+        aStream.write('<fields>')
+        for (k,v) in fields:
+            line = k in sortfields and NO_TOKENIZE_FIELD_LINE or STANDARD_FIELD_LINE
+            aStream.write(line % (k, v))
+        aStream.write("</fields>")

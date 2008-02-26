@@ -27,55 +27,55 @@
 import sys
 
 class UploaderException(Exception):
-	pass
-	
+    pass
+    
 class VirtualUploader:
-	def __init__(self, eventlogger):
-		self._logger = eventlogger
-	
-	def start(self):
-		"""Overwrite to initiate connections needed."""
-		pass
-	
-	def stop(self):
-		"""Overwrite to stop initiated connections."""
-		pass
-		
-	def send(self, anUpload):
-		"""Send data in upload object, identified by upload.id"""
-		raise NotImplementedError(self.send.__doc__)
-	
-	def delete(self, anUpload):
-		"""Delete the record with anUpload.id"""
-		raise NotImplementedError(self.delete.__doc__)
-	
-	def info(self):
-		"""Return information on yourself."""
-		raise NotImplementedError(self.info.__doc__)
-	
-	def logLine(self, *args, **kwargs):
-		self._logger.logLine(*args, **kwargs)
-	
-	def logError(self, *args, **kwargs):
-		self._logger.error(*args, **kwargs)
+    def __init__(self, eventlogger):
+        self._logger = eventlogger
+    
+    def start(self):
+        """Overwrite to initiate connections needed."""
+        pass
+    
+    def stop(self):
+        """Overwrite to stop initiated connections."""
+        pass
+        
+    def send(self, anUpload):
+        """Send data in upload object, identified by upload.id"""
+        raise NotImplementedError(self.send.__doc__)
+    
+    def delete(self, anUpload):
+        """Delete the record with anUpload.id"""
+        raise NotImplementedError(self.delete.__doc__)
+    
+    def info(self):
+        """Return information on yourself."""
+        raise NotImplementedError(self.info.__doc__)
+    
+    def logLine(self, *args, **kwargs):
+        self._logger.logLine(*args, **kwargs)
+    
+    def logError(self, *args, **kwargs):
+        self._logger.error(*args, **kwargs)
 
-	def logDelete(self, anId):
-		self.logLine('DELETE', "Delete document", id=anId)
+    def logDelete(self, anId):
+        self.logLine('DELETE', "Delete document", id=anId)
 
 class UploaderFactory:
-	
-	def __init__(self):
-		from sseuploader import SSEUploader
-		from teddyuploader import TeddyUploader
-		from compositeuploader import CompositeUploader
-		from filesystemuploader import FileSystemUploader
-		self.mapping = {
-					'sse': SSEUploader,
-					'teddy': TeddyUploader,
-					'composite': CompositeUploader,
-					'filesystem': FileSystemUploader
-					}
-		
-	def createUploader(self, target, logger, collection):
-		uploaderClass = self.mapping[target.targetType]
-		return uploaderClass(target, logger, collection)
+    
+    def __init__(self):
+        from sseuploader import SSEUploader
+        from teddyuploader import TeddyUploader
+        from compositeuploader import CompositeUploader
+        from filesystemuploader import FileSystemUploader
+        self.mapping = {
+                    'sse': SSEUploader,
+                    'teddy': TeddyUploader,
+                    'composite': CompositeUploader,
+                    'filesystem': FileSystemUploader
+                    }
+        
+    def createUploader(self, target, logger, collection):
+        uploaderClass = self.mapping[target.targetType]
+        return uploaderClass(target, logger, collection)

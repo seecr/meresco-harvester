@@ -26,38 +26,38 @@
 #
 import sys, os
 if sys.version_info[:2] == (2,3):
-	from sets import Set as set
+    from sets import Set as set
 
 def idfilename(logpath, name):
-	return os.path.join(logpath, name + '.ids')
+    return os.path.join(logpath, name + '.ids')
 
 class Ids:
-	def __init__(self, logpath, name):
-		self._filename = idfilename(logpath,name)
-		self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))
-		self._idsfile = open(self._filename, 'a')
-		
-	def total(self):
-		return len(self._ids)
-	
-	def clear(self):
-		self._ids = []
-		
-	def close(self):
-		self._idsfile.close()
-		idfilenew = open(self._filename + '.new', 'w')
-		try:
-			for anId in self._ids:
-				idfilenew.write( anId + '\n')
-		finally:
-			idfilenew.close()
-		os.rename(self._filename + '.new', self._filename)
+    def __init__(self, logpath, name):
+        self._filename = idfilename(logpath,name)
+        self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))
+        self._idsfile = open(self._filename, 'a')
+        
+    def total(self):
+        return len(self._ids)
+    
+    def clear(self):
+        self._ids = []
+        
+    def close(self):
+        self._idsfile.close()
+        idfilenew = open(self._filename + '.new', 'w')
+        try:
+            for anId in self._ids:
+                idfilenew.write( anId + '\n')
+        finally:
+            idfilenew.close()
+        os.rename(self._filename + '.new', self._filename)
 
-	def add(self, uploadid):
-		self._ids.add(uploadid)
-		self._idsfile.write( uploadid + '\n')
-		self._idsfile.flush()
+    def add(self, uploadid):
+        self._ids.add(uploadid)
+        self._idsfile.write( uploadid + '\n')
+        self._idsfile.flush()
 
-	def remove(self, uploadid):
-		uploadid in self._ids and self._ids.remove(uploadid)
-		
+    def remove(self, uploadid):
+        uploadid in self._ids and self._ids.remove(uploadid)
+        

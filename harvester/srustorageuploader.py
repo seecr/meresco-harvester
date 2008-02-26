@@ -40,12 +40,12 @@ PART = """<part name="%s" type="text/xml">
 
 class SRUStorageUploader(SSHUploader):
 
-	def _getName(self):
-		return 'SRUStorageUploader'
-	
-	def _sshCommand(self):
-		return '/home/supplier/cq2/src/sru/dofeed'
-	
-	def _writeDocumentBody(self, aStream, anId, anUpload):
-		aStream.write(">")
-		aStream.write(PART % ('lom', anUpload.fields.getItem('orginal:lom', '')))
+    def _getName(self):
+        return 'SRUStorageUploader'
+    
+    def _sshCommand(self):
+        return '/home/supplier/cq2/src/sru/dofeed'
+    
+    def _writeDocumentBody(self, aStream, anId, anUpload):
+        aStream.write(">")
+        aStream.write(PART % ('lom', anUpload.fields.getItem('orginal:lom', '')))

@@ -39,48 +39,48 @@ cardInXml = r"""<centity>BEGIN:VCARD\nFN:Suilen\, A.\nN:Suilen\, A.\nVERSION:3.0
 cardInXmlWithEncoding = r"""<centity><vcard>BEGIN:vcard&#xD;FN:onbekend&#xD;ORG:Fontys/MBRT&#xD;END:vcard</vcard></centity>"""
 
 class VCardTest(unittest.TestCase):
-	
-	def testReadEmptyVCard(self):
-		card = vcard.fromString("")
-		self.assertFalse(card.isValid())
+    
+    def testReadEmptyVCard(self):
+        card = vcard.fromString("")
+        self.assertFalse(card.isValid())
 
-	def testReadVCard(self):
-		card = vcard.fromString(validCard)
-		self.assertTrue(card.isValid())
-		self.assertEquals("3.0", card.version)
-		self.assertEquals("International Finance and Commodities Institute", card.fn)
+    def testReadVCard(self):
+        card = vcard.fromString(validCard)
+        self.assertTrue(card.isValid())
+        self.assertEquals("3.0", card.version)
+        self.assertEquals("International Finance and Commodities Institute", card.fn)
 
-	def testHasFieldVCard(self):
-		card = vcard.fromString(validCard)
-		self.assertTrue(card.isValid())
-		self.assertTrue(card.hasField('version'))
-		self.assertTrue(card.hasField('VERSION'))
-		self.assertFalse(card.hasField('doesnotexist'))
-		
-	def testGetFields(self):
-		card = vcard.fromString(validCard)
-		self.assertTrue(card.isValid())
-		self.assertEquals('3.0', card.email or card.version)
-		self.assertEquals('', card.email)
-		self.assertEquals('', card.fullname)
-		
-	def testReadFromXmlString(self):
-		xmlCard = wrapp(binderytools.bind_string(cardInXml)).centity
-		card = vcard.fromString(xmlCard)
-		self.assertTrue(card.isValid())
-		self.assertEquals('Suilen, A.', card.fn)
+    def testHasFieldVCard(self):
+        card = vcard.fromString(validCard)
+        self.assertTrue(card.isValid())
+        self.assertTrue(card.hasField('version'))
+        self.assertTrue(card.hasField('VERSION'))
+        self.assertFalse(card.hasField('doesnotexist'))
+        
+    def testGetFields(self):
+        card = vcard.fromString(validCard)
+        self.assertTrue(card.isValid())
+        self.assertEquals('3.0', card.email or card.version)
+        self.assertEquals('', card.email)
+        self.assertEquals('', card.fullname)
+        
+    def testReadFromXmlString(self):
+        xmlCard = wrapp(binderytools.bind_string(cardInXml)).centity
+        card = vcard.fromString(xmlCard)
+        self.assertTrue(card.isValid())
+        self.assertEquals('Suilen, A.', card.fn)
 
-	def testReadFromXmlStringWithEncoding(self):
-		"""	
-		  Fontis in LOREnet does not abide by the VCARD spec. They use \r instead of \n and in the begin/end marker
-		  they spell 'vcard' in lowercase. This test is here to show that when those changes are made to the text
-			before it is fed into the vcard-parser it will work. 
-		"""
-		xmlCard = wrapp(binderytools.bind_string(cardInXmlWithEncoding)).centity.vcard
-		card = vcard.fromString(xmlCard.replace('\r', '\n').replace('vcard', 'VCARD'))
-		self.assertTrue(card.isValid())
-		self.assertEquals('onbekend', card.fn)
+    def testReadFromXmlStringWithEncoding(self):
+        """    
+          Fontis in LOREnet does not abide by the VCARD spec. They use \r instead of \n and in the begin/end marker
+          they spell 'vcard' in lowercase. This test is here to show that when those changes are made to the text
+            before it is fed into the vcard-parser it will work. 
+        """
+        xmlCard = wrapp(binderytools.bind_string(cardInXmlWithEncoding)).centity.vcard
+        card = vcard.fromString(xmlCard.replace('\r', '\n').replace('vcard', 'VCARD'))
+        self.assertTrue(card.isValid())
+        self.assertEquals('onbekend', card.fn)
 
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

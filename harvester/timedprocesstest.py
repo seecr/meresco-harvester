@@ -69,7 +69,7 @@ class TimedProcessTest(unittest.TestCase):
         fd = open(self.filename,'w')
         try:
             fd.write("""while True:
-	pass
+    pass
 """)
         finally:
             fd.close()

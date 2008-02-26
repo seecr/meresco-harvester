@@ -29,56 +29,56 @@ import datetime, tempfile, os, shutil
 from throughputanalyser import parseToTime, ThroughputAnalyser, ThroughputReport
 
 class ThroughputAnalyserTest(unittest.TestCase):
-	
-	def setUp(self):
-		self.mockAnalyseRepository_arguments = []
-		self.testdir = os.path.join(tempfile.gettempdir(), 'throughputanalysertest')
-		not os.path.isdir(self.testdir) and os.makedirs(self.testdir)
-	
-	def tearDown(self):
-		shutil.rmtree(self.testdir)
-	
-	def testParseToTime(self):
-		timeString = "1999-12-03 12:34:35.123"
-		date = parseToTime(timeString)
-		self.assertEquals((1999,12,3,12,34,35,123000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
-		
-		date = parseToTime("2006-08-04 10:40:50.644")
-		self.assertEquals((2006,8,4,10,40,50,644000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
-		
-	def testParseToTimeDiff(self):
-		date1 = parseToTime("1999-12-03 12:34:35.123")
-		date2 = parseToTime("1999-12-03 12:34:36.423")
-		delta = date2 - date1
-		self.assertEquals(1.3, delta.seconds + delta.microseconds/1000000.0)
-		
-		
-	def testAnalyse(self):
-		t = ThroughputAnalyser(eventpath = self.testdir)
-		t._analyseRepository = self.mockAnalyseRepository
-		
-		report = t.analyse(['repo1','repo2'], '2006-08-31')
-		
-		self.assertEquals(1000, report.records)
-		self.assertEquals(2000.0, report.seconds)
-		self.assertEquals(['repo1', 'repo2'], self.mockAnalyseRepository_arguments)
-		
-	def testAnalyseNothing(self):
-		t = ThroughputAnalyser(eventpath = self.testdir)
-		t._analyseRepository = self.mockAnalyseRepository
-		
-		report = t.analyse([], '2006-08-31')
-		
-		self.assertEquals(0, report.records)
-		self.assertEquals(0.0, report.seconds)
-		self.assertEquals('-' , report.recordsPerSecond())
-		self.assertEquals('-' , report.recordsPerDay())
+    
+    def setUp(self):
+        self.mockAnalyseRepository_arguments = []
+        self.testdir = os.path.join(tempfile.gettempdir(), 'throughputanalysertest')
+        not os.path.isdir(self.testdir) and os.makedirs(self.testdir)
+    
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+    
+    def testParseToTime(self):
+        timeString = "1999-12-03 12:34:35.123"
+        date = parseToTime(timeString)
+        self.assertEquals((1999,12,3,12,34,35,123000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
+        
+        date = parseToTime("2006-08-04 10:40:50.644")
+        self.assertEquals((2006,8,4,10,40,50,644000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
+        
+    def testParseToTimeDiff(self):
+        date1 = parseToTime("1999-12-03 12:34:35.123")
+        date2 = parseToTime("1999-12-03 12:34:36.423")
+        delta = date2 - date1
+        self.assertEquals(1.3, delta.seconds + delta.microseconds/1000000.0)
+        
+        
+    def testAnalyse(self):
+        t = ThroughputAnalyser(eventpath = self.testdir)
+        t._analyseRepository = self.mockAnalyseRepository
+        
+        report = t.analyse(['repo1','repo2'], '2006-08-31')
+        
+        self.assertEquals(1000, report.records)
+        self.assertEquals(2000.0, report.seconds)
+        self.assertEquals(['repo1', 'repo2'], self.mockAnalyseRepository_arguments)
+        
+    def testAnalyseNothing(self):
+        t = ThroughputAnalyser(eventpath = self.testdir)
+        t._analyseRepository = self.mockAnalyseRepository
+        
+        report = t.analyse([], '2006-08-31')
+        
+        self.assertEquals(0, report.records)
+        self.assertEquals(0.0, report.seconds)
+        self.assertEquals('-' , report.recordsPerSecond())
+        self.assertEquals('-' , report.recordsPerDay())
 
-		
-	def testAnalyseRepository(self):
-		r = open(os.path.join(self.testdir, 'repo1.events'), 'w')
-		try:
-			r.write("""
+        
+    def testAnalyseRepository(self):
+        r = open(os.path.join(self.testdir, 'repo1.events'), 'w')
+        try:
+            r.write("""
 [2006-08-30 00:00:15.500]	ENDHARVEST	[repo1]	
 [2006-08-30 01:00:00.000]	STARTHARVEST	[repo1]	Uploader connected ...
 [2006-08-30 01:00:10.000]	SUCCES	[repo1]	Harvested/Uploaded/Deleted/Total: 200/200/0/1000, ResumptionToken: r1
@@ -93,36 +93,36 @@ class ThroughputAnalyserTest(unittest.TestCase):
 [2006-08-31 03:00:10.000]	SUCCES	[repo1]	Harvested/Uploaded/Deleted/Total: 200/200/0/1600, ResumptionToken: r3
 [2006-08-31 03:00:35.500]	ENDHARVEST	[repo1]	
 """)
-		finally:
-			r.close()
-		t = ThroughputAnalyser(eventpath = self.testdir)
-		records, seconds = t._analyseRepository('repo1', '2006-08-31')
-		self.assertEquals(600, records)
-		self.assertEquals(76.5, seconds)
-		
-		def testAnalyseNonExistingRepository(self):
-			t = ThroughputAnalyser(eventpath = self.testdir)
-			records, seconds = t._analyseRepository('repository', '2006-08-31')
-			self.assertEquals(0, records)
-			self.assertEquals(0.0, seconds)
-			
-	def testReportOnEmptyEventsFile(self):
-		t = ThroughputAnalyser(eventpath = self.testdir)
-		records, seconds = t._analyseRepository('repo1', '2006-08-31')
-                self.assertEquals(0, records)
-                self.assertEquals(0, seconds)
+        finally:
+            r.close()
+        t = ThroughputAnalyser(eventpath = self.testdir)
+        records, seconds = t._analyseRepository('repo1', '2006-08-31')
+        self.assertEquals(600, records)
+        self.assertEquals(76.5, seconds)
+        
+    def testAnalyseNonExistingRepository(self):
+        t = ThroughputAnalyser(eventpath = self.testdir)
+        records, seconds = t._analyseRepository('repository', '2006-08-31')
+        self.assertEquals(0, records)
+        self.assertEquals(0.0, seconds)
+            
+    def testReportOnEmptyEventsFile(self):
+        t = ThroughputAnalyser(eventpath = self.testdir)
+        records, seconds = t._analyseRepository('repo1', '2006-08-31')
+        self.assertEquals(0, records)
+        self.assertEquals(0, seconds)
 
-	def testReport(self):
-		report = ThroughputReport()
-		report.add(100000,10000.0)
-		self.assertEquals('10.00', report.recordsPerSecond())
-		self.assertEquals('864000', report.recordsPerDay())
-		self.assertEquals("02:46:40", report.hmsString())
-		
-	#Mock	self shunt
-	def mockAnalyseRepository(self, repositoryName, dateSince):
-		self.mockAnalyseRepository_arguments.append(repositoryName)
-		return 500, 1000.0
-		 
+    def testReport(self):
+        report = ThroughputReport()
+        report.add(100000,10000.0)
+        self.assertEquals('10.00', report.recordsPerSecond())
+        self.assertEquals('864000', report.recordsPerDay())
+        self.assertEquals("02:46:40", report.hmsString())
+        
+    #Mock    self shunt
+    def mockAnalyseRepository(self, repositoryName, dateSince):
+        self.mockAnalyseRepository_arguments.append(repositoryName)
+        return 500, 1000.0
+         
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

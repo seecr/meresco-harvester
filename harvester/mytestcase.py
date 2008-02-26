@@ -28,10 +28,10 @@ import unittest
 
 class MyTestCase(unittest.TestCase):
 
-	def setUp(self):
-		self.tempdir = tempfile.gettempdir()
-		self.testdir = self.tempdir + '/harvestertest'
-		os.path.isdir(self.testdir) or os.mkdir(self.testdir)
+    def setUp(self):
+        self.tempdir = tempfile.gettempdir()
+        self.testdir = self.tempdir + '/harvestertest'
+        os.path.isdir(self.testdir) or os.mkdir(self.testdir)
 
-	def tearDown(self):
-		os.system('rm -rf ' + self.testdir)
+    def tearDown(self):
+        os.system('rm -rf ' + self.testdir)

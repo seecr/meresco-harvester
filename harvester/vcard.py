@@ -27,42 +27,42 @@ import re
 vcardLine = re.compile("^(?P<key>[A-Z]+):(?P<value>.*)$", re.M)
 
 def fromString(aString):
-	card = VCard()
-	if aString != "":
-		card.fromString(aString)
-	return card
+    card = VCard()
+    if aString != "":
+        card.fromString(aString)
+    return card
 
 
 ESCAPED = [('\,',','), ('\;',';'), ('\:',':')]
 
 class VCard:
-	def __init__(self):
-		self._valid = False
-		self._fields = {}
-		
-	def __getattr__(self, name):
-		return self.hasField(name) and self._fields[name.lower()] or ''
-		
-	def hasField(self, fieldName):
-		return self._fields.has_key(fieldName.lower())
-		
-	def fromString(self, aString):
-		aString = aString.replace(r'\n','\n').strip()
-		if not (aString.startswith("BEGIN:VCARD") and aString.endswith("END:VCARD")):
-			return
-		
-		lines = aString.split("\n")[1:-1]
-		for line in lines:
-			match = vcardLine.match(line)
-			if match:
-				key = match.groupdict()['key'].lower()
-				value = match.groupdict()['value']
-				for orig,repl in ESCAPED:
-					value = value.replace(orig, repl)
-				self._fields[key] = value
-		
-		if len(self._fields ) > 0:
-			self._valid = True
+    def __init__(self):
+        self._valid = False
+        self._fields = {}
+        
+    def __getattr__(self, name):
+        return self.hasField(name) and self._fields[name.lower()] or ''
+        
+    def hasField(self, fieldName):
+        return self._fields.has_key(fieldName.lower())
+        
+    def fromString(self, aString):
+        aString = aString.replace(r'\n','\n').strip()
+        if not (aString.startswith("BEGIN:VCARD") and aString.endswith("END:VCARD")):
+            return
+        
+        lines = aString.split("\n")[1:-1]
+        for line in lines:
+            match = vcardLine.match(line)
+            if match:
+                key = match.groupdict()['key'].lower()
+                value = match.groupdict()['value']
+                for orig,repl in ESCAPED:
+                    value = value.replace(orig, repl)
+                self._fields[key] = value
+        
+        if len(self._fields ) > 0:
+            self._valid = True
 
-	def isValid(self):
-		return self._valid
+    def isValid(self):
+        return self._valid
