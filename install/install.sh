@@ -243,6 +243,15 @@ if isFedora ; then
 	chmod a+rx $SAHARA_HOME_DIR
 fi
 
+if [ "$MODIFY_BASHRC" == "Y" ]
+	DIRECTORY=$(cat /etc/passwd | grep "^sahara" | cut -d: -f6)
+	cat << EOF >> $DIRECTORY/.bashrc
+export PYTHONPATH=$CQ2_DEP_DIR
+EOF
+else
+	logToDo "- set the PYTHONPATH variable to contain $CQ2_DEP_DIR"
+fi
+
 message "Installation of Sahara is finished.
 
 However there are some things you still need to do:
