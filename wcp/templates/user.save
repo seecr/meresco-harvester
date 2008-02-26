@@ -3,9 +3,6 @@ users = asxml(url('/users.xml')).users
 from cq2utils.amaraextension import getElements
 from cq2utils.wrappers import wrapp
 f = asform(input)
-#break wrapper knowledge
-#user._delegatee.domain = unicode(f.domain)
-#user = getattr(users.users, str(f.user))
 target(filepath('users.xml'))
 %><?xml version ="1.0" encoding="UTF-8"?>
 <users>

@@ -2,7 +2,7 @@
 domainId = args.domainId
 
 import os
-logdir = '/home/sahara/harvester/log'
+logdir = req.document_root() + '/../harvester/log'
 def listIds(repositoryId):
   idfile = os.path.join(logdir, domainId, repositoryId + '.ids')
   if os.path.isfile(idfile):

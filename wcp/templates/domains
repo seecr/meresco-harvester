@@ -62,7 +62,17 @@ for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
      </tr>
      <tr>
       <td width="60">Domain:&nbsp;</td>
-      <td width="200"><input name="domain" type="text" class="zkveld" value=""></td>
+      <td width="200">
+        <select name="domain">
+<%
+for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
+%>
+          <option value="<%=id%>"><%=id%></option>
+<%
+#
+%>
+        </select>
+      </td>
      </tr>
      <tr>
       <td width="60">Password:&nbsp;</td>

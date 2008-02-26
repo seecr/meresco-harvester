@@ -11,7 +11,7 @@ repositoryGroupId = args.repositoryGroupId
 
 import os
 from repositorystatus import RepositoryStatus
-logdir = '/home/sahara/harvester/log'
+logdir = req.document_root() + '/../harvester/log'
 
 def writeStatus(repositoryId, repositoryGroupId):
   rs = RepositoryStatus()

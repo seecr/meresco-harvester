@@ -4,6 +4,7 @@
   </tr>
 <%
 if session.get('username',''):
+  #
 %>
   <tr>
     <td class="button">
@@ -16,7 +17,7 @@ if session.get('username',''):
     </td>
   </tr>
 <%
-if session.get('domain',''):
+  if session.get('domain',''):
 %>
   <tr>
     <td class="button">
@@ -24,11 +25,19 @@ if session.get('domain',''):
     </td>
   </tr>
 <%
-if session.get('isAdmin',''):
+  elif session.get('isAdmin',''):
 %>
   <tr>
     <td class="button">
       <a href="/page/domains/show">Domains</a>
+    </td>
+  </tr>
+<%
+  else:
+%>
+  <tr>
+    <td class="button" style="color:red;">
+      No domain
     </td>
   </tr>
 <%

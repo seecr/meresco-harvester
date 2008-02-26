@@ -17,7 +17,10 @@ domain = user.domain
 try:
   account.login(str(username), str(password)) 
   session['username'] = str(username)
-  session['domain'] = str(domain)
+  if domain == asxml(url('/%s.domain' % domain)).domain.id:
+    session['domain'] = str(domain)
+  else:
+    session['domain'] = ''
   session['isAdmin'] = username == 'admin'
   session.save()
   redirect('/')

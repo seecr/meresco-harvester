@@ -4,3 +4,4 @@ INSTALL
 Chapter 4 of the SaharaManual (see doc/SaharaManual.odt) describes the installation procedure in detail.  Read this first.
 
 Actual installation is automatic.  To start installation run install/install.sh.
+
