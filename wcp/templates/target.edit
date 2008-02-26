@@ -189,6 +189,10 @@ else:
     <td>Path:</td>
     <td><%=searchEngineTarget.path%></td>
   </tr>
+  <tr>
+    <td>Wrap in OAI-Envelope:</td>
+    <td><%=searchEngineTarget.oaiEnvelope and 'true' or 'false'%></td>
+  </tr>
 <%
   elif searchEngineTarget.targetType == 'composite':
     #
