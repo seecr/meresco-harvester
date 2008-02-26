@@ -17,7 +17,7 @@ domain = user.domain
 try:
   account.login(str(username), str(password)) 
   session['username'] = str(username)
-  if domain == asxml(url('/%s.domain' % domain)).domain.id:
+  if domain and domain == asxml(url('/%s.domain' % domain)).domain.id:
     session['domain'] = str(domain)
   else:
     session['domain'] = ''
