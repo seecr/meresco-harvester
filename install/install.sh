@@ -241,7 +241,7 @@ if isFedora ; then
 	chmod a+rx $SAHARA_HOME_DIR
 fi
 
-if [ "$MODIFY_BASHRC" == "Y" ]
+if [ "$MODIFY_BASHRC" == "Y" ]; then
 	DIRECTORY=$(cat /etc/passwd | grep "^sahara" | cut -d: -f6)
 	cat << EOF >> $DIRECTORY/.bashrc
 export PYTHONPATH=$CQ2_DEP_DIR

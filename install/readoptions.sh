@@ -14,6 +14,7 @@ SAHARA_HTTPS_PORT=""
 SAHARA_HTTP_PORT=""
 OPEN_FIREWALL="N"
 INSTALL_MOD_PYTHON_TOOLS="N"
+ENABLE_MOD_PYTHON="N"
 
 message 'This will install and configure SAHARA, containing all necessary
 components. Some steps in this installation may require your confirmation or
