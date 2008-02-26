@@ -25,7 +25,10 @@
 ## end license ##
 
 mydir=$(cd $(dirname $0); pwd)
-libdir=$(cd $mydir/../lib; pwd)
-export PYTHONPATH=$libdir
+
+if [ -d $mydir/../lib ]; then
+    libdir=$(cd $mydir/../lib; pwd)
+    export PYTHONPATH=$libdir
+fi
 cd $mydir
 python startharvester.py $*
