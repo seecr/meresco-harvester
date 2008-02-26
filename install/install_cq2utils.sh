@@ -26,7 +26,7 @@
 
 set -o errexit
 
-cq2utils_version=2.4.2
+cq2utils_version=2.4.3
 
 basedir=$(cd $(dirname $0); pwd)
 source $basedir/functions.sh
