@@ -47,8 +47,11 @@ class DisallowFilePlugin:
 		if self.inPatterns(filename):
 			username = request.getSession().get('username', None)
 			if username == None:
-				raise IOError(2,"No such file or directory: '%s'"%path)
+				self.doNotAllowedAction(request, path)
 		extension = filename.split('.')[-1]
 		if extension in BANNED_EXTENSIONS and not request.remoteHost() in ['127.0.0.1', 'localhost'] and request.getSession().get('username', None) == None:
-			raise IOError(2,"No such file or directory: '%s'"%path)
+			self.doNotAllowedAction(request, path)
 
+	def doNotAllowedAction(self, request, path):
+		request.write('<script language="javascript">document.location="/page/error"</script>')
+	
