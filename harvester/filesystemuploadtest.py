@@ -90,36 +90,39 @@ class FileSystemUploaderTest(CQ2TestCase):
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
         
-        upload = CallTrace("Upload")
-        upload.header = wrapp(binderytools.bind_string('<header xmlns="http://www.openarchives.org/OAI/2.0/">header</header>')).header
-        upload.metadata = wrapp(binderytools.bind_string('<metadata xmlns="http://www.openarchives.org/OAI/2.0/">text</metadata>')).metadata
-        upload.id = 'id'
-        
+        upload = createUpload()
         self.uploader.send(upload)
         
         self.assertTrue(os.path.isfile(recordFile))
-        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>', open(recordFile).read())
+        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD, open(recordFile).read())
         
     def testSendOaiEnvelope(self):
         self.target.oaiEnvelope = 'true'
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
         
-        upload = CallTrace("Upload")
-        upload.header = wrapp(binderytools.bind_string('<header xmlns="http://www.openarchives.org/OAI/2.0/">header</header>')).header
-        upload.metadata = wrapp(binderytools.bind_string('<metadata xmlns="http://www.openarchives.org/OAI/2.0/">text</metadata>')).metadata
-        upload.id = 'id'
+        upload = createUpload()
+        upload.repository = CallTrace('Repository')
+        upload.repository.baseurl = 'http://www.example.com'
+        upload.repository.metadataPrefix = 'weird&strange'
         
         self.uploader.send(upload)
         
         self.assertTrue(os.path.isfile(recordFile))
         xmlGetRecord = binderytools.bind_file(recordFile)
         self.assertEquals('header', str(xmlGetRecord.OAI_PMH.GetRecord.record.header))
+        self.assertEquals('http://www.example.com', str(xmlGetRecord.OAI_PMH.request))
+        self.assertEquals('weird&strange', str(xmlGetRecord.OAI_PMH.request.metadataPrefix))
         
     def testSendTwice(self):
         self.testSend()
         self.testSend()
 
-
-if __name__ == '__main__':
-    unittest.main()
+def createUpload():
+    upload = CallTrace("Upload")
+    upload.header = wrapp(binderytools.bind_string('<header xmlns="http://www.openarchives.org/OAI/2.0/">header</header>')).header
+    upload.metadata = wrapp(binderytools.bind_string('<metadata xmlns="http://www.openarchives.org/OAI/2.0/">text</metadata>')).metadata
+    upload.id = 'id'
+    return upload
+        
+RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>"""

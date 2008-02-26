@@ -32,6 +32,7 @@ elif searchEngineTarget.targetType == 'teddy':
 elif searchEngineTarget.targetType == 'filesystem':
 %>
   <path><%escape_xml(searchEngineTarget.path)%></path>
+  <oaiEnvelope><%escape_xml(searchEngineTarget.oaiEnvelope)%></oaiEnvelope>
 <%
 #
 %>

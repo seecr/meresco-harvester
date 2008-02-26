@@ -88,6 +88,10 @@ if session.get('isAdmin',''):
     <td>Path:</td>
     <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
    </tr>
+   <tr>
+    <td>Wrap in OAI-Envelope:</td>
+    <td><input type="checkbox" name="oaiEnvelope" value="true" <%= searchEngineTarget.oaiEnvelope == 'true' and 'checked'%>></td>
+   </tr>
 <%	
   elif searchEngineTarget.targetType == 'composite':
     targetIds = asxml(url('/%s.domain' % args.referrerDomain)).domain.targetId

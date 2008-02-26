@@ -27,6 +27,27 @@
 from virtualuploader import VirtualUploader
 import time, os
 from cq2utils import binderytools
+from xml.sax.saxutils import escape as xmlEscape
+from time import gmtime, strftime
+
+OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH 
+    xmlns="http://www.openarchives.org/OAI/2.0/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"
+>
+    <responseDate>%(responseDate)s</responseDate>
+    <request 
+        verb="GetRecord" 
+        metadataPrefix="%(metadataPrefix)s"
+        identifier="%(identifier)s"
+    >%(baseurl)s</request>
+    <GetRecord>
+        <record/>
+    </GetRecord>
+</OAI-PMH>"""
+
+tznow = lambda : time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 class FileSystemUploader(VirtualUploader):
     
@@ -53,8 +74,18 @@ class FileSystemUploader(VirtualUploader):
 
     def _createOutput(self, anUpload):
         theXml = binderytools.bind_string('<record xmlns="http://www.openarchives.org/OAI/2.0/"/>')
-        theXml.record.xml_children.append(anUpload.header)
-        theXml.record.xml_children.append(anUpload.metadata)
+        record = theXml.record
+        if str(self._target.oaiEnvelope) == 'true':
+            envelopedata = {
+                'identifier': xmlEscape(str(anUpload.header.identifier)),
+                'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
+                'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
+                'responseDate': tznow()
+            }
+            theXml = binderytools.bind_string(OAI_ENVELOPE % envelopedata)
+            record = theXml.OAI_PMH.GetRecord.record
+        record.xml_children.append(anUpload.header)
+        record.xml_children.append(anUpload.metadata)
         return theXml
 
 

@@ -103,6 +103,7 @@
         <xs:element ref="path"/>
         <xs:element ref="port"/>
         <xs:element ref="username"/>
+        <xs:element ref="oaiEnvelope"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -111,6 +112,7 @@
   <xs:element name="path" type="xs:string"/>
   <xs:element name="port" type="xs:integer"/>
   <xs:element name="username" type="xs:NCName"/>
+  <xs:element name="oaiEnvelope" type="xs:boolean"/>
   <xs:element name="repositoryGroup">
     <xs:complexType mixed="true">
       <xs:choice minOccurs="0" maxOccurs="unbounded">
