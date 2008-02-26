@@ -23,6 +23,11 @@ if searchEngineTarget.targetType == 'sse':
   <password><%escape_xml(searchEngineTarget.password)%></password>
   <baseurl><%escape_xml(searchEngineTarget.baseurl)%></baseurl>
 <%
+elif searchEngineTarget.targetType == 'sruUpdate':
+%>
+  <path><%escape_xml(searchEngineTarget.path)%></path>
+  <baseurl><%escape_xml(searchEngineTarget.baseurl)%></baseurl>
+<%
 elif searchEngineTarget.targetType == 'teddy':
 %>
   <hostname><%escape_xml(searchEngineTarget.hostname)%></hostname>

@@ -25,6 +25,7 @@
 
 from xml.sax.saxutils import escape as xmlEscape
 from virtualuploader import VirtualUploader, UploaderException
+from httplib import HTTPConnection
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
 <updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="http://www.loc.gov/ucp">
@@ -80,4 +81,6 @@ class SruUpdateUploader(VirtualUploader):
         connection.send(data)
 
         result = connection.getresponse()
-        self.logLine('UPLOAD.SEND', 'DUMP', id = '', result.read())
+        message = result.read()
+        if result.status != 200 or 'srw:diagnostic' in message:
+            raise Exception(message)

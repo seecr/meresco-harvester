@@ -55,6 +55,23 @@ if session.get('isAdmin',''):
     <td><input type="text" name="port" value="<%=searchEngineTarget.port%>" size="6"></td>
    </tr>
 <%
+  elif searchEngineTarget.targetType == 'sruUpdate':
+%>
+   <tr>
+    <td>Base URL: (without &quot;http://&quot;)</td>
+    <td><input type="text" name="baseurl" value="<%=searchEngineTarget.baseurl%>" size="30"></td>
+   </tr>
+
+   <tr>
+    <td>Path:</td>
+    <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
+  </tr>
+
+   <tr>
+    <td>Port:</td>
+    <td><input type="text" name="port" value="<%=searchEngineTarget.port%>" size="6"></td>
+   </tr>
+<%
   elif searchEngineTarget.targetType == 'teddy':
 %>
    <tr>
@@ -92,7 +109,7 @@ if session.get('isAdmin',''):
     <td>Wrap in OAI-Envelope:</td>
     <td><input type="checkbox" name="oaiEnvelope" value="true" <%= searchEngineTarget.oaiEnvelope == 'true' and 'checked'%>></td>
    </tr>
-<%	
+<%
   elif searchEngineTarget.targetType == 'composite':
     targetIds = asxml(url('/%s.domain' % args.referrerDomain)).domain.targetId
     targetIds = filter(lambda t: t != searchEngineTarget.id, targetIds)
@@ -146,6 +163,23 @@ else:
     <td><%=searchEngineTarget.password%></td>
   </tr>
 
+  <tr>
+    <td>Base URL:</td>
+    <td><%=searchEngineTarget.baseurl%></td>
+  </tr>
+
+  <tr>
+    <td>Path:</td>
+    <td><%=searchEngineTarget.path%></td>
+  </tr>
+
+  <tr>
+    <td>Port:</td>
+    <td><%=searchEngineTarget.port%></td>
+  </tr>
+<%
+  elif searchEngineTarget.targetType == 'sruUpdate':
+%>
   <tr>
     <td>Base URL:</td>
     <td><%=searchEngineTarget.baseurl%></td>
