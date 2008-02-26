@@ -48,12 +48,14 @@ class SruUpdateUploader(VirtualUploader):
         anId = anUpload.id
         self.logLine('UPLOAD.SEND', 'START', id = anId)
 
-        for partName, recordData in anUpload.parts.items():
-            action = "replace"
-            recordIdentifier= xmlEscape(anId)
-            recordPacking = 'xml'
-            recordSchema = xmlEscape(partName)
-            self._sendData(recordUpdate % locals())
+        recordData = '<document>%s</document>' % ''.join(
+                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
+
+        action = "replace"
+        recordIdentifier= xmlEscape(anId)
+        recordPacking = 'xml'
+        recordSchema = xmlEscape(partName)
+        self._sendData(recordUpdate % locals())
 
         self.logLine('UPLOAD.SEND', 'END', id = anId)
 

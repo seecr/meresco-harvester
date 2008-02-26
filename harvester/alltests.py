@@ -57,6 +57,7 @@ from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from vcardtest import VCardTest
 from amaraforharvestertest import AmaraForHarvesterTest
+from sruupdateuploadertest import SruUpdateUploaderTest
 
 if __name__ == '__main__':
         unittest.main()
