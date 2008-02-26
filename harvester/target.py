@@ -23,15 +23,11 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005, Seek You Too B.V.
-#
-# $Id: target.py 4825 2007-04-16 13:36:24Z TJ $
-#
+
 from saharaobject import SaharaObject
 
 class Target(SaharaObject):
-	def __init__(self, id):
-		SaharaObject.__init__(self, ['baseurl', 'name', 'username', 'password',
-								'port', 'path', 'targetType', 'privateKey', 'command', 'hostname'], ['delegate'])
-		self.id = id
+    def __init__(self, id):
+        SaharaObject.__init__(self, ['baseurl', 'name', 'username', 'password',
+                                'port', 'path', 'targetType', 'privateKey', 'command', 'hostname', 'oaiEnvelope'], ['delegate'])
+        self.id = id
