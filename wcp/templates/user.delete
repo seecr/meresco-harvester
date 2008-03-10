@@ -1,5 +1,5 @@
 <%
-from account import deleteAccount, AccountException
+from slowfoot.account import deleteAccount, AccountException
 users = xml.users
 user = getattr(users, str(args.user), None)
 error = ''

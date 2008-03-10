@@ -1,6 +1,6 @@
 <%
 from cq2utils import binderytools
-from account import createAccount,AccountException
+from slowfoot.account import createAccount,AccountException
 f = asform(input)
 users = xml.users
 error = ''
