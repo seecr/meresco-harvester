@@ -97,6 +97,7 @@ class DeleteIds:
                 try:
                     anUpload = Upload()
                     anUpload.id = id
+                    anUpload.repository = self.repository
                     uploader.delete(anUpload)
                     done.add(id)
                 except UploaderException, e:
