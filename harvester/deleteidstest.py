@@ -84,6 +84,21 @@ class DeleteIdsTest(unittest.TestCase):
         logger = harvesterlog.HarvesterLog(self.testdir, repository.id)
         self.assert_(not logger.from_)
 
+    def testDeleteUsesUploadObjectWithRepository(self):
+        """This will test a bug found in May 2008 by KennisNet
+        The FileSystemUploader needs a repository object in the
+        Upload object."""
+        repository = MockRepositoryAndUploader()
+        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile.write('mock:5\n')
+        idfile.close()
+        self.createStatsFile(repository)
+        dt = DeleteIds(repository, self.testdir)
+        self.assertEquals(0, len(repository.uploads))
+        dt.delete()
+        self.assertEquals(1, len(repository.uploads))
+        self.assertEquals(repository, repository.uploads[0].repository)
+
     def testDeleteOtherFilename(self):
         repository = MockRepositoryAndUploader()
         filename = os.path.join(self.testdir, 'delete.ids.in.this.file')
@@ -152,6 +167,7 @@ class MockRepositoryAndUploader(VirtualUploader):
         self.id = 'mock'
         self.deleteMock24Count = 0
         self.deleted_ids = Set()
+        self.uploads = []
     
     def createUploader(self, logger):
         self.logger = logger
@@ -159,6 +175,7 @@ class MockRepositoryAndUploader(VirtualUploader):
     
     def delete(self, anUpload):
         id = anUpload.id
+        self.uploads.append(anUpload)
         self.logger.logLine('UPLOADER','START deleting',id=id)
         if id == 'mock:3':
             raise UploaderException('Sorry, but the vm has crashed.')
