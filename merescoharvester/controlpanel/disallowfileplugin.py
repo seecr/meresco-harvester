@@ -59,5 +59,4 @@ class DisallowFilePlugin:
 			self.doNotAllowedAction(request, path)
 
 	def doNotAllowedAction(self, request, path):
-		request.write('<script language="javascript">document.location="/page/error"</script>')
-	
+		raise IOError(2,"No such file or directory: '%s'"%path)

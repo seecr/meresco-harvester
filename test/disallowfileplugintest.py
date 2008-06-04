@@ -48,9 +48,6 @@ class MockRequest:
             self._session = {}
         return self._session
 
-    def write(self, text):
-        self.written = text
-
 class DisallowFilePluginTest(unittest.TestCase):
 
     def testHandle(self):
@@ -68,8 +65,11 @@ class DisallowFilePluginTest(unittest.TestCase):
     def testDonotHandle(self):
         dfp = DisallowFilePlugin()
         req = MockRequest()
-        dfp.handle(req, '/some/path/to/datadirectory/edit')
-        self.assertTrue('/page/error' in req.written)
+        try:
+            dfp.handle(req, '/some/path/to/datadirectory/edit')
+            self.fail()
+        except IOError, e:
+            self.assertTrue('/some/path/to/datadirectory/edit' in str(e))
 
     def testInitializePatterns(self):
         nr,filename = tempfile.mkstemp()

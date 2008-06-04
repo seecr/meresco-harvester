@@ -1,11 +1,10 @@
-<%
-type('text/plain')
-%>
-An error occurred:
 
+<h3>Sorry</h3>
+<p>Er is een fout opgetreden.</p>
+<!--
 <%
 import traceback
 errortype, errorvalue, errortraceback = error_info
 traceback.print_exception(errortype, errorvalue, errortraceback, None, req)
 %>
-
+-->

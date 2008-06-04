@@ -1,0 +1,5 @@
+<%
+remoteHost() in ['127.0.0.1', 'localhost'] or \
+    requireValidUser('saharaget')
+type('text/plain')
+%><%=req.get_options().get(str(args.name),'')%>
