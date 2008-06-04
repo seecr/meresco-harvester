@@ -30,7 +30,7 @@
 #
 ## end license ##
 import unittest
-import tools
+from merescoharvester.controlpanel import tools
 
 class ToolsTest(unittest.TestCase):
 	def testCheckName(self):

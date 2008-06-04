@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -31,10 +30,10 @@
 ## end license ##
 
 import unittest
-from sseuploader import SSEUploader, UploaderException
-from eventlogger import StreamEventLogger, NilEventLogger
-from cStringIO import StringIO
-import mapping
+from merescoharvester.harvester.sseuploader import SSEUploader, UploaderException
+from merescoharvester.harvester.eventlogger import StreamEventLogger, NilEventLogger
+from StringIO import StringIO
+from merescoharvester.harvester import mapping
 from cq2utils.calltrace import CallTrace
 
 class SSEUploaderTest(unittest.TestCase):

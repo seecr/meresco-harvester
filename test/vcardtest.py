@@ -29,7 +29,7 @@
 #
 ## end license ##
 import unittest
-import vcard
+from merescoharvester.harvester import vcard
 from cq2utils import binderytools
 from cq2utils.wrappers import wrapp
 

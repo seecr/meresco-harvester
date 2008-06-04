@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,12 +28,10 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# 
 import unittest
-from repositorystatus import RepositoryStatus
+from merescoharvester.harvester.repositorystatus import RepositoryStatus
 import tempfile
-from cStringIO import StringIO
+from StringIO import StringIO
 
 class RepositoryStatusTest(unittest.TestCase):
     def setUp(self):

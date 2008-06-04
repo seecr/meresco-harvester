@@ -30,9 +30,9 @@
 ## end license ##
 
 import unittest,os, time
-from harvesterlog import HarvesterLog
-import harvesterlog
-from eventlogger import LOGLINE_RE
+from merescoharvester.harvester.harvesterlog import HarvesterLog
+from merescoharvester.harvester import harvesterlog
+from merescoharvester.harvester.eventlogger import LOGLINE_RE
 
 LOGDIR='testlog'
 def clearTestLog():
@@ -143,7 +143,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
     
     def testParseInfo(self):
-        from harvesterlog import getHarvestedUploadedRecords
+        from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
         line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Total: 200/201/6600, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
         harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
         self.assertEquals('200', harvested)
@@ -152,7 +152,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('6600', total)
         
     def testLogWithDeletedCount(self):
-        from harvesterlog import getHarvestedUploadedRecords
+        from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
         line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Deleted/Total: 200/195/5/449, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
         harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
         self.assertEquals('200', harvested)
@@ -211,4 +211,3 @@ class MockMailer:
     def send(self, message):
         self.message=message
     
-if __name__ == '__main__': unittest.main()

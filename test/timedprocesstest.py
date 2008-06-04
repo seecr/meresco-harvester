@@ -28,14 +28,9 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
-# $Id: timedprocesstest.py 4825 2007-04-16 13:36:24Z TJ $
-#
 
 import unittest, tempfile, os
-from timedprocess import TimedProcess
+from merescoharvester.harvester.timedprocess import TimedProcess
 
 class TimedProcessTest(unittest.TestCase):
 

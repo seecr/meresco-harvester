@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -31,7 +30,7 @@
 ## end license ##
 
 import unittest
-from saharaget import SaharaGet, SaharaGetException
+from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
 from cq2utils.wrappers import wrapp
 from cq2utils import binderytools
 

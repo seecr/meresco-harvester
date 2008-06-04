@@ -31,7 +31,7 @@
 import unittest
 from cq2utils import binderytools
 from cq2utils.wrappers import wrapp
-import classification
+from merescoharvester.harvester import classification
 
 LOM = "<lom>%s</lom>"
 
@@ -104,6 +104,3 @@ class ClassificationTest(unittest.TestCase):
         self.assertEquals(["discipline", "education level"], classificationResult.getPurposes())
         self.assertEquals("", classificationResult.flattenEntry("not existing"))
     
-    
-if __name__ == '__main__':
-    unittest.main()

@@ -1,4 +1,3 @@
-from eventlogger import *
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,3 +28,4 @@ from eventlogger import *
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
+from eventlogger import *

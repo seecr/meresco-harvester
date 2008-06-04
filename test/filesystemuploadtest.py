@@ -29,7 +29,7 @@
 #
 ## end license ##
 import unittest
-from filesystemuploader import FileSystemUploader
+from merescoharvester.harvester.filesystemuploader import FileSystemUploader
 from cq2utils.calltrace import CallTrace
 from cq2utils.wrappers import wrapp
 import os, shutil

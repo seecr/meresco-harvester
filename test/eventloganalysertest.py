@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,13 +28,10 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-#
-#$Date: 2007-04-16 15:36:24 +0200 (Mon, 16 Apr 2007) $ $Revision: 4825 $
 
 import unittest
-from eventloganalyser import EventLogAnalyser
-from cStringIO import StringIO
+from merescoharvester.harvester.eventlogger.eventloganalyser import EventLogAnalyser
+from StringIO import StringIO
 
 class EventLogAnalyserTest(unittest.TestCase):
 	def setUp(self):

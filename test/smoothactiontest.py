@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,17 +28,13 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
-# $Id: smoothactiontest.py 4825 2007-04-16 13:36:24Z TJ $
 
 import unittest, shutil, os, tempfile
-from repository import Repository, SmoothAction, DONE
+from merescoharvester.harvester.repository import Repository, SmoothAction, DONE
 from cq2utils.wrappers import wrapp
-from harvester import HARVESTED, NOTHING_TO_DO
-from deleteids import readIds
-import repository
+from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
+from merescoharvester.harvester.deleteids import readIds
+from merescoharvester.harvester import repository
 from sets import Set
 
 class SmoothActionTest(unittest.TestCase):

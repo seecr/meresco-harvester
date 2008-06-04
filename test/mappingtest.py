@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -31,10 +30,11 @@
 ## end license ##
 
 import unittest
-from mapping import Mapping, assertObligatoryFields, TestRepository, DataMapException, DataMapAssertionException, parse_xml
-import os, tempfile, mapping
-from cStringIO import StringIO
-from eventlogger import StreamEventLogger
+from merescoharvester.harvester.mapping import Mapping, assertObligatoryFields, TestRepository, DataMapException, DataMapAssertionException, parse_xml
+import os, tempfile
+from merescoharvester.harvester import mapping
+from StringIO import StringIO
+from merescoharvester.harvester.eventlogger import StreamEventLogger
 from cq2utils.wrappers import wrapp
 
 class MappingTest(unittest.TestCase):
@@ -268,7 +268,4 @@ skipRecord("Don't like it here.")
 
         self.assertEquals('value', upload.parts['name'])
         self.assertEquals('1', upload.parts['number'])
-
-if __name__ == '__main__':
-    unittest.main()
 

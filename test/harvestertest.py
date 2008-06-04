@@ -29,17 +29,17 @@
 #
 ## end license ##
 import unittest
-from harvester import Harvester
-from harvesterlog import HarvesterLog, printTime, isCurrentDay, getHarvestedUploadedRecords
+from merescoharvester.harvester.harvester import Harvester
+from merescoharvester.harvester.harvesterlog import HarvesterLog, printTime, isCurrentDay, getHarvestedUploadedRecords
 from harvesterlogtest import LOGDIR, clearTestLog
-from oairequest import MockOAIRequest, OAIRequest
+from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
 from cq2utils.wrappers import wrapp, binderytools
-from mapping import Mapping, DEFAULT_DC_CODE, Upload
+from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload
 import shelve
 import os
 import sys
 import re
-import harvester
+from merescoharvester.harvester import harvester
 from time import sleep, strftime
 
 class DeletedRecordHeader:
@@ -380,6 +380,3 @@ class HarvesterTest(unittest.TestCase):
                 return self.mockRepository.listRecords(metadataPrefix = metadataPrefix, set = set)
             return self.mockRepository.listRecords(metadataPrefix = metadataPrefix)
         return self.mockRepository.listRecords(resumptionToken = resumptionToken)
-
-if __name__ == '__main__':
-    unittest.main()

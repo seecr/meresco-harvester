@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,14 +28,10 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
-# $Id: repositorytest.py 4825 2007-04-16 13:36:24Z TJ $
-from saharaget import SaharaGet, SaharaGetException
-from eventlogger import NilEventLogger
-from harvesterlog import HarvesterLog
-from repository import *
+from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
+from merescoharvester.harvester.eventlogger import NilEventLogger
+from merescoharvester.harvester.harvesterlog import HarvesterLog
+from merescoharvester.harvester.repository import *
 from cq2utils.wrappers import wrapp
 from cq2utils.timeslot import Timeslot
 from cq2utils.calltrace import CallTrace
@@ -220,6 +215,3 @@ GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
 </repository>
 """
 
-
-if __name__ == '__main__':
-    unittest.main()

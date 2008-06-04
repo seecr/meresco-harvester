@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,17 +28,13 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
-# $Id: deleteidstest.py 4825 2007-04-16 13:36:24Z TJ $
 
 import unittest, tempfile, os, shutil
-import harvesterlog
-from deleteids import DeleteIds, readIds
+from merescoharvester.harvester import harvesterlog
+from merescoharvester.harvester.deleteids import DeleteIds, readIds
 from sets import Set
-from virtualuploader import UploaderException, VirtualUploader
-import deleteids
+from merescoharvester.harvester.virtualuploader import UploaderException, VirtualUploader
+from merescoharvester.harvester import deleteids
 
 class DeleteIdsTest(unittest.TestCase):
     def _rmtree(self):
@@ -193,6 +188,3 @@ class MockRepositoryAndUploader(VirtualUploader):
                 raise UploaderException('Sorry, but cannot delete mock24')
         self.deleted_ids.add(id)
         self.logger.logLine('UPLOADER','END deleting',id=id)
-
-if __name__ == '__main__':
-    unittest.main()

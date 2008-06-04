@@ -31,7 +31,7 @@
 from cq2utils import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
 
-from sruupdateuploader import SruUpdateUploader
+from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader
 
 class SruUpdateUploaderTest(CQ2TestCase):
     def testOne(self):

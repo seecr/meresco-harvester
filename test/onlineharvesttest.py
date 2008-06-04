@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -31,9 +30,9 @@
 ## end license ##
 
 import unittest
-from onlineharvest import OnlineHarvest
-from cStringIO import StringIO
-from mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
+from merescoharvester.harvester.onlineharvest import OnlineHarvest
+from StringIO import StringIO
+from merescoharvester.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
 from cq2utils.wrappers import wrapp
 import os
 
@@ -106,6 +105,3 @@ class OnlineHarvestTest(unittest.TestCase):
         upload = Upload()
         upload.init(repository, header, metadata, about)
         return upload
-
-
-if __name__ == '__main__': unittest.main()

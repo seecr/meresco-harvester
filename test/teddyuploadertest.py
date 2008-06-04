@@ -28,14 +28,11 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Teddy Uploader Test
-#
 
 from StringIO import StringIO
 import unittest, os, sys
-import teddyuploader, mapping
-from virtualuploader import VirtualUploader, UploaderException
+from merescoharvester.harvester import teddyuploader, mapping
+from merescoharvester.harvester.virtualuploader import VirtualUploader, UploaderException
 from cq2utils.networking.growlclient import GrowlClient
 from cq2utils.calltrace import CallTrace
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,15 +28,11 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Copyright (C) 2005 Seek You Too B.V. http://www.cq2.nl
-#
-# $Id: oairequesttest.py 4825 2007-04-16 13:36:24Z TJ $
 
 import unittest
 from cq2utils import binderytools
 from urllib import urlencode
-from oairequest import OAIRequest, MockOAIRequest, OAIError
+from merescoharvester.harvester.oairequest import OAIRequest, MockOAIRequest, OAIError
 
 class OAIRequestTest(unittest.TestCase):
     def setUp(self):

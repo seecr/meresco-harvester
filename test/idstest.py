@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -32,7 +31,7 @@
 
 import unittest
 from mytestcase import MyTestCase
-from ids import Ids
+from merescoharvester.harvester.ids import Ids
 
 class IdsTest(MyTestCase):
     def tearDown(self):
@@ -83,6 +82,3 @@ class IdsTest(MyTestCase):
                 w.write(anId + '\n')
         finally:
             w.close()
-
-if __name__ == '__main__':
-    unittest.main()
