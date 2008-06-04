@@ -1,5 +1,5 @@
 <%
-from throughputanalyser import ThroughputAnalyser
+from merescoharvester.harvester.throughputanalyser import ThroughputAnalyser
 
 if args.repositoryId:
 	caption = args.repositoryId

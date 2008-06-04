@@ -1,5 +1,5 @@
 <%
-from tools import getDomainId
+from merescoharvester.controlpanel.tools import getDomainId
 domainId = args.domainId
 repositoryId = args.repositoryId
 

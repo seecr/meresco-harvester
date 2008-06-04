@@ -1,7 +1,0 @@
-<%
-data = asform(input)
-name = data.name + args.ext
-target('/data/' + name)
-%><%=data.text%><%
-redirect('/edit/' + name)
-%>

@@ -1,5 +1,5 @@
 <%
-from tools import getDomainId
+from merescoharvester.controlpanel.tools import getDomainId
 group = xml
 domainId = getDomainId(req.uri)
 deleteId = args['repository']

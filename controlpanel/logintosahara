@@ -11,7 +11,6 @@ passwdFile = req.get_options()['usersfile']
 
 users = asxml(url('/users.xml')).users
 
-from md5 import md5
 domain = None
 user = getattr(users, str(username))
 domain = user.domain

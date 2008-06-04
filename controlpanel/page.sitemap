@@ -13,7 +13,7 @@ if session.get('username',''):
   </tr>
  <tr>
     <td class="button">
-      <a href="/page/release">Release notes</a>
+      <a href="http://meresco.sourceforge.net">About Meresco</a>
     </td>
   </tr>
 <%

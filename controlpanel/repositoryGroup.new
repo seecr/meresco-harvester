@@ -1,6 +1,6 @@
 <%
 from cq2utils import binderytools
-from tools import checkName
+from merescoharvester.controlpanel.tools import checkName
 
 f = asform(input)
 id = f.id

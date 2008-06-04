@@ -1,6 +1,6 @@
 <%
 from cq2utils import binderytools
-from mapping import DEFAULT_DC_CODE as execcode
+from merescoharvester.harvester.mapping import DEFAULT_DC_CODE as execcode
 
 f = asform(input)
 name = f.name

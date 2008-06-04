@@ -1,6 +1,6 @@
 <%
 from cq2utils import binderytools
-from tools import checkName, getDomainId
+from merescoharvester.controlpanel.tools import checkName, getDomainId
 
 f = asform(input)
 repositoryId = f.id

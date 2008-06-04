@@ -28,9 +28,9 @@ def writeStatus(repositoryId, repositoryGroupId):
 
 exists = True
 if repositoryId:
-  exists = os.path.isfile(req.document_root() + '/data/' + domainId + '.' + repositoryId + '.repository')
+  exists = os.path.isfile(req.document_root() + '/' + domainId + '.' + repositoryId + '.repository')
 elif repositoryGroupId:
-  exists = os.path.isfile(req.document_root() + '/data/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')
+  exists = os.path.isfile(req.document_root() + '/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')
 
 if not exists:
   include('/saharageterror?errorCode=idDoesNotExist')

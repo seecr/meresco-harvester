@@ -10,7 +10,7 @@ else:
   identifier = str(args.identifier)
 if repositoryId and identifier:
   from os.path import isfile
-  if isfile(req.document_root() + '/data/%s.%s.repository'%(domainId,repositoryId)):
+  if isfile(req.document_root() + '/%s.%s.repository'%(domainId,repositoryId)):
     repo = asxml(url('/xml/%s.%s.repository'%(domainId,repositoryId))).repository
     repourl = repo.baseurl
     metadataPrefix = args.metadataPrefix or repo.metadataPrefix

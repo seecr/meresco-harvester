@@ -1,5 +1,5 @@
 <%
-from tools import getDomainId
+from merescoharvester.controlpanel.tools import getDomainId
 repository = asform(input)
 domainId = getDomainId(req.uri)
 fileName = args.name
