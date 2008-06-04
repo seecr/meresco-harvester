@@ -9,4 +9,3 @@ errortype, errorvalue, errortraceback = error_info
 traceback.print_exception(errortype, errorvalue, errortraceback, None, req)
 %>
 
-If you want to change the handling of errors add a template, called 'error', to your slowfoot data directory.

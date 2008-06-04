@@ -1,0 +1,11 @@
+<%
+suffix = args.name.split('.')[-1]
+
+known_types = {
+  'gif':'image/gif',
+  'ico':'image/gif',
+  'png':'image/png'
+}
+
+type(known_types.get(suffix, 'image/jpeg'))
+%><%=text%>

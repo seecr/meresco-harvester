@@ -10,12 +10,12 @@ repositoryId = args.repositoryId
 repositoryGroupId = args.repositoryGroupId
 
 import os
-from repositorystatus import RepositoryStatus
-logdir = req.document_root() + '/../harvester/log'
+from merescoharvester.harvester.repositorystatus import RepositoryStatus
+logDir = req.get_options()['logDir']
 
 def writeStatus(repositoryId, repositoryGroupId):
   rs = RepositoryStatus()
-  statsfile = os.path.join(logdir, domainId, repositoryId + '.events')
+  statsfile = os.path.join(logDir, domainId, repositoryId + '.events')
   if os.path.isfile(statsfile):
     try:
       f = open(statsfile)

@@ -2,10 +2,12 @@
 from slowfoot.account import deleteAccount, AccountException
 users = xml.users
 user = getattr(users, str(args.user), None)
+passwdFile = req.get_options()['usersfile']
+
 error = ''
 if user != None:
   try:
-    deleteAccount(str(args.user))
+    deleteAccount(str(args.user), passwdFile)
     users.xml_remove_child(user._delegatee)
     target(filepath('users.xml'))
     print >> req, xml.xml()

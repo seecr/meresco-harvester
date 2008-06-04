@@ -7,6 +7,8 @@ password = f.password
 if not f.username:
   redirect('/')
 
+passwdFile = req.get_options()['usersfile']
+
 users = asxml(url('/users.xml')).users
 
 from md5 import md5
@@ -15,7 +17,7 @@ user = getattr(users, str(username))
 domain = user.domain
 
 try:
-  account.login(str(username), str(password)) 
+  account.login(str(username), str(password), passwdFile) 
   session['username'] = str(username)
   if domain and domain == asxml(url('/%s.domain' % domain)).domain.id:
     session['domain'] = str(domain)

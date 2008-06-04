@@ -1,11 +1,11 @@
 <%
 domainId = args.domainId
 
-import os
-logdir = req.document_root() + '/../harvester/log'
+stateDir = req.get_options()['stateDir']
+from os.path import join, isfile
 def listIds(repositoryId):
-  idfile = os.path.join(logdir, domainId, repositoryId + '.ids')
-  if os.path.isfile(idfile):
+  idfile = join(stateDir, domainId, repositoryId + '.ids')
+  if isfile(idfile):
     try:
       f = open(idfile)
       for id in map(str.strip, filter(None, f)):
