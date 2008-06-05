@@ -38,6 +38,9 @@ setup(
         'merescoharvester.harvester',
     ],
     package_data={
+        'merescoharvester.controlpanel': [
+            'slowfoottemplates/*'
+        ]
     },
     version='%VERSION%',
     url='http://www.meresco.org',

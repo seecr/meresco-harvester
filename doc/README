@@ -1,11 +1,17 @@
+"Meresco Harvester" is the OAI-Harvester from the Meresco Suite 2005-2008
 
+http://www.meresco.org
+
+
+**********
 
 1. Webcontrolpanel users in /var/lib/python-merescoharvester/users.txt
-
+----------------------------------------------------------------------
 All users are specified in this file. The format of the file is:
 <username>:<md5sum of password>
 
 2. Default web controlpanel user account
+----------------------------------------
 
 The python-merescoharvester is installed with one default user
 which can access the control panel. This is the 'admin' user.
@@ -14,6 +20,7 @@ should change the file /var/lib/python-merescoharvester/users.txt
 echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
 
 3. Adding a new user.
+---------------------
 
 The admin user can add or delete users with the control panel.
 
