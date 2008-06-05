@@ -15,6 +15,7 @@ Installation can be done with python distutils.
 Furthermore you will need to configure:
     - apache
     - webcontrolpanel administrator (admin)
+    - harvesting (user)
 
 2.1 Apache Configuration
 ------------------------
@@ -62,6 +63,15 @@ Furthermore you will need to configure:
 ---------------------------------
     To create a password for the user admin you can do:
       $ echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
+
+2.3. Harvesting configuration
+-----------------------------
+    Harvesting is done with the startharvester.sh script which is in the example
+    directory.
+    The user that will run the startharvester.sh script will need to have
+    read/write permissions in the stateDir and logDir specified in the
+    apache configuration.
+    
 
 3. Further Reading
 ------------------
