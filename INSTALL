@@ -1,7 +1,0 @@
-INSTALL
--------
-
-The installation procedure is explained in detail in the deployment manual.
-
-Actual installation is automatic.  To start installation run install/install.sh.
-
