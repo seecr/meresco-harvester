@@ -47,7 +47,7 @@ def p(anObject):
 class Harvester:
     def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None):
         self._repository = repository
-        self._logger = mockLogger or HarvesterLog(logpath, repository.id)
+        self._logger = mockLogger or HarvesterLog(stateDir, logDir, repository.id)
         self._eventlogger = self._logger.eventLogger()
         self._oairequest = mockRequest or OAIRequest(self._repository.url)
         self._uploader = repository.createUploader(self._eventlogger)

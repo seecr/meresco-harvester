@@ -100,4 +100,3 @@ class OAIRequestTest(unittest.TestCase):
         amarabinding = request.request({'verb':'ListRecords','metadataPrefix':'oai_dc'})
         amarabinding.OAI_PMH
                     
-if __name__ == '__main__': unittest.main()

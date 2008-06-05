@@ -87,6 +87,3 @@ class VCardTest(unittest.TestCase):
         self.assertTrue(card.isValid())
         self.assertEquals('onbekend', card.fn)
 
-
-if __name__ == '__main__':
-    unittest.main()

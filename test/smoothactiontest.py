@@ -29,7 +29,8 @@
 #
 ## end license ##
 
-import unittest, shutil, os, tempfile
+import unittest, shutil, os
+from tempfile import mkdtemp
 from merescoharvester.harvester.repository import Repository, SmoothAction, DONE
 from cq2utils.wrappers import wrapp
 from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
@@ -40,15 +41,16 @@ from sets import Set
 class SmoothActionTest(unittest.TestCase):
     def setUp(self):
         self.repo = Repository('domainId', 'rep')
-        self.logpath = os.path.join(tempfile.tempdir, 'repositorytest')
-        os.path.isdir(self.logpath) or os.mkdir(self.logpath)
-        self.smoothaction = SmoothAction(self.repo, self.logpath)
-        self.idfilename = os.path.join(self.logpath, 'rep.ids')
-        self.old_idfilename = os.path.join(self.logpath, 'rep.ids.old')
-        self.statsfilename = os.path.join(self.logpath,'rep.stats')
+        self.stateDir = mkdtemp()
+        self.logDir = mkdtemp()
+        self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir)
+        self.idfilename = os.path.join(self.stateDir, 'rep.ids')
+        self.old_idfilename = os.path.join(self.stateDir, 'rep.ids.old')
+        self.statsfilename = os.path.join(self.stateDir,'rep.stats')
 
     def tearDown(self):
-        shutil.rmtree(self.logpath)
+        shutil.rmtree(self.stateDir)
+        shutil.rmtree(self.logDir)
 
     def testSmooth_Init(self):
         writefile(self.idfilename, 'rep:id:1\nrep:id:2\n')
@@ -137,37 +139,36 @@ class SmoothActionTest(unittest.TestCase):
     
     def testSmooth_Delete(self):
         class MockDelete:
-            usedrep, usedlogpath,filename = None, None, None
-            def __init__(self, rep, logpath):
+            usedrep, usedStateDir, usedLogDir, filename = None, None, None, None
+            def __init__(self, rep, stateDir, logDir):
                 MockDelete.usedrep = rep
-                MockDelete.usedlogpath = logpath
+                MockDelete.usedStateDir = stateDir
+                MockDelete.usedLogDir = logDir
             def deleteFile(self, filename):
                 MockDelete.filename = filename
         repository.DeleteIds = MockDelete
         self.smoothaction._delete(self.idfilename+'.delete') 
         self.assertEquals(self.idfilename + '.delete', MockDelete.filename)
         self.assertEquals(self.repo, MockDelete.usedrep)
-        self.assertEquals(self.logpath, MockDelete.usedlogpath)
+        self.assertEquals(self.stateDir, MockDelete.usedStateDir)
+        self.assertEquals(self.logDir, MockDelete.usedLogDir)
         
     
     def testHarvest(self):
         class MockHarvester:
-            usedrep, usedlogpath = None, 'some path'
-            def __init__(self, rep, logpath):
+            usedrep, usedStateDir, usedLogDir = None, 'some path', 'some path'
+            def __init__(self, rep, stateDir, logDir):
                 MockHarvester.usedrep = rep
-                MockHarvester.usedlogpath = logpath
+                MockHarvester.usedStateDir = stateDir
+                MockHarvester.usedLogDir = logDir
             def harvest(self):
                 return 'mockharvest'
         repository.Harvester = MockHarvester
         self.assertEquals('mockharvest', self.smoothaction._harvest())
         self.assertEquals(self.repo, MockHarvester.usedrep)
-        self.assertEquals(self.logpath, MockHarvester.usedlogpath)
+        self.assertEquals(self.stateDir, MockHarvester.usedStateDir)
+        self.assertEquals(self.logDir, MockHarvester.usedLogDir)
     
-    # harvest klaar, dan deleten. en een .ids.old file. (smoothfinish/ eerst smoothinit, dan harvesten)
-    # xml aanpassen.
-    # xml aanpassen op de server + edit template XSLT
-    # harvest gooit exception.
-
 def writefile(filename, contents):
     f = open(filename,'w')
     try:

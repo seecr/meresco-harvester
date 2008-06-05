@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -129,6 +128,3 @@ class ThroughputAnalyserTest(unittest.TestCase):
     def mockAnalyseRepository(self, repositoryName, dateSince):
         self.mockAnalyseRepository_arguments.append(repositoryName)
         return 500, 1000.0
-         
-if __name__ == '__main__':
-    unittest.main()

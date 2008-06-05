@@ -61,15 +61,15 @@ def getResumptionToken(logline):
         return matches.group(1)
     return None
 
-def idfilename(logpath, repositorykey):
-    return pathjoin(logpath, repositorykey+'.ids')
+def idfilename(stateDir, repositorykey):
+    return pathjoin(stateDir, repositorykey+'.ids')
 
 class HarvesterLog:
-    def __init__(self, logPath, statePath, name):
+    def __init__(self, stateDir, logDir, name):
         self._name=name
-        self._ids = Ids(logpath,name)
-        self._statsfilename = logpath + '/' + name + '.stats'
-        self._eventlogger = EventLogger(logpath + '/' + name +'.events')
+        self._ids = Ids(stateDir, name)
+        self._statsfilename = stateDir + '/' + name + '.stats'
+        self._eventlogger = EventLogger(logDir + '/' + name +'.events')
         self.from_, self._statsfile, self.token, self.total = self.readFromStatsFileAndOpenForWriting(self._statsfilename)
         self._lastline = ''
         

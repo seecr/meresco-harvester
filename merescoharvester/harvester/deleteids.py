@@ -60,11 +60,12 @@ def writeIds(filename, ids):
 
 
 class DeleteIds:
-    def __init__(self, repository, logpath):
-        self.logpath = logpath
+    def __init__(self, repository, stateDir, logDir):
+        self._stateDir = stateDir
+        self._logDir = logDir
         self.repository = repository
-        self.logger = EventLogger(os.path.join(logpath,'deleteids.log'))
-        self.filename = idfilename(self.logpath,self.repository.id)
+        self.logger = EventLogger(os.path.join(self._logDir, 'deleteids.log'))
+        self.filename = idfilename(self._stateDir, self.repository.id)
         self.markLogger = True
                     
     def ids(self):
@@ -108,7 +109,7 @@ class DeleteIds:
     def _finish(self, remainingIDs):
         writeIds(self.filename, remainingIDs)
         if self.markLogger and not remainingIDs:
-            logger = HarvesterLog(self.logpath,self.repository.id)
+            logger = HarvesterLog(self._stateDir, self._logDir, self.repository.id)
             try:
                 logger.markDeleted()
             finally:

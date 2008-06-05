@@ -70,9 +70,6 @@ class StartHarvester:
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
 
-        #self.full_logpath = os.path.join(self.logPath(), self.domainId)
-        
-        #os.path.isdir(self.full_logpath) or os.makedirs(self.full_logpath)
         self.eventlogger = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
     
         if self.uploadLog:

@@ -33,12 +33,12 @@ import sys, os
 if sys.version_info[:2] == (2,3):
     from sets import Set as set
 
-def idfilename(logpath, name):
-    return os.path.join(logpath, name + '.ids')
+def idfilename(stateDir, name):
+    return os.path.join(stateDir, name + '.ids')
 
 class Ids:
-    def __init__(self, logpath, name):
-        self._filename = idfilename(logpath,name)
+    def __init__(self, stateDir, name):
+        self._filename = idfilename(stateDir, name)
         self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))
         self._idsfile = open(self._filename, 'a')
         

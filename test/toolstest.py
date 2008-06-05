@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -49,5 +48,3 @@ class ToolsTest(unittest.TestCase):
 		self.assertEquals('cq2Mock', tools.getDomainId('cq2Mock.hoi.st'))
 		self.assertEquals('cq2Mock', tools.getDomainId('/asf/asdf/cq2Mock.hoi.st'))
 
-if __name__ == '__main__':
-	unittest.main()

@@ -40,6 +40,3 @@ class AmaraForHarvesterTest(unittest.TestCase):
     def testParsingOfNodeWithLocalInAttribute(self):
         binderytools.bind_string('<a><b local="yes"/></a>')
 
-
-if __name__ == '__main__':
-    unittest.main()

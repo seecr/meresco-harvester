@@ -42,15 +42,14 @@ class RepositoryTest(unittest.TestCase):
     def setUp(self):
         self.repo = Repository('domainId','rep')
         self.repo._saharaget = self
-        self.logpath = os.path.join(tempfile.gettempdir(),'repositorytest')
+        self.logAndStateDir = os.path.join(tempfile.gettempdir(),'repositorytest')
         self._read = self.mock_read
         self.mock_read_args = []
-        self.logpath = os.path.join(tempfile.gettempdir(), 'repositorytest')
-        os.path.isdir(self.logpath) or os.mkdir(self.logpath)
+        os.path.isdir(self.logAndStateDir) or os.mkdir(self.logAndStateDir)
 
 
     def tearDown(self):
-        shutil.rmtree(self.logpath)
+        shutil.rmtree(self.logAndStateDir)
 
     def testNoTimeslots(self):
         slots = self.repo.shopclosed
@@ -92,8 +91,8 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = ''
         self.repo.action = ''
         action = MockAction()
-        self.repo._createAction=lambda a: action
-        result = self.repo.do(self.logpath)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals('', result)
         self.assert_(action.called)
         self.assertEquals('', self.repo.use)
@@ -103,8 +102,8 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = 'true'
         self.repo.action = ''
         action = MockAction(DONE)
-        self.repo._createAction=lambda a: action
-        result = self.repo.do(self.logpath)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals(DONE, result)
         self.assert_(action.called)
         self.assertEquals('true', self.repo.use)
@@ -114,8 +113,8 @@ class RepositoryTest(unittest.TestCase):
         self.repo._saharaget = self
         self.repo.action = 'someaction'
         action = MockAction(DONE)
-        self.repo._createAction=lambda a: action
-        result = self.repo.do(self.logpath)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals(DONE, result)
         self.assert_(action.called)
         self.assertEquals('', self.repo.action)
@@ -126,8 +125,8 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = 'true'
         self.repo.action = 'someaction'
         action = MockAction('Not yet done!', False)
-        self.repo._createAction=lambda a: action
-        result = self.repo.do(self.logpath)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals('Not yet done!', result)
         self.assert_(action.called)
         self.assertEquals('true', self.repo.use)
@@ -137,7 +136,7 @@ class RepositoryTest(unittest.TestCase):
         factory = ActionFactory()
         self.repo.use = use
         self.repo.action = action
-        self.assert_(isinstance(self.repo._createAction(self.logpath), expectedType))
+        self.assert_(isinstance(self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir), expectedType))
 
     def testActionFactory(self):
         self._testAction('', '', NoneAction)
@@ -154,18 +153,17 @@ class RepositoryTest(unittest.TestCase):
 
     def testDoWithoutLogpath(self):
         try:
-            self.repo.do('')
+            self.repo.do('','')
             self.fail()
         except RepositoryException, e:
             pass
 
     def testHarvestAction(self):
         repository = CallTrace("Repository")
-        logpath = CallTrace("LogPath")
         harvester = CallTrace("Harvester")
         
         repository.returnValues['shopClosed'] = False
-        action = HarvestAction(repository, logpath)
+        action = HarvestAction(repository, stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         action._createHarvester = lambda: harvester
         action.do()
         self.assertEquals(['harvest()'], harvester.__calltrace__())

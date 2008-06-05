@@ -31,7 +31,7 @@
 ## end license ##
 
 import os, sys
-os.system('rm -f *.pyc')
+os.system('find .. -name "*.pyc" | xargs rm -f')
 sys.path.insert(0, '..')
 
 import unittest

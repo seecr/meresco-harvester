@@ -33,17 +33,19 @@ import unittest,os, time
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.eventlogger import LOGLINE_RE
-
-LOGDIR='testlog'
-def clearTestLog():
-    os.system("rm -rf testlog")
-    os.system("mkdir testlog")
+from tempfile import mkdtemp
+from shutil import rmtree
 
 
 class HarvesterLogTest(unittest.TestCase):
     def setUp(self):
-        clearTestLog()
-        
+        self.stateDir = mkdtemp()
+        self.logDir = mkdtemp()
+
+    def tearDown(self):
+        rmtree(self.stateDir)
+        rmtree(self.logDir)
+       
     def testReadStartDateFromLogLine(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEquals('2005-01-02', harvesterlog.getStartDate(logline))
@@ -78,7 +80,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(not harvesterlog.isCurrentDay('2005-01-02'))
         
     def testHasWork(self):
-        logger = HarvesterLog(LOGDIR,'someuni')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
         self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
         self.assert_(logger.hasWork())
         logger.from_=time.strftime('%Y-%m-%d')
@@ -97,24 +99,24 @@ class HarvesterLogTest(unittest.TestCase):
         
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"
-        f = open(LOGDIR+'/name.stats','w')
+        f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Don"crack"')
         f.close()
-        logger = HarvesterLog(LOGDIR, 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.startRepository('RepositoryName')
         logger.close()
-        lines = open(LOGDIR+'/name.stats').readlines()
+        lines = open(self.stateDir+'/name.stats').readlines()
         self.assertEqual(2,len(lines))
         
     def testLogLine(self):
-        logger = HarvesterLog(LOGDIR, 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.begin()
         logger.updateStatsfile(1, 2, 3)
         logger.done()
         logger.endRepository(None)
         logger.close()
-        lines = open(LOGDIR+'/name.stats').readlines()
-        eventline = open(LOGDIR+'/name.events').readlines()[0].strip()
+        lines = open(self.stateDir+'/name.stats').readlines()
+        eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
         self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0, Done:',lines[0][:50])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
@@ -123,7 +125,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 1/2/3/0, ResumptionToken: None',comments)
     
     def testLogLineError(self):
-        logger = HarvesterLog(LOGDIR, 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.begin()
         try:
             logger.updateStatsfile(1, 2, 3)
@@ -131,8 +133,8 @@ class HarvesterLogTest(unittest.TestCase):
         except:
             logger.endWithException()
         logger.close()
-        lines = open(LOGDIR+'/name.stats').readlines()
-        eventline = open(LOGDIR+'/name.events').readlines()[0].strip()
+        lines = open(self.stateDir+'/name.stats').readlines()
+        eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
         self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0 busy..., Error: exceptions.Exception: FATAL',lines[0][:87])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
@@ -161,10 +163,10 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('449', total)        
         
     def testLogWithoutDoubleIDs(self):
-        f = open(LOGDIR+'/name.ids','w')
+        f = open(self.stateDir+'/name.ids','w')
         f.writelines(['id:1\n','id:2\n','id:1\n'])
         f.close()
-        logger = HarvesterLog(LOGDIR, 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         self.assertEquals(2,logger.totalids())
         logger.logID('id:3')
         self.assertEquals(3,logger.totalids())
@@ -173,35 +175,35 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(3,logger.totalids())
         
     def testLogDeleted(self):
-        logger = HarvesterLog(LOGDIR,'emptyrepoi')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
         self.assertEquals(None, logger.token)
-        f = open(LOGDIR+'/name.stats','w')
+        f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
-        logger = HarvesterLog(LOGDIR,'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
         self.assertEquals('2005-01-02',logger.from_)
         self.assertEquals(1650, logger.total)
         self.assertEquals('resumption', logger.token)
-        f = open(LOGDIR+'/name.stats','w')
+        f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption\n')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s\n')
         f.close()
-        logger = HarvesterLog(LOGDIR,'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
         
     def testMarkDeleted(self):
-        f = open(LOGDIR+'/name.stats','w')
+        f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
-        logger = HarvesterLog(LOGDIR,'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
         self.assertEquals('resumption', logger.token)
         logger.markDeleted()
         logger.close()
-        logger = HarvesterLog(LOGDIR,'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)

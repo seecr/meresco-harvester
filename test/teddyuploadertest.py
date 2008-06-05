@@ -138,5 +138,3 @@ class TeddyUploaderTest(unittest.TestCase):
         """Self Shunt"""
         pass
         
-if __name__ == '__main__':
-    unittest.main()

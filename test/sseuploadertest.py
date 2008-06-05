@@ -339,6 +339,3 @@ XML="""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 </SOAP-ENV:Envelope>
 """
 
-if __name__ == '__main__':
-    unittest.main()
-    

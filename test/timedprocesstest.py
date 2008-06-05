@@ -80,5 +80,3 @@ class TimedProcessTest(unittest.TestCase):
         self.assert_(tp.wasTimeout())
         self.assert_(not tp.wasSuccess())
         
-if __name__ == '__main__':
-    unittest.main()

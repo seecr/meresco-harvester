@@ -148,5 +148,3 @@ class RepositoryStatusTest(unittest.TestCase):
   <recenterrors></recenterrors>
 </status>""", streamOut.getvalue())
 
-if __name__ == '__main__':
-    unittest.main()

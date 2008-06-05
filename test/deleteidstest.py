@@ -29,60 +29,56 @@
 #
 ## end license ##
 
-import unittest, tempfile, os, shutil
+import unittest, os, shutil
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.deleteids import DeleteIds, readIds
 from sets import Set
 from merescoharvester.harvester.virtualuploader import UploaderException, VirtualUploader
 from merescoharvester.harvester import deleteids
+from tempfile import mkdtemp
+from shutil import rmtree
 
 class DeleteIdsTest(unittest.TestCase):
-    def _rmtree(self):
-        if os.path.isdir(self.testdir):
-            shutil.rmtree(self.testdir)
-        else:
-            os.makedirs(self.testdir)
-
     def setUp(self):
-        self.testdir = os.path.join(tempfile.gettempdir(), 'deleteidstest')
-        self._rmtree()
-        reload(deleteids)
-            
+        self.stateDir = mkdtemp()
+        self.logDir = mkdtemp()
+
     def tearDown(self):
-        self._rmtree()
+        rmtree(self.stateDir)
+        rmtree(self.logDir)
         
     def testDeleteWithOneFailure(self):
         repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
         idfile.write('mock:1\nmock:2\n\n\t\nmock:3\nmock:2\nmock:2\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(Set(['mock:1','mock:2','mock:3']),dt.ids())
         dt.delete(trials=1)
-        dlogfile = os.path.join(self.testdir,'deleteids.log')
+        dlogfile = os.path.join(self.logDir,'deleteids.log')
         self.assert_(os.path.isfile(dlogfile))
         dlog = open(dlogfile)
         s = Set(map(lambda l:l.split('\t')[2],dlog))
         self.assertEquals(Set(['[mock:1]','[mock:2]','[mock:3]']),s)
         dlog.close()
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(Set(['mock:3']),dt.ids())
-        logger = harvesterlog.HarvesterLog(self.testdir, repository.id)
+        logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         self.assert_(logger.from_)
         
     def testDelete(self):
         repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
         idfile.write('mock:5\nmock:6\nmock:7\nmock:8\nmock:9\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(5, len(dt.ids()))
         dt.delete(trials=1)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(0, len(dt.ids()))
-        logger = harvesterlog.HarvesterLog(self.testdir, repository.id)
+        logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         self.assert_(not logger.from_)
 
     def testDeleteUsesUploadObjectWithRepository(self):
@@ -90,11 +86,11 @@ class DeleteIdsTest(unittest.TestCase):
         The FileSystemUploader needs a repository object in the
         Upload object."""
         repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
         idfile.write('mock:5\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(0, len(repository.uploads))
         dt.delete()
         self.assertEquals(1, len(repository.uploads))
@@ -102,50 +98,45 @@ class DeleteIdsTest(unittest.TestCase):
 
     def testDeleteOtherFilename(self):
         repository = MockRepositoryAndUploader()
-        filename = os.path.join(self.testdir, 'delete.ids.in.this.file')
+        filename = os.path.join(self.stateDir, 'delete.ids.in.this.file')
         idfile = file(filename, 'w')
         idfile.write('mock:5\nmock:6\nmock:7\nmock:8\nmock:9\n')
         idfile.close()
         self.createStatsFile(repository)
-        class MockHarvesterLog:
-            def __init__(self, *args, **kwargs):
-                raise AssertionError('Should not reach here')
-
-        deleteids.HarvesterLog = MockHarvesterLog
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         dt.deleteFile(filename)
         self.assertEquals(0, len(readIds(filename)))
         self.assertEquals(Set(['mock:5','mock:6','mock:7','mock:8','mock:9']),repository.deleted_ids)
         
-        logger = harvesterlog.HarvesterLog(self.testdir, repository.id)
+        logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         #self.assert_(not logger.from_)
 
         
     def testDeleteWithCtrlC(self):
         repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
         idfile.write('mock:11\nmock:12\n\n\t\nmock:13\nmock:14\nmock:15\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(5, len(dt.ids()))
         try:
             dt.delete(trials=1)
             self.fail()
         except SystemExit, e:
             pass
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(3, len(dt.ids()))
         
     def testTrials(self):
         repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.testdir, repository.id), 'w')
+        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
         idfile.write('mock:21\nmock:22\nmock:23\nmock:24\nmock:25\n')
         idfile.close()
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(5, len(dt.ids()))
         dt.delete(trials=1)
-        dt = DeleteIds(repository, self.testdir)
+        dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(1, len(dt.ids()))
         self.assertEquals(1, repository.deleteMock24Count)
         dt.delete()
@@ -154,7 +145,7 @@ class DeleteIdsTest(unittest.TestCase):
         
 
     def createStatsFile(self,repository):
-        logger = harvesterlog.HarvesterLog(self.testdir, repository.id)
+        logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         logger.startRepository('A beautiful name')
         logger.begin()
         logger.updateStatsfile(0,0,0)
