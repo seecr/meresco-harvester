@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -116,7 +115,3 @@ class ThroughputAnalyser:
         finally:
             events.close()
         return records, seconds
-
-if __name__ == '__main__':
-    rs = Throughput()
-    rs.main(sys.stdin, sys.stdout)

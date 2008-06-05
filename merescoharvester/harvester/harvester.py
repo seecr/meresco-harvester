@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -46,7 +45,7 @@ def p(anObject):
     sys.stdout.flush()
 
 class Harvester:
-    def __init__(self, repository, logpath, mockRequest = None, mockLogger = None):
+    def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None):
         self._repository = repository
         self._logger = mockLogger or HarvesterLog(logpath, repository.id)
         self._eventlogger = self._logger.eventLogger()

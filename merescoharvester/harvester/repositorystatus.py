@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -98,6 +97,3 @@ class RepositoryStatus:
 """)
         streamOut.flush()
 
-if __name__ == '__main__':
-    rs = RepositoryStatus()
-    rs.main(sys.stdin, sys.stdout)

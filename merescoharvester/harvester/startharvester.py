@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,11 +28,7 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005, Seek You Too B.V.
-#
-# $Id: startharvester.py 4825 2007-04-16 13:36:24Z TJ $
-#
+
 from harvesterlog import HarvesterLog
 from eventlogger import EventLogger, NilEventLogger
 from harvester import Harvester
@@ -43,6 +38,8 @@ from saharaget import SaharaGet
 from time import sleep
 import traceback
 from timedprocess import TimedProcess
+from urllib import urlopen
+from os.path import join
 
 
 class StartHarvester:
@@ -56,6 +53,11 @@ class StartHarvester:
         if not self.domainId:
             self.parser.error("Specify domain")
         
+        if self._logDir == None:
+            self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()
+        if self._stateDir == None:
+            self._stateDir = urlopen(self.saharaurl + '/_getoptions/stateDir').read()
+
         self.saharaget = SaharaGet(self.saharaurl, self.setActionDone)
         
         self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
@@ -67,11 +69,11 @@ class StartHarvester:
             self.repository.targetId = self.forceTarget
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
+
+        #self.full_logpath = os.path.join(self.logPath(), self.domainId)
         
-        self.full_logpath = os.path.join(self.logpath, self.domainId)
-        
-        os.path.isdir(self.full_logpath) or os.makedirs(self.full_logpath)
-        self.eventlogger = EventLogger(os.path.join(self.full_logpath, 'harvester.log'))
+        #os.path.isdir(self.full_logpath) or os.makedirs(self.full_logpath)
+        self.eventlogger = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
     
         if self.uploadLog:
             self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))
@@ -83,8 +85,10 @@ class StartHarvester:
                         help="The url of the SAHARA web interface, e.g. https://username:password@sahara.example.org", default="http://localhost")
         self.parser.add_option("-r", "--repository", dest="repositoryId",
                         help="Process a single repository within the given domain. Defaults to all repositories from the domain.", metavar="REPOSITORY")
-        self.parser.add_option("-l", "--logpath", dest="logpath",
-                        help="Set the logpath, if not use <current directory>/log", metavar="DIRECTORY", default=self.getDefaultLogpath())
+        self.parser.add_option("--logDir", "", dest="_logDir",
+                        help="Override the logDir in the apache configuration.", metavar="DIRECTORY", default=None)
+        self.parser.add_option("--stateDir", dest="_stateDir",
+                        help="Override the stateDir in the apache configuration.", metavar="DIRECTORY", default=None)
         self.parser.add_option("--uploadLog", "", dest="uploadLog",
                         help="Set the mockUploadLogFile to which the fields are logged instead of uploading to a server.", metavar="FILE")
         self.parser.add_option("--force-target", "", dest="forceTarget",
@@ -94,10 +98,7 @@ class StartHarvester:
         self.parser.add_option("--no-action-done", "", action="store_false", dest="setActionDone", default=True, help="Do not set SAHARA's actions", metavar="TARGETID")
         (options, args) = self.parser.parse_args()
         return options
-    
-    def getDefaultLogpath(self):
-        return os.path.join(os.getcwd(), 'log')
-    
+       
     def restartWithLoop(self, domainId):
         for key in self.saharaget.getRepositoryIds(domainId):
             args = sys.argv[:1] + ['--repository='+key] + sys.argv[1:]
@@ -114,7 +115,10 @@ class StartHarvester:
     
     def start(self):
         try:
-            self.repository.do(self.full_logpath, self.eventlogger)
+            self.repository.do(
+                stateDir=join(self._stateDir, self.domainId),
+                logDir=join(self._logDir, self.domainId),
+                eventlogger=self.eventlogger)
         except:
             xtype,xval,xtb=sys.exc_info()
             self.eventlogger.error('|'.join(map(str.strip, traceback.format_exception(xtype,xval,xtb))), id=self.repository.id)

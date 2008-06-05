@@ -28,10 +28,7 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Copyright (C) 2005 Seek You Too B.V. http://www.cq2.nl
-#
-# $Id: harvesterlog.py 4825 2007-04-16 13:36:24Z TJ $
+
 import time, os, sys, re, string
 if sys.version_info[:2] == (2,3):
     from sets import Set as set
@@ -68,7 +65,7 @@ def idfilename(logpath, repositorykey):
     return pathjoin(logpath, repositorykey+'.ids')
 
 class HarvesterLog:
-    def __init__(self, logpath, name):
+    def __init__(self, logPath, statePath, name):
         self._name=name
         self._ids = Ids(logpath,name)
         self._statsfilename = logpath + '/' + name + '.stats'

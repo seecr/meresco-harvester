@@ -32,8 +32,8 @@ for repositoryGroup in groups:
 			if not args.repositoryId or args.repositoryId == repositoryId:
 				repositoryNames.append(repositoryId)
 
-
-analyser = ThroughputAnalyser('/home/sahara/harvester/log/' + args.domainId)
+logDir = req.get_options()['logDir']
+analyser = ThroughputAnalyser(logDir + '/' + args.domainId)
 report = analyser.analyse(repositoryNames, dateSince)
 %>
 <table>

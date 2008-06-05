@@ -61,7 +61,6 @@ from vcardtest import VCardTest
 from amaraforharvestertest import AmaraForHarvesterTest
 from sruupdateuploadertest import SruUpdateUploaderTest
 from eventloggertest import EventLoggerTest
-from eventloganalysertest import EventLogAnalyserTest
 
 if __name__ == '__main__':
         unittest.main()

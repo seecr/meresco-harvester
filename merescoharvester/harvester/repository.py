@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -29,11 +28,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005, Seek You Too B.V.
-#
-# $Id: repository.py 4825 2007-04-16 13:36:24Z TJ $
-#
 
 from cq2utils import binderytools
 from mapping import Mapping
@@ -54,9 +48,10 @@ class RepositoryException(Exception):
     pass
 
 class Action:
-    def __init__(self, repository, logpath):
+    def __init__(self, repository, stateDir, logDir):
         self._repository = repository
-        self._logpath = logpath
+        self._stateDir = stateDir
+        self._logDir = logDir
     def do(self):
         """
         perform action and return
@@ -74,7 +69,7 @@ class NoneAction(Action):
 
 class HarvestAction(Action):
     def _createHarvester(self):
-        return Harvester(self._repository, self._logpath)
+        return Harvester(self._repository, self._stateDir, self._logDir)
     
     def do(self):
         if self._repository.shopClosed():
@@ -85,14 +80,14 @@ class HarvestAction(Action):
 
 class DeleteIdsAction(Action):
     def do(self):
-        d = DeleteIds(self._repository, self._logpath)
+        d = DeleteIds(self._repository, self._stateDir, self._logDir)
         d.delete()
         return True, 'Deleted'
 
 class SmoothAction(Action):
-    def __init__(self, repository, logpath):
-        Action.__init__(self, repository, logpath)
-        self.filename = os.path.join(self._logpath, self._repository.key + '.ids')
+    def __init__(self, repository, stateDir, logDir):
+        Action.__init__(self, repository, stateDir, logDir)
+        self.filename = os.path.join(self._stateDir, self._repository.key + '.ids')
         self.oldfilename = self.filename + ".old"
 
     def do(self):
@@ -113,7 +108,7 @@ class SmoothAction(Action):
         else:
             open(self.oldfilename, 'w').close()
         open(self.filename, 'w').close()
-        logger = HarvesterLog(self._logpath,self._repository.key)
+        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.key)
         try:
             logger.markDeleted()
         finally:
@@ -128,26 +123,26 @@ class SmoothAction(Action):
         return DONE
 
     def _delete(self, filename):
-        d = DeleteIds(self._repository, self._logpath)
+        d = DeleteIds(self._repository, self._stateDir, self._logDir)
         d.deleteFile(filename)
 
     def _harvest(self):
-        harvester = Harvester(self._repository, self._logpath)
+        harvester = Harvester(self._repository, self._stateDir, self._logDir)
         return harvester.harvest()
 
 class ActionFactoryException(Exception):
     pass
 
 class ActionFactory:
-    def createAction(self, repository, logpath):
+    def createAction(self, repository, stateDir, logDir):
         if repository.action == 'clear':
-            return DeleteIdsAction(repository, logpath)
+            return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir)
         if repository.action == 'refresh':
-            return SmoothAction(repository, logpath)
+            return SmoothAction(repository, stateDir=stateDir, logDir=logDir)
         if repository.use == 'true' and repository.action == '':
-            return HarvestAction(repository, logpath)
+            return HarvestAction(repository, stateDir=stateDir, logDir=logDir)
         if repository.use == "" and repository.action == '':
-            return NoneAction(repository, logpath)
+            return NoneAction(repository, stateDir=stateDir, logDir=logDir)
         raise ActionFactoryException("Action '%s' not supported."%repository.action)
 
 class Repository(SaharaObject):
@@ -188,13 +183,13 @@ class Repository(SaharaObject):
             return self.mockUploader
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
-    def _createAction(self, logpath):
-        return ActionFactory().createAction(self, logpath)
+    def _createAction(self, stateDir, logDir):
+        return ActionFactory().createAction(self, stateDir=stateDir, logDir=logDir)
 
-    def do(self, logpath, eventlogger=nillogger):
-        if not logpath:
-            raise RepositoryException('Missing logpath')
-        action = self._createAction(logpath)
+    def do(self, stateDir, logDir, eventlogger=nillogger):
+        if not (stateDir or logDir):
+            raise RepositoryException('Missing stateDir and/or logDir')
+        action = self._createAction(stateDir=stateDir, logDir=logDir)
         if action.info():
             eventlogger.logLine('START',action.info(), id=self.key)
         actionIsDone, message = action.do()
