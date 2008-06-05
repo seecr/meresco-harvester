@@ -30,11 +30,7 @@
 #
 ## end license ##
 
-mydir=$(cd $(dirname $0); pwd)
+# This script should be run by a user with write access to the logDir and stateDir
+# specified in the apache configuration
 
-if [ -d $mydir/../lib ]; then
-    libdir=$(cd $mydir/../lib; pwd)
-    export PYTHONPATH=$libdir
-fi
-cd $mydir
-python startharvester.py $*
+python -c "from merescoharvester.harvester.startharvester import StartHarvester; StartHarvester().start()" "$@"

@@ -31,6 +31,9 @@
 
 from slowfoot.slowfoothandler import Request, handlepsp, util, _psp_login, retrieveSession, apache
 from disallowfileplugin import DisallowFilePlugin
+from os.path import dirname, join
+
+templatesPath = join(dirname(__file__), 'slowfoottemplates')
 
 dfp = DisallowFilePlugin([
     'edit',
@@ -62,6 +65,7 @@ dfp = DisallowFilePlugin([
 
 
 def handler(req):
+    req.get_options()['templatesPath'] = templatesPath
     req = Request(req, handlepsp, util, _psp_login, retrieveSession)
     
     req.addPlugin('PREOPEN', dfp)

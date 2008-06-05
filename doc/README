@@ -5,22 +5,65 @@ http://www.meresco.org
 
 **********
 
-1. Webcontrolpanel users in /var/lib/python-merescoharvester/users.txt
-----------------------------------------------------------------------
-All users are specified in this file. The format of the file is:
-<username>:<md5sum of password>
+1. Installation
+---------------
+Installation can be done with python distutils.
+    $ python setup.py install
 
-2. Default web controlpanel user account
-----------------------------------------
+2. Configuration
+----------------
+Furthermore you will need to configure:
+    - apache
+    - webcontrolpanel administrator (admin)
 
-The python-merescoharvester is installed with one default user
-which can access the control panel. This is the 'admin' user.
-To change the default password 'admin' to something else, you
-should change the file /var/lib/python-merescoharvester/users.txt
-echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
+2.1 Apache Configuration
+------------------------
+    An example apache configuration is given in the example directory. Please
+    change it to your needs.
 
-3. Adding a new user.
----------------------
+2.1.1 Accessible directories.
+----------------------------
+    The DocumentRoot of your apache configuration should be writable for the
+    web user, e.g. www-data
+    The directories specified in the PythonOption logDir and stateDir should
+    be readable for the www-data user.
+    The file specified in the PythonOption usersfile should be writable by the
+    web user. (See 2.2)
 
-The admin user can add or delete users with the control panel.
+2.1.2 SSL Certificate creation
+------------------------------
+    If you don't have an SSL Certificate for your server you can create your
+    own self-signed certificate.
+      Create a server key.
+        $ openssl genrsa -out server.pem 2096
+      Create a certificate. Fill in some information. BEWARE: As Common Name (CN)
+      fill in your domainname, e.g. harvester.example.org
+        $ openssl req -new -key server.pem -out server.csr
+      Now create a self-signed certificate.
+        $ openssl x509 -req -days 60 -in server.csr -signkey server.pem -out server.crt
 
+2.2 Webcontrolpanel Configuration
+---------------------------------
+    The webcontrolpanel has one special user called 'admin', with extra privileges.
+    They are documentend at http://meresco.org
+
+    Amongst these privileges is the right to create users. This is all done
+    in the webcontrolpanel. The created users are stored in the file specified
+    in the apache configuration (PythonOption usersfile)
+
+    Each user has it's own line in this file in the format:
+        <username>:<md5sum of password>
+
+    To start using the "Meresco Harvester" you will need to provide it with one
+    admin user, a default usersfile is in the example directory. It contains the
+    admin user with the password 'admin'.
+
+2.2.1 Changing the admin password
+---------------------------------
+    To create a password for the user admin you can do:
+      $ echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
+
+3. Further Reading
+------------------
+    For more information take a look at http://meresco.org or at the
+    documentation in the doc directory.
