@@ -40,7 +40,7 @@ class IdsTest(MyTestCase):
         MyTestCase.tearDown(self)
         
     def testAddOne(self):
-        self.ids = Ids(self.testdir, 'idstest')
+        self.ids = Ids(self.testdir + '/doesnotexistyet/', 'idstest')
         self.ids.add('id:1')
         self.assertEquals(1, self.ids.total())
         

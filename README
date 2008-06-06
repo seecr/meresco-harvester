@@ -14,6 +14,7 @@ Installation can be done with python distutils.
 ----------------
 Furthermore you will need to configure:
     - apache
+    - sitecustomize.py !!
     - webcontrolpanel administrator (admin)
     - harvesting (user)
 
@@ -43,7 +44,40 @@ Furthermore you will need to configure:
       Now create a self-signed certificate.
         $ openssl x509 -req -days 60 -in server.csr -signkey server.pem -out server.crt
 
-2.2 Webcontrolpanel Configuration
+2.1.3 Module configuration
+--------------------------
+    Take care that the correct modules are enabled in apache.
+    For the apache example configuration you should enable:
+        - mod_python.load
+        - rewrite.load
+        - ssl.load
+        - ssl.conf
+        - proxy.load
+        - cgid.conf
+        - cgid.load
+        - authz_host.load
+        - mime.load
+        - alias.load
+        - proxy_http.load
+    Also make sure that now cache modules are enabled!
+
+2.1.4 Ports confguration
+------------------------
+    The example configuration acts on ports 80 and 443, make sure
+    apache listens to these ports.
+
+2.2 Sitecustomize.py !!
+-----------------------
+    "Meresco Harvester" requires 'utf-8' as defaultencodig. This can be
+    done with a file sitecustomize.py somewhere in your pythonpath. A usual
+    place for your sitecustomize.py is /usr/lib/python2.4/site-packages/
+    The contents should be:
+        import sys
+        sys.setdefaultencoding('utf-8')
+
+    The webcontrolpanel does not work if the encoding is different.
+
+2.3 Webcontrolpanel Configuration
 ---------------------------------
     The webcontrolpanel has one special user called 'admin', with extra privileges.
     They are documentend at http://meresco.org
@@ -59,16 +93,16 @@ Furthermore you will need to configure:
     admin user, a default usersfile is in the example directory. It contains the
     admin user with the password 'admin'.
 
-2.2.1 Changing the admin password
+2.3.1 Changing the admin password
 ---------------------------------
     To create a password for the user admin you can do:
       $ echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
 
-2.3. Harvesting configuration
+2.4 Harvesting configuration
 -----------------------------
-    Harvesting is done with the startharvester.sh script which is in the example
+    Harvesting is done with the startharvester.py script which is in the example
     directory.
-    The user that will run the startharvester.sh script will need to have
+    The user that will run the startharvester.py script will need to have
     read/write permissions in the stateDir and logDir specified in the
     apache configuration.
     

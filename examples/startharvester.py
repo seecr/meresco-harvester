@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -33,4 +33,4 @@
 # This script should be run by a user with write access to the logDir and stateDir
 # specified in the apache configuration
 
-python -c "from merescoharvester.harvester.startharvester import StartHarvester; StartHarvester().start()" "$@"
+from merescoharvester.harvester.startharvester import StartHarvester StartHarvester().start()

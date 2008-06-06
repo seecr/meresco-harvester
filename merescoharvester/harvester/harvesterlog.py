@@ -35,7 +35,8 @@ if sys.version_info[:2] == (2,3):
 from eventlogger import EventLogger
 from ids import Ids
 import traceback
-from os.path import join as pathjoin
+from os.path import join as pathjoin, isdir
+from os import makedirs
 
 def    printTime():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
@@ -64,9 +65,13 @@ def getResumptionToken(logline):
 def idfilename(stateDir, repositorykey):
     return pathjoin(stateDir, repositorykey+'.ids')
 
+def ensureDirectory(directoryPath):
+    isdir(directoryPath) or makedirs(directoryPath)
+
 class HarvesterLog:
     def __init__(self, stateDir, logDir, name):
         self._name=name
+        ensureDirectory(stateDir)
         self._ids = Ids(stateDir, name)
         self._statsfilename = stateDir + '/' + name + '.stats'
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
