@@ -54,7 +54,7 @@ class SruUpdateUploader(VirtualUploader):
         anId = anUpload.id
         self.logLine('UPLOAD.SEND', 'START', id = anId)
 
-        recordData = '<document>%s</document>' % ''.join(
+        recordData = '<document xmlns="http://meresco.com/namespace/harvester/document">%s</document>' % ''.join(
                 ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
 
         action = "replace"

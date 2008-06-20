@@ -34,6 +34,11 @@ import os, sys
 os.system('find .. -name "*.pyc" | xargs rm -f')
 sys.path.insert(0, '..')
 
+
+from glob import glob
+for dir in glob('../deps.d/*'):
+  sys.path.insert(0, dir)
+
 import unittest
 
 from disallowfileplugintest import DisallowFilePluginTest
@@ -54,7 +59,6 @@ from repositorytest import RepositoryTest
 from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest
 from sseuploadertest import SSEUploaderTest
-from teddyuploadertest import TeddyUploaderTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from vcardtest import VCardTest
