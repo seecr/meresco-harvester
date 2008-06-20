@@ -34,7 +34,6 @@ import os, sys
 os.system('find .. -name "*.pyc" | xargs rm -f')
 sys.path.insert(0, '..')
 
-
 from glob import glob
 for dir in glob('../deps.d/*'):
   sys.path.insert(0, dir)

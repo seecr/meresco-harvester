@@ -1,2 +1,4 @@
 python-slowfoot (>=7.2)
 python-slowfoot (<<7.3)
+python-cq2utils (>=5.3)
+python-cq2utils (<<5.4)
