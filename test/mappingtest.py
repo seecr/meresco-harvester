@@ -30,7 +30,7 @@
 ## end license ##
 
 import unittest
-from merescoharvester.harvester.mapping import Mapping, assertObligatoryFields, TestRepository, DataMapException, DataMapAssertionException, parse_xml
+from merescoharvester.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException, parse_xml
 import os, tempfile
 from merescoharvester.harvester import mapping
 from StringIO import StringIO
@@ -70,11 +70,6 @@ class MappingTest(unittest.TestCase):
         self.assertEquals('Jonkers, J', uploadfields['meta_dc.creator'])
         self.assertEquals('utf-8', uploadfields['charset'])
 
-    def testAssertObligatoryFields(self):
-        uploadfields = {'title':'bla', 'data':'tosti', 'charset':'utf-8'}
-        self.assert_(not assertObligatoryFields({}))
-        self.assert_(assertObligatoryFields(uploadfields))
-
     def testOtherFile(self):
         testcode="""
 upload.fields['charset']=u'utf-8'
@@ -100,13 +95,13 @@ upload.fields['repository'] = input.repository.id"""
 
     def testInValidMapping(self):
         datamap = Mapping('mappingId')
-        datamap.code ="""upload.fields"""
+        datamap.code ="""upload.parts['unfinishpython"""
         self.assert_(not datamap.isValid())
         try:
             datamap.validate()
             self.fail()
-        except DataMapException, e:
-            self.assertEquals('The keys: title, data, charset are mandatory', str(e))
+        except Exception, e:
+            self.assertTrue('EOL while scanning single-quoted string' in str(e), str(e))
 
     def testInValidWithImportMapping(self):
         datamap = Mapping('mappingId')

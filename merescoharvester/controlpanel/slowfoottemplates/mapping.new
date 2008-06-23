@@ -1,6 +1,35 @@
 <%
 from cq2utils import binderytools
-from merescoharvester.harvester.mapping import DEFAULT_DC_CODE as execcode
+execcode = '''upload.parts['metadata'] = input.metadata.xml()
+
+upload.parts['header'] = input.header.xml()
+
+upload.parts['meta'] = """<meta xmlns="http://meresco.com/namespace/harvester/meta">
+  <upload><id>%(id)s</id></upload>
+  <record>
+    <id>%(recordId)s</id>
+  </record>
+  <repository>
+    <id>%(repository)s</id>
+    <set>%(set)s</set>
+    <baseurl>%(baseurl)s</baseurl>
+    <repositoryGroupId>%(repositoryGroupId)s</repositoryGroupId>
+    <metadataPrefix>%(metadataPrefix)s</metadataPrefix>
+    <collection>%(collection)s</collection>
+  </repository>
+</meta>""" % dict([(k,xmlEscape(v)) for k,v in {
+  'id': upload.id,
+  'set': input.repository.set,
+  'baseurl': input.repository.baseurl,
+  'repositoryGroupId':  input.repository.repositoryGroupId,
+  'repository': input.repository.id,
+  'metadataPrefix': input.repository.metadataPrefix,
+  'collection': input.repository.collection,
+  'recordId': input.header.identifier,
+}.items()])
+'''
+description = """This mapping is what has become the default mapping for most Meresco based projects.
+"""
 
 f = asform(input)
 name = f.name
@@ -23,6 +52,7 @@ else:
   <id><%=mappingid%></id>
   <name><%= name %></name>
   <code><% escape_xml(execcode) %></code>
+  <description><% escape_xml(description) %></description>
 </mapping>
 <%
   redirect(uri(path='/page/mapping.edit/' + mappingid + '.mapping', query={'referrerDomain':domain.domain.id}))

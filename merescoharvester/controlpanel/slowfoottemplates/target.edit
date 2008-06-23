@@ -28,34 +28,7 @@ if session.get('isAdmin',''):
    </tr>
 
 <%
-  if searchEngineTarget.targetType == 'sse':
-%>
-   <tr>
-    <td>Username:</td>
-    <td><input type="text" name="username" value="<%=searchEngineTarget.username%>"></td>
-   </tr>
-
-   <tr>
-    <td>Password:</td>
-    <td><input type="text" name="password" value="<%=searchEngineTarget.password%>"></td>
-   </tr>
-
-   <tr>
-    <td>Base URL: (without &quot;http://&quot;)</td>
-    <td><input type="text" name="baseurl" value="<%=searchEngineTarget.baseurl%>" size="30"></td>
-   </tr>
-
-   <tr>
-    <td>Path:</td>
-    <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
-  </tr>
-
-   <tr>
-    <td>Port:</td>
-    <td><input type="text" name="port" value="<%=searchEngineTarget.port%>" size="6"></td>
-   </tr>
-<%
-  elif searchEngineTarget.targetType == 'sruUpdate':
+  if searchEngineTarget.targetType == 'sruUpdate':
 %>
    <tr>
     <td>Base URL: (without &quot;http://&quot;)</td>
@@ -66,33 +39,6 @@ if session.get('isAdmin',''):
     <td>Path:</td>
     <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
   </tr>
-
-   <tr>
-    <td>Port:</td>
-    <td><input type="text" name="port" value="<%=searchEngineTarget.port%>" size="6"></td>
-   </tr>
-<%
-  elif searchEngineTarget.targetType == 'teddy':
-%>
-   <tr>
-    <td>Username:</td>
-    <td><input type="text" name="username" value="<%=searchEngineTarget.username%>"></td>
-   </tr>
-
-   <tr>
-    <td style="vertical-align:top">Private Key:</td>
-    <td><textarea name="privateKey" rows="14" cols="80"><% escape_html(searchEngineTarget.privateKey) %></textarea></td>
-   </tr>
-
-   <tr>
-    <td>Command:</td>
-    <td><input type="text" name="command" value="<%=searchEngineTarget.command%>" size="50"></td>
-  </tr>
-
-   <tr>
-    <td>Hostname:</td>
-    <td><input type="text" name="hostname" value="<%=searchEngineTarget.hostname%>" size="50"></td>
-   </tr>
 
    <tr>
     <td>Port:</td>
@@ -151,34 +97,7 @@ else:
   </tr>
 
 <%
-  if searchEngineTarget.targetType == 'sse':
-%>
-  <tr>
-    <td>Username:</td>
-    <td><%=searchEngineTarget.username%></td>
-  </tr>
-
-  <tr>
-    <td>Password:</td>
-    <td><%=searchEngineTarget.password%></td>
-  </tr>
-
-  <tr>
-    <td>Base URL:</td>
-    <td><%=searchEngineTarget.baseurl%></td>
-  </tr>
-
-  <tr>
-    <td>Path:</td>
-    <td><%=searchEngineTarget.path%></td>
-  </tr>
-
-  <tr>
-    <td>Port:</td>
-    <td><%=searchEngineTarget.port%></td>
-  </tr>
-<%
-  elif searchEngineTarget.targetType == 'sruUpdate':
+  if searchEngineTarget.targetType == 'sruUpdate':
 %>
   <tr>
     <td>Base URL:</td>
@@ -188,28 +107,6 @@ else:
   <tr>
     <td>Path:</td>
     <td><%=searchEngineTarget.path%></td>
-  </tr>
-
-  <tr>
-    <td>Port:</td>
-    <td><%=searchEngineTarget.port%></td>
-  </tr>
-<%
-  elif searchEngineTarget.targetType == 'teddy':
-%>
-  <tr>
-    <td>Username:</td>
-    <td><%=searchEngineTarget.username%></td>
-  </tr>
-
-  <tr>
-    <td style="vertical-align:top">Private Key:</td>
-    <td><pre><% escape_html(searchEngineTarget.privateKey) %></pre></td>
-  </tr>
-
-  <tr>
-    <td>Hostname:</td>
-    <td><%=searchEngineTarget.hostname%></td>
   </tr>
 
   <tr>

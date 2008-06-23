@@ -17,22 +17,10 @@ for delegate in searchEngineTarget.delegate:
 #
 %>
 <%
-if searchEngineTarget.targetType == 'sse':
-%>
-  <path><%escape_xml(searchEngineTarget.path)%></path>
-  <password><%escape_xml(searchEngineTarget.password)%></password>
-  <baseurl><%escape_xml(searchEngineTarget.baseurl)%></baseurl>
-<%
-elif searchEngineTarget.targetType == 'sruUpdate':
+if searchEngineTarget.targetType == 'sruUpdate':
 %>
   <path><%escape_xml(searchEngineTarget.path)%></path>
   <baseurl><%escape_xml(searchEngineTarget.baseurl)%></baseurl>
-<%
-elif searchEngineTarget.targetType == 'teddy':
-%>
-  <hostname><%escape_xml(searchEngineTarget.hostname)%></hostname>
-  <privateKey><%escape_xml(searchEngineTarget.privateKey)%></privateKey>
-  <command><%escape_xml(searchEngineTarget.command)%></command>
 <%
 elif searchEngineTarget.targetType == 'filesystem':
 %>

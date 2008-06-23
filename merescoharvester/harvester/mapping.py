@@ -109,10 +109,6 @@ def read(filename):
     finally:
         file.close()
 
-def assertObligatoryFields(uploadfields):
-    keys = uploadfields.keys()
-    return 'title' in keys and 'data' in keys and 'charset' in keys
-
 def noimport(name, globals, locals, fromlist):
     raise DataMapException('Import not allowed')
 
@@ -259,6 +255,4 @@ class Mapping(SaharaObject):
         metadata = parse_xml("""<metadata><dc><identifier>test:identifier</identifier></dc></metadata>""")
         about = parse_xml("""<about/>""")
         upload = self.createUpload(TestRepository(), header,metadata,about)
-        if not assertObligatoryFields(upload.fields):
-            raise DataMapException('The keys: title, data, charset are mandatory')
 

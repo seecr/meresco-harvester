@@ -85,9 +85,7 @@ if isAdmin:
      <td>
       <select name="targetType">
        <option value="sruUpdate">SRU Update Target</option>
-       <option value="teddy">Teddy Search Engine</option>
        <option value="filesystem">File System</option>
-       <option value="sse">SURFnet Search Engine</option>
        <option value="composite">Multiple Targets</option>
       </select>
      </td>
