@@ -121,6 +121,3 @@ class StartHarvester:
             self.eventlogger.error('|'.join(map(str.strip, traceback.format_exception(xtype,xval,xtb))), id=self.repository.id)
         sleep(1)
 
-if __name__ == '__main__':
-    startharvester = StartHarvester()
-    startharvester.start()

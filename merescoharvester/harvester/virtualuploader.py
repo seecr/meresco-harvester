@@ -72,13 +72,11 @@ class UploaderFactory:
     def __init__(self):
         from sseuploader import SSEUploader
         from sruupdateuploader import SruUpdateUploader
-        from teddyuploader import TeddyUploader
         from compositeuploader import CompositeUploader
         from filesystemuploader import FileSystemUploader
         self.mapping = {
                     'sruUpdate': SruUpdateUploader,
                     'sse': SSEUploader,
-                    'teddy': TeddyUploader,
                     'composite': CompositeUploader,
                     'filesystem': FileSystemUploader
                     }
