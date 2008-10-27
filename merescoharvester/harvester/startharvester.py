@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -49,32 +49,32 @@ class StartHarvester:
         self.parser = optparse.OptionParser()
         args = self.parse_args()
         self.__dict__.update(args.__dict__)
-        
+
         if not self.domainId:
             self.parser.error("Specify domain")
-        
+
         if self._logDir == None:
             self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()
         if self._stateDir == None:
             self._stateDir = urlopen(self.saharaurl + '/_getoptions/stateDir').read()
 
         self.saharaget = SaharaGet(self.saharaurl, self.setActionDone)
-        
+
         self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
-        
+
         if not self.repository:
             self.restartWithLoop(self.domainId)
-        
+
         if self.forceTarget:
             self.repository.targetId = self.forceTarget
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
 
         self.eventlogger = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
-    
+
         if self.uploadLog:
             self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))
-        
+
     def parse_args(self):
         self.parser.add_option("-d", "--domain", dest="domainId",
                         help="Mandatory argument denoting the domain.", metavar="DOMAIN")
@@ -92,24 +92,27 @@ class StartHarvester:
                         help="Overrides the repository's target", metavar="TARGETID")
         self.parser.add_option("--force-mapping", "", dest="forceMapping",
                         help="Overrides the repository's mapping", metavar="MAPPINGID")
-        self.parser.add_option("--no-action-done", "", action="store_false", dest="setActionDone", default=True, help="Do not set SAHARA's actions", metavar="TARGETID")
+        self.parser.add_option("--no-action-done", "", action="store_false",
+                        dest="setActionDone", default=True,
+                        help="Do not set SAHARA's actions", metavar="TARGETID")
+        self.parser.add_option("-t", "--set-process-timeout", dest="processTimeout",
+                        type="int", default=60*60, metavar="TIMEOUT",
+                        help="Subprocess will be timed out after amount of seconds.")
         (options, args) = self.parser.parse_args()
         return options
-       
-    def restartWithLoop(self, domainId):
+
+    def restartWithLoop(self, domainId, processTimeout=60*60):
         for key in self.saharaget.getRepositoryIds(domainId):
             args = sys.argv[:1] + ['--repository='+key] + sys.argv[1:]
             t = TimedProcess()
             try:
-                one_hour = 60 * 60
-                TIMEOUT = one_hour
                 SIG_INT = 2
-                t.executeScript(args, TIMEOUT, SIG_INT)
-            except KeyboardInterrupt, e:     
+                t.executeScript(args, processTimeout, SIG_INT)
+            except KeyboardInterrupt, e:
                 t.terminate()
                 raise
         sys.exit()
-    
+
     def start(self):
         try:
             self.repository.do(
