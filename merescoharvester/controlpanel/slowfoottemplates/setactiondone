@@ -13,6 +13,7 @@ target(filepath(filename))
   <repositoryGroupId><% escape_xml(repository.repositoryGroupId) %></repositoryGroupId>
   <use><% escape_xml(repository.use) %></use>
   <action></action>
+  <complete><% escape_xml(repository.complete) %></complete>
   <baseurl><% escape_xml(repository.baseurl) %></baseurl>
   <set><% escape_xml(repository.set) %></set>
   <collection><% escape_xml(repository.collection) %></collection>

@@ -122,6 +122,8 @@ class StartHarvester:
                     stateDir=join(self._stateDir, self.domainId),
                     logDir=join(self._logDir, self.domainId),
                     eventlogger=self.eventlogger)
+                if again:
+                    print 'Completely harvesting the repository %s' % self.repository.id
         except:
             xtype,xval,xtb=sys.exc_info()
             self.eventlogger.error('|'.join(map(str.strip, traceback.format_exception(xtype,xval,xtb))), id=self.repository.id)
