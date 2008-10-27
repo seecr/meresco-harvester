@@ -13,7 +13,7 @@ The mappings can be tested using an <i>online harvester</i>. It will harvest a c
 </table>
 </form>
 </p>
-<p>Secondly you can use one of the repositories known by SAHARA.
+<p>Secondly you can use one of the repositories known by Meresco Harvester.
 <form action="/onlinemapping" method="get">
 <input type="hidden" name="mapping" value="<%=args.name%>">
 <table>
