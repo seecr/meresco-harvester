@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -45,7 +45,7 @@ class HarvesterLogTest(unittest.TestCase):
     def tearDown(self):
         rmtree(self.stateDir)
         rmtree(self.logDir)
-       
+
     def testReadStartDateFromLogLine(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEquals('2005-01-02', harvesterlog.getStartDate(logline))
@@ -53,7 +53,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('2005-03-23', harvesterlog.getStartDate(logline))
         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded: 113/  113, Done: 2004-12-31 16:39:15, ResumptionToken: ga+hier+verder\n'
         self.assertEquals('1999-12-01', harvesterlog.getStartDate(logline))
-    
+
     def testReadHarvestedRecordsFromLogLine(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/ 200/  678, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEquals(('199', '200', '0', '678'), harvesterlog.getHarvestedUploadedRecords(logline))
@@ -64,21 +64,21 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testReadResumptionToken(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))        
+        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))
         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded:   113/  113, Error: XXX\n'
         self.assertEqual(None, harvesterlog.getResumptionToken(logline))
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: None'
         self.assertEqual(None, harvesterlog.getResumptionToken(logline))
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230\n'
-        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))        
+        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^452 30\n'
-        self.assertEquals('^^^oai_dc^452 30', harvesterlog.getResumptionToken(logline))        
-        
+        self.assertEquals('^^^oai_dc^452 30', harvesterlog.getResumptionToken(logline))
+
     def testSameDate(self):
         date=harvesterlog.printTime()[:10]
         self.assert_(harvesterlog.isCurrentDay(date))
         self.assert_(not harvesterlog.isCurrentDay('2005-01-02'))
-        
+
     def testHasWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
         self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
@@ -91,12 +91,25 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(logger.hasWork())
         logger.token=None
         self.assert_(logger.hasWork())
-    
+
+    def testHasWorkBeforeAndAfterDoingWork(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        self.assertTrue(logger.hasWork())
+        logger.startRepository('RepositoryName')
+        logger.begin()
+        logger.updateStatsfile(0,0,0,0)
+        logger.done()
+        logger.endRepository(None)
+        logger.close()
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        self.assertFalse(logger.hasWork())
+
+
     def createMockMailer(self, name):
         self.mockMailerName=name
         self.mockMailer=MockMailer()
         return self.mockMailer
-        
+
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"
         f = open(self.stateDir+'/name.stats','w')
@@ -107,7 +120,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         self.assertEqual(2,len(lines))
-        
+
     def testLogLine(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.begin()
@@ -123,7 +136,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 1/2/3/0, ResumptionToken: None',comments)
-    
+
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.begin()
@@ -143,7 +156,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(comments.startswith('Traceback (most recent call last):|File "'))
         self.assert_('harvesterlogtest.py", line ' in comments)
         self.assert_(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
-    
+
     def testParseInfo(self):
         from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
         line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Total: 200/201/6600, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
@@ -152,7 +165,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('201', uploaded)
         self.assertEquals('0', deleted)
         self.assertEquals('6600', total)
-        
+
     def testLogWithDeletedCount(self):
         from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
         line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Deleted/Total: 200/195/5/449, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
@@ -160,8 +173,8 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('200', harvested)
         self.assertEquals('195', uploaded)
         self.assertEquals('5', deleted)
-        self.assertEquals('449', total)        
-        
+        self.assertEquals('449', total)
+
     def testLogWithoutDoubleIDs(self):
         f = open(self.stateDir+'/name.ids','w')
         f.writelines(['id:1\n','id:2\n','id:1\n'])
@@ -173,7 +186,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger.logID('id:3')
         logger.logID('id:2')
         self.assertEquals(3,logger.totalids())
-        
+
     def testLogDeleted(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')
         self.assertEquals(None,logger.from_)
@@ -194,7 +207,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
-        
+
     def testMarkDeleted(self):
         f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
@@ -207,9 +220,9 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
-        
+
 
 class MockMailer:
     def send(self, message):
         self.message=message
-    
+

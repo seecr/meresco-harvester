@@ -96,6 +96,10 @@ for name,id in targets:
         <td><input type="checkbox" name="use" value="true" <%= repo.use and 'checked'%>></td>
       </tr>
       <tr>
+        <td>Complete in one attempt:</td>
+        <td><input type="checkbox" name="complete" value="true" <%= repo.complete and 'checked'%>>Tells the harvester to complete harvesting in one attempt. Generally this option should not be required. Only for repositories with shortlived resumptionTokens.</td>
+      </tr>
+      <tr>
         <td>Next action:</td>
         <td>
           <select name="repositoryAction">
@@ -128,7 +132,7 @@ def renderDropdown(index, selectName, aTupleList, selectedValue, wildcardName=''
 			<option value="<%=key%>" <%=selectedValue==key and 'selected' or ''%>><%=value%></option>
 <%
 	#
-%>			
+%>
 			</select>
 <%
 #
@@ -151,7 +155,7 @@ def renderTimeslot(index, aTimeslot):
 	req.write(' until')
 	renderDropdown(index, 'shopclosedEnd', hours, aTimeslot.endhour)
 	req.write(':00 hrs')
-	req.write('</td>')	
+	req.write('</td>')
 	if index != 0:
 		req.write("""
 		<td align="right">
@@ -163,7 +167,7 @@ def renderTimeslot(index, aTimeslot):
 #
 %>
     </table>
-  
+
 	<p>
   <fieldset><legend class="subhead">Closing hours</legend>
     <table>
@@ -192,7 +196,7 @@ for shopclosed in repo.shopclosed:
 	<tr><td class="horline" colspan="6"></td></tr>
 	<tr><td colspan="6"></td></tr>
 	<tr>
-		<% renderTimeslot(0, Timeslot('*:*:0:0-*:*:0:0'))%> 
+		<% renderTimeslot(0, Timeslot('*:*:0:0-*:*:0:0'))%>
 		<td><input type="submit" class="butt" value="Add" accesskey="a" name="addTimeslot"></td>
 	</tr>
 </table>

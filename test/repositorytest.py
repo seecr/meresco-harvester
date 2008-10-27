@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -75,7 +75,7 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals(2, len(timeslots))
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
         timeslots[1]._end = (Wildcard(), Wildcard(), Wildcard(), Wildcard())
-        
+
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testShopNotClosedAndThenClosed(self):
@@ -83,7 +83,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
-        
+
         timeslots[0]._end = (Wildcard(), Wildcard(), Wildcard(), Wildcard())
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
@@ -93,7 +93,7 @@ class RepositoryTest(unittest.TestCase):
         action = MockAction()
         self.repo._createAction=lambda stateDir,logDir: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals('', result)
+        self.assertEquals(('', False), result)
         self.assert_(action.called)
         self.assertEquals('', self.repo.use)
         self.assertEquals('', self.repo.action)
@@ -104,10 +104,28 @@ class RepositoryTest(unittest.TestCase):
         action = MockAction(DONE)
         self.repo._createAction=lambda stateDir,logDir: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals(DONE, result)
+        self.assertEquals((DONE, False), result)
         self.assert_(action.called)
         self.assertEquals('true', self.repo.use)
         self.assertEquals('', self.repo.action)
+
+    def testDoHarvestWithCompleteHarvestingEnabled(self):
+        self.repo.use = 'true'
+        self.repo.action = ''
+        self.repo.complete = 'true'
+        action = MockAction(DONE, hasResumptionToken=True)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
+        self.assertEquals((DONE, True), result)
+
+    def testDoHarvestWithCompleteHarvestingDisabled(self):
+        self.repo.use = 'true'
+        self.repo.action = ''
+        self.repo.complete = ''
+        action = MockAction(DONE, hasResumptionToken=True)
+        self.repo._createAction=lambda stateDir,logDir: action
+        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
+        self.assertEquals((DONE, False), result)
 
     def testDoSomeAction(self):
         self.repo._saharaget = self
@@ -115,7 +133,7 @@ class RepositoryTest(unittest.TestCase):
         action = MockAction(DONE)
         self.repo._createAction=lambda stateDir,logDir: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals(DONE, result)
+        self.assertEquals((DONE, False), result)
         self.assert_(action.called)
         self.assertEquals('', self.repo.action)
         self.assertEquals('domainId', self.mock_repositoryActionDone_domainId)
@@ -126,7 +144,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.action = 'someaction'
         action = MockAction('Not yet done!', False)
         self.repo._createAction=lambda stateDir,logDir: action
-        result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
+        result, hasResumptionToken = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals('Not yet done!', result)
         self.assert_(action.called)
         self.assertEquals('true', self.repo.use)
@@ -161,13 +179,14 @@ class RepositoryTest(unittest.TestCase):
     def testHarvestAction(self):
         repository = CallTrace("Repository")
         harvester = CallTrace("Harvester")
-        
+
         repository.returnValues['shopClosed'] = False
+        harvester.returnValues['harvest'] = ('', False)
         action = HarvestAction(repository, stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         action._createHarvester = lambda: harvester
         action.do()
         self.assertEquals(['harvest()'], harvester.__calltrace__())
-        
+
         repository.returnValues['shopClosed'] = True
         harvester = CallTrace("Harvester")
         action._createHarvester = lambda: harvester
@@ -187,14 +206,15 @@ class RepositoryTest(unittest.TestCase):
 
 
 class MockAction(Action):
-    def __init__(self, message = '', done = True):
+    def __init__(self, message = '', done = True, hasResumptionToken=False):
         self.message = message
         self.done = done
         self.called = False
+        self.hasResumptionToken = hasResumptionToken
 
     def do(self):
         self.called = True
-        return self.done, self.message
+        return self.done, self.message, self.hasResumptionToken
 
 GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
 <repository>

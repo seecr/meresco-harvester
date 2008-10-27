@@ -63,7 +63,7 @@ class StartHarvester:
         self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
 
         if not self.repository:
-            self.restartWithLoop(self.domainId)
+            self.restartWithLoop(self.domainId, self.processTimeout)
 
         if self.forceTarget:
             self.repository.targetId = self.forceTarget
@@ -82,6 +82,9 @@ class StartHarvester:
                         help="The url of the SAHARA web interface, e.g. https://username:password@sahara.example.org", default="http://localhost")
         self.parser.add_option("-r", "--repository", dest="repositoryId",
                         help="Process a single repository within the given domain. Defaults to all repositories from the domain.", metavar="REPOSITORY")
+        self.parser.add_option("-t", "--set-process-timeout", dest="processTimeout",
+                        type="int", default=60*60, metavar="TIMEOUT",
+                        help="Subprocess will be timed out after amount of seconds.")
         self.parser.add_option("--logDir", "", dest="_logDir",
                         help="Override the logDir in the apache configuration.", metavar="DIRECTORY", default=None)
         self.parser.add_option("--stateDir", dest="_stateDir",
@@ -95,9 +98,7 @@ class StartHarvester:
         self.parser.add_option("--no-action-done", "", action="store_false",
                         dest="setActionDone", default=True,
                         help="Do not set SAHARA's actions", metavar="TARGETID")
-        self.parser.add_option("-t", "--set-process-timeout", dest="processTimeout",
-                        type="int", default=60*60, metavar="TIMEOUT",
-                        help="Subprocess will be timed out after amount of seconds.")
+
         (options, args) = self.parser.parse_args()
         return options
 
@@ -115,10 +116,12 @@ class StartHarvester:
 
     def start(self):
         try:
-            self.repository.do(
-                stateDir=join(self._stateDir, self.domainId),
-                logDir=join(self._logDir, self.domainId),
-                eventlogger=self.eventlogger)
+            again = True
+            while again:
+                message, again = self.repository.do(
+                    stateDir=join(self._stateDir, self.domainId),
+                    logDir=join(self._logDir, self.domainId),
+                    eventlogger=self.eventlogger)
         except:
             xtype,xval,xtb=sys.exc_info()
             self.eventlogger.error('|'.join(map(str.strip, traceback.format_exception(xtype,xval,xtb))), id=self.repository.id)

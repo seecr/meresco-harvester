@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -63,26 +63,27 @@ class Action:
 
 class NoneAction(Action):
     def do(self):
-        return False, ''
+        return False, '', False
     def info(self):
         return ''
 
 class HarvestAction(Action):
     def _createHarvester(self):
         return Harvester(self._repository, self._stateDir, self._logDir)
-    
+
     def do(self):
         if self._repository.shopClosed():
-            return False, 'Not harvesting outside timeslots.'
-         
+            return False, 'Not harvesting outside timeslots.', False
+
         harvester = self._createHarvester()
-        return False, harvester.harvest()
+        message, hasResumptionToken = harvester.harvest()
+        return False, message, hasResumptionToken
 
 class DeleteIdsAction(Action):
     def do(self):
         d = DeleteIds(self._repository, self._stateDir, self._logDir)
         d.delete()
-        return True, 'Deleted'
+        return True, 'Deleted', False
 
 class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir):
@@ -92,15 +93,16 @@ class SmoothAction(Action):
 
     def do(self):
         if self._repository.shopClosed():
-            return False, 'Not smoothharvesting outside timeslots.'
+            return False, 'Not smoothharvesting outside timeslots.', False
 
         if not os.path.isfile(self.oldfilename):
-            result = self._smoothinit()
+            result, hasResumptionToken = self._smoothinit(), True
         else:
-            result = self._harvest()
+            result, hasResumptionToken = self._harvest()
         if result == NOTHING_TO_DO:
             result = self._finish()
-        return result == DONE, 'Smooth reharvest: ' + result
+            hasResumptionToken = False
+        return result == DONE, 'Smooth reharvest: ' + result, hasResumptionToken
 
     def _smoothinit(self):
         if os.path.isfile(self.filename):
@@ -148,7 +150,7 @@ class ActionFactory:
 class Repository(SaharaObject):
     def __init__(self, domainId, repositoryId):
         SaharaObject.__init__(self, ['repositoryGroupId', 'baseurl', 'set',
-            'collection', 'metadataPrefix', 'use',  'targetId', 'mappingId', 'action'], ['shopclosed'])
+            'collection', 'metadataPrefix', 'use',  'targetId', 'mappingId', 'action', 'complete'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
         self.mockUploader = None
@@ -192,10 +194,10 @@ class Repository(SaharaObject):
         action = self._createAction(stateDir=stateDir, logDir=logDir)
         if action.info():
             eventlogger.logLine('START',action.info(), id=self.key)
-        actionIsDone, message = action.do()
+        actionIsDone, message, hasResumptionToken = action.do()
         if  actionIsDone:
             self.action = ''
             self._saharaget.repositoryActionDone(self.domainId, self.id)
         if message:
             eventlogger.logLine('END', message, id = self.key)
-        return message
+        return message, hasResumptionToken and self.complete == 'true'

@@ -10,6 +10,7 @@ groupId = args.referrerGroup
   <id><% escape_xml(repository.id) %></id>
   <repositoryGroupId><% escape_xml(repository.repositoryGroupId) %></repositoryGroupId>
   <use><% escape_xml(repository.use) %></use>
+  <complete><% escape_xml(repository.complete) %></complete>
   <action><% escape_xml(repository.repositoryAction) %></action>
   <baseurl><% escape_xml(repository.baseurl) %></baseurl>
   <set><% escape_xml(repository.set) %></set>
@@ -23,10 +24,10 @@ for i in range(1,1+int(repository.numberOfTimeslots)):
 	if repository.get('deleteTimeslot_' + str(i)+".x", None) == None:
 		#
 %>   <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_'+str(i)),
-	repository.getfirst('shopclosedWeekDay_'+str(i)), 
-	repository.getfirst('shopclosedBegin_'+str(i)), 
-	repository.getfirst('shopclosedWeek_'+str(i)), 
-	repository.getfirst('shopclosedWeekDay_'+str(i)), 
+	repository.getfirst('shopclosedWeekDay_'+str(i)),
+	repository.getfirst('shopclosedBegin_'+str(i)),
+	repository.getfirst('shopclosedWeek_'+str(i)),
+	repository.getfirst('shopclosedWeekDay_'+str(i)),
 	repository.getfirst('shopclosedEnd_'+str(i))) %></shopclosed>
 <%
 	#
@@ -35,10 +36,10 @@ if repository.get('addTimeslot', None) != None:
   #
 %>
   <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'), 
-	repository.getfirst('shopclosedBegin_0'), 
-	repository.getfirst('shopclosedWeek_0'), 
-	repository.getfirst('shopclosedWeekDay_0'), 
+	repository.getfirst('shopclosedWeekDay_0'),
+	repository.getfirst('shopclosedBegin_0'),
+	repository.getfirst('shopclosedWeek_0'),
+	repository.getfirst('shopclosedWeekDay_0'),
 	repository.getfirst('shopclosedEnd_0')) %>
   </shopclosed>
 <%
@@ -51,10 +52,10 @@ if repository.get('deleteTimeslot', None) != None:
   #
 %>
   <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'), 
-	repository.getfirst('shopclosedBegin_0'), 
-	repository.getfirst('shopclosedWeek_0'), 
-	repository.getfirst('shopclosedWeekDay_0'), 
+	repository.getfirst('shopclosedWeekDay_0'),
+	repository.getfirst('shopclosedBegin_0'),
+	repository.getfirst('shopclosedWeek_0'),
+	repository.getfirst('shopclosedWeekDay_0'),
 	repository.getfirst('shopclosedEnd_0')) %>
   </shopclosed>
 <%

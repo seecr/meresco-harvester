@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -55,11 +55,11 @@ class SmoothActionTest(unittest.TestCase):
     def testSmooth_Init(self):
         writefile(self.idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n')
-        
+
         self.assert_(not os.path.isfile(self.old_idfilename))
-        
-        done,message = self.smoothaction.do()
-        
+
+        done,message, hasResumptionToken = self.smoothaction.do()
+
         self.assert_(os.path.isfile(self.old_idfilename))
         self.assert_(os.path.isfile(self.idfilename))
         self.assertEquals('rep:id:1\nrep:id:2\n', readfile(self.old_idfilename))
@@ -67,14 +67,14 @@ class SmoothActionTest(unittest.TestCase):
         self.assert_('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assert_(not done)
-        
+
     def testSmooth_InitWithNothingHarvestedYetRepository(self):
         self.assert_(not os.path.isfile(self.idfilename))
         self.assert_(not os.path.isfile(self.old_idfilename))
         self.assert_(not os.path.isfile(self.statsfilename))
-        
-        done,message = self.smoothaction.do()
-        
+
+        done,message, hasResumptionToken = self.smoothaction.do()
+
         self.assert_(os.path.isfile(self.old_idfilename))
         self.assert_(os.path.isfile(self.idfilename))
         self.assertEquals('', readfile(self.old_idfilename))
@@ -82,17 +82,17 @@ class SmoothActionTest(unittest.TestCase):
         self.assert_('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assert_(not done)
-        
-        
+
+
     def testSmooth_Harvest(self):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.idfilename, '')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n'+
         'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s. \n')
-        
-        self.smoothaction._harvest = lambda:HARVESTED
-        done,message = self.smoothaction.do()
-        
+
+        self.smoothaction._harvest = lambda:(HARVESTED, False)
+        done,message,hasResumptionToken = self.smoothaction.do()
+
         self.assertEquals('Smooth reharvest: Harvested.', message)
         self.assert_(not done)
 
@@ -101,42 +101,42 @@ class SmoothActionTest(unittest.TestCase):
         writefile(self.idfilename, 'rep:id:41\nrep:id:2\n')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n'+
         'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 2/2/0/2, Done: ResumptionToken:yes \n')
-        
-        self.smoothaction._harvest = lambda:HARVESTED
-        done, message = self.smoothaction.do()
-        
+
+        self.smoothaction._harvest = lambda:(HARVESTED, False)
+        done, message, hasResumptionToken = self.smoothaction.do()
+
         self.assertEquals('Smooth reharvest: Harvested.', message)
         self.assert_(not done)
-        
+
     def testSmooth_NothingToDo(self):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.idfilename, 'rep:id:41\nrep:id:2\n')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n'+
         'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 2/2/0/2, Done: ResumptionToken:None \n')
-        
-        self.smoothaction._harvest = lambda:NOTHING_TO_DO
+
+        self.smoothaction._harvest = lambda:(NOTHING_TO_DO, False)
         self.smoothaction._finish = lambda:DONE
-        done, message = self.smoothaction.do()
-        
+        done, message, hasResumptionToken = self.smoothaction.do()
+
         self.assertEquals('Smooth reharvest: ' + DONE, message)
         self.assert_(done)
-        
+
     def mockdelete(self, filename):
         self.mockdelete_filename = filename
         self.mockdelete_ids = readIds(filename)
-        
+
     def testSmooth_Finish(self):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.idfilename, 'rep:id:41\nrep:id:2\n')
-    
+
         self.smoothaction._delete=self.mockdelete
         result = self.smoothaction._finish()
-    
+
         self.assert_(not os.path.isfile(self.old_idfilename))
         self.assertEquals(DONE, result)
         self.assertEquals(self.idfilename+'.delete', self.mockdelete_filename)
         self.assertEquals(Set(['rep:id:1']), self.mockdelete_ids)
-    
+
     def testSmooth_Delete(self):
         class MockDelete:
             usedrep, usedStateDir, usedLogDir, filename = None, None, None, None
@@ -147,13 +147,13 @@ class SmoothActionTest(unittest.TestCase):
             def deleteFile(self, filename):
                 MockDelete.filename = filename
         repository.DeleteIds = MockDelete
-        self.smoothaction._delete(self.idfilename+'.delete') 
+        self.smoothaction._delete(self.idfilename+'.delete')
         self.assertEquals(self.idfilename + '.delete', MockDelete.filename)
         self.assertEquals(self.repo, MockDelete.usedrep)
         self.assertEquals(self.stateDir, MockDelete.usedStateDir)
         self.assertEquals(self.logDir, MockDelete.usedLogDir)
-        
-    
+
+
     def testHarvest(self):
         class MockHarvester:
             usedrep, usedStateDir, usedLogDir = None, 'some path', 'some path'
@@ -162,20 +162,20 @@ class SmoothActionTest(unittest.TestCase):
                 MockHarvester.usedStateDir = stateDir
                 MockHarvester.usedLogDir = logDir
             def harvest(self):
-                return 'mockharvest'
+                return 'mockharvest', False
         repository.Harvester = MockHarvester
-        self.assertEquals('mockharvest', self.smoothaction._harvest())
+        self.assertEquals(('mockharvest', False), self.smoothaction._harvest())
         self.assertEquals(self.repo, MockHarvester.usedrep)
         self.assertEquals(self.stateDir, MockHarvester.usedStateDir)
         self.assertEquals(self.logDir, MockHarvester.usedLogDir)
-    
+
 def writefile(filename, contents):
     f = open(filename,'w')
     try:
         f.write(contents)
     finally:
         f.close()
-    
+
 def readfile(filename):
     f = open(filename)
     try:

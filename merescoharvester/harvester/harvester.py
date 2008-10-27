@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -112,6 +112,7 @@ class Harvester:
             self._logger.startRepository(self._oairequest.identify().repositoryName)
             result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
             self._logger.endRepository(newtoken)
+            return newtoken
         except:
             self._logger.endWithException()
             raise
@@ -122,7 +123,7 @@ class Harvester:
             self._eventlogger.logLine("INFO", "Mappingname '%s'"%self._mapper.name, id=self._repository.id)
             self._uploader.start()
             try:
-                self._harvestLoop()
+                return self._harvestLoop()
             finally:
                 self._uploader.stop()
         finally:
@@ -131,9 +132,10 @@ class Harvester:
     def harvest(self):
         try:
             if self._logger.hasWork():
-                self._harvest()
-                return HARVESTED
+                resumptionToken = self._harvest()
+                hasResumptionToken = bool(resumptionToken and str(resumptionToken) != 'None')
+                return HARVESTED, hasResumptionToken
             else:
-                return NOTHING_TO_DO
+                return NOTHING_TO_DO, False
         finally:
             self._logger.close()
