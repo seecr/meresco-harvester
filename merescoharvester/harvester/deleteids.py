@@ -29,7 +29,7 @@
 #
 ## end license ##
 
-from sseuploader import SSEUploader, UploaderException
+from virtualuploader import UploaderException
 from eventlogger import NilEventLogger, EventLogger
 from harvesterlog import idfilename, HarvesterLog
 from string import strip

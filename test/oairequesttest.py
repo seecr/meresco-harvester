@@ -44,16 +44,16 @@ class OAIRequestTest(unittest.TestCase):
         self.assertEquals('2004-12-29T13:19:27Z',str(binding.OAI_PMH.responseDate))
         
     def testOtherOAIRequest(self):
-        binding = self.request.request({'verb':'GetRecord','metadataPrefix':'oai_dc', 'identifier':'oai:rep:00000'})
-        self.assertEquals('2005-04-28T12:48:13Z',str(binding.OAI_PMH.responseDate))
+        binding = self.request.request({'verb':'GetRecord','metadataPrefix':'oai_dc', 'identifier':'oai:rep:12345'})
+        self.assertEquals('2005-04-28T12:16:27Z',str(binding.OAI_PMH.responseDate))
         
     def testListRecordsError(self):
         try:
             self.request.listRecords(resumptionToken='BadResumptionToken')
             self.fail()
         except OAIError, e:
-            self.assertEquals('The value of the resumptionToken argument is invalid or expired.',str(e))
-            self.assertEquals( u'badResumptionToken',e.code())
+            self.assertEquals('The value of the resumptionToken argument is invalid or expired.',e.errorMessage())
+            self.assertEquals( u'badResumptionToken',e.errorCode())
             
     def testListRecords(self):
         records = self.request.listRecords(metadataPrefix='oai_dc')

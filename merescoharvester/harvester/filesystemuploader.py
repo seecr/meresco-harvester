@@ -67,15 +67,18 @@ class FileSystemUploader(VirtualUploader):
         Writes the original header and metadata to a file.
         The fields are ignored.
         """
-        filename = self._filenameFor(anUpload)
-        dirname = os.path.dirname(filename)
-        if not os.path.isdir(dirname):
-            os.makedirs(os.path.dirname(filename))
-        f = open(filename, 'w')
         try:
-            f.write(self._createOutput(anUpload).xml())
-        finally:
-            f.close()
+            filename = self._filenameFor(anUpload)
+            dirname = os.path.dirname(filename)
+            if not os.path.isdir(dirname):
+                os.makedirs(os.path.dirname(filename))
+            f = open(filename, 'w')
+            try:
+                f.write(self._createOutput(anUpload).xml())
+            finally:
+                f.close()
+        except Exception, e:
+            raise UploaderException(uploadId=anUpload.id, message=str(e))
 
     def _createOutput(self, anUpload):
         theXml = binderytools.bind_string('<record xmlns="http://www.openarchives.org/OAI/2.0/"/>')

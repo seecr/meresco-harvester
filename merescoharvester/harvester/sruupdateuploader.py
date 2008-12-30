@@ -53,17 +53,19 @@ class SruUpdateUploader(VirtualUploader):
     def send(self, anUpload):
         anId = anUpload.id
         self.logLine('UPLOAD.SEND', 'START', id = anId)
+        try:
 
-        recordData = '<document xmlns="http://meresco.com/namespace/harvester/document">%s</document>' % ''.join(
-                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
+            recordData = '<document xmlns="http://meresco.com/namespace/harvester/document">%s</document>' % ''.join(
+                    ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
 
-        action = "replace"
-        recordIdentifier= xmlEscape(anId)
-        recordPacking = 'xml'
-        recordSchema = xmlEscape(partName)
-        self._sendData(recordUpdate % locals())
-
-        self.logLine('UPLOAD.SEND', 'END', id = anId)
+            action = "replace"
+            recordIdentifier= xmlEscape(anId)
+            recordPacking = 'xml'
+            recordSchema = xmlEscape(partName)
+            self._sendData(recordUpdate % locals())
+            self.logLine('UPLOAD.SEND', 'END', id = anId)
+        except Exception, e:
+            raise UploaderException(uploadId=anId, message=str(e))
 
     def delete(self, anUpload):
         self.logDelete(anUpload.id)

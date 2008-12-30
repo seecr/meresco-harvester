@@ -31,33 +31,61 @@
 from cq2utils import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
 
-from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader
+from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException
 
 class SruUpdateUploaderTest(CQ2TestCase):
-    def testOne(self):
-        target = CallTrace('SruUpdateTarget', verbose=True)
-        uploader = SruUpdateUploader(target, CallTrace('eventlogger'))
-        sentData = []
+    def setUp(self):
+        CQ2TestCase.setUp(self)
+        self.target = CallTrace('SruUpdateTarget', verbose=True)
+        self.uploader = SruUpdateUploader(self.target, CallTrace('eventlogger'))
+        self.sentData = []
         def sendData(data):
-            sentData.append(data)
-        uploader._sendData = sendData
+            self.sentData.append(data)
+        self.uploader._sendData = sendData
 
-        upload = CallTrace('Upload')
-        upload.id = 'some:id'
-        upload.parts={
+        self.upload = CallTrace('Upload')
+        self.upload.id = 'some:id'
+        self.upload.parts={
             'meta': '<meta>....</meta>',
             'otherdata': '<stupidXML>abcdefgh'
         }
-        uploader.send(upload)
-        self.assertEquals(1, len(sentData))
+        
+    def testOne(self):
 
-        updateRequest = bind_string(sentData[0]).updateRequest
+        self.uploader.send(self.upload)
+        self.assertEquals(1, len(self.sentData))
+
+        updateRequest = bind_string(self.sentData[0]).updateRequest
         self.assertEquals('some:id', str(updateRequest.recordIdentifier))
         self.assertEquals('info:srw/action/1/replace', str(updateRequest.action))
         document = updateRequest.record.recordData.document
         self.assertEquals(2, len(document.part))
 
-        uploader.delete(upload)
-        updateRequest = bind_string(sentData[1]).updateRequest
+        self.uploader.delete(self.upload)
+        updateRequest = bind_string(self.sentData[1]).updateRequest
         self.assertEquals('some:id', str(updateRequest.recordIdentifier))
         self.assertEquals('info:srw/action/1/delete', str(updateRequest.action))
+
+    def testException(self):
+        possibleSRUError="""<?xml version="1.0" encoding="UTF-8"?>
+<updateRequest xmlns:srw="info:srw/namespace/1/srw-schema" xmlns:ucp="info:srw/namespace/1/update">
+    <srw:version>1.0</srw:version>
+    <ucp:operationStatus>fail</ucp:operationStatus>
+    <srw:diagnostics>
+            <diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+            <diag:uri>info:srw/diagnostic/12/1</diag:uri>
+            <diag:details>Traceback (most recent call last): File "../meresco/components/sru/srurecordupdate.py", line 47, in handleRequest File "../meresco/framework/transaction.py", line 63, in unknown File "../meresco/framework/observable.py", line 101, in __call__ File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 106, in _callonce KeyError: '__id__' </diag:details>
+            <diag:message>Invalid component: record rejected</diag:message>
+        </diag:diagnostic>
+    </srw:diagnostics>
+</updateRequest>"""
+        def sendData(data):
+            raise Exception(possibleSRUError)
+        self.uploader._sendData = sendData
+        try:
+            self.uploader.send(self.upload)
+            self.fail()
+        except UploaderException, e:
+            self.assertEquals(self.upload.id, e.uploadId)
+        
+        

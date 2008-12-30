@@ -170,12 +170,12 @@ class MockRepositoryAndUploader(VirtualUploader):
         self.uploads.append(anUpload)
         self.logger.logLine('UPLOADER','START deleting',id=id)
         if id == 'mock:3':
-            raise UploaderException('Sorry, but the vm has crashed.')
+            raise UploaderException(uploadId=id, message='Sorry, but the vm has crashed.')
         if id == 'mock:13':
             raise SystemExit()
         if id == 'mock:24':
             self.deleteMock24Count += 1
             if self.deleteMock24Count < 3:
-                raise UploaderException('Sorry, but cannot delete mock24')
+                raise UploaderException(uploadId=id, message='Sorry, but cannot delete mock24')
         self.deleted_ids.add(id)
         self.logger.logLine('UPLOADER','END deleting',id=id)

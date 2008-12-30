@@ -57,7 +57,6 @@ from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest
 from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest
-from sseuploadertest import SSEUploaderTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from vcardtest import VCardTest

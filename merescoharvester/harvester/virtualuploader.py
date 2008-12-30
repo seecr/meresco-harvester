@@ -32,7 +32,9 @@
 import sys
 
 class UploaderException(Exception):
-    pass
+    def __init__(self, uploadId, message):
+        Exception.__init__(self, 'UploadException uploadId: "%s", message: "%s"' % (uploadId, message))
+        self.uploadId = uploadId
 
 class VirtualUploader:
     def __init__(self, eventlogger):
@@ -70,13 +72,11 @@ class VirtualUploader:
 class UploaderFactory:
 
     def __init__(self):
-        from sseuploader import SSEUploader
         from sruupdateuploader import SruUpdateUploader
         from compositeuploader import CompositeUploader
         from filesystemuploader import FileSystemUploader
         self.mapping = {
                     'sruUpdate': SruUpdateUploader,
-                    'sse': SSEUploader,
                     'composite': CompositeUploader,
                     'filesystem': FileSystemUploader
                     }

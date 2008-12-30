@@ -38,11 +38,23 @@ from urllib import urlencode, urlopen
 import os
 from cq2utils.wrappers import wrapp
 
-class OAIError(Exception):
-    def code(self):
-        error = self.args[0]
-        return getattr(error,'code','')
+class OAIRequestException(Exception):
+    def __init__(self, url, message):
+        Exception.__init__(self, '%s occurred with repository at "%s", message: "%s"' % (self.__class__.__name__, url, message))
+        self.url = url
 
+class OAIError(OAIRequestException):
+    def __init__(self, url, message, response):
+        OAIRequestException.__init__(self, url, message)
+        self.response = response
+
+    def _error(self):
+        return getattr(self.response.OAI_PMH, 'error', 'Unknown Error')
+    def errorMessage(self):
+        return str(self._error())
+    def errorCode(self):
+        return getattr(self._error(), 'code', '')
+    
 class OAIRequest:
     def __init__(self, url):
         self._url = url
@@ -52,29 +64,36 @@ class OAIRequest:
             args['from']=args['from_']
             del args['from_']
         args['verb']='ListRecords'
-        response = self.request(args)
-        if not hasattr(response.OAI_PMH,'ListRecords'):
-            error = OAIError(getattr(response.OAI_PMH,'error','Unknown Error.'))
-            if error.code() != 'noRecordsMatch':
-                raise error
+        try:
+            response = self.request(args)
+        except OAIError, e:
+            if e.errorCode() != 'noRecordsMatch':
+                raise e
+            response = e.response
         return wrapp(response.OAI_PMH).ListRecords.record
-        
+
     def getRecord(self, **args):
         args['verb'] = 'GetRecord'
         response = self.request(args)
-        if not hasattr(response.OAI_PMH,'GetRecord'):
-            raise OAIError(getattr(response.OAI_PMH,'error','Unknown Error.'))
-        return wrapp(response.OAI_PMH.GetRecord.record)
-        
+        return wrapp(response).OAI_PMH.GetRecord.record
+    
     def identify(self):
         response = self.request({'verb':'Identify'})
         return wrapp(response.OAI_PMH.Identify)
     
     def request(self, args):
-        return self._request(filter(lambda (k,v):v,args.items()))
+        try:
+            argslist = filter(lambda (k,v):v,args.items())
+            result = self._request(argslist)
+        except Exception, e:
+            raise OAIRequestException(self._url + '?' + urlencode(argslist), message=str(e))
+        if hasattr(result.OAI_PMH, 'error'):
+            raise OAIError(self._url + '?' + urlencode(argslist), str(result.OAI_PMH.error), result)
+        return result
     
     def _request(self, argslist):
-        return binderytools.bind_uri(self._url + '?' + urlencode(argslist))
+        requesturl = self._url + '?' + urlencode(argslist)
+        return binderytools.bind_uri(requesturl)
     
 class LoggingOAIRequest(OAIRequest):
     def __init__(self, url, tempdir):
