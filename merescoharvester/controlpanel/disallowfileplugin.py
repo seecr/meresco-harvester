@@ -2,7 +2,7 @@
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 #    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for 
+#    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
@@ -28,35 +28,33 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
+
 from string import strip
-BANNED_EXTENSIONS = ['domain', 'repositoryGroup', 'repository', 'mapping', 'target'] 
+BANNED_EXTENSIONS = ['domain', 'repositoryGroup', 'repository', 'mapping', 'target']
 
 class DisallowFilePlugin:
-	def __init__(self, patterns = ['edit', 'save'], patternfile = None):
-		self._patterns = patternfile and self._readPatterns(patternfile) or patterns
+    def __init__(self, patterns = ['edit', 'save'], patternfile = None):
+        self._patterns = patternfile and self._readPatterns(patternfile) or patterns
 
-	def _readPatterns(self, filename):
-		patternfile = open(filename)
-		try:
-			return filter(None, map(strip,patternfile.readlines()))
-		finally:
-			patternfile.close()
-		
-	def inPatterns(self, aString):
-		return aString in self._patterns
+    def _readPatterns(self, filename):
+        patternfile = open(filename)
+        try:
+            return filter(None, map(strip,patternfile.readlines()))
+        finally:
+            patternfile.close()
 
-	def handle(self, request, path):
-		filename = path.split('/')[-1]
-		if self.inPatterns(filename):
-			username = request.getSession().get('username', None)
-			if username == None:
-				self.doNotAllowedAction(request, path)
-		extension = filename.split('.')[-1]
-		if extension in BANNED_EXTENSIONS and not request.remoteHost() in ['127.0.0.1', 'localhost'] and request.getSession().get('username', None) == None:
-			self.doNotAllowedAction(request, path)
+    def inPatterns(self, aString):
+        return aString in self._patterns
 
-	def doNotAllowedAction(self, request, path):
-		raise IOError(2,"No such file or directory: '%s'"%path)
+    def handle(self, request, path):
+        filename = path.split('/')[-1]
+        if self.inPatterns(filename):
+            username = request.getSession().get('username', None)
+            if username == None:
+                self.doNotAllowedAction(request, path)
+        extension = filename.split('.')[-1]
+        if extension in BANNED_EXTENSIONS and not request.remoteHost() in ['127.0.0.1', 'localhost'] and request.getSession().get('username', None) == None:
+            self.doNotAllowedAction(request, path)
+
+    def doNotAllowedAction(self, request, path):
+        raise IOError(2,"No such file or directory: '%s'"%path)

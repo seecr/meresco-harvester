@@ -50,10 +50,11 @@ class RepositoryException(Exception):
     pass
 
 class Action:
-    def __init__(self, repository, stateDir, logDir):
+    def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         self._repository = repository
         self._stateDir = stateDir
         self._logDir = logDir
+        self._generalHarvestLog = generalHarvestLog
     def do(self):
         """
         perform action and return
@@ -71,7 +72,7 @@ class NoneAction(Action):
 
 class HarvestAction(Action):
     def _createHarvester(self):
-        return Harvester(self._repository, self._stateDir, self._logDir)
+        return Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
 
     def do(self):
         if self._repository.shopClosed():
@@ -88,8 +89,8 @@ class DeleteIdsAction(Action):
         return True, 'Deleted', False
 
 class SmoothAction(Action):
-    def __init__(self, repository, stateDir, logDir):
-        Action.__init__(self, repository, stateDir, logDir)
+    def __init__(self, repository, stateDir, logDir, generalHarvestLog):
+        Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
         self.filename = os.path.join(self._stateDir, self._repository.key + '.ids')
         self.oldfilename = self.filename + ".old"
 
@@ -131,22 +132,22 @@ class SmoothAction(Action):
         d.deleteFile(filename)
 
     def _harvest(self):
-        harvester = Harvester(self._repository, self._stateDir, self._logDir)
+        harvester = Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
         return harvester.harvest()
 
 class ActionFactoryException(Exception):
     pass
 
 class ActionFactory:
-    def createAction(self, repository, stateDir, logDir):
+    def createAction(self, repository, stateDir, logDir, generalHarvestLog):
         if repository.action == 'clear':
-            return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir)
+            return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
         if repository.action == 'refresh':
-            return SmoothAction(repository, stateDir=stateDir, logDir=logDir)
+            return SmoothAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
         if repository.use == 'true' and repository.action == '':
-            return HarvestAction(repository, stateDir=stateDir, logDir=logDir)
+            return HarvestAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
         if repository.use == "" and repository.action == '':
-            return NoneAction(repository, stateDir=stateDir, logDir=logDir)
+            return NoneAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
         raise ActionFactoryException("Action '%s' not supported."%repository.action)
 
 class Repository(SaharaObject):
@@ -186,14 +187,14 @@ class Repository(SaharaObject):
             return self.mockUploader
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
-    def _createAction(self, stateDir, logDir):
-        return ActionFactory().createAction(self, stateDir=stateDir, logDir=logDir)
+    def _createAction(self, stateDir, logDir, generalHarvestLog):
+        return ActionFactory().createAction(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 
     def do(self, stateDir, logDir, generalHarvestLog=nillogger):
         try:
             if not (stateDir or logDir):
                 raise RepositoryException('Missing stateDir and/or logDir')
-            action = self._createAction(stateDir=stateDir, logDir=logDir)
+            action = self._createAction(stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
             if action.info():
                 generalHarvestLog.logLine('START',action.info(), id=self.id)
             actionIsDone, message, hasResumptionToken = action.do()

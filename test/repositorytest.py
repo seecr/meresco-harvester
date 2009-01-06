@@ -91,7 +91,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = ''
         self.repo.action = ''
         action = MockAction()
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals(('', False), result)
         self.assert_(action.called)
@@ -102,7 +102,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = 'true'
         self.repo.action = ''
         action = MockAction(DONE)
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, False), result)
         self.assert_(action.called)
@@ -114,7 +114,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.action = ''
         self.repo.complete = 'true'
         action = MockAction(DONE, hasResumptionToken=True)
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, True), result)
 
@@ -123,7 +123,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.action = ''
         self.repo.complete = ''
         action = MockAction(DONE, hasResumptionToken=True)
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, False), result)
 
@@ -131,7 +131,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo._saharaget = self
         self.repo.action = 'someaction'
         action = MockAction(DONE)
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, False), result)
         self.assert_(action.called)
@@ -143,7 +143,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.use = 'true'
         self.repo.action = 'someaction'
         action = MockAction('Not yet done!', False)
-        self.repo._createAction=lambda stateDir,logDir: action
+        self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result, hasResumptionToken = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals('Not yet done!', result)
         self.assert_(action.called)
@@ -154,7 +154,7 @@ class RepositoryTest(unittest.TestCase):
         factory = ActionFactory()
         self.repo.use = use
         self.repo.action = action
-        self.assert_(isinstance(self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir), expectedType))
+        self.assert_(isinstance(self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger()), expectedType))
 
     def testActionFactory(self):
         self._testAction('', '', NoneAction)
@@ -184,7 +184,7 @@ class RepositoryTest(unittest.TestCase):
 
         repository.returnValues['shopClosed'] = False
         harvester.returnValues['harvest'] = ('', False)
-        action = HarvestAction(repository, stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
+        action = HarvestAction(repository, stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())
         action._createHarvester = lambda: harvester
         action.do()
         self.assertEquals(['harvest()'], harvester.__calltrace__())

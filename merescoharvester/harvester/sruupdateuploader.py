@@ -65,7 +65,7 @@ class SruUpdateUploader(VirtualUploader):
             self._sendData(recordUpdate % locals())
             self.logLine('UPLOAD.SEND', 'END', id = anId)
         except Exception, e:
-            raise UploaderException(uploadId=anId, message=str(e))
+            raise UploaderException(uploadId=anId, message=repr(e))
 
     def delete(self, anUpload):
         try:
@@ -77,7 +77,7 @@ class SruUpdateUploader(VirtualUploader):
             recordData = '<ignored/>'
             self._sendData(recordUpdate % locals())
         except Exception, e:
-            raise UploaderException(uploadId=anUpload.id, message=str(e))
+            raise UploaderException(uploadId=anUpload.id, message=repr(e))
 
 
     def info(self):

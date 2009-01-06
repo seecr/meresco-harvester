@@ -78,7 +78,7 @@ class FileSystemUploader(VirtualUploader):
             finally:
                 f.close()
         except Exception, e:
-            raise UploaderException(uploadId=anUpload.id, message=str(e))
+            raise UploaderException(uploadId=anUpload.id, message=repr(e))
 
     def _createOutput(self, anUpload):
         theXml = binderytools.bind_string('<record xmlns="http://www.openarchives.org/OAI/2.0/"/>')

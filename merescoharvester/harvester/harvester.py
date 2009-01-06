@@ -32,6 +32,7 @@
 
 import os, sys, shelve, time, traceback,re
 from harvesterlog import HarvesterLog
+from eventlogger import CompositeLogger, NilEventLogger
 import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
@@ -45,10 +46,13 @@ def p(anObject):
     sys.stdout.flush()
 
 class Harvester:
-    def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None):
+    def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None, generalHarvestLog=NilEventLogger()):
         self._repository = repository
         self._logger = mockLogger or HarvesterLog(stateDir, logDir, repository.id)
-        self._eventlogger = self._logger.eventLogger()
+        self._eventlogger = CompositeLogger([
+            (['*'], self._logger.eventLogger()),
+            (['ERROR', 'INFO', 'WARN'], generalHarvestLog)
+        ])
         self._oairequest = mockRequest or OAIRequest(self._repository.url)
         self._uploader = repository.createUploader(self._eventlogger)
         self._mapper = repository.mapping()
@@ -119,15 +123,16 @@ class Harvester:
 
     def _harvest(self):
         try:
-            self._logger.eventLogger().logLine('STARTHARVEST',self.uploaderInfo(),id=self._repository.id)
-            self._eventlogger.logLine("INFO", "Mappingname '%s'"%self._mapper.name, id=self._repository.id)
+            self._eventlogger.logLine('STARTHARVEST', '',id=self._repository.id)
+            self._eventlogger.info(self.uploaderInfo(), id=self._repository.id)
+            self._eventlogger.info("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
             self._uploader.start()
             try:
                 return self._harvestLoop()
             finally:
                 self._uploader.stop()
         finally:
-            self._logger.eventLogger().logLine('ENDHARVEST','',id=self._repository.id)
+            self._eventlogger.logLine('ENDHARVEST','',id=self._repository.id)
 
     def harvest(self):
         try:

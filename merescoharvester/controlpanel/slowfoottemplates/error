@@ -1,10 +1,26 @@
+<%
+errortype, errorvalue, errortraceback = error_info
 
+if not session.get('username', None):
+    #
+%><h3>Geen toegang</h3>
+<p>U bent niet (meer) ingelogd, klik op login en probeer het opnieuw.</p>
+<%
+else:
+    #
+%>
 <h3>Sorry</h3>
 <p>Er is een fout opgetreden.</p>
+<pre><%=errorvalue%></pre>
+<%
+#
+%>
 <!--
 <%
-import traceback
-errortype, errorvalue, errortraceback = error_info
-traceback.print_exception(errortype, errorvalue, errortraceback, None, req)
+from sys import stderr
+from traceback import print_exception
+print_exception(errortype, errorvalue, errortraceback, None, req)
+print_exception(errortype, errorvalue, errortraceback, None, stderr)
+stderr.flush()
 %>
 -->

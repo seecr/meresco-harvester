@@ -37,13 +37,14 @@ from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
 from merescoharvester.harvester.deleteids import readIds
 from merescoharvester.harvester import repository
 from sets import Set
+from merescoharvester.harvester.eventlogger import NilEventLogger
 
 class SmoothActionTest(unittest.TestCase):
     def setUp(self):
         self.repo = Repository('domainId', 'rep')
         self.stateDir = mkdtemp()
         self.logDir = mkdtemp()
-        self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir)
+        self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir, NilEventLogger())
         self.idfilename = os.path.join(self.stateDir, 'rep.ids')
         self.old_idfilename = os.path.join(self.stateDir, 'rep.ids.old')
         self.statsfilename = os.path.join(self.stateDir,'rep.stats')
@@ -157,7 +158,7 @@ class SmoothActionTest(unittest.TestCase):
     def testHarvest(self):
         class MockHarvester:
             usedrep, usedStateDir, usedLogDir = None, 'some path', 'some path'
-            def __init__(self, rep, stateDir, logDir):
+            def __init__(self, rep, stateDir, logDir, generalHarvestLog):
                 MockHarvester.usedrep = rep
                 MockHarvester.usedStateDir = stateDir
                 MockHarvester.usedLogDir = logDir
