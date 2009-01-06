@@ -70,7 +70,7 @@ class StartHarvester:
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
 
-        self.eventlogger = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
+        self._generalHarvestLog = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
 
         if self.uploadLog:
             self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))
@@ -115,17 +115,11 @@ class StartHarvester:
         sys.exit()
 
     def start(self):
-        try:
-            again = True
-            while again:
-                message, again = self.repository.do(
-                    stateDir=join(self._stateDir, self.domainId),
-                    logDir=join(self._logDir, self.domainId),
-                    eventlogger=self.eventlogger)
-                if again:
-                    print 'Completely harvesting the repository %s' % self.repository.id
-        except:
-            xtype,xval,xtb=sys.exc_info()
-            self.eventlogger.error('|'.join(map(str.strip, traceback.format_exception(xtype,xval,xtb))), id=self.repository.id)
+        again = True
+        while again:
+            messageIgnored, again = self.repository.do(
+                stateDir=join(self._stateDir, self.domainId),
+                logDir=join(self._logDir, self.domainId),
+                generalHarvestLog=self._generalHarvestLog)
         sleep(1)
 

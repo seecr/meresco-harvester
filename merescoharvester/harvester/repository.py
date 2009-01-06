@@ -39,6 +39,8 @@ import os.path, shutil
 from eventlogger import NilEventLogger
 from virtualuploader import UploaderFactory
 from cq2utils.timeslot import Timeslot
+from sys import exc_info
+from traceback import format_exception
 import time
 
 nillogger = NilEventLogger()
@@ -59,7 +61,7 @@ class Action:
         """
         raise NotImplementedError
     def info(self):
-        return  str(self.__class__).split('.')[-1]
+        return  str(self.__class__.__name__)
 
 class NoneAction(Action):
     def do(self):
@@ -158,7 +160,6 @@ class Repository(SaharaObject):
         self._copyOldStuff()
 
     def _copyOldStuff(self):
-        #aan de bezoeker: gelieve een van deze regels code weg te halen. (KvS, JJ)
         self.key = self.id
         self.url = self.baseurl
         self.institutionkey = self.repositoryGroupId
@@ -188,16 +189,25 @@ class Repository(SaharaObject):
     def _createAction(self, stateDir, logDir):
         return ActionFactory().createAction(self, stateDir=stateDir, logDir=logDir)
 
-    def do(self, stateDir, logDir, eventlogger=nillogger):
-        if not (stateDir or logDir):
-            raise RepositoryException('Missing stateDir and/or logDir')
-        action = self._createAction(stateDir=stateDir, logDir=logDir)
-        if action.info():
-            eventlogger.logLine('START',action.info(), id=self.key)
-        actionIsDone, message, hasResumptionToken = action.do()
-        if  actionIsDone:
-            self.action = ''
-            self._saharaget.repositoryActionDone(self.domainId, self.id)
-        if message:
-            eventlogger.logLine('END', message, id = self.key)
-        return message, hasResumptionToken and self.complete == 'true'
+    def do(self, stateDir, logDir, generalHarvestLog=nillogger):
+        try:
+            if not (stateDir or logDir):
+                raise RepositoryException('Missing stateDir and/or logDir')
+            action = self._createAction(stateDir=stateDir, logDir=logDir)
+            if action.info():
+                generalHarvestLog.logLine('START',action.info(), id=self.id)
+            actionIsDone, message, hasResumptionToken = action.do()
+            if  actionIsDone:
+                self.action = ''
+                self._saharaget.repositoryActionDone(self.domainId, self.id)
+            if message:
+                generalHarvestLog.logLine('END', message, id = self.id)
+            completeHarvest = hasResumptionToken and self.complete == 'true'
+            if completeHarvest:
+                generalHarvestLog.info('Repository will be completed in one attempt', id=self.id)
+            return message, completeHarvest
+        except:
+            xtype,xval,xtb = exc_info()
+            errorMessage = '|'.join(line.strip() for line in format_exception(xtype,xval,xtb))
+            generalHarvestLog.error(errorMessage, id=self.id)
+            return errorMessage, False

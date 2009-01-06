@@ -105,7 +105,7 @@ class HarvesterLog:
 
     def endWithException(self):
         error = str(sys.exc_type) + ': ' + str(sys.exc_value)
-        xtype,xval,xtb=sys.exc_info()
+        xtype,xval,xtb = sys.exc_info()
         error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
         self._eventlogger.error(error2, id=self._name)
         self._statsfile.write( ', Error: ' + error)

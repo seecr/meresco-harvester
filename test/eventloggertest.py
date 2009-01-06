@@ -30,7 +30,8 @@
 ## end license ##
 
 import unittest,os,re
-from merescoharvester.harvester.eventlogger import StreamEventLogger, EventLogger, LOGLINE_RE
+from merescoharvester.harvester.eventlogger import StreamEventLogger, EventLogger, LOGLINE_RE, CompositeLogger
+from StringIO import StringIO
 
 EVENTLOGFILE = '/tmp/EventLoggerTestFile'
 DATELENGTH = 26
@@ -96,20 +97,46 @@ class EventLoggerTest(unittest.TestCase):
         self.assertEquals('ERROR\t[id]\tcomm', self.logfile.readline().strip()[DATELENGTH:])
 
     def testTestStreamLog(self):
-        logger = StreamEventLogger()
+        stream = StringIO()
+        logger = StreamEventLogger(stream)
         logger.logLine('BLA','something')
         logger.error('this should not happen.')
         lines = []
-        for line in logger:
+        stream.seek(0)
+        for line in stream:
             lines.append(line.strip()[DATELENGTH:])
         self.assertEquals(['BLA\t[]\tsomething','ERROR\t[]\tthis should not happen.'],lines)
 
     def testLogNone(self):
-        logger = StreamEventLogger()
+        stream = StringIO()
+        logger = StreamEventLogger(stream)
         logger.error(None)
         logger.logLine(None, None)
         lines = []
-        for line in logger:
+        stream.seek(0)
+        for line in stream:
             lines.append(line[DATELENGTH:])
         self.assertEquals(['ERROR\t[]\tNone\n', 'None\t[]\tNone\n'],lines)
 
+    def compositLogger(self):
+        stream1 = StringIO()
+        stream2 = StringIO()
+        log1 = StreamEventLogger(stream1)
+        log2 = StreamEventLogger(stream2)
+        comp = CompositeLogger([
+                (['*'], log1),
+                (['ERROR'], log2)
+            ])
+        return stream1, stream2, comp
+
+    def testCompositeLogger(self):
+        stream1, stream2, comp = self.compositLogger()
+        comp.info('info', 'id')
+        self.assertEquals('', stream2.getvalue())
+        self.assertEquals('INFO\t[id]\tinfo\n', stream1.getvalue()[DATELENGTH:])
+
+    def testCompositeLogger2(self):
+        stream1, stream2, comp = self.compositLogger()
+        comp.error('error', 'id')
+        self.assertEquals('ERROR\t[id]\terror\n', stream1.getvalue()[DATELENGTH:])
+        self.assertEquals('ERROR\t[id]\terror\n', stream2.getvalue()[DATELENGTH:])

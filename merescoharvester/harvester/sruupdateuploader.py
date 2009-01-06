@@ -68,13 +68,16 @@ class SruUpdateUploader(VirtualUploader):
             raise UploaderException(uploadId=anId, message=str(e))
 
     def delete(self, anUpload):
-        self.logDelete(anUpload.id)
-        action = "delete"
-        recordIdentifier = xmlEscape(anUpload.id)
-        recordPacking = 'xml'
-        recordSchema = 'ignored'
-        recordData = '<ignored/>'
-        self._sendData(recordUpdate % locals())
+        try:
+            self.logDelete(anUpload.id)
+            action = "delete"
+            recordIdentifier = xmlEscape(anUpload.id)
+            recordPacking = 'xml'
+            recordSchema = 'ignored'
+            recordData = '<ignored/>'
+            self._sendData(recordUpdate % locals())
+        except Exception, e:
+            raise UploaderException(uploadId=anUpload.id, message=str(e))
 
 
     def info(self):

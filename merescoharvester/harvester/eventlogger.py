@@ -91,25 +91,41 @@ class EventLogger(BasicEventLogger):
         return open(logfile, 'a+')
 
     def succes(self,comments='', id=''):
-        self.logLine('SUCCES',comments=comments,id=id)
+        self.logLine('SUCCES', comments=comments, id=id)
 
     def failure(self,comments='', id=''):
-        self.logLine('FAILURE',comments=comments,id=id)
+        self.logLine('FAILURE', comments=comments, id=id)
     fail = failure
 
     def error(self,comments='', id=''):
-        self.logLine('ERROR',comments=comments,id=id)
+        self.logLine('ERROR', comments=comments, id=id)
+
+    def info(self, comments='', id=''):
+        self.logLine('INFO', comments=comments, id=id)
+
+    def warning(self, comments='', id=''):
+        self.logLine('WARNING', comments=comments, id=id)
 
 class StreamEventLogger(EventLogger):
-    def __init__(self,stream=None):
-        self._stream = stream and stream or StringIO()
+    def __init__(self, stream):
+        self._stream = stream
         EventLogger.__init__(self, None)
 
     def openlogfile(self, logfile):
         return self._stream
 
-    def __iter__(self):
-        return StringIO(self._stream.getvalue())
+class CompositeLogger(EventLogger):
+    def __init__(self, loggers):
+        EventLogger.__init__(self, None)
+        self._loggers = loggers
+        
+    def openlogfile(self, logfile):
+        return None
+
+    def logLine(self, event, comments, id=''):
+        for events, logger in self._loggers:
+            if events == ['*'] or event in events:
+                logger.logLine(event, comments, id)
 
 class NilEventLogger(EventLogger):
         def __init__(self):

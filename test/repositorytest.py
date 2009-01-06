@@ -170,11 +170,13 @@ class RepositoryTest(unittest.TestCase):
             self.assertEquals("Action 'nonexisting' not supported.", str(afe))
 
     def testDoWithoutLogpath(self):
-        try:
-            self.repo.do('','')
-            self.fail()
-        except RepositoryException, e:
-            pass
+        generalHarvestLog = CallTrace('Log')
+        message, again = self.repo.do('','', generalHarvestLog=generalHarvestLog)
+        self.assertFalse(again)
+        self.assertTrue('RepositoryException: Missing stateDir and/or logDir' in message)
+        self.assertEquals((message,), generalHarvestLog.calledMethods[-1].args)
+        self.assertEquals({'id':self.repo.id}, generalHarvestLog.calledMethods[-1].kwargs)
+        self.assertEquals('error', generalHarvestLog.calledMethods[-1].name)
 
     def testHarvestAction(self):
         repository = CallTrace("Repository")

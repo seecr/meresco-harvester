@@ -28,10 +28,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Copyright (C) 2005 Seek You Too B.V. http://www.cq2.nl
-#
-# $Id: oairequest.py 4825 2007-04-16 13:36:24Z TJ $
 
 from cq2utils import binderytools
 from urllib import urlencode, urlopen
