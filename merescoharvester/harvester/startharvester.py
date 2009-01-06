@@ -30,9 +30,9 @@
 ## end license ##
 
 from harvesterlog import HarvesterLog
-from eventlogger import EventLogger, NilEventLogger
+from eventlogger import EventLogger, NilEventLogger, CompositeLogger, StreamEventLogger
 from harvester import Harvester
-from sseuploader import LoggingUploader
+from virtualuploader import LoggingUploader
 import sys, os, optparse
 from saharaget import SaharaGet
 from time import sleep
@@ -40,6 +40,7 @@ import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
+from sys import stderr, stdout
 
 
 class StartHarvester:
@@ -70,7 +71,11 @@ class StartHarvester:
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
 
-        self._generalHarvestLog = EventLogger(join(self._logDir, self.domainId, 'harvester.log'))
+        self._generalHarvestLog = CompositeLogger([
+            (['*'], EventLogger(join(self._logDir, self.domainId, 'harvester.log'))),
+            (['*'], StreamEventLogger(stdout)),
+            (['ERROR', 'WARN'], StreamEventLogger(stderr)),
+        ])
 
         if self.uploadLog:
             self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))

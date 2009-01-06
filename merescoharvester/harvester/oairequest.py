@@ -36,7 +36,7 @@ from cq2utils.wrappers import wrapp
 
 class OAIRequestException(Exception):
     def __init__(self, url, message):
-        Exception.__init__(self, '%s occurred with repository at "%s", message: "%s"' % (self.__class__.__name__, url, message))
+        Exception.__init__(self, 'occurred with repository at "%s", message: "%s"' % (url, message))
         self.url = url
 
 class OAIError(OAIRequestException):
@@ -81,8 +81,9 @@ class OAIRequest:
         try:
             argslist = filter(lambda (k,v):v,args.items())
             result = self._request(argslist)
+            result.OAI_PMH #Make sure the xml is a OAI_PMH request
         except Exception, e:
-            raise OAIRequestException(self._url + '?' + urlencode(argslist), message=str(e))
+            raise OAIRequestException(self._url + '?' + urlencode(argslist), message=repr(e))
         if hasattr(result.OAI_PMH, 'error'):
             raise OAIError(self._url + '?' + urlencode(argslist), str(result.OAI_PMH.error), result)
         return result

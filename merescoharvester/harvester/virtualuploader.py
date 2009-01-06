@@ -33,7 +33,7 @@ import sys
 
 class UploaderException(Exception):
     def __init__(self, uploadId, message):
-        Exception.__init__(self, 'UploadException uploadId: "%s", message: "%s"' % (uploadId, message))
+        Exception.__init__(self, 'uploadId: "%s", message: "%s"' % (uploadId, message))
         self.uploadId = uploadId
 
 class VirtualUploader:
@@ -84,3 +84,20 @@ class UploaderFactory:
     def createUploader(self, target, logger, collection):
         uploaderClass = self.mapping[target.targetType]
         return uploaderClass(target, logger, collection)
+
+class LoggingUploader(VirtualUploader):
+    def __init__(self, eventlogger):
+        VirtualUploader.__init__(self, eventlogger)
+        
+    def send(self, anUpload):
+        self.logLine('LoggingUploader','START send',id=anUpload.id)
+        for k,v in anUpload.fields.items():
+            self.logLine('upload.fields','%s=%s'%(k,v), id=anUpload.id)
+        self.logLine('LoggingUploader','END send',id=anUpload.id)
+    
+    def delete(self, anUpload):
+        self.logLine('LoggingUploader','DELETE',id=anUpload.id)
+        
+    def info(self):
+        return 'Uploader connected to a logfile.'
+
