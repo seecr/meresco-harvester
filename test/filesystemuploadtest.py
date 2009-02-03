@@ -30,6 +30,7 @@
 ## end license ##
 import unittest
 from merescoharvester.harvester.filesystemuploader import FileSystemUploader
+from merescoharvester.harvester.virtualuploader import UploaderException
 from cq2utils.calltrace import CallTrace
 from cq2utils.wrappers import wrapp
 import os, shutil
@@ -101,6 +102,19 @@ class FileSystemUploaderTest(CQ2TestCase):
         
         self.assertTrue(os.path.isfile(recordFile))
         self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD, open(recordFile).read())
+
+    def testSendRaisesError(self):
+        def raiseError(*args, **kwargs):
+            raise Exception('Catch me')
+        self.uploader._filenameFor = raiseError
+        
+        try:
+            upload = createUpload()
+            self.uploader.send(upload)
+            self.fail()
+        except UploaderException:
+            pass
+
         
     def testSendOaiEnvelope(self):
         self.target.oaiEnvelope = 'true'
