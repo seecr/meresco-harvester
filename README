@@ -13,7 +13,7 @@ Installation can be done with python distutils.
 2. Configuration
 ----------------
 Furthermore you will need to configure:
-    - apache
+    - apache2
     - sitecustomize.py !!
     - webcontrolpanel administrator (admin)
     - harvesting (user)
@@ -21,9 +21,15 @@ Furthermore you will need to configure:
 2.1 Apache Configuration
 ------------------------
     An example apache configuration is given in the example directory. Please
-    change it to your needs.
+    change it to your needs. 
 
-2.1.1 Accessible directories.
+2.1.1 Apache Worker (Threaded Model)
+------------------------------------
+    Meresco Harvester depends on Slowfoot (see deps.txt), which on its turn depends
+    on mod_python (an apache module). For correct working of Meresco Harvester you will
+    need the apache2-mpm-worker, which is the high speed threaded model of Apache2.
+
+2.1.2 Accessible directories.
 ----------------------------
     The DocumentRoot of your apache configuration should be writable for the
     web user, e.g. www-data
@@ -32,7 +38,7 @@ Furthermore you will need to configure:
     The file specified in the PythonOption usersfile should be writable by the
     web user. (See 2.2)
 
-2.1.2 SSL Certificate creation
+2.1.3 SSL Certificate creation
 ------------------------------
     If you don't have an SSL Certificate for your server you can create your
     own self-signed certificate.
@@ -44,7 +50,7 @@ Furthermore you will need to configure:
       Now create a self-signed certificate.
         $ openssl x509 -req -days 60 -in server.csr -signkey server.pem -out server.crt
 
-2.1.3 Module configuration
+2.1.4 Module configuration
 --------------------------
     Take care that the correct modules are enabled in apache.
     For the apache example configuration you should enable:
@@ -61,7 +67,7 @@ Furthermore you will need to configure:
         - proxy_http.load
     Also make sure that now cache modules are enabled!
 
-2.1.4 Ports confguration
+2.1.5 Ports confguration
 ------------------------
     The example configuration acts on ports 80 and 443, make sure
     apache listens to these ports.
