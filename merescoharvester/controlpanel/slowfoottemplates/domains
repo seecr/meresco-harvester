@@ -1,6 +1,6 @@
 <%
-from cq2utils.amaraextension import getElements
-from cq2utils.wrappers import wrapp
+from cq2utils_old.amaraextension import getElements
+from cq2utils_old.wrappers import wrapp
 %>
 
 <p class="head">Domains Administration</p>

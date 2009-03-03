@@ -31,11 +31,11 @@
 import unittest
 from merescoharvester.harvester.filesystemuploader import FileSystemUploader
 from merescoharvester.harvester.virtualuploader import UploaderException
-from cq2utils.calltrace import CallTrace
-from cq2utils.wrappers import wrapp
+from cq2utils_old.calltrace import CallTrace
+from cq2utils_old.wrappers import wrapp
 import os, shutil
-from cq2utils import binderytools
-from cq2utils.cq2testcase import CQ2TestCase
+from cq2utils_old import binderytools
+from cq2utils_old.cq2testcase import CQ2TestCase
 from tempfile import mkdtemp
 
 class FileSystemUploaderTest(CQ2TestCase):

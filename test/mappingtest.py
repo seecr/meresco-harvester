@@ -35,7 +35,7 @@ import os, tempfile
 from merescoharvester.harvester import mapping
 from StringIO import StringIO
 from merescoharvester.harvester.eventlogger import StreamEventLogger
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 
 class MappingTest(unittest.TestCase):
     def testCreateUploadFields(self):

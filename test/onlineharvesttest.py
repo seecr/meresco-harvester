@@ -33,7 +33,7 @@ import unittest
 from merescoharvester.harvester.onlineharvest import OnlineHarvest
 from StringIO import StringIO
 from merescoharvester.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 import os
 
 class OnlineHarvestTest(unittest.TestCase):

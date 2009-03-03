@@ -32,9 +32,9 @@ from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.repository import *
-from cq2utils.wrappers import wrapp
-from merescoharvester.harvevster.timeslot import Timeslot, Wildcard
-from cq2utils.calltrace import CallTrace
+from cq2utils_old.wrappers import wrapp
+from merescoharvester.harvester.timeslot import Timeslot, Wildcard
+from cq2utils_old.calltrace import CallTrace
 import tempfile, os, shutil
 import unittest
 

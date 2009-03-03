@@ -32,7 +32,7 @@
 import unittest, shutil, os
 from tempfile import mkdtemp
 from merescoharvester.harvester.repository import Repository, SmoothAction, DONE
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
 from merescoharvester.harvester.deleteids import readIds
 from merescoharvester.harvester import repository

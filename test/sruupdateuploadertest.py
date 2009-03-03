@@ -28,7 +28,7 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-from cq2utils import CQ2TestCase, CallTrace
+from cq2utils_old import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
 
 from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException

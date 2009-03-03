@@ -25,7 +25,7 @@ import datetime
 import time
 import re
 
-from merescoharvester.harvester.timeslot import Timeslot, Wildcard
+from merescoharvester.harvester.timeslot import Timeslot, Wildcard, _parse as parse, ParseException
 
 class TimeslotTest(unittest.TestCase):
 
@@ -88,15 +88,12 @@ class TimeslotTest(unittest.TestCase):
 		self.assertTrue(timeslot.areWeWithinTimeslot( (2006, 10,  4,  9, 54)))
 
 	def testRegExp(self):
-		from cq2utils.timeslot import _parse as parse
-		from cq2utils.timeslot import Wildcard
 		self.assertEquals((43, 5, 7, 45), parse('43:5:7:45'))
 		self.assertEquals((43, Wildcard(), 7, 45), parse('43:*:7:45'))
 		self.assertEquals((Wildcard(), 5, 7, 45), parse('*:5:7:45'))
 		self.assertEquals((Wildcard(), Wildcard(), 7, 45), parse('*:*:7:45'))
 
 	def testParseZero(self):
-		from cq2utils.timeslot import _parse as parse
 		self.assertEquals((43, 5, 7, 45), parse('43:5:07:45'))
 
 	def testTimeslotinOneDay(self):
@@ -112,7 +109,6 @@ class TimeslotTest(unittest.TestCase):
 		self.assertTrue(timeslot.areWeWithinTimeslot((2001, 10,  2, 10, 01)))
 
 	def testParseError(self):
-		from cq2utils.timeslot import ParseException
 		try:
 			Timeslot('*:*:***:00-*:*:11:00')
 			self.fail()

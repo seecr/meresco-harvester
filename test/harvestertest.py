@@ -32,7 +32,7 @@ import unittest
 from merescoharvester.harvester.harvester import Harvester
 from merescoharvester.harvester.harvesterlog import HarvesterLog, printTime, isCurrentDay, getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
-from cq2utils.wrappers import wrapp, binderytools
+from cq2utils_old.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload
 import shelve
 import os

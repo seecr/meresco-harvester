@@ -36,7 +36,7 @@ from eventlogger import CompositeLogger, NilEventLogger
 import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 from oairequest import OAIRequest
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'

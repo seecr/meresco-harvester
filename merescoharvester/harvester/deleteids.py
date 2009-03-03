@@ -33,8 +33,8 @@ from virtualuploader import UploaderException
 from eventlogger import NilEventLogger, EventLogger
 from harvesterlog import idfilename, HarvesterLog
 from string import strip
-from cq2utils import binderytools
-from cq2utils import wrappers
+from cq2utils_old import binderytools
+from cq2utils_old import wrappers
 import sys, os
 from sets import Set
 from mapping import Upload

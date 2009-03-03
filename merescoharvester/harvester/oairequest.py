@@ -29,10 +29,10 @@
 #
 ## end license ##
 
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 from urllib import urlencode, urlopen
 import os
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 
 class OAIRequestException(Exception):
     def __init__(self, url, message):

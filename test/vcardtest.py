@@ -30,8 +30,8 @@
 ## end license ##
 import unittest
 from merescoharvester.harvester import vcard
-from cq2utils import binderytools
-from cq2utils.wrappers import wrapp
+from cq2utils_old import binderytools
+from cq2utils_old.wrappers import wrapp
 
 validCard = """BEGIN:VCARD
 FN:International Finance and Commodities Institute

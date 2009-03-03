@@ -29,7 +29,7 @@
 #
 ## end license ##
 
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 from mapping import Mapping
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO

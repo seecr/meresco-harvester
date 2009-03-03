@@ -31,8 +31,8 @@
 
 from xml.sax.saxutils import escape as xmlEscape
 from eventlogger import NilEventLogger
-from cq2utils import binderytools
-from cq2utils import wrappers
+from cq2utils_old import binderytools
+from cq2utils_old import wrappers
 from urlparse import urljoin
 from urllib import urlencode
 from saharaobject import SaharaObject

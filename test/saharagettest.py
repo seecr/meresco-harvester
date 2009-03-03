@@ -31,8 +31,8 @@
 
 import unittest
 from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
-from cq2utils.wrappers import wrapp
-from cq2utils import binderytools
+from cq2utils_old.wrappers import wrapp
+from cq2utils_old import binderytools
 
 class SaharaGetTest(unittest.TestCase):
     def setUp(self):

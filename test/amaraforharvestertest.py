@@ -30,7 +30,7 @@
 ## end license ##
 import unittest
 
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 
 class AmaraForHarvesterTest(unittest.TestCase):
 

@@ -30,8 +30,8 @@
 ## end license ##
 
 import unittest
-from cq2utils import binderytools
-from cq2utils.wrappers import wrapp
+from cq2utils_old import binderytools
+from cq2utils_old.wrappers import wrapp
 
 class CacheRecordTest(unittest.TestCase):
     def testGetPartlyXML(self):

@@ -30,7 +30,7 @@
 ## end license ##
 
 import unittest
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 from urllib import urlencode
 from merescoharvester.harvester.oairequest import OAIRequest, MockOAIRequest, OAIError
 

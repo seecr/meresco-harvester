@@ -31,7 +31,7 @@
 #
 from virtualuploader import VirtualUploader, UploaderException
 import time, os
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 from xml.sax.saxutils import escape as xmlEscape
 from time import gmtime, strftime
 

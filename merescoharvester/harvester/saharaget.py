@@ -31,9 +31,9 @@
 #
 # $Id: saharaget.py 4825 2007-04-16 13:36:24Z TJ $
 
-from cq2utils.wrappers import wrapp
+from cq2utils_old.wrappers import wrapp
 from repository import Repository
-from cq2utils import binderytools
+from cq2utils_old import binderytools
 from urllib import urlencode
 from target import Target
 from mapping import Mapping
