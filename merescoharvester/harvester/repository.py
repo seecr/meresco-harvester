@@ -38,7 +38,7 @@ from saharaobject import SaharaObject
 import os.path, shutil
 from eventlogger import NilEventLogger
 from virtualuploader import UploaderFactory
-from cq2utils.timeslot import Timeslot
+from timeslot import Timeslot
 from sys import exc_info
 from traceback import format_exception
 import time

@@ -41,6 +41,7 @@ for dir in glob('../deps.d/*'):
 import unittest
 
 from disallowfileplugintest import DisallowFilePluginTest
+from timeslottest import TimeslotTest
 from toolstest import ToolsTest
 
 from cacherecordtest import CacheRecordTest

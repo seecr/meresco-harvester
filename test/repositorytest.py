@@ -33,7 +33,7 @@ from merescoharvester.harvester.eventlogger import NilEventLogger
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.repository import *
 from cq2utils.wrappers import wrapp
-from cq2utils.timeslot import Timeslot
+from merescoharvester.harvevster.timeslot import Timeslot, Wildcard
 from cq2utils.calltrace import CallTrace
 import tempfile, os, shutil
 import unittest
@@ -69,7 +69,6 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testTimeslotInitialization(self):
-        from cq2utils.timeslot import Wildcard
         self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertEquals(2, len(timeslots))
@@ -79,7 +78,6 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testShopNotClosedAndThenClosed(self):
-        from cq2utils.timeslot import Wildcard
         self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
