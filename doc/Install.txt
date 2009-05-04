@@ -12,7 +12,7 @@ Install of Meresco Harvester version 5.2
 ========================================
 ----------------------------------------------------------------------------------------------------------
 Describing: installation, requirements and a start point for your own Meresco Harvester installation
------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
 :Authors: Seek You Too
 :Organization: `Seek You Too`_
@@ -106,3 +106,5 @@ Configuration
 =============
 
 All configuration is explained in the README file accompanied in the source tarball.
+
+For more information on the Meresco Harvester see http://meresco.com/doclink?package=meresco-harvester
