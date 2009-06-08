@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -69,6 +70,9 @@ class VirtualUploader:
 
     def logDelete(self, anId):
         self.logLine('DELETE', "Delete document", id=anId)
+
+    def logWarning(self, *args, **kwargs):
+        self._logger.warning(*args, **kwargs)
 
 class UploaderFactory:
 

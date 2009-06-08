@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -84,8 +85,19 @@ class SruUpdateUploader(VirtualUploader):
     def info(self):
         return 'Uploader connected to: %s:%s%s'%(self._target.baseurl, self._target.port, self._target.path)
 
-
     def _sendData(self, data):
+        tries = 0
+        while tries < 3:
+            status, message = self._sendDataToRemote(data)
+            if status != 400:
+                break
+            self.logWarning("Status 400 received while trying to upload")
+            tries += 1
+                
+        if status != 200 or 'srw:diagnostic' in message:
+            raise Exception("HTTP %s: %s" % (str(status), message))
+
+    def _sendDataToRemote(self, data):
         connection = HTTPConnection(self._target.baseurl, self._target.port)
         connection.putrequest("POST", self._target.path)
         connection.putheader("Host", self._target.baseurl)
@@ -96,5 +108,5 @@ class SruUpdateUploader(VirtualUploader):
 
         result = connection.getresponse()
         message = result.read()
-        if result.status != 200 or 'srw:diagnostic' in message:
-            raise Exception(message)
+        return result.status, message
+        

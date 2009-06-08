@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -88,5 +89,54 @@ class SruUpdateUploaderTest(CQ2TestCase):
             self.fail()
         except UploaderException, e:
             self.assertEquals(self.upload.id, e.uploadId)
+
+    def testRetryOn400(self):
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
+
+        answers = [(200, "ALL IS WELL")]
+        datas = []
+        def sendDataToRemote(data):
+            answer = answers.pop(0)
+            datas.append(data)
+            return answer
+
+        uploader._sendDataToRemote = sendDataToRemote
+        uploader._sendData("HOW IS EVERYTHING")
+
+        self.assertEquals(0, len(answers))
+        self.assertEquals(1, len(datas))
+
+        answers = [(400, ''), (200, "ALL IS WELL")]
+        datas = []
+        uploader._sendData("HOW IS EVERYTHING")
         
+        self.assertEquals(0, len(answers))
+        self.assertEquals(2, len(datas))
+        self.assertEquals(1, len(eventLogger.calledMethods))
+        self.assertEquals("Status 400 received while trying to upload", eventLogger.calledMethods[0].args[0])
+
+    def testRetryOn400FailsAfter3Times(self):
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
         
+        answers = [(400, ''), (400, ''), (400, ''), (200, "ALL IS WELL")]
+        datas = []
+        def sendDataToRemote(data):
+            answer = answers.pop(0)
+            datas.append(data)
+            return answer
+            
+        uploader._sendDataToRemote = sendDataToRemote
+        exception = None
+        try:
+            uploader._sendData("HOW IS EVERYTHING")
+            self.fail()
+        except Exception, e:
+            exception = e
+
+        self.assertFalse(exception == None)
+        self.assertEquals("HTTP 400: ", str(e))
+        self.assertEquals(1, len(answers))
+        self.assertEquals(3, len(datas))
+        self.assertEquals(3, len(eventLogger.calledMethods))
