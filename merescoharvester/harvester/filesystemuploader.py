@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -94,6 +95,9 @@ class FileSystemUploader(VirtualUploader):
             record = theXml.OAI_PMH.GetRecord.record
         record.xml_children.append(anUpload.header)
         record.xml_children.append(anUpload.metadata)
+        if anUpload.about:
+            for about in anUpload.about:
+                record.xml_children.append(about)
         return theXml
 
 
