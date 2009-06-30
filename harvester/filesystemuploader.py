@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Sahara" consists of two subsystems, namely an OAI-harvester and a web-control panel.
@@ -86,6 +87,9 @@ class FileSystemUploader(VirtualUploader):
             record = theXml.OAI_PMH.GetRecord.record
         record.xml_children.append(anUpload.header)
         record.xml_children.append(anUpload.metadata)
+        if anUpload.about:
+            for about in anUpload.about:
+                record.xml_children.append(about)
         return theXml
 
 
