@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -104,6 +105,29 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.assertTrue(os.path.isfile(recordFile))
         self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD, open(recordFile).read())
 
+    def testSendWithAbout(self):
+        ABOUT = "<about>abouttext</about>"
+        recordFile = self.tempdir + '/group/repo/id.record'
+        self.uploader._filenameFor = lambda *args: recordFile
+        
+        upload = createUploadWithAbout(about=ABOUT)
+        self.uploader.send(upload)
+        
+        self.assertTrue(os.path.isfile(recordFile))
+        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+
+    def testSendWithMultipleAbout(self):
+        ABOUT = "<about>about_1</about><about>about_2</about>"
+        
+        recordFile = self.tempdir + '/group/repo/id.record'
+        self.uploader._filenameFor = lambda *args: recordFile
+        
+        upload = createUploadWithAbout(about=ABOUT)
+        self.uploader.send(upload)
+        
+        self.assertTrue(os.path.isfile(recordFile))
+        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+
     def testSendRaisesError(self):
         def raiseError(*args, **kwargs):
             raise Exception('Catch me')
@@ -141,9 +165,31 @@ class FileSystemUploaderTest(CQ2TestCase):
 
 def createUpload():
     upload = CallTrace("Upload")
-    upload.header = wrapp(binderytools.bind_string('<header xmlns="http://www.openarchives.org/OAI/2.0/">header</header>')).header
-    upload.metadata = wrapp(binderytools.bind_string('<metadata xmlns="http://www.openarchives.org/OAI/2.0/">text</metadata>')).metadata
+    record = wrapp(binderytools.bind_string("""<record xmlns="http://www.openarchives.org/OAI/2.0/">
+    <header>header</header>
+    <metadata>text</metadata>
+</record>"""))
+    
+    upload.header = record.record.header
+    upload.metadata = record.record.metadata
+    upload.about = record.record.about
+    upload.id = 'id'
+    return upload
+    
+def createUploadWithAbout(about):
+    upload = CallTrace("Upload")
+    record = wrapp(binderytools.bind_string("""<record xmlns="http://www.openarchives.org/OAI/2.0/">
+    <header>header</header>
+    <metadata>text</metadata>
+    %s
+</record>""" % about))
+    
+    upload.header = record.record.header
+    upload.metadata = record.record.metadata
+    upload.about = record.record.about
+
     upload.id = 'id'
     return upload
         
 RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>"""
+RECORD_WITH_ABOUT = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata>%s</record>"""
