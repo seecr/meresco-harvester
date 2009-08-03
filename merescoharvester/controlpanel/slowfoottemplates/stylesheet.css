@@ -18,6 +18,10 @@ a:active, a:hover {
 	text-decoration: underline;
 }
 
+fieldset tr:hover {
+background-color: #E5E3DE;
+}
+
 .error {
 	font-weight: bold;
 	color: red;
