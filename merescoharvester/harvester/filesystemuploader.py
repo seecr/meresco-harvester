@@ -32,10 +32,10 @@
 ## end license ##
 #
 from virtualuploader import VirtualUploader, UploaderException
-import time, os
+import os
 from cq2utils_old import binderytools
 from xml.sax.saxutils import escape as xmlEscape
-from time import gmtime, strftime
+from time import gmtime, strftime, time
 
 OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
 <OAI-PMH 
@@ -54,8 +54,6 @@ OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
     </GetRecord>
 </OAI-PMH>"""
 
-tznow = lambda : time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
 class FileSystemUploader(VirtualUploader):
     
     def __init__(self, aTarget, aLogger, aCollection):
@@ -63,7 +61,10 @@ class FileSystemUploader(VirtualUploader):
         self._target = aTarget
         if not os.path.isdir(self._target.path):
             os.makedirs(self._target.path)
-    
+
+    def tznow(self):
+        return strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+
     def send(self, anUpload):
         """
         Writes the original header and metadata to a file.
@@ -90,7 +91,7 @@ class FileSystemUploader(VirtualUploader):
                 'identifier': xmlEscape(str(anUpload.header.identifier)),
                 'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
                 'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
-                'responseDate': tznow()
+                'responseDate': self.tznow()
             }
             theXml = binderytools.bind_string(OAI_ENVELOPE % envelopedata)
             record = theXml.OAI_PMH.GetRecord.record
@@ -105,7 +106,7 @@ class FileSystemUploader(VirtualUploader):
     def _properFilename(self, anId):
         if anId in ['.', '..'] or chr(0) in anId or len(anId) > 255 or \
             len(anId) == 0:
-            anId = "_malformed_id." + str(time.time())
+            anId = "_malformed_id." + str(time())
         return str(anId).replace(os.path.sep, '_SLASH_') + ".record"
 
     def _filenameFor(self, anUpload):
@@ -114,13 +115,30 @@ class FileSystemUploader(VirtualUploader):
             
     def delete(self, anUpload):
         filename = self._filenameFor(anUpload)
-        os.path.isfile(filename) and os.remove(filename)
-        f = open(os.path.join(self._target.path,
-            'deleted_records'),'a')
-        try:
-            f.write('%s\n' % anUpload.id)
-        finally:
-            f.close()
+        if str(self._target.oaiEnvelope) == 'false':
+            os.path.isfile(filename) and os.remove(filename)
+            f = open(os.path.join(self._target.path,
+                'deleted_records'),'a')
+            try:
+                f.write('%s\n' % anUpload.id)
+            finally:
+                f.close()
+        else:
+            envelopedata = {
+                'identifier': xmlEscape(str(anUpload.header.identifier)),
+                'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
+                'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
+                'responseDate': self.tznow()
+            }
+            theXml = binderytools.bind_string(OAI_ENVELOPE % envelopedata)
+            record = theXml.OAI_PMH.GetRecord.record
+            record.xml_children.append(anUpload.header)
+            fd = open(filename, 'w')
+            try:
+                fd.write(theXml.xml())
+            finally:
+                fd.close()
+
         self.logDelete(anUpload.id)
     
     def info(self):

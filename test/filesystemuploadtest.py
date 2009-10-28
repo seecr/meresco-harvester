@@ -39,6 +39,9 @@ import os, shutil
 from cq2utils_old import binderytools
 from cq2utils_old.cq2testcase import CQ2TestCase
 from tempfile import mkdtemp
+from amara.binderytools import bind_string
+
+from os.path import isfile, join
 
 class FileSystemUploaderTest(CQ2TestCase):
 
@@ -70,30 +73,73 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.assertTrue(getFilename('').startswith(self.tempdir + '/groupId/repositoryId/_malformed_id.'))
         self.assertTrue(getFilename('a'*256).startswith(self.tempdir + '/groupId/repositoryId/_malformed_id.'))
 
-    def testDelete(self):
-        recordFile = self.tempdir + '/id.record'
+    def testDeleteWithoutOaiEnvelope(self):
+        recordFile = join(self.tempdir, 'id.record')
         os.system('touch ' + recordFile)
-        self.assertTrue(os.path.isfile(recordFile))
+        self.assertTrue(isfile(recordFile))
         self.uploader._filenameFor = lambda *args: recordFile
+        self.target.oaiEnvelope = 'false'
         
         repository = CallTrace('Repository')
         repository.repositoryGroupId = 'groupId'
         repository.id = 'repositoryId'
+
         
         upload = CallTrace('Upload')
         upload.id = 'id'
         upload.repository = repository
         
         self.uploader.delete(upload)
-        
-        self.assertTrue(os.path.isfile(self.tempdir + '/deleted_records'))
-        self.assertEquals(['id\n'], open(self.tempdir + '/deleted_records').readlines())
-        self.assertFalse(os.path.isfile(recordFile))
+
+        DELETED_RECORDS = join(self.tempdir, 'deleted_records')
+
+        self.assertTrue(isfile(DELETED_RECORDS))
+        self.assertEquals(['id\n'], open(DELETED_RECORDS).readlines())
+        self.assertFalse(isfile(recordFile))
         
         upload.id = 'second:id'
         self.uploader.delete(upload)
-        self.assertEquals(['id\n', 'second:id\n'], open(self.tempdir + '/deleted_records').readlines())
-        
+        self.assertEquals(['id\n', 'second:id\n'], open(DELETED_RECORDS).readlines())
+
+    def testDeleteWithOaiEnvelope(self):
+        RECORD_FILENAME = join(self.tempdir, 'id.record')
+        self.uploader._filenameFor = lambda *args: RECORD_FILENAME
+        self.uploader.tznow = lambda: "VANDAAG_EN_NU"
+        self.target.oaiEnvelope = 'true'
+
+        repository = CallTrace('Repository')
+        repository.repositoryGroupId = 'groupId'
+        repository.metadataPrefix = 'oai_dc'
+        repository.baseurl = "http://repository"
+        repository.id = 'repositoryId'
+
+        upload = CallTrace('Upload')
+        upload.id = 'id'
+        upload.repository = repository
+
+        header = bind_string("""<header xmlns="http://www.openarchives.org/OAI/2.0/" status="deleted">
+                <identifier>id.record</identifier>
+            </header>""").header
+
+        upload.header = header
+
+        self.assertFalse(isfile(RECORD_FILENAME))
+        self.uploader.delete(upload)
+        self.assertTrue(isfile(RECORD_FILENAME))
+
+        self.assertEqualsWS("""<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>VANDAAG_EN_NU</responseDate>
+    <request verb="GetRecord" metadataPrefix="oai_dc" identifier="id.record">http://repository</request>
+    <GetRecord>
+        <record>
+            <header status="deleted">
+                <identifier>id.record</identifier>
+            </header>
+        </record>
+    </GetRecord>
+</OAI-PMH>""", open(RECORD_FILENAME).read())
+
 
     def testSend(self):
         recordFile = self.tempdir + '/group/repo/id.record'
@@ -102,7 +148,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         upload = createUpload()
         self.uploader.send(upload)
         
-        self.assertTrue(os.path.isfile(recordFile))
+        self.assertTrue(isfile(recordFile))
         self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD, open(recordFile).read())
 
     def testSendWithAbout(self):
@@ -113,7 +159,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         upload = createUploadWithAbout(about=ABOUT)
         self.uploader.send(upload)
         
-        self.assertTrue(os.path.isfile(recordFile))
+        self.assertTrue(isfile(recordFile))
         self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
     def testSendWithMultipleAbout(self):
@@ -125,7 +171,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         upload = createUploadWithAbout(about=ABOUT)
         self.uploader.send(upload)
         
-        self.assertTrue(os.path.isfile(recordFile))
+        self.assertTrue(isfile(recordFile))
         self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
     def testSendRaisesError(self):
@@ -153,7 +199,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         
         self.uploader.send(upload)
         
-        self.assertTrue(os.path.isfile(recordFile))
+        self.assertTrue(isfile(recordFile))
         xmlGetRecord = binderytools.bind_file(recordFile)
         self.assertEquals('header', str(xmlGetRecord.OAI_PMH.GetRecord.record.header))
         self.assertEquals('http://www.example.com', str(xmlGetRecord.OAI_PMH.request))
