@@ -92,7 +92,7 @@ For each of these requirements a short description can be found below.
 
 Installation of these software components is done using default python setuptools. After downloading run ``python setup.py --help`` for further instructions.
 
-Slowfoot 7.2
+Slowfoot 7.3
 ~~~~~~~~~~~~
 
 *Slowfoot is an integration system for web-based applications.* It's based on Mod Python and depends on Apache 2.2
