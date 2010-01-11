@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -64,16 +65,16 @@ class DeleteIds:
     def __init__(self, repository, stateDir, logDir):
         self._stateDir = stateDir
         self._logDir = logDir
-        self.repository = repository
-        self.logger = EventLogger(os.path.join(self._logDir, 'deleteids.log'))
-        self.filename = idfilename(self._stateDir, self.repository.id)
-        self.markLogger = True
+        self._repository = repository
+        self._eventLogger = EventLogger(os.path.join(self._logDir, 'deleteids.log'))
+        self._filename = idfilename(self._stateDir, self._repository.id)
+        self._markLogger = True
                     
     def ids(self):
-        return readIds(self.filename)
+        return readIds(self._filename)
         
     def delete(self):
-        uploader = self.repository.createUploader(self.logger)
+        uploader = self._repository.createUploader(self._eventLogger)
         uploader.start()
         try:
             self._delete(uploader)
@@ -81,32 +82,31 @@ class DeleteIds:
             uploader.stop()
     
     def deleteFile(self, filename):
-        self.filename = filename
-        self.markLogger = False
+        self._filename = filename
+        self._markLogger = False
         self.delete()
         
     def _delete(self, uploader):
         ids = self.ids()
         done = Set()
-        exceptions = []
         try:
             for id in ids:
                 try:
                     anUpload = Upload()
                     anUpload.id = id
-                    anUpload.repository = self.repository
+                    anUpload.repository = self._repository
                     uploader.delete(anUpload)
                     done.add(id)
-                except UploaderException, e:
-                    exceptions.append((id,e))
+                except:
+                    raise
             return ids - done
         finally:
             self._finish(ids - done)
             
     def _finish(self, remainingIDs):
-        writeIds(self.filename, remainingIDs)
-        if self.markLogger and not remainingIDs:
-            logger = HarvesterLog(self._stateDir, self._logDir, self.repository.id)
+        writeIds(self._filename, remainingIDs)
+        if self._markLogger and not remainingIDs:
+            logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
             try:
                 logger.markDeleted()
             finally:

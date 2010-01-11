@@ -31,7 +31,7 @@
 #
 ## end license ##
 
-import unittest, os, shutil
+from cq2utils_old import CallTrace, CQ2TestCase
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.deleteids import DeleteIds, readIds
 from sets import Set
@@ -39,35 +39,36 @@ from merescoharvester.harvester.virtualuploader import UploaderException, Virtua
 from merescoharvester.harvester import deleteids
 from tempfile import mkdtemp
 from shutil import rmtree
+from os.path import join, isfile
+from os import makedirs
 
-class DeleteIdsTest(unittest.TestCase):
+
+class DeleteIdsTest(CQ2TestCase):
     def setUp(self):
-        self.stateDir = mkdtemp()
-        self.logDir = mkdtemp()
+        CQ2TestCase.setUp(self)
+        self.stateDir = join(self.tempdir, 'state')
+        makedirs(self.stateDir)
+        self.logDir = join(self.tempdir, 'log')
 
-    def tearDown(self):
-        rmtree(self.stateDir)
-        rmtree(self.logDir)
-        
-    def testDeleteWithOneFailure(self):
+    def testDeleteWithFailure(self):
         repository = MockRepositoryAndUploader()
         idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
-        idfile.write('mock:1\nmock:2\n\n\t\nmock:3\nmock:2\nmock:2\n')
+        idfile.write('mock:1\nmock:2\n\n\t\nmock:raises:server:crash\nmock:2\nmock:2\n')
         idfile.close()
         self.createStatsFile(repository)
         dt = DeleteIds(repository, self.stateDir, self.logDir)
-        self.assertEquals(Set(['mock:1','mock:2','mock:3']),dt.ids())
-        dt.delete()
-        dlogfile = os.path.join(self.logDir,'deleteids.log')
-        self.assert_(os.path.isfile(dlogfile))
-        dlog = open(dlogfile)
-        s = Set(map(lambda l:l.split('\t')[2],dlog))
-        self.assertEquals(Set(['[mock:1]','[mock:2]','[mock:3]']),s)
-        dlog.close()
+        self.assertEquals(Set(['mock:1','mock:2','mock:raises:server:crash']),dt.ids())
+        try:
+            dt.delete()
+            self.fail()
+        except UploaderException, e:
+            self.assertTrue('crashed' in str(e))
+        dlogfile = join(self.logDir,'deleteids.log')
+        self.assertTrue(isfile(dlogfile))
+        dlog = open(dlogfile).read()
+        self.assertTrue('[mock:raises:server:crash]' in dlog, dlog)
         dt = DeleteIds(repository, self.stateDir, self.logDir)
-        self.assertEquals(Set(['mock:3']),dt.ids())
-        logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
-        self.assert_(logger.from_)
+        self.assertTrue('mock:raises:server:crash' in dt.ids(), dt.ids())
         
     def testDelete(self):
         repository = MockRepositoryAndUploader()
@@ -100,7 +101,7 @@ class DeleteIdsTest(unittest.TestCase):
 
     def testDeleteOtherFilename(self):
         repository = MockRepositoryAndUploader()
-        filename = os.path.join(self.stateDir, 'delete.ids.in.this.file')
+        filename = join(self.stateDir, 'delete.ids.in.this.file')
         idfile = file(filename, 'w')
         idfile.write('mock:5\nmock:6\nmock:7\nmock:8\nmock:9\n')
         idfile.close()
@@ -111,17 +112,15 @@ class DeleteIdsTest(unittest.TestCase):
         self.assertEquals(Set(['mock:5','mock:6','mock:7','mock:8','mock:9']),repository.deleted_ids)
         
         logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
-        #self.assert_(not logger.from_)
-
         
     def testDeleteWithCtrlC(self):
         repository = MockRepositoryAndUploader()
         idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
-        idfile.write('mock:11\nmock:12\n\n\t\nmock:13\nmock:14\nmock:15\n')
+        idfile.write('mock:b\n\n\t\nmock:raises:system:exit\nmock:14\nmock:15\n')
         idfile.close()
         self.createStatsFile(repository)
         dt = DeleteIds(repository, self.stateDir, self.logDir)
-        self.assertEquals(5, len(dt.ids()))
+        self.assertEquals(4, len(dt.ids()))
         try:
             dt.delete()
             self.fail()
@@ -155,13 +154,9 @@ class MockRepositoryAndUploader(VirtualUploader):
         id = anUpload.id
         self.uploads.append(anUpload)
         self.logger.logLine('UPLOADER','START deleting',id=id)
-        if id == 'mock:3':
+        if id == 'mock:raises:server:crash':
             raise UploaderException(uploadId=id, message='Sorry, but the vm has crashed.')
-        if id == 'mock:13':
+        if id == 'mock:raises:system:exit':
             raise SystemExit()
-        if id == 'mock:24':
-            self.deleteMock24Count += 1
-            if self.deleteMock24Count < 3:
-                raise UploaderException(uploadId=id, message='Sorry, but cannot delete mock24')
         self.deleted_ids.add(id)
         self.logger.logLine('UPLOADER','END deleting',id=id)
