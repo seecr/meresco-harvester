@@ -72,15 +72,11 @@ class DeleteIds:
     def ids(self):
         return readIds(self.filename)
         
-    def delete(self, trials = 3):
+    def delete(self):
         uploader = self.repository.createUploader(self.logger)
         uploader.start()
         try:
-            trials = min(10, max(1, trials))
-            for i in range(trials):
-                remaining = self._delete(uploader)
-                if not remaining:
-                    break
+            self._delete(uploader)
         finally:
             uploader.stop()
     

@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -56,7 +57,7 @@ class DeleteIdsTest(unittest.TestCase):
         self.createStatsFile(repository)
         dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(Set(['mock:1','mock:2','mock:3']),dt.ids())
-        dt.delete(trials=1)
+        dt.delete()
         dlogfile = os.path.join(self.logDir,'deleteids.log')
         self.assert_(os.path.isfile(dlogfile))
         dlog = open(dlogfile)
@@ -76,7 +77,7 @@ class DeleteIdsTest(unittest.TestCase):
         self.createStatsFile(repository)
         dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(5, len(dt.ids()))
-        dt.delete(trials=1)
+        dt.delete()
         dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(0, len(dt.ids()))
         logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
@@ -122,29 +123,13 @@ class DeleteIdsTest(unittest.TestCase):
         dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(5, len(dt.ids()))
         try:
-            dt.delete(trials=1)
+            dt.delete()
             self.fail()
         except SystemExit, e:
             pass
         dt = DeleteIds(repository, self.stateDir, self.logDir)
         self.assertEquals(3, len(dt.ids()))
         
-    def testTrials(self):
-        repository = MockRepositoryAndUploader()
-        idfile = file(harvesterlog.idfilename(self.stateDir, repository.id), 'w')
-        idfile.write('mock:21\nmock:22\nmock:23\nmock:24\nmock:25\n')
-        idfile.close()
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
-        self.assertEquals(5, len(dt.ids()))
-        dt.delete(trials=1)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
-        self.assertEquals(1, len(dt.ids()))
-        self.assertEquals(1, repository.deleteMock24Count)
-        dt.delete()
-        self.assertEquals(0, len(dt.ids()))
-        self.assertEquals(3, repository.deleteMock24Count)
-        
-
     def createStatsFile(self,repository):
         logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         logger.startRepository('A beautiful name')
