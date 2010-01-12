@@ -34,12 +34,14 @@
 from virtualuploader import UploaderException
 from eventlogger import NilEventLogger, EventLogger
 from harvesterlog import idfilename, HarvesterLog
+from eventlogger import CompositeLogger, NilEventLogger
 from string import strip
 from cq2utils_old import binderytools
 from cq2utils_old import wrappers
 import sys, os
 from sets import Set
 from mapping import Upload
+from traceback import format_exception
 
 def readIds(filename):
     ids = Set()
@@ -62,11 +64,16 @@ def writeIds(filename, ids):
 
 
 class DeleteIds:
-    def __init__(self, repository, stateDir, logDir):
+    def __init__(self, repository, stateDir, logDir, generalHarvestLog=NilEventLogger()):
         self._stateDir = stateDir
         self._logDir = logDir
         self._repository = repository
-        self._eventLogger = EventLogger(os.path.join(self._logDir, 'deleteids.log'))
+        self._logger = HarvesterLog(stateDir, logDir, repository.id)
+        self._eventLogger = CompositeLogger([
+            (['*'], EventLogger(os.path.join(self._logDir, 'deleteids.log'))),
+            (['*'], self._logger.eventLogger()),
+            (['ERROR', 'INFO', 'WARN'], generalHarvestLog),
+        ])
         self._filename = idfilename(self._stateDir, self._repository.id)
         self._markLogger = True
                     
@@ -98,6 +105,9 @@ class DeleteIds:
                     uploader.delete(anUpload)
                     done.add(id)
                 except:
+                    xtype,xval,xtb = sys.exc_info()
+                    errorMessage = '|'.join(map(str.strip,format_exception(xtype,xval,xtb)))
+                    self._eventLogger.error(errorMessage, id=id)
                     raise
             return ids - done
         finally:

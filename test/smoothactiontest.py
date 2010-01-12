@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -142,7 +143,7 @@ class SmoothActionTest(unittest.TestCase):
     def testSmooth_Delete(self):
         class MockDelete:
             usedrep, usedStateDir, usedLogDir, filename = None, None, None, None
-            def __init__(self, rep, stateDir, logDir):
+            def __init__(self, rep, stateDir, logDir, **kwargs):
                 MockDelete.usedrep = rep
                 MockDelete.usedStateDir = stateDir
                 MockDelete.usedLogDir = logDir

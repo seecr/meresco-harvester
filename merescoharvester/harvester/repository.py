@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -85,7 +86,7 @@ class HarvestAction(Action):
 
 class DeleteIdsAction(Action):
     def do(self):
-        d = DeleteIds(self._repository, self._stateDir, self._logDir)
+        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
         d.delete()
         return True, 'Deleted', False
 
@@ -129,7 +130,7 @@ class SmoothAction(Action):
         return DONE
 
     def _delete(self, filename):
-        d = DeleteIds(self._repository, self._stateDir, self._logDir)
+        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
         d.deleteFile(filename)
 
     def _harvest(self):
