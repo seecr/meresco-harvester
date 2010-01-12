@@ -37,7 +37,9 @@ from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
 from deleteids import DeleteIds, readIds, writeIds
 from saharaobject import SaharaObject
-import os.path, shutil
+from shutil import move
+from os.path import isfile, join
+from os import remove
 from eventlogger import NilEventLogger
 from virtualuploader import UploaderFactory
 from timeslot import Timeslot
@@ -93,14 +95,14 @@ class DeleteIdsAction(Action):
 class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
-        self.filename = os.path.join(self._stateDir, self._repository.key + '.ids')
+        self.filename = join(self._stateDir, self._repository.key + '.ids')
         self.oldfilename = self.filename + ".old"
 
     def do(self):
         if self._repository.shopClosed():
             return False, 'Not smoothharvesting outside timeslots.', False
 
-        if not os.path.isfile(self.oldfilename):
+        if not isfile(self.oldfilename):
             result, hasResumptionToken = self._smoothinit(), True
         else:
             result, hasResumptionToken = self._harvest()
@@ -110,8 +112,8 @@ class SmoothAction(Action):
         return result == DONE, 'Smooth reharvest: ' + result, hasResumptionToken
 
     def _smoothinit(self):
-        if os.path.isfile(self.filename):
-            shutil.move(self.filename, self.oldfilename)
+        if isfile(self.filename):
+            move(self.filename, self.oldfilename)
         else:
             open(self.oldfilename, 'w').close()
         open(self.filename, 'w').close()
@@ -124,9 +126,11 @@ class SmoothAction(Action):
 
     def _finish(self):
         deletefilename = self.filename + '.delete'
-        writeIds(deletefilename, readIds(self.oldfilename) - readIds(self.filename))
+        if not isfile(deletefilename):
+            writeIds(deletefilename, readIds(self.oldfilename) - readIds(self.filename))
         self._delete(deletefilename)
-        os.remove(self.oldfilename)
+        remove(self.oldfilename)
+        remove(deletefilename)
         return DONE
 
     def _delete(self, filename):
