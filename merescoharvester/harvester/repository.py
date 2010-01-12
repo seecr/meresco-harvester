@@ -88,6 +88,9 @@ class HarvestAction(Action):
 
 class DeleteIdsAction(Action):
     def do(self):
+        if self._repository.shopClosed():
+            return False, 'Not deleting outside timeslots.', False
+
         d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
         d.delete()
         return True, 'Deleted', False
