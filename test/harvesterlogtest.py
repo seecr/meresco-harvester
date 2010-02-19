@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -150,7 +150,7 @@ class HarvesterLogTest(unittest.TestCase):
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0 busy..., Error: exceptions.Exception: FATAL',lines[0][:87])
+        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0 busy..., Error: ',lines[0][:60])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('ERROR', event.strip())
         self.assertEquals('name', id)

@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -33,9 +33,9 @@ from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.repository import *
-from cq2utils_old.wrappers import wrapp
+from slowfoot.wrappers import wrapp
 from merescoharvester.harvester.timeslot import Timeslot, Wildcard
-from cq2utils_old.calltrace import CallTrace
+from cq2utils import CallTrace
 import tempfile, os, shutil
 import unittest
 

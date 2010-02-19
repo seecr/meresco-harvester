@@ -65,7 +65,7 @@ Furthermore you will need to configure:
         - mime.load
         - alias.load
         - proxy_http.load
-    Also make sure that now cache modules are enabled!
+    Also make sure that no cache modules are enabled!
 
 2.1.5 Ports confguration
 ------------------------

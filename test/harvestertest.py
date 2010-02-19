@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -33,7 +33,7 @@ import unittest
 from merescoharvester.harvester.harvester import Harvester
 from merescoharvester.harvester.harvesterlog import HarvesterLog, printTime, isCurrentDay, getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
-from cq2utils_old.wrappers import wrapp, binderytools
+from slowfoot.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload
 import shelve
 import os
@@ -160,7 +160,8 @@ class HarvesterTest(unittest.TestCase):
         except:
             pass
         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
-        self.assertEquals(' Error: exceptions.Exception: send failed', stats[2])
+        self.assertTrue(stats[2].startswith(' Error: '), stats[2])
+        self.assertTrue(stats[2].endswith('send failed'), stats[2])
 
     def testResumptionTokenLog(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -194,7 +195,7 @@ class HarvesterTest(unittest.TestCase):
             self.fail()
         except:
             self.assertEquals('aap', str(sys.exc_value))
-            self.assertEquals('exceptions.Exception', str(sys.exc_type))
+            self.assertTrue('exceptions.Exception' in str(sys.exc_type), str(sys.exc_type))
 
     def testIncrementalHarvest(self):
         self.mockRepository = MockOAIRequest('mocktud')

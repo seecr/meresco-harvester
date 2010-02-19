@@ -1,6 +1,6 @@
 <%
-from cq2utils_old.amaraextension import getElements
-from cq2utils_old.wrappers import wrapp
+from merescoharvester.controlpanel.tools import getElements
+from slowfoot.wrappers import wrapp
 %>
 
 <p class="head">Domains Administration</p>

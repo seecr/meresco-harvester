@@ -7,11 +7,10 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -31,7 +30,7 @@
 #
 ## end license ##
 
-from cq2utils_old import CallTrace, CQ2TestCase
+from cq2utils import CallTrace, CQ2TestCase
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.deleteids import DeleteIds, readIds
 from sets import Set

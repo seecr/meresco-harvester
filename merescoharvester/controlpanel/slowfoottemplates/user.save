@@ -1,7 +1,7 @@
 <%
 users = asxml(url('/users.xml')).users
-from cq2utils_old.amaraextension import getElements
-from cq2utils_old.wrappers import wrapp
+from merescoharvester.controlpanel.tools import getElements
+from slowfoot.wrappers import wrapp
 f = asform(input)
 target(filepath('users.xml'))
 %><?xml version ="1.0" encoding="UTF-8"?>

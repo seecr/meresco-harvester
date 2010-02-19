@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -30,6 +30,7 @@
 #
 ## end license ##
 import re
+AMARA_TYPE_XML_ELEMENT = 1
 
 def checkName(aName):
 	return not re.sub('[\w\-]','', str(aName))
@@ -38,3 +39,11 @@ def getDomainId(uri):
   fileName = uri.split('/')[-1]
   domainId,someId,typeExt = fileName.split('.')
   return domainId
+
+def getElements(amaraObject):
+	result = []
+	for child in amaraObject.childNodes:
+		if child.nodeType == AMARA_TYPE_XML_ELEMENT:
+			result.append(child)
+	return result
+

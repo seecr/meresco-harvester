@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -32,8 +32,8 @@
 
 import unittest
 from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
-from cq2utils_old.wrappers import wrapp
-from cq2utils_old import binderytools
+from slowfoot.wrappers import wrapp
+from slowfoot import binderytools
 
 class SaharaGetTest(unittest.TestCase):
     def setUp(self):

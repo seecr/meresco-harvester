@@ -7,11 +7,10 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -34,7 +33,7 @@
 import unittest, shutil, os
 from tempfile import mkdtemp
 from merescoharvester.harvester.repository import Repository, SmoothAction, DONE
-from cq2utils_old.wrappers import wrapp
+from slowfoot.wrappers import wrapp
 from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
 from merescoharvester.harvester.deleteids import readIds
 from merescoharvester.harvester import repository

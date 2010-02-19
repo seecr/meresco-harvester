@@ -97,11 +97,6 @@ Slowfoot 7.3
 
 *Slowfoot is an integration system for web-based applications.* It's based on Mod Python and depends on Apache 2.2
 
-CQ2Utils Old 5.4
-~~~~~~~~~~~~~~~~
-
-*"CQ2 Utils Old" (cq2utilsold) is a package with a wide range of valuable tools.* Its a typical utils project containing modules used in many of our projects. CQ2Utils Old is a branch from the original cq2utils, it's used for supporting the software based on python2.4 like Slowfoot and Meresco Harvester.
-
 Configuration
 =============
 
