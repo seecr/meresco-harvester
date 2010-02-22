@@ -65,7 +65,11 @@ Furthermore you will need to configure:
         - mime.load
         - alias.load
         - proxy_http.load
-    Also make sure that now cache modules are enabled!
+
+    Disable the following modules:
+        - cache.load (and other cache modules) 
+        - deflate.conf
+        - deflate.load
 
 2.1.5 Ports confguration
 ------------------------
