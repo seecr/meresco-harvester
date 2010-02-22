@@ -54,7 +54,7 @@ Furthermore you will need to configure:
 --------------------------
     Take care that the correct modules are enabled in apache.
     For the apache example configuration you should enable:
-        - mod_python.load
+        - python.load
         - rewrite.load
         - ssl.load
         - ssl.conf
@@ -65,7 +65,11 @@ Furthermore you will need to configure:
         - mime.load
         - alias.load
         - proxy_http.load
-    Also make sure that no cache modules are enabled!
+
+    Disable the following modules:
+        - cache.load (and other cache modules) 
+        - deflate.conf
+        - deflate.load
 
 2.1.5 Ports confguration
 ------------------------
@@ -76,7 +80,7 @@ Furthermore you will need to configure:
 -----------------------
     "Meresco Harvester" requires 'utf-8' as defaultencodig. This can be
     done with a file sitecustomize.py somewhere in your pythonpath. A usual
-    place for your sitecustomize.py is /usr/lib/python2.4/site-packages/
+    place for your sitecustomize.py is /usr/lib/python2.5/site-packages/
     The contents should be:
         import sys
         sys.setdefaultencoding('utf-8')
