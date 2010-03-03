@@ -42,10 +42,6 @@ from oairequest import OAIRequest
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
-def p(anObject):
-    sys.stdout.write(str(anObject)+'\n')
-    sys.stdout.flush()
-
 class Harvester:
     def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None, generalHarvestLog=NilEventLogger()):
         self._repository = repository
