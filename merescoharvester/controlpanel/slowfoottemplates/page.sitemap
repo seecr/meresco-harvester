@@ -11,11 +11,6 @@ if session.get('username',''):
       <a href="/page/home">HOME</a>
     </td>
   </tr>
- <tr>
-    <td class="button">
-      <a href="http://meresco.sourceforge.net">About Meresco</a>
-    </td>
-  </tr>
 <%
   if session.get('domain',''):
 %>
@@ -43,6 +38,11 @@ if session.get('username',''):
 <%
 #
 %>
+ <tr>
+    <td class="button">
+      <a href="http://meresco.sourceforge.net">About Meresco</a>
+    </td>
+  </tr>
   <tr>
     <td>&nbsp;</td>
   </tr>
