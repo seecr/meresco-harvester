@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -33,6 +34,7 @@ from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.repository import *
+from merescoharvester.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
 from merescoharvester.harvester.timeslot import Timeslot, Wildcard
 from cq2utils import CallTrace
@@ -96,6 +98,19 @@ class RepositoryTest(unittest.TestCase):
         self.assert_(action.called)
         self.assertEquals('', self.repo.use)
         self.assertEquals('', self.repo.action)
+
+    def testHarvestWithBadResumptionToken(self):
+        self.repo.use = 'true'
+        self.repo.action = ''
+        self.repo.complete = 'true'
+        action = CallTrace('Action')
+        oaiError = OAIError('url', 'resumptionToken expired', 'amaraResponse')
+        oaiError.errorCode = lambda :'badResumptionToken'
+        action.exceptions['do'] = oaiError
+        self.repo._createAction = lambda **kwargs: action
+        message, again = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
+        self.assertTrue('resumptionToken expired' in message)
+        self.assertTrue(again)
 
     def testDoHarvest(self):
         self.repo.use = 'true'

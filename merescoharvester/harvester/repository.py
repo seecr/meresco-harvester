@@ -35,6 +35,7 @@ from slowfoot import binderytools
 from mapping import Mapping
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from oairequest import OAIError
 from deleteids import DeleteIds, readIds, writeIds
 from saharaobject import SaharaObject
 from shutil import move
@@ -216,8 +217,17 @@ class Repository(SaharaObject):
             if completeHarvest:
                 generalHarvestLog.info('Repository will be completed in one attempt', id=self.id)
             return message, completeHarvest
+        except OAIError, e:
+            errorMessage = _errorMessage()
+            generalHarvestLog.error(errorMessage, id=self.id)
+            if e.errorCode() == 'badResumptionToken':
+                return errorMessage, self.complete == 'true'
+            return errorMessage, False
         except:
-            xtype,xval,xtb = exc_info()
-            errorMessage = '|'.join(line.strip() for line in format_exception(xtype,xval,xtb))
+            errorMessage = _errorMessage()
             generalHarvestLog.error(errorMessage, id=self.id)
             return errorMessage, False
+
+def _errorMessage():
+    xtype,xval,xtb = exc_info()
+    return '|'.join(line.strip() for line in format_exception(xtype,xval,xtb))
