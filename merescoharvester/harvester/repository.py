@@ -221,6 +221,7 @@ class Repository(SaharaObject):
             errorMessage = _errorMessage()
             generalHarvestLog.error(errorMessage, id=self.id)
             if e.errorCode() == 'badResumptionToken':
+                action.resetState()
                 return errorMessage, self.complete == 'true'
             return errorMessage, False
         except:

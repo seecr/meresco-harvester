@@ -110,6 +110,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo._createAction = lambda **kwargs: action
         message, again = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertTrue('resumptionToken expired' in message)
+        self.assertEquals(['info', 'do', 'resetState'], [m.name for m in action.calledMethods])
         self.assertTrue(again)
 
     def testDoHarvest(self):
