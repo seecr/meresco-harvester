@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -76,9 +77,10 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('^^^oai_dc^452 30', harvesterlog.getResumptionToken(logline))
 
     def testSameDate(self):
-        date=harvesterlog.printTime()[:10]
-        self.assert_(harvesterlog.isCurrentDay(date))
-        self.assert_(not harvesterlog.isCurrentDay('2005-01-02'))
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
+        date=logger.printTime()[:10]
+        self.assertTrue(logger.isCurrentDay(date))
+        self.assertFalse(logger.isCurrentDay('2005-01-02'))
 
     def testHasWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')

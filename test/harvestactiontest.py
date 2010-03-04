@@ -32,29 +32,65 @@
 ## end license ##
 from cq2utils import CallTrace, CQ2TestCase
 from merescoharvester.harvester.repository import HarvestAction
+from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.eventlogger import NilEventLogger
+from os.path import join
 
 class HarvestActionTest(CQ2TestCase):
+    def setUp(self):
+        CQ2TestCase.setUp(self)
+        self.harvester = CallTrace("Harvester")
+        self._original_createHarvester = HarvestAction._createHarvester
+        HarvestAction._createHarvester = lambda instance: self.harvester
+        self.repository = CallTrace("Repository")
+        self.repository.returnValues['shopClosed'] = False
+
+    def tearDown(self):
+        HarvestAction._createHarvester = self._original_createHarvester
+        CQ2TestCase.tearDown(self)
+
     def testHarvestAction(self):
-        repository = CallTrace("Repository")
-        harvester = CallTrace("Harvester")
-        repository.returnValues['shopClosed'] = False
-        harvester.returnValues['harvest'] = ('', False)
-        action = HarvestAction(repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
-        action._createHarvester = lambda: harvester
+        self.harvester.returnValues['harvest'] = ('', False)
+        action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
 
         action.do()
 
-        self.assertEquals(['harvest()'], harvester.__calltrace__())
+        self.assertEquals(['harvest'], [m.name for m in self.harvester.calledMethods])
 
     def testShopClosed(self):
-        repository = CallTrace("Repository")
-        harvester = CallTrace("Harvester")
-        repository.returnValues['shopClosed'] = True
-        harvester = CallTrace("Harvester")
-        action = HarvestAction(repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
-        action._createHarvester = lambda: harvester
+        self.repository.returnValues['shopClosed'] = True
+        action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
 
         action.do()
 
-        self.assertEquals([], harvester.__calltrace__())
+        self.assertEquals([], [m.name for m in self.harvester.calledMethods])
+
+    def testResetState(self):
+        action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+        action.resetState()
+
+
+    def testCreateLogFile(self):
+        self.writeLogLine(2010, 3, 1, token='resumptionToken')
+        self.writeLogLine(2010, 3, 2, token='')
+        self.writeLogLine(2010, 3, 2, exception='Exception')
+
+        print open(join(self.tempdir, 'repository.stats')).read()
+
+    def writeLogLine(self, year, month, day, token=None, exception=None):
+        h = HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name='repository')
+        h._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
+ 
+        h.startRepository('The Repository')
+        h.begin()
+        h.updateStatsfile(4,1,3)
+        if exception != None:
+            try:
+                raise Exception(exception)
+            except:
+                h.endWithException()
+        else:
+            h.done()
+            h.endRepository(token)
+        h.close()
+ 

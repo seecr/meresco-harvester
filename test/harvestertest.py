@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -31,7 +32,7 @@
 ## end license ##
 import unittest
 from merescoharvester.harvester.harvester import Harvester
-from merescoharvester.harvester.harvesterlog import HarvesterLog, printTime, isCurrentDay, getHarvestedUploadedRecords
+from merescoharvester.harvester.harvesterlog import HarvesterLog, getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
 from slowfoot.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload

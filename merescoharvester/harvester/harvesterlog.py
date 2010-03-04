@@ -11,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -38,12 +39,6 @@ from ids import Ids
 import traceback
 from os.path import join as pathjoin, isdir
 from os import makedirs
-
-def    printTime():
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    
-def isCurrentDay(yyyy_mm_dd):
-    return yyyy_mm_dd == printTime()[:10]    
 
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
@@ -78,9 +73,15 @@ class HarvesterLog:
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
         self.from_, self._statsfile, self.token, self.total = self.readFromStatsFileAndOpenForWriting(self._statsfilename)
         self._lastline = ''
+
+    def printTime(self):
+        return time.strftime('%Y-%m-%d %H:%M:%S', self._localtime())
+    
+    def isCurrentDay(self, yyyy_mm_dd):
+        return yyyy_mm_dd == self.printTime()[:10]    
         
     def startRepository(self, repositoryname):
-        self._statsfile.write('Started: %s' % printTime())
+        self._statsfile.write('Started: %s' % self.printTime())
 
     def totalids(self):
         return self._ids.total()
@@ -100,7 +101,7 @@ class HarvesterLog:
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
-        self._statsfile.write(', Done: %s, ResumptionToken: %s' % (printTime(), token))
+        self._statsfile.write(', Done: %s, ResumptionToken: %s' % (self.printTime(), token))
         self._statsfile.flush()
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s'%(self._lastline,token),id=self._name)
 
@@ -167,4 +168,7 @@ class HarvesterLog:
         self._statsfile.seek(-8, 2)
     
     def hasWork(self):
-        return not isCurrentDay(self.from_) or self.token
+        return not self.isCurrentDay(self.from_) or self.token
+
+    def _localtime(self):
+        return time.localtime()
