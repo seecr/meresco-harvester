@@ -193,23 +193,6 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals({'id':self.repo.id}, generalHarvestLog.calledMethods[-1].kwargs)
         self.assertEquals('error', generalHarvestLog.calledMethods[-1].name)
 
-    def testHarvestAction(self):
-        repository = CallTrace("Repository")
-        harvester = CallTrace("Harvester")
-
-        repository.returnValues['shopClosed'] = False
-        harvester.returnValues['harvest'] = ('', False)
-        action = HarvestAction(repository, stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())
-        action._createHarvester = lambda: harvester
-        action.do()
-        self.assertEquals(['harvest()'], harvester.__calltrace__())
-
-        repository.returnValues['shopClosed'] = True
-        harvester = CallTrace("Harvester")
-        action._createHarvester = lambda: harvester
-        action.do()
-        self.assertEquals([], harvester.__calltrace__())
-
     # mock saharaget
     def repositoryActionDone(self, domainId, repositoryId):
         self.mock_repositoryActionDone_domainId = domainId

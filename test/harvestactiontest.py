@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -12,6 +11,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -30,43 +30,31 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
+from cq2utils import CallTrace, CQ2TestCase
+from merescoharvester.harvester.repository import HarvestAction
+from merescoharvester.harvester.eventlogger import NilEventLogger
 
-import os, sys
-os.system('find .. -name "*.pyc" | xargs rm -f')
-sys.path.insert(0, '..')
+class HarvestActionTest(CQ2TestCase):
+    def testHarvestAction(self):
+        repository = CallTrace("Repository")
+        harvester = CallTrace("Harvester")
+        repository.returnValues['shopClosed'] = False
+        harvester.returnValues['harvest'] = ('', False)
+        action = HarvestAction(repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+        action._createHarvester = lambda: harvester
 
-from glob import glob
-for dir in glob('../deps.d/*'):
-  sys.path.insert(0, dir)
+        action.do()
 
-import unittest
+        self.assertEquals(['harvest()'], harvester.__calltrace__())
 
-from disallowfileplugintest import DisallowFilePluginTest
-from timeslottest import TimeslotTest
-from toolstest import ToolsTest
+    def testShopClosed(self):
+        repository = CallTrace("Repository")
+        harvester = CallTrace("Harvester")
+        repository.returnValues['shopClosed'] = True
+        harvester = CallTrace("Harvester")
+        action = HarvestAction(repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+        action._createHarvester = lambda: harvester
 
-from cacherecordtest import CacheRecordTest
-from classificationtest import ClassificationTest
-from deleteidstest import DeleteIdsTest
-from filesystemuploadtest import FileSystemUploaderTest
-from harvesterlogtest import HarvesterLogTest
-from harvestertest import HarvesterTest
-from idstest import IdsTest
-from mappingtest import MappingTest
-from oairequesttest import OAIRequestTest
-from onlineharvesttest import OnlineHarvestTest
-from repositorystatustest import RepositoryStatusTest
-from repositorytest import RepositoryTest
-from saharagettest import SaharaGetTest
-from smoothactiontest import SmoothActionTest
-from harvestactiontest import HarvestActionTest
-from throughputanalysertest import ThroughputAnalyserTest
-from timedprocesstest import TimedProcessTest
-from vcardtest import VCardTest
-from amaraforharvestertest import AmaraForHarvesterTest
-from sruupdateuploadertest import SruUpdateUploaderTest
-from eventloggertest import EventLoggerTest
+        action.do()
 
-if __name__ == '__main__':
-        unittest.main()
-
+        self.assertEquals([], harvester.__calltrace__())
