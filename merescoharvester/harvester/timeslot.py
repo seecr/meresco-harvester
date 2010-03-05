@@ -35,6 +35,8 @@ import re
 
 class Wildcard(object):
     def __eq__(self, arg): return True
+    def __lt__(self, arg): return True
+    def __le__(self, arg): return True
     def __gt__(self, arg): return True
     def __ge__(self, arg): return True
     def __str__(self): return '*'
