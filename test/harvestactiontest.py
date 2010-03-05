@@ -65,20 +65,36 @@ class HarvestActionTest(CQ2TestCase):
 
         self.assertEquals([], [m.name for m in self.harvester.calledMethods])
 
-    def testResetState(self):
-        action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
-        action.resetState()
-
-
-    def testCreateLogFile(self):
+    def testResetState_LastStateIsAlreadyGood(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')
         self.writeLogLine(2010, 3, 2, token='')
-        self.writeLogLine(2010, 3, 2, exception='Exception')
+        self.writeLogLine(2010, 3, 3, exception='Exception')
+        action = self.newHarvestAction()
 
-        print open(join(self.tempdir, 'repository.stats')).read()
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals('2010-03-02', h.from_)
+        self.assertEquals(None, h.token)
+
+
+    def testTheWriteLogLineTestMethod(self):
+        self.writeLogLine(2010, 3, 1, token='resumptionToken')
+        self.writeLogLine(2010, 3, 2, token='')
+        self.writeLogLine(2010, 3, 3, exception='Exception')
+
+        h = self.newHarvesterLog()
+        self.assertEquals('2010-03-02', h.from_)
+        self.assertEquals(None, h.token)
+
+    def newHarvestAction(self):
+        return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+
+    def newHarvesterLog(self):
+        return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name='repository')
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
-        h = HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name='repository')
+        h = self.newHarvesterLog()
         h._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
  
         h.startRepository('The Repository')
