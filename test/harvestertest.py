@@ -32,7 +32,8 @@
 ## end license ##
 import unittest
 from merescoharvester.harvester.harvester import Harvester
-from merescoharvester.harvester.harvesterlog import HarvesterLog, getHarvestedUploadedRecords
+from merescoharvester.harvester.harvesterlog import HarvesterLog
+from merescoharvester.harvester.state import getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
 from slowfoot.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload

@@ -48,34 +48,6 @@ class HarvesterLogTest(unittest.TestCase):
         rmtree(self.stateDir)
         rmtree(self.logDir)
 
-    def testReadStartDateFromLogLine(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals('2005-01-02', harvesterlog.getStartDate(logline))
-        logline = 'Started: 2005-03-23 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals('2005-03-23', harvesterlog.getStartDate(logline))
-        logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded: 113/  113, Done: 2004-12-31 16:39:15, ResumptionToken: ga+hier+verder\n'
-        self.assertEquals('1999-12-01', harvesterlog.getStartDate(logline))
-
-    def testReadHarvestedRecordsFromLogLine(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/ 200/  678, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals(('199', '200', '0', '678'), harvesterlog.getHarvestedUploadedRecords(logline))
-
-    def testReadDeletedRecordsFromLogLine(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals(('1', '2', '3', '4'), harvesterlog.getHarvestedUploadedRecords(logline))
-
-    def testReadResumptionToken(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))
-        logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded:   113/  113, Error: XXX\n'
-        self.assertEqual(None, harvesterlog.getResumptionToken(logline))
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: None'
-        self.assertEqual(None, harvesterlog.getResumptionToken(logline))
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230\n'
-        self.assertEquals('^^^oai_dc^45230', harvesterlog.getResumptionToken(logline))
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^452 30\n'
-        self.assertEquals('^^^oai_dc^452 30', harvesterlog.getResumptionToken(logline))
-
     def testSameDate(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
         date=logger.printTime()[:10]
@@ -159,24 +131,6 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(comments.startswith('Traceback (most recent call last):|File "'))
         self.assert_('harvesterlogtest.py", line ' in comments)
         self.assert_(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
-
-    def testParseInfo(self):
-        from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Total: 200/201/6600, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
-        self.assertEquals('200', harvested)
-        self.assertEquals('201', uploaded)
-        self.assertEquals('0', deleted)
-        self.assertEquals('6600', total)
-
-    def testLogWithDeletedCount(self):
-        from merescoharvester.harvester.harvesterlog import getHarvestedUploadedRecords
-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Deleted/Total: 200/195/5/449, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
-        self.assertEquals('200', harvested)
-        self.assertEquals('195', uploaded)
-        self.assertEquals('5', deleted)
-        self.assertEquals('449', total)
 
     def testLogWithoutDoubleIDs(self):
         f = open(self.stateDir+'/name.ids','w')

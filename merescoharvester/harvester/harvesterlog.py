@@ -39,24 +39,7 @@ from ids import Ids
 import traceback
 from os.path import join as pathjoin, isdir
 from os import makedirs
-
-def getStartDate(logline):
-    matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
-    return matches.group(1)
-
-def getStartDateAndTime(logline):
-    matches = re.search('Started: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', logline)
-    return matches and matches.group(1) or 'Started: ?'
-    
-def getHarvestedUploadedRecords(logline):
-    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
-    return matches.groups('0')
-    
-def getResumptionToken(logline):
-    matches=re.search('ResumptionToken: (.*)', logline.strip())
-    if matches and matches.group(1) != 'None': 
-        return matches.group(1)
-    return None
+from state import State
 
 def idfilename(stateDir, repositorykey):
     return pathjoin(stateDir, repositorykey+'.ids')
@@ -69,9 +52,9 @@ class HarvesterLog(object):
         self._name=name
         ensureDirectory(stateDir)
         self._ids = Ids(stateDir, name)
-        self._statsfilename = stateDir + '/' + name + '.stats'
+        self._state = State(stateDir, name)
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
-        self.from_, self._statsfile, self.token, self.total = self._readFromStatsFileAndOpenForWriting(self._statsfilename)
+        self.from_, self._statsfile, self.token, self.total = self._state.readFromStatsFileAndOpenForWriting()
         self._lastline = ''
 
     def printTime(self):
@@ -97,7 +80,6 @@ class HarvesterLog(object):
         self.done()
         self._statsfile.write(", Done: Deleted all id's.")
         self._statsfile.flush()
-        #self._eventlogger.succes('Deleted all id\'s',id=self._name)
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
@@ -131,34 +113,6 @@ class HarvesterLog(object):
         self._statsfile.write(self._lastline)
         self._statsfile.write(' busy...')
         self._statsfile.flush()
-
-    def findLastNonErrorLogLine(self, lines):
-        reversedlines = lines[:]
-        reversedlines.reverse()
-        for line in reversedlines:
-            if line.find('Done:') >= 0:
-                return line
-
-    def isDeleted(self, logline):
-        return "Done: Deleted all id's" in logline
-                
-    def _readFromStatsFileAndOpenForWriting(self, statsfilename):
-        startdate = None
-        token = None
-        total = 0
-        if os.path.isfile( statsfilename ):
-            lines = open(statsfilename).readlines()
-            logline = self.findLastNonErrorLogLine(lines)
-            if logline and not self.isDeleted(logline):
-                startdate = getStartDate(logline)
-                token = getResumptionToken(logline)
-                harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
-            statsfile = open(statsfilename, 'w')
-            statsfile.writelines(map(lambda line:line.strip()+'\n',filter(string.strip,lines))) #filters empty lines and every line has \n
-            statsfile.flush()
-        else:
-            statsfile = open(statsfilename, 'w')
-        return startdate, statsfile, token, int(total)
 
     def begin(self):
         self._statsfile.write(', Harvested/Uploaded/Deleted/Total: ')
