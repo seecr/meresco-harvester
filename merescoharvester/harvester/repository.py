@@ -35,6 +35,7 @@ from slowfoot import binderytools
 from mapping import Mapping
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from state import State
 from oairequest import OAIError
 from deleteids import DeleteIds, readIds, writeIds
 from saharaobject import SaharaObject
@@ -88,7 +89,11 @@ class HarvestAction(Action):
         return False, message, hasResumptionToken
 
     def resetState(self):
-        pass
+        s = State(self._stateDir, self._repository.id)
+        try:
+            s.write(s._getLastCleanState())
+        finally:
+            s.close()
 
 class DeleteIdsAction(Action):
     def do(self):

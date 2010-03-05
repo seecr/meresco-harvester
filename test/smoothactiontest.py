@@ -171,6 +171,9 @@ class SmoothActionTest(unittest.TestCase):
         self.assertEquals(self.stateDir, MockHarvester.usedStateDir)
         self.assertEquals(self.logDir, MockHarvester.usedLogDir)
 
+    def testResetState(self):
+        self.fail('implement resetState for SmoothAction.')
+
 def writefile(filename, contents):
     f = open(filename,'w')
     try:

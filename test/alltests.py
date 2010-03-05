@@ -41,14 +41,14 @@ for dir in glob('../deps.d/*'):
 
 import unittest
 
-from disallowfileplugintest import DisallowFilePluginTest
-from timeslottest import TimeslotTest
-from toolstest import ToolsTest
-
+from amaraforharvestertest import AmaraForHarvesterTest
 from cacherecordtest import CacheRecordTest
 from classificationtest import ClassificationTest
 from deleteidstest import DeleteIdsTest
+from disallowfileplugintest import DisallowFilePluginTest
+from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
+from harvestactiontest import HarvestActionTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest
@@ -59,14 +59,13 @@ from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest
 from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest
-from harvestactiontest import HarvestActionTest
+from sruupdateuploadertest import SruUpdateUploaderTest
+from statetest import StateTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
+from timeslottest import TimeslotTest
+from toolstest import ToolsTest
 from vcardtest import VCardTest
-from amaraforharvestertest import AmaraForHarvesterTest
-from sruupdateuploadertest import SruUpdateUploaderTest
-from eventloggertest import EventLoggerTest
-from statetest import StateTest
 
 if __name__ == '__main__':
         unittest.main()

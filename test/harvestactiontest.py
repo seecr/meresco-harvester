@@ -43,6 +43,7 @@ class HarvestActionTest(CQ2TestCase):
         self._original_createHarvester = HarvestAction._createHarvester
         HarvestAction._createHarvester = lambda instance: self.harvester
         self.repository = CallTrace("Repository")
+        self.repository.id = 'repository'
         self.repository.returnValues['shopClosed'] = False
 
     def tearDown(self):
@@ -87,6 +88,16 @@ class HarvestActionTest(CQ2TestCase):
         h = self.newHarvesterLog()
         self.assertEquals(('2010-03-02', None), (h.from_, h.token))
 
+    def testResetState_ToStartAllOver(self):
+        self.writeLogLine(2010, 3, 3, token='resumptionToken')
+        self.writeLogLine(2010, 3, 4, exception='Exception')
+        action = self.newHarvestAction()
+
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals((None, None), (h.from_, h.token))
+
     def testTheWriteLogLineTestMethod(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')
         self.writeLogLine(2010, 3, 2, token='')
@@ -99,7 +110,7 @@ class HarvestActionTest(CQ2TestCase):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
 
     def newHarvesterLog(self):
-        return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name='repository')
+        return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
         h = self.newHarvesterLog()
