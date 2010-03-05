@@ -71,7 +71,7 @@ class HarvesterLog(object):
         self._ids = Ids(stateDir, name)
         self._statsfilename = stateDir + '/' + name + '.stats'
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
-        self.from_, self._statsfile, self.token, self.total = self.readFromStatsFileAndOpenForWriting(self._statsfilename)
+        self.from_, self._statsfile, self.token, self.total = self._readFromStatsFileAndOpenForWriting(self._statsfilename)
         self._lastline = ''
 
     def printTime(self):
@@ -142,7 +142,7 @@ class HarvesterLog(object):
     def isDeleted(self, logline):
         return "Done: Deleted all id's" in logline
                 
-    def readFromStatsFileAndOpenForWriting(self, statsfilename):
+    def _readFromStatsFileAndOpenForWriting(self, statsfilename):
         startdate = None
         token = None
         total = 0

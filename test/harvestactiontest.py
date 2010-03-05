@@ -74,9 +74,18 @@ class HarvestActionTest(CQ2TestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals('2010-03-02', h.from_)
-        self.assertEquals(None, h.token)
+        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
 
+    def testResetState_ToStateBeforeResumptionToken(self):
+        self.writeLogLine(2010, 3, 2, token='')
+        self.writeLogLine(2010, 3, 3, token='resumptionToken')
+        self.writeLogLine(2010, 3, 4, exception='Exception')
+        action = self.newHarvestAction()
+
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
 
     def testTheWriteLogLineTestMethod(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')
@@ -84,8 +93,7 @@ class HarvestActionTest(CQ2TestCase):
         self.writeLogLine(2010, 3, 3, exception='Exception')
 
         h = self.newHarvesterLog()
-        self.assertEquals('2010-03-02', h.from_)
-        self.assertEquals(None, h.token)
+        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
 
     def newHarvestAction(self):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
