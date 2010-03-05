@@ -63,21 +63,11 @@ class State(object):
     ## temporary methods
     def write(self, *args):
         self._statsfile.write(*args)
-
-    def flush(self):
-        self._statsfile.flush()
+    ## /temporary methods
 
     def close(self):
         self.write('\n')
         self._statsfile.close()
-
-    def seek(self, *args):
-        return self._statsfile.seek(*args)
-
-    def tell(self):
-        return self._statsfile.tell()
-
-    ## /temporary methods
 
     @staticmethod
     def _findLastNonErrorLogLine(lines):

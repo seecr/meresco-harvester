@@ -124,7 +124,7 @@ class HarvesterLogTest(unittest.TestCase):
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0 busy..., Error: ',lines[0][:60])
+        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0, Error: ',lines[0][:52])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('ERROR', event.strip())
         self.assertEquals('name', id)
