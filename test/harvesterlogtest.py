@@ -225,7 +225,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(0, logger.total)
 
 
-class MockMailer:
+class MockMailer(object):
     def send(self, message):
         self.message=message
 

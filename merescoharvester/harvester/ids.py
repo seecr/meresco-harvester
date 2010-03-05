@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -41,7 +41,7 @@ def idfilename(stateDir, name):
     isdir(stateDir) or makedirs(stateDir)
     return os.path.join(stateDir, name + '.ids')
 
-class Ids:
+class Ids(object):
     def __init__(self, stateDir, name):
         self._filename = idfilename(stateDir, name)
         self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))

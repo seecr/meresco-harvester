@@ -151,7 +151,7 @@ class SmoothAction(Action):
 class ActionFactoryException(Exception):
     pass
 
-class ActionFactory:
+class ActionFactory(object):
     def createAction(self, repository, stateDir, logDir, generalHarvestLog):
         if repository.action == 'clear':
             return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)

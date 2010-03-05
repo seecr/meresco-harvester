@@ -63,7 +63,7 @@ def writeIds(filename, ids):
         f.close()
 
 
-class DeleteIds:
+class DeleteIds(object):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog=NilEventLogger()):
         self._stateDir = stateDir
         self._logDir = logDir

@@ -122,7 +122,7 @@ class DataMapAssertionException(Exception):
 class DataMapSkip(Exception):
     pass
 
-class TestRepository:
+class TestRepository(object):
     id = 'repository.id'
     repositoryGroupId = 'repository.institute'
     baseurl = 'http://repository.example.org/oai'
@@ -146,7 +146,7 @@ def doAssert(aBoolean, message="Assertion failed"):
 def doNotAssert(aBoolean, message="This should not happen"):
     pass
 
-class Input:
+class Input(object):
     def __init__(self, header=None, metadata=None, about=None, repository=None, log=None):
         self.header = header
         self.metadata = metadata
@@ -159,7 +159,7 @@ class UploadDict(dict):
         return dict.__setitem__(self, key, str(value))
 
 
-class Upload:
+class Upload(object):
     def __init__(self):
         self.fulltexturl = None
         self._properties = {}

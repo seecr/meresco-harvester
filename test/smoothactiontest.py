@@ -140,7 +140,7 @@ class SmoothActionTest(unittest.TestCase):
         self.assertEquals(Set(['rep:id:1']), self.mockdelete_ids)
 
     def testSmooth_Delete(self):
-        class MockDelete:
+        class MockDelete(object):
             usedrep, usedStateDir, usedLogDir, filename = None, None, None, None
             def __init__(self, rep, stateDir, logDir, **kwargs):
                 MockDelete.usedrep = rep
@@ -157,7 +157,7 @@ class SmoothActionTest(unittest.TestCase):
 
 
     def testHarvest(self):
-        class MockHarvester:
+        class MockHarvester(object):
             usedrep, usedStateDir, usedLogDir = None, 'some path', 'some path'
             def __init__(self, rep, stateDir, logDir, generalHarvestLog):
                 MockHarvester.usedrep = rep

@@ -52,7 +52,7 @@ class OAIError(OAIRequestException):
     def errorCode(self):
         return getattr(self._error(), 'code', '')
     
-class OAIRequest:
+class OAIRequest(object):
     def __init__(self, url):
         self._url = url
 

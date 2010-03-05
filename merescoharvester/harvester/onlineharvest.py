@@ -36,7 +36,7 @@ from slowfoot.wrappers import wrapp
 from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
 
-class OnlineHarvest:
+class OnlineHarvest(object):
     def __init__(self, outputstream):
         self._output = outputstream
         self.eventlogger = StreamEventLogger(self._output)

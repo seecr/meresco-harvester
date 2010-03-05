@@ -45,7 +45,7 @@ from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
 
-class DeletedRecordHeader:
+class DeletedRecordHeader(object):
     def isDeleted(self):
         return True
     def identifier(self):

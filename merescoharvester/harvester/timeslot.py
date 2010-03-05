@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -33,7 +33,7 @@ import datetime
 import time
 import re
 
-class Wildcard:
+class Wildcard(object):
     def __eq__(self, arg): return True
     def __gt__(self, arg): return True
     def __ge__(self, arg): return True
@@ -59,7 +59,7 @@ def _parse(txt):
 def format(date):
 	return ':'.join(map(str, date))
 
-class Timeslot:
+class Timeslot(object):
 
 	def __init__(self, string):
 		self._begin, self._end = map(_parse, string.split('-'))

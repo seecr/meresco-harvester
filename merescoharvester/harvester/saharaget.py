@@ -39,7 +39,7 @@ from urllib import urlencode
 from target import Target
 from mapping import Mapping
 
-class SaharaGet:
+class SaharaGet(object):
     def __init__(self, saharaurl, doSetActionDone=True):
         self.doSetActionDone = doSetActionDone
         self.saharaurl = saharaurl

@@ -43,7 +43,7 @@ from oairequest import OAIRequest
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
-class Harvester:
+class Harvester(object):
     def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None, generalHarvestLog=NilEventLogger()):
         self._repository = repository
         self._logger = mockLogger or HarvesterLog(stateDir, logDir, repository.id)

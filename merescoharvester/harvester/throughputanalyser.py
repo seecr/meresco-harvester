@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -49,7 +49,7 @@ def diffTime(newest, oldest):
     delta = newest - oldest
     return delta.seconds + delta.microseconds/1000000.0
 
-class ThroughputReport:
+class ThroughputReport(object):
     def __init__(self):
         self.records = 0
         self.seconds = 0.0
@@ -75,7 +75,7 @@ class ThroughputReport:
         return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
                     
-class ThroughputAnalyser:
+class ThroughputAnalyser(object):
     def __init__(self, eventpath):
         self.eventpath = eventpath
         
