@@ -38,13 +38,34 @@ class State(object):
         self._readState()
         self._prepareForWriting()
 
+    def close(self):
+        self.write('\n')
+        self._statsfile.close()
+
+    def _getLastCleanState(self):
+        result = None
+        self._statsfile.seek(0)
+        for line in self._filterNonErrorLogLine(self._statsfile):
+            token = getResumptionToken(line)
+            if token == None:
+                result = line
+        self._statsfile.seek(0, SEEK_END)
+        return result
+
+    def _getLastDoneState(self):
+        result = None
+        self._statsfile.seek(0)
+        for line in self._filterNonErrorLogLine(self._statsfile):
+            result = line
+        self._statsfile.seek(0, SEEK_END)
+        return result
+
     def _readState(self):
         self.startdate = None
         self.token = None
         self.total = 0
         if isfile(self._filename):
-            lines = self._statsfile.readlines()
-            logline = self._findLastNonErrorLogLine(lines)
+            logline = self._getLastDoneState()
             if logline and not self._isDeleted(logline):
                 self.startdate = getStartDate(logline)
                 self.token = getResumptionToken(logline)
@@ -65,18 +86,10 @@ class State(object):
         self._statsfile.write(*args)
     ## /temporary methods
 
-    def close(self):
-        self.write('\n')
-        self._statsfile.close()
-
     @staticmethod
-    def _findLastNonErrorLogLine(lines):
-        reversedlines = lines[:]
-        reversedlines.reverse()
-        for line in reversedlines:
-            if line.find('Done:') >= 0:
-                return line
-
+    def _filterNonErrorLogLine(iterator):
+        return (line for line in iterator if 'Done:' in line)
+    
     @staticmethod
     def _isDeleted(logline):
         return "Done: Deleted all id's" in logline

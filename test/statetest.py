@@ -33,6 +33,7 @@
 
 from merescoharvester.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
 from cq2utils import CQ2TestCase
+from os.path import join
 
 class StateTest(CQ2TestCase):
     def testReadStartDateFromLogLine(self):
@@ -78,4 +79,29 @@ class StateTest(CQ2TestCase):
         self.assertEquals('195', uploaded)
         self.assertEquals('5', deleted)
         self.assertEquals('449', total)
+
+    def testFindLastCleanState(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
+Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
+Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
+Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
+        f.close()
+        s = State(self.tempdir, 'repository')
+        l = s._getLastCleanState()
+        self.assertEquals('Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:\n', l)
+
+    def testFindLastCleanState_whichDoesNotExist(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
+Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
+Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
+Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
+        f.close()
+        s = State(self.tempdir, 'repository')
+        l = s._getLastCleanState()
+        self.assertEquals(None, l)
 
