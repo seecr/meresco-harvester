@@ -27,30 +27,57 @@
 ## end license ##
 
 from os.path import join, isfile
+from os import SEEK_END
 import re
 
 class State(object):
     def __init__(self, stateDir, name):
         self._filename = join(stateDir, '%s.stats' % name)
-    
-    def readFromStatsFileAndOpenForWriting(self):
-        startdate = None
-        token = None
-        total = 0
+        open(self._filename, 'a').close()
+        self._statsfile = open(self._filename, 'r+')
+        self._readState()
+        self._prepareForWriting()
+
+    def _readState(self):
+        self.startdate = None
+        self.token = None
+        self.total = 0
         if isfile(self._filename):
-            lines = open(self._filename).readlines()
+            lines = self._statsfile.readlines()
             logline = self._findLastNonErrorLogLine(lines)
             if logline and not self._isDeleted(logline):
-                startdate = getStartDate(logline)
-                token = getResumptionToken(logline)
+                self.startdate = getStartDate(logline)
+                self.token = getResumptionToken(logline)
                 harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
-            statsfile = open(self._filename, 'w')
-            statsfile.writelines(line.strip() + '\n' for line in lines if line.strip()) #filters empty lines and every line has \n
-            #statsfile.writelines(map(lambda line:line.strip()+'\n',filter(string.strip,lines))) 
-            statsfile.flush()
-        else:
-            statsfile = open(self._filename, 'w')
-        return startdate, statsfile, token, int(total)
+                self.total = int(total)
+
+    def _prepareForWriting(self):
+        """Make sure writing always starts on newline."""
+        if self._statsfile.tell() == 0:
+            return
+        self._statsfile.seek(-1, SEEK_END)
+        lastchar = self._statsfile.read()
+        if lastchar != '\n':
+            self._statsfile.write('\n')
+    
+    ## temporary methods
+    def write(self, *args):
+        self._statsfile.write(*args)
+
+    def flush(self):
+        self._statsfile.flush()
+
+    def close(self):
+        self.write('\n')
+        self._statsfile.close()
+
+    def seek(self, *args):
+        return self._statsfile.seek(*args)
+
+    def tell(self):
+        return self._statsfile.tell()
+
+    ## /temporary methods
 
     @staticmethod
     def _findLastNonErrorLogLine(lines):
@@ -77,4 +104,4 @@ def getResumptionToken(logline):
 def getHarvestedUploadedRecords(logline):
     matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
     return matches.groups('0')
-    
+   

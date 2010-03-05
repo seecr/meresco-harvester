@@ -54,7 +54,9 @@ class HarvesterLog(object):
         self._ids = Ids(stateDir, name)
         self._state = State(stateDir, name)
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
-        self.from_, self._statsfile, self.token, self.total = self._state.readFromStatsFileAndOpenForWriting()
+        self.from_ = self._state.startdate
+        self.token = self._state.token
+        self.total = self._state.total
         self._lastline = ''
 
     def printTime(self):
@@ -64,7 +66,7 @@ class HarvesterLog(object):
         return yyyy_mm_dd == self.printTime()[:10]    
         
     def startRepository(self, repositoryname):
-        self._statsfile.write('Started: %s' % self.printTime())
+        self._state.write('Started: %s' % self.printTime())
 
     def totalids(self):
         return self._ids.total()
@@ -78,13 +80,13 @@ class HarvesterLog(object):
         self.begin()
         self.updateStatsfile(0,0,0)
         self.done()
-        self._statsfile.write(", Done: Deleted all id's.")
-        self._statsfile.flush()
+        self._state.write(", Done: Deleted all id's.")
+        self._state.flush()
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
-        self._statsfile.write(', Done: %s, ResumptionToken: %s' % (self.printTime(), token))
-        self._statsfile.flush()
+        self._state.write(', Done: %s, ResumptionToken: %s' % (self.printTime(), token))
+        self._state.flush()
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s'%(self._lastline,token),id=self._name)
 
     def endWithException(self):
@@ -92,14 +94,13 @@ class HarvesterLog(object):
         xtype,xval,xtb = sys.exc_info()
         error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
         self._eventlogger.error(error2, id=self._name)
-        self._statsfile.write( ', Error: ' + error)
-        self._statsfile.flush()
+        self._state.write( ', Error: ' + error)
+        self._state.flush()
 
     def close(self):
         self._eventlogger.close()
         self._ids.close()
-        self._statsfile.write('\n')
-        self._statsfile.close()
+        self._state.close()
 
     def logID(self, uploadid):
         self._ids.add(uploadid)
@@ -108,18 +109,18 @@ class HarvesterLog(object):
         self._ids.remove(uploadid)
         
     def updateStatsfile(self, harvested, uploaded, deleted, totalWillBeIgnored=None):
-        self._statsfile.seek(self._pos)
+        self._state.seek(self._pos)
         self._lastline = '%d/%d/%d/%d' % (harvested, uploaded, deleted, self.totalids())
-        self._statsfile.write(self._lastline)
-        self._statsfile.write(' busy...')
-        self._statsfile.flush()
+        self._state.write(self._lastline)
+        self._state.write(' busy...')
+        self._state.flush()
 
     def begin(self):
-        self._statsfile.write(', Harvested/Uploaded/Deleted/Total: ')
-        self._pos = self._statsfile.tell()
+        self._state.write(', Harvested/Uploaded/Deleted/Total: ')
+        self._pos = self._state.tell()
         
     def done(self):
-        self._statsfile.seek(-8, 2)
+        self._state.seek(-8, 2)
     
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token
