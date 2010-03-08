@@ -28,6 +28,7 @@
 
 from os.path import join, isfile
 from os import SEEK_END
+from time import strftime, localtime
 import re
 
 class State(object):
@@ -41,6 +42,16 @@ class State(object):
     def close(self):
         self.write('\n')
         self._statsfile.close()
+
+    def setToLastCleanState(self):
+        cleanState = self._getLastCleanState()
+        if cleanState != None:
+            self.write(self._getLastCleanState())
+        else:
+            self.markDeleted()
+
+    def markDeleted(self):
+        self.write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self._getTime())
 
     def _getLastCleanState(self):
         result = None
@@ -93,6 +104,13 @@ class State(object):
     @staticmethod
     def _isDeleted(logline):
         return "Done: Deleted all id's" in logline
+
+    def _getTime(self):
+        return strftime('%Y-%m-%d %H:%M:%S', self._localtime())
+
+    @staticmethod
+    def _localtime():
+        return localtime()
                 
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)

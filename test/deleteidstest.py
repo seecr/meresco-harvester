@@ -130,10 +130,8 @@ class DeleteIdsTest(CQ2TestCase):
         
     def createStatsFile(self,repository):
         logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
-        logger.startRepository('A beautiful name')
-        logger.begin()
+        logger.startRepository()
         logger.updateStatsfile(0,0,0)
-        logger.done()
         logger.endRepository(None)
         logger.close()
         

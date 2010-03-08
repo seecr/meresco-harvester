@@ -77,7 +77,6 @@ class Harvester(object):
         harvestedRecords = 0
         uploadedRecords = 0
         deletedRecords = 0
-        self._logger.begin()
         records = self.listRecords(server, from_, token, self._repository.set)
         self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
@@ -88,7 +87,6 @@ class Harvester(object):
             deletedRecords += deletecount
             self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
-        self._logger.done()
         return uploadedRecords == harvestedRecords, newtoken
 
     def uploadRecord(self, header, metadata, about):
@@ -111,7 +109,7 @@ class Harvester(object):
     def _harvestLoop(self):
 
         try:
-            self._logger.startRepository(self._oairequest.identify().repositoryName)
+            self._logger.startRepository()
             result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
             self._logger.endRepository(newtoken)
             return newtoken

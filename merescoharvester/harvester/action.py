@@ -76,7 +76,7 @@ class HarvestAction(Action):
     def resetState(self):
         s = State(self._stateDir, self._repository.id)
         try:
-            s.write(s._getLastCleanState())
+            s.setToLastCleanState()
         finally:
             s.close()
 

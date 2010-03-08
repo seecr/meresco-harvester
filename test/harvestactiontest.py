@@ -114,10 +114,9 @@ class HarvestActionTest(CQ2TestCase):
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
         h = self.newHarvesterLog()
-        h._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
+        h._state._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
  
-        h.startRepository('The Repository')
-        h.begin()
+        h.startRepository()
         h.updateStatsfile(4,1,3)
         if exception != None:
             try:
@@ -125,7 +124,6 @@ class HarvestActionTest(CQ2TestCase):
             except:
                 h.endWithException()
         else:
-            h.done()
             h.endRepository(token)
         h.close()
  

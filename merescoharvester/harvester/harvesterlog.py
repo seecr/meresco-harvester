@@ -59,14 +59,11 @@ class HarvesterLog(object):
         self.total = self._state.total
         self._lastline = ''
 
-    def printTime(self):
-        return time.strftime('%Y-%m-%d %H:%M:%S', self._localtime())
-    
     def isCurrentDay(self, yyyy_mm_dd):
-        return yyyy_mm_dd == self.printTime()[:10]    
+        return yyyy_mm_dd == self._state._getTime()[:10]    
         
-    def startRepository(self, repositoryname):
-        self._state.write('Started: %s' % self.printTime())
+    def startRepository(self):
+        self._state.write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state._getTime())
 
     def totalids(self):
         return self._ids.total()
@@ -75,17 +72,13 @@ class HarvesterLog(object):
         return self._eventlogger
             
     def markDeleted(self):
-        self.startRepository(self._name)
         self._ids.clear()
-        self.begin()
-        self.updateStatsfile(0,0,0)
-        self.done()
-        self._state.write(", Done: Deleted all id's.")
+        self._state.markDeleted()
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
         self._state.write(self._lastline)
-        self._state.write(', Done: %s, ResumptionToken: %s' % (self.printTime(), token))
+        self._state.write(', Done: %s, ResumptionToken: %s' % (self._state._getTime(), token))
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s'%(self._lastline,token),id=self._name)
 
     def endWithException(self):
@@ -110,15 +103,5 @@ class HarvesterLog(object):
     def updateStatsfile(self, harvested, uploaded, deleted, totalWillBeIgnored=None):
         self._lastline = '%d/%d/%d/%d' % (harvested, uploaded, deleted, self.totalids())
 
-    def begin(self):
-        self._state.write(', Harvested/Uploaded/Deleted/Total: ')
-        
-    def done(self):
-        "deprecated"
-        pass
-    
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token
-
-    def _localtime(self):
-        return time.localtime()

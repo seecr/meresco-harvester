@@ -50,7 +50,7 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testSameDate(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
-        date=logger.printTime()[:10]
+        date=logger._state._getTime()[:10]
         self.assertTrue(logger.isCurrentDay(date))
         self.assertFalse(logger.isCurrentDay('2005-01-02'))
 
@@ -70,10 +70,8 @@ class HarvesterLogTest(unittest.TestCase):
     def testHasWorkBeforeAndAfterDoingWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         self.assertTrue(logger.hasWork())
-        logger.startRepository('RepositoryName')
-        logger.begin()
+        logger.startRepository()
         logger.updateStatsfile(0,0,0,0)
-        logger.done()
         logger.endRepository(None)
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
@@ -91,22 +89,20 @@ class HarvesterLogTest(unittest.TestCase):
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Don"crack"')
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
-        logger.startRepository('RepositoryName')
+        logger.startRepository()
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         self.assertEqual(2,len(lines))
 
     def testLogLine(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
-        logger.begin()
         logger.updateStatsfile(1, 2, 3)
-        logger.done()
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0, Done:',lines[0][:50])
+        self.assertEqual('1/2/3/0, Done:',lines[0][:14])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
@@ -114,7 +110,6 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
-        logger.begin()
         try:
             logger.updateStatsfile(1, 2, 3)
             raise Exception('FATAL')
@@ -124,7 +119,7 @@ class HarvesterLogTest(unittest.TestCase):
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual(', Harvested/Uploaded/Deleted/Total: 1/2/3/0, Error: ',lines[0][:52])
+        self.assertEqual('1/2/3/0, Error: ',lines[0][:16])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('ERROR', event.strip())
         self.assertEquals('name', id)

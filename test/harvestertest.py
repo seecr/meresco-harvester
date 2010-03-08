@@ -376,9 +376,6 @@ class HarvesterTest(unittest.TestCase):
     def createUploader(self, logger):
         return self
 
-    def identify(self):
-        return self.mockRepository.identify()
-
     def listRecords(self, metadataPrefix = None, from_ = "aap", resumptionToken = 'mies', set = None):
         self.listRecordsFrom = from_
         self.listRecordsToken = resumptionToken
