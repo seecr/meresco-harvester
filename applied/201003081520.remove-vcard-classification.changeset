@@ -1,0 +1,51 @@
+Changeset created on Mon Mar  8 15:20:31 CET 2010 by Seek You Too
+
+Description: Removed classification and vcard modules
+
+    Removed deprecated modules.
+
+Baseline version: meresco-harvester/tags/version_5.5
+
+Only in version_5.5/merescoharvester/harvester: classification.py
+diff --unidirectional-new-file '--exclude=.svn' '--exclude=*.pyc' '--exclude=applied' --recursive --unified version_5.5/merescoharvester/harvester/mapping.py version_5.5.1/merescoharvester/harvester/mapping.py
+--- version_5.5/merescoharvester/harvester/mapping.py	2010-03-08 14:23:36.000000000 +0100
++++ version_5.5.1/merescoharvester/harvester/mapping.py	2010-03-08 15:19:57.000000000 +0100
+@@ -38,7 +38,6 @@
+ from urllib import urlencode
+ from saharaobject import SaharaObject
+ 
+-import vcard, classification
+ 
+ nillogger = NilEventLogger()
+ execcode = DEFAULT_DC_CODE = """
+@@ -225,8 +224,6 @@
+             'doAssert':assertionMethod,
+             'logger': logger,
+             'skipRecord': self.skipSimple,
+-            'vcard':vcard,
+-            'classification':classification,
+             'xmlEscape': xmlEscape,
+             '__builtins__':builtinscopy})
+             upload.ensureStrings()
+Only in version_5.5/merescoharvester/harvester: vcard.py
+diff --unidirectional-new-file '--exclude=.svn' '--exclude=*.pyc' '--exclude=applied' --recursive --unified version_5.5/test/alltests.py version_5.5.1/test/alltests.py
+--- version_5.5/test/alltests.py	2010-03-08 14:23:35.000000000 +0100
++++ version_5.5.1/test/alltests.py	2010-03-08 15:19:57.000000000 +0100
+@@ -43,7 +43,6 @@
+ 
+ from amaraforharvestertest import AmaraForHarvesterTest
+ from cacherecordtest import CacheRecordTest
+-from classificationtest import ClassificationTest
+ from deleteidstest import DeleteIdsTest
+ from disallowfileplugintest import DisallowFilePluginTest
+ from eventloggertest import EventLoggerTest
+@@ -65,7 +64,6 @@
+ from timedprocesstest import TimedProcessTest
+ from timeslottest import TimeslotTest
+ from toolstest import ToolsTest
+-from vcardtest import VCardTest
+ 
+ if __name__ == '__main__':
+         unittest.main()
+Only in version_5.5/test: classificationtest.py
+Only in version_5.5/test: vcardtest.py
