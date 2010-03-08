@@ -33,9 +33,11 @@
 from merescoharvester.harvester.saharaget import SaharaGet, SaharaGetException
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from merescoharvester.harvester.harvesterlog import HarvesterLog
-from merescoharvester.harvester.repository import *
+from merescoharvester.harvester.repository import Repository
+from merescoharvester.harvester.action import Action, DONE, ActionFactory, ActionFactoryException
 from merescoharvester.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
+from slowfoot.binderytools import bind_string
 from merescoharvester.harvester.timeslot import Timeslot, Wildcard
 from cq2utils import CallTrace
 import tempfile, os, shutil
@@ -60,19 +62,19 @@ class RepositoryTest(unittest.TestCase):
         self.assertFalse(self.repo.shopClosed())
 
     def testInitHarvestExclusionInterval(self):
-        self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
         slots = self.repo.shopclosed
         self.assertEquals(2, len(slots))
         self.assertEquals('*:*:10:30-*:*:11:45', slots[0])
         self.assertEquals('*:5:5:59-*:5:23:00', slots[1])
 
     def testShopClosed(self):
-        self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertEquals(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testTimeslotInitialization(self):
-        self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertEquals(2, len(timeslots))
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
@@ -81,7 +83,7 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testShopNotClosedAndThenClosed(self):
-        self.repo.fill(self, wrapp(binderytools.bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
         timeslots = self.repo.closedSlots()
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
@@ -165,21 +167,23 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals('true', self.repo.use)
         self.assertEquals('someaction', self.repo.action)
 
-    def _testAction(self, use, action, expectedType):
+    def _testAction(self, use, action, expectedTypeName):
         factory = ActionFactory()
         self.repo.use = use
         self.repo.action = action
-        self.assert_(isinstance(self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger()), expectedType))
+        createdAction = self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())
+        self.assertEquals(expectedTypeName, createdAction.__class__.__name__)
+
 
     def testActionFactory(self):
-        self._testAction('', '', NoneAction)
-        self._testAction('true', '', HarvestAction)
-        self._testAction('', 'clear', DeleteIdsAction)
-        self._testAction('true', 'clear', DeleteIdsAction)
-        self._testAction('', 'refresh', SmoothAction)
-        self._testAction('true', 'refresh', SmoothAction)
+        self._testAction('', '', 'NoneAction')
+        self._testAction('true', '', 'HarvestAction')
+        self._testAction('', 'clear', 'DeleteIdsAction')
+        self._testAction('true', 'clear', 'DeleteIdsAction')
+        self._testAction('', 'refresh', 'SmoothAction')
+        self._testAction('true', 'refresh', 'SmoothAction')
         try:
-            self._testAction('true', 'nonexisting', None)
+            self._testAction('true', 'nonexisting', 'ignored')
             self.fail()
         except ActionFactoryException, afe:
             self.assertEquals("Action 'nonexisting' not supported.", str(afe))
@@ -202,7 +206,7 @@ class RepositoryTest(unittest.TestCase):
         self.mock_read_args.append(kwargs)
         verb = kwargs['verb']
         if verb == 'GetRepository':
-            return wrapp(binderytools.bind_string(GETREPOSITORY))
+            return wrapp(bind_string(GETREPOSITORY))
 
 
 class MockAction(Action):

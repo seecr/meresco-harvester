@@ -32,11 +32,12 @@
 
 import unittest, shutil, os
 from tempfile import mkdtemp
-from merescoharvester.harvester.repository import Repository, SmoothAction, DONE
+from merescoharvester.harvester.repository import Repository
+from merescoharvester.harvester.action import SmoothAction, DONE
 from slowfoot.wrappers import wrapp
 from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
 from merescoharvester.harvester.deleteids import readIds
-from merescoharvester.harvester import repository
+from merescoharvester.harvester import action
 from sets import Set
 from merescoharvester.harvester.eventlogger import NilEventLogger
 
@@ -148,7 +149,7 @@ class SmoothActionTest(unittest.TestCase):
                 MockDelete.usedLogDir = logDir
             def deleteFile(self, filename):
                 MockDelete.filename = filename
-        repository.DeleteIds = MockDelete
+        action.DeleteIds = MockDelete
         self.smoothaction._delete(self.idfilename+'.delete')
         self.assertEquals(self.idfilename + '.delete', MockDelete.filename)
         self.assertEquals(self.repo, MockDelete.usedrep)
@@ -165,7 +166,7 @@ class SmoothActionTest(unittest.TestCase):
                 MockHarvester.usedLogDir = logDir
             def harvest(self):
                 return 'mockharvest', False
-        repository.Harvester = MockHarvester
+        action.Harvester = MockHarvester
         self.assertEquals(('mockharvest', False), self.smoothaction._harvest())
         self.assertEquals(self.repo, MockHarvester.usedrep)
         self.assertEquals(self.stateDir, MockHarvester.usedStateDir)

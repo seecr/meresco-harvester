@@ -31,142 +31,20 @@
 #
 ## end license ##
 
-from slowfoot import binderytools
-from mapping import Mapping
-from harvesterlog import HarvesterLog
-from harvester import Harvester, HARVESTED, NOTHING_TO_DO
-from state import State
 from oairequest import OAIError
-from deleteids import DeleteIds, readIds, writeIds
 from saharaobject import SaharaObject
-from shutil import move
-from os.path import isfile, join
-from os import remove
 from eventlogger import NilEventLogger
 from virtualuploader import UploaderFactory
 from timeslot import Timeslot
 from sys import exc_info
 from traceback import format_exception
-import time
+from time import localtime
+from action import ActionFactory
 
 nillogger = NilEventLogger()
-DONE = 'Done.'
 
 class RepositoryException(Exception):
     pass
-
-class Action(object):
-    def __init__(self, repository, stateDir, logDir, generalHarvestLog):
-        self._repository = repository
-        self._stateDir = stateDir
-        self._logDir = logDir
-        self._generalHarvestLog = generalHarvestLog
-    def do(self):
-        """
-        perform action and return
-        (if the action is finished/done, a Message about what happened.)
-        """
-        raise NotImplementedError
-    def info(self):
-        return  str(self.__class__.__name__)
-
-class NoneAction(Action):
-    def do(self):
-        return False, '', False
-    def info(self):
-        return ''
-
-class HarvestAction(Action):
-    def _createHarvester(self):
-        return Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
-
-    def do(self):
-        if self._repository.shopClosed():
-            return False, 'Not harvesting outside timeslots.', False
-
-        harvester = self._createHarvester()
-        message, hasResumptionToken = harvester.harvest()
-        return False, message, hasResumptionToken
-
-    def resetState(self):
-        s = State(self._stateDir, self._repository.id)
-        try:
-            s.write(s._getLastCleanState())
-        finally:
-            s.close()
-
-class DeleteIdsAction(Action):
-    def do(self):
-        if self._repository.shopClosed():
-            return False, 'Not deleting outside timeslots.', False
-
-        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
-        d.delete()
-        return True, 'Deleted', False
-
-class SmoothAction(Action):
-    def __init__(self, repository, stateDir, logDir, generalHarvestLog):
-        Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
-        self.filename = join(self._stateDir, self._repository.key + '.ids')
-        self.oldfilename = self.filename + ".old"
-
-    def do(self):
-        if self._repository.shopClosed():
-            return False, 'Not smoothharvesting outside timeslots.', False
-
-        if not isfile(self.oldfilename):
-            result, hasResumptionToken = self._smoothinit(), True
-        else:
-            result, hasResumptionToken = self._harvest()
-        if result == NOTHING_TO_DO:
-            result = self._finish()
-            hasResumptionToken = False
-        return result == DONE, 'Smooth reharvest: ' + result, hasResumptionToken
-
-    def _smoothinit(self):
-        if isfile(self.filename):
-            move(self.filename, self.oldfilename)
-        else:
-            open(self.oldfilename, 'w').close()
-        open(self.filename, 'w').close()
-        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.key)
-        try:
-            logger.markDeleted()
-        finally:
-            logger.close()
-        return     'initialized.'
-
-    def _finish(self):
-        deletefilename = self.filename + '.delete'
-        if not isfile(deletefilename):
-            writeIds(deletefilename, readIds(self.oldfilename) - readIds(self.filename))
-        self._delete(deletefilename)
-        remove(self.oldfilename)
-        remove(deletefilename)
-        return DONE
-
-    def _delete(self, filename):
-        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
-        d.deleteFile(filename)
-
-    def _harvest(self):
-        harvester = Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
-        return harvester.harvest()
-
-class ActionFactoryException(Exception):
-    pass
-
-class ActionFactory(object):
-    def createAction(self, repository, stateDir, logDir, generalHarvestLog):
-        if repository.action == 'clear':
-            return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
-        if repository.action == 'refresh':
-            return SmoothAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
-        if repository.use == 'true' and repository.action == '':
-            return HarvestAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
-        if repository.use == "" and repository.action == '':
-            return NoneAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
-        raise ActionFactoryException("Action '%s' not supported."%repository.action)
 
 class Repository(SaharaObject):
     def __init__(self, domainId, repositoryId):
@@ -191,7 +69,7 @@ class Repository(SaharaObject):
                 self._closedslots = []
         return self._closedslots
 
-    def shopClosed(self, dateTuple = time.localtime()[:5]):
+    def shopClosed(self, dateTuple = localtime()[:5]):
         return reduce(lambda lhs, rhs: lhs or rhs, map(lambda x:x.areWeWithinTimeslot( dateTuple), self.closedSlots()), False)
 
     def target(self):

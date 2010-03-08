@@ -31,7 +31,7 @@
 #
 ## end license ##
 from cq2utils import CallTrace, CQ2TestCase
-from merescoharvester.harvester.repository import HarvestAction
+from merescoharvester.harvester.action import HarvestAction
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from os.path import join
