@@ -43,7 +43,6 @@ import unittest
 
 from amaraforharvestertest import AmaraForHarvesterTest
 from cacherecordtest import CacheRecordTest
-from classificationtest import ClassificationTest
 from deleteidstest import DeleteIdsTest
 from disallowfileplugintest import DisallowFilePluginTest
 from eventloggertest import EventLoggerTest
@@ -65,7 +64,6 @@ from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest
 from toolstest import ToolsTest
-from vcardtest import VCardTest
 
 if __name__ == '__main__':
         unittest.main()

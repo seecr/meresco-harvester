@@ -38,7 +38,6 @@ from urlparse import urljoin
 from urllib import urlencode
 from saharaobject import SaharaObject
 
-import vcard, classification
 
 nillogger = NilEventLogger()
 execcode = DEFAULT_DC_CODE = """
@@ -225,8 +224,6 @@ class Mapping(SaharaObject):
             'doAssert':assertionMethod,
             'logger': logger,
             'skipRecord': self.skipSimple,
-            'vcard':vcard,
-            'classification':classification,
             'xmlEscape': xmlEscape,
             '__builtins__':builtinscopy})
             upload.ensureStrings()
