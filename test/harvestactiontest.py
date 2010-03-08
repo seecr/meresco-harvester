@@ -30,25 +30,22 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-from cq2utils import CallTrace, CQ2TestCase
+from actiontestcase import ActionTestCase
+from cq2utils import CallTrace
 from merescoharvester.harvester.action import HarvestAction
-from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.eventlogger import NilEventLogger
 from os.path import join
 
-class HarvestActionTest(CQ2TestCase):
+class HarvestActionTest(ActionTestCase):
     def setUp(self):
-        CQ2TestCase.setUp(self)
+        ActionTestCase.setUp(self)
         self.harvester = CallTrace("Harvester")
         self._original_createHarvester = HarvestAction._createHarvester
         HarvestAction._createHarvester = lambda instance: self.harvester
-        self.repository = CallTrace("Repository")
-        self.repository.id = 'repository'
-        self.repository.returnValues['shopClosed'] = False
 
     def tearDown(self):
         HarvestAction._createHarvester = self._original_createHarvester
-        CQ2TestCase.tearDown(self)
+        ActionTestCase.tearDown(self)
 
     def testHarvestAction(self):
         self.harvester.returnValues['harvest'] = ('', False)
@@ -98,32 +95,6 @@ class HarvestActionTest(CQ2TestCase):
         h = self.newHarvesterLog()
         self.assertEquals((None, None), (h.from_, h.token))
 
-    def testTheWriteLogLineTestMethod(self):
-        self.writeLogLine(2010, 3, 1, token='resumptionToken')
-        self.writeLogLine(2010, 3, 2, token='')
-        self.writeLogLine(2010, 3, 3, exception='Exception')
-
-        h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
-
     def newHarvestAction(self):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
 
-    def newHarvesterLog(self):
-        return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
-
-    def writeLogLine(self, year, month, day, token=None, exception=None):
-        h = self.newHarvesterLog()
-        h._state._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
- 
-        h.startRepository()
-        h.updateStatsfile(4,1,3)
-        if exception != None:
-            try:
-                raise Exception(exception)
-            except:
-                h.endWithException()
-        else:
-            h.endRepository(token)
-        h.close()
- 

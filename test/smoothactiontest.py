@@ -29,8 +29,9 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-
-import unittest, shutil, os
+from actiontestcase import ActionTestCase
+import shutil, os
+from os.path import join
 from tempfile import mkdtemp
 from merescoharvester.harvester.repository import Repository
 from merescoharvester.harvester.action import SmoothAction, DONE
@@ -41,19 +42,16 @@ from merescoharvester.harvester import action
 from sets import Set
 from merescoharvester.harvester.eventlogger import NilEventLogger
 
-class SmoothActionTest(unittest.TestCase):
+class SmoothActionTest(ActionTestCase):
     def setUp(self):
+        ActionTestCase.setUp(self)
         self.repo = Repository('domainId', 'rep')
-        self.stateDir = mkdtemp()
-        self.logDir = mkdtemp()
+        self.stateDir = self.tempdir
+        self.logDir = self.tempdir
         self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir, NilEventLogger())
-        self.idfilename = os.path.join(self.stateDir, 'rep.ids')
-        self.old_idfilename = os.path.join(self.stateDir, 'rep.ids.old')
-        self.statsfilename = os.path.join(self.stateDir,'rep.stats')
-
-    def tearDown(self):
-        shutil.rmtree(self.stateDir)
-        shutil.rmtree(self.logDir)
+        self.idfilename = join(self.stateDir, 'rep.ids')
+        self.old_idfilename = join(self.stateDir, 'rep.ids.old')
+        self.statsfilename = join(self.stateDir,'rep.stats')
 
     def testSmooth_Init(self):
         writefile(self.idfilename, 'rep:id:1\nrep:id:2\n')
@@ -172,8 +170,44 @@ class SmoothActionTest(unittest.TestCase):
         self.assertEquals(self.stateDir, MockHarvester.usedStateDir)
         self.assertEquals(self.logDir, MockHarvester.usedLogDir)
 
-    def testResetState(self):
-        self.fail('implement resetState for SmoothAction.')
+    def testResetState_WithoutPreviousCleanState(self):
+        self.writeLogLine(2010, 3, 1, token='resumptionToken')
+        self.writeLogLine(2010, 3, 2, token='resumptionToken')
+        self.writeLogLine(2010, 3, 3, exception='Exception')
+        action = self.newSmoothAction()
+
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals((None, None), (h.from_, h.token))
+
+    def testResetState_ToPreviousCleanState(self):
+        self.writeLogLine(2010, 3, 2, token='')
+        self.writeMarkDeleted(2010, 3, 3)
+        self.writeLogLine(2010, 3, 4, token='resumptionToken')
+        self.writeLogLine(2010, 3, 5, token='resumptionToken')
+        self.writeLogLine(2010, 3, 6, exception='Exception')
+        action = self.newSmoothAction()
+
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals((None, None), (h.from_, h.token))
+
+    def xtestResetState_ToStartAllOver(self):
+        self.writeLogLine(2010, 3, 3, token='resumptionToken')
+        self.writeLogLine(2010, 3, 4, exception='Exception')
+        action = self.newSmoothAction()
+
+        action.resetState()
+
+        h = self.newHarvesterLog()
+        self.assertEquals((None, None), (h.from_, h.token))
+    
+    def newSmoothAction(self):
+        action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+        action._harvest = lambda:None
+        return action
 
 def writefile(filename, contents):
     f = open(filename,'w')

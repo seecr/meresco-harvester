@@ -92,7 +92,7 @@ class DeleteIdsAction(Action):
 class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
-        self.filename = join(self._stateDir, self._repository.key + '.ids')
+        self.filename = join(self._stateDir, self._repository.id + '.ids')
         self.oldfilename = self.filename + ".old"
 
     def do(self):
@@ -108,13 +108,20 @@ class SmoothAction(Action):
             hasResumptionToken = False
         return result == DONE, 'Smooth reharvest: ' + result, hasResumptionToken
 
+    def resetState(self):
+        s = State(self._stateDir, self._repository.id)
+        try:
+            s.markDeleted()
+        finally:
+            s.close()
+
     def _smoothinit(self):
         if isfile(self.filename):
             rename(self.filename, self.oldfilename)
         else:
             open(self.oldfilename, 'w').close()
         open(self.filename, 'w').close()
-        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.key)
+        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
         try:
             logger.markDeleted()
         finally:
