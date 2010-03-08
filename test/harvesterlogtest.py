@@ -50,7 +50,7 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testSameDate(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
-        date=logger._state._getTime()[:10]
+        date=logger._state.getTime()[:10]
         self.assertTrue(logger.isCurrentDay(date))
         self.assertFalse(logger.isCurrentDay('2005-01-02'))
 

@@ -40,18 +40,18 @@ class State(object):
         self._prepareForWriting()
 
     def close(self):
-        self.write('\n')
+        self._write('\n')
         self._statsfile.close()
 
     def setToLastCleanState(self):
         cleanState = self._getLastCleanState()
         if cleanState != None:
-            self.write(self._getLastCleanState())
+            self._write(self._getLastCleanState())
         else:
             self.markDeleted()
 
     def markDeleted(self):
-        self.write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self._getTime())
+        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self.getTime())
 
     def _getLastCleanState(self):
         result = None
@@ -90,12 +90,10 @@ class State(object):
         self._statsfile.seek(-1, SEEK_END)
         lastchar = self._statsfile.read()
         if lastchar != '\n':
-            self._statsfile.write('\n')
+            self._write('\n')
     
-    ## temporary methods
-    def write(self, *args):
+    def _write(self, *args):
         self._statsfile.write(*args)
-    ## /temporary methods
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):
@@ -105,7 +103,7 @@ class State(object):
     def _isDeleted(logline):
         return "Done: Deleted all id's" in logline
 
-    def _getTime(self):
+    def getTime(self):
         return strftime('%Y-%m-%d %H:%M:%S', self._localtime())
 
     @staticmethod

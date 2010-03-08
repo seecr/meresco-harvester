@@ -60,10 +60,10 @@ class HarvesterLog(object):
         self._lastline = ''
 
     def isCurrentDay(self, yyyy_mm_dd):
-        return yyyy_mm_dd == self._state._getTime()[:10]    
+        return yyyy_mm_dd == self._state.getTime()[:10]    
         
     def startRepository(self):
-        self._state.write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state._getTime())
+        self._state._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state.getTime())
 
     def totalids(self):
         return self._ids.total()
@@ -77,8 +77,8 @@ class HarvesterLog(object):
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
-        self._state.write(self._lastline)
-        self._state.write(', Done: %s, ResumptionToken: %s' % (self._state._getTime(), token))
+        self._state._write(self._lastline)
+        self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s'%(self._lastline,token),id=self._name)
 
     def endWithException(self):
@@ -86,8 +86,8 @@ class HarvesterLog(object):
         xtype,xval,xtb = sys.exc_info()
         error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
         self._eventlogger.error(error2, id=self._name)
-        self._state.write(self._lastline)
-        self._state.write( ', Error: ' + error)
+        self._state._write(self._lastline)
+        self._state._write( ', Error: ' + error)
 
     def close(self):
         self._eventlogger.close()
