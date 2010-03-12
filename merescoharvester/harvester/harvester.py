@@ -114,7 +114,7 @@ class Harvester:
     def _harvestLoop(self):
 
         try:
-            self._logger.startRepository(self._oairequest.identify().repositoryName)
+            self._logger.startRepository("ignored")
             result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
             self._logger.endRepository(newtoken)
             return newtoken
