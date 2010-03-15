@@ -4,7 +4,7 @@ execcode = '''upload.parts['metadata'] = input.metadata.xml()
 
 upload.parts['header'] = input.header.xml()
 
-upload.parts['meta'] = """<meta xmlns="http://meresco.com/namespace/harvester/meta">
+upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
   <upload><id>%(id)s</id></upload>
   <record>
     <id>%(recordId)s</id>
