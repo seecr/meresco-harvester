@@ -7,7 +7,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -30,45 +30,43 @@
 #
 ## end license ##
 
-import unittest, tempfile, os
+from cq2utils import CQ2TestCase
 from merescoharvester.harvester.timedprocess import TimedProcess
+from os.path import join
 
-class TimedProcessTest(unittest.TestCase):
-
-    def setUp(self):
-        fd, self.filename = tempfile.mkstemp()
-
-    def tearDown(self):
-        os.remove(self.filename)
+class TimedProcessTest(CQ2TestCase):
 
     def testSuccess(self):
-        fd = open(self.filename,'w')
-        try:
-            fd.write('pass')
-        finally:
-            fd.close()
-
-        tp = TimedProcess()
-        tp.executeScript([self.filename], 10)
-        self.assert_(not tp.wasTimeout())
-        self.assert_(tp.wasSuccess())
-    
-    def testSuccessParameters(self):
-        fd = open(self.filename,'w')
+        fd = open(self.tempfile,'w')
         try:
             fd.write("""import sys
-#print len(sys.argv[1:])
-""")
+sys.exit(42)""")
         finally:
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript([self.filename, 'it','is','difficult'], 10)
-        self.assert_(not tp.wasTimeout())
-        self.assert_(tp.wasSuccess())
+        exitstatus = tp.executeScript([self.tempfile], 10)
+        self.assertFalse(tp.wasTimeout())
+        self.assertTrue(tp.wasSuccess())
+        self.assertEquals(42, exitstatus)
+    
+    def testSuccessParameters(self):
+        fd = open(self.tempfile,'w')
+        try:
+            fd.write("""import sys
+open('%s', 'w').write(str(len(sys.argv[1:])))
+""" % join(self.tempdir, 'output.txt'))
+        finally:
+            fd.close()
+
+        tp = TimedProcess()
+        tp.executeScript([self.tempfile, 'it','is','difficult'], 10)
+        self.assertFalse(tp.wasTimeout())
+        self.assertTrue(tp.wasSuccess())
+        self.assertEquals('3', open(join(self.tempdir, 'output.txt')).read())
 
     def testTimeout(self):
-        fd = open(self.filename,'w')
+        fd = open(self.tempfile,'w')
         try:
             fd.write("""while True:
     pass
@@ -77,7 +75,7 @@ class TimedProcessTest(unittest.TestCase):
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript([self.filename], 1)
-        self.assert_(tp.wasTimeout())
-        self.assert_(not tp.wasSuccess())
+        tp.executeScript([self.tempfile], 1)
+        self.assertTrue(tp.wasTimeout())
+        self.assertFalse(tp.wasSuccess())
         
