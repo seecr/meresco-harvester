@@ -29,13 +29,10 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# (c) 2005 Seek You Too B.V.
-#
-# $Id: timedprocess.py 4825 2007-04-16 13:36:24Z TJ $
-#
 
-import os, sys
+from os import spawnvp, waitpid, kill, P_NOWAIT
+from sys import executable
+
 from threading import Timer
 
 class TimedProcess(object):
@@ -57,19 +54,22 @@ class TimedProcess(object):
         
     def terminate(self):
         if self._pid != -1:
-            os.kill(self._pid, self._signal)
+            kill(self._pid, self._signal)
         self._wasTimeout = True
         self.timer.cancel()
 
     def executeScript(self, args, timeout, signal=9):
         self._signal = signal
-        self._pid = os.spawnvp(os.P_NOWAIT, sys.executable,
-            [sys.executable] + args)
+        self._pid = spawnvp(P_NOWAIT, executable,
+            [executable] + args)
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
-        os.waitpid(self._pid, 0)
+        resultpid, status = waitpid(self._pid, 0)
+        exitstatus = status >> 8
 
         if not self._wasTimeout:
             self.timer.cancel()
             self._wasSuccess = True
             self._wasTimeout = False
+        return exitstatus 
+
