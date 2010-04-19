@@ -1,0 +1,34 @@
+Changeset created on Mon Mar 15 16:58:16 CET 2010 by Seek You Too
+
+Description: Namespace change to http://meresco.org/namespace/...
+
+    Namespace changed to http://meresco.org/namespace/harvester/document
+    This affects the SRUUpdate Target, which will now send documents
+    with this new namespace.
+
+Baseline version: meresco-harvester/tags/version_5.5.1
+
+diff --unidirectional-new-file '--exclude=.svn' '--exclude=*.pyc' '--exclude=applied' --recursive --unified version_5.5.1/merescoharvester/controlpanel/slowfoottemplates/mapping.new version_6.0/merescoharvester/controlpanel/slowfoottemplates/mapping.new
+--- version_5.5.1/merescoharvester/controlpanel/slowfoottemplates/mapping.new	2010-03-08 15:19:57.000000000 +0100
++++ version_6.0/merescoharvester/controlpanel/slowfoottemplates/mapping.new	2010-03-15 16:57:48.000000000 +0100
+@@ -4,7 +4,7 @@
+ 
+ upload.parts['header'] = input.header.xml()
+ 
+-upload.parts['meta'] = """<meta xmlns="http://meresco.com/namespace/harvester/meta">
++upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
+   <upload><id>%(id)s</id></upload>
+   <record>
+     <id>%(recordId)s</id>
+diff --unidirectional-new-file '--exclude=.svn' '--exclude=*.pyc' '--exclude=applied' --recursive --unified version_5.5.1/merescoharvester/harvester/sruupdateuploader.py version_6.0/merescoharvester/harvester/sruupdateuploader.py
+--- version_5.5.1/merescoharvester/harvester/sruupdateuploader.py	2010-03-08 15:19:57.000000000 +0100
++++ version_6.0/merescoharvester/harvester/sruupdateuploader.py	2010-03-15 16:57:48.000000000 +0100
+@@ -57,7 +57,7 @@
+         self.logLine('UPLOAD.SEND', 'START', id = anId)
+         try:
+ 
+-            recordData = '<document xmlns="http://meresco.com/namespace/harvester/document">%s</document>' % ''.join(
++            recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
+                     ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
+ 
+             action = "replace"
