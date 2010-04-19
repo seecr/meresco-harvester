@@ -65,8 +65,92 @@ class StartHarvester(object):
 
         self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
 
+
+    def parse_args(self):
+        self.parser.add_option("-d", "--domain",
+            dest="domainId",
+            help="Mandatory argument denoting the domain.", 
+            metavar="DOMAIN")
+        self.parser.add_option("-s", "--saharaurl", 
+            dest="saharaurl",
+            help="The url of the SAHARA web interface, e.g. https://username:password@sahara.example.org", 
+            default="http://localhost")
+        self.parser.add_option("-r", "--repository", 
+            dest="repositoryId",
+            help="Process a single repository within the given domain. Defaults to all repositories from the domain.", 
+            metavar="REPOSITORY")
+        self.parser.add_option("-t", "--set-process-timeout", 
+            dest="processTimeout",
+            type="int", 
+            default=60*60, 
+            metavar="TIMEOUT",
+            help="Subprocess will be timed out after amount of seconds.")
+        self.parser.add_option("--logDir", "", 
+            dest="_logDir",
+            help="Override the logDir in the apache configuration.",
+            metavar="DIRECTORY", 
+            default=None)
+        self.parser.add_option("--stateDir", 
+            dest="_stateDir",
+            help="Override the stateDir in the apache configuration.", 
+            metavar="DIRECTORY", 
+            default=None)
+        self.parser.add_option("--uploadLog", "", 
+            dest="uploadLog",
+            help="Set the mockUploadLogFile to which the fields are logged instead of uploading to a server.", 
+            metavar="FILE")
+        self.parser.add_option("--force-target", "", 
+            dest="forceTarget",
+            help="Overrides the repository's target", 
+            metavar="TARGETID")
+        self.parser.add_option("--force-mapping", "", 
+            dest="forceMapping",
+            help="Overrides the repository's mapping", 
+            metavar="MAPPINGID")
+        self.parser.add_option("--no-action-done", "", 
+            action="store_false",
+            dest="setActionDone", 
+            default=True,
+            help="Do not set SAHARA's actions", 
+            metavar="TARGETID")
+        self.parser.add_option("--runOnce", "", 
+            dest="runOnce", 
+            action="store_true",
+            default=False,
+            help="Prevent harvester from looping (if combined with --repository)")
+
+        (options, args) = self.parser.parse_args()
+        return options
+
+    def start(self):
         if not self.repository:
-            self.restartWithLoop(self.domainId, self.processTimeout)
+            self._restartWithLoop()
+        elif not self.runOnce:
+            self._startRepositoryWithChild()
+        else:
+            self._startRepository()
+
+    def _restartWithLoop(self):
+        for key in self.saharaget.getRepositoryIds(self.domainId):
+            self._startChildProcess(['--repository='+key, '--runOnce'])
+
+    def _startRepositoryWithChild(self):
+        self._startChildProcess(['--runOnce'])
+
+    def _startChildProcess(self, extraArgs):
+        args = argv[:1] + extraArgs + argv[1:]
+        exitstatus = AGAIN_EXITCODE
+        while exitstatus == AGAIN_EXITCODE:
+            t = TimedProcess()
+            try:
+                SIG_INT = 2
+                exitstatus = t.executeScript(args, self.processTimeout, SIG_INT)
+            except KeyboardInterrupt, e:
+                t.terminate()
+                raise
+
+
+    def _startRepository(self):
 
         if self.forceTarget:
             self.repository.targetId = self.forceTarget
@@ -82,48 +166,6 @@ class StartHarvester(object):
         if self.uploadLog:
             self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))
 
-    def parse_args(self):
-        self.parser.add_option("-d", "--domain", dest="domainId",
-                        help="Mandatory argument denoting the domain.", metavar="DOMAIN")
-        self.parser.add_option("-s", "--saharaurl", dest="saharaurl",
-                        help="The url of the SAHARA web interface, e.g. https://username:password@sahara.example.org", default="http://localhost")
-        self.parser.add_option("-r", "--repository", dest="repositoryId",
-                        help="Process a single repository within the given domain. Defaults to all repositories from the domain.", metavar="REPOSITORY")
-        self.parser.add_option("-t", "--set-process-timeout", dest="processTimeout",
-                        type="int", default=60*60, metavar="TIMEOUT",
-                        help="Subprocess will be timed out after amount of seconds.")
-        self.parser.add_option("--logDir", "", dest="_logDir",
-                        help="Override the logDir in the apache configuration.", metavar="DIRECTORY", default=None)
-        self.parser.add_option("--stateDir", dest="_stateDir",
-                        help="Override the stateDir in the apache configuration.", metavar="DIRECTORY", default=None)
-        self.parser.add_option("--uploadLog", "", dest="uploadLog",
-                        help="Set the mockUploadLogFile to which the fields are logged instead of uploading to a server.", metavar="FILE")
-        self.parser.add_option("--force-target", "", dest="forceTarget",
-                        help="Overrides the repository's target", metavar="TARGETID")
-        self.parser.add_option("--force-mapping", "", dest="forceMapping",
-                        help="Overrides the repository's mapping", metavar="MAPPINGID")
-        self.parser.add_option("--no-action-done", "", action="store_false",
-                        dest="setActionDone", default=True,
-                        help="Do not set SAHARA's actions", metavar="TARGETID")
-
-        (options, args) = self.parser.parse_args()
-        return options
-
-    def restartWithLoop(self, domainId, processTimeout=60*60):
-        for key in self.saharaget.getRepositoryIds(domainId):
-            args = argv[:1] + ['--repository='+key] + argv[1:]
-            exitstatus = AGAIN_EXITCODE
-            while exitstatus == AGAIN_EXITCODE:
-                t = TimedProcess()
-                try:
-                    SIG_INT = 2
-                    exitstatus = t.executeScript(args, processTimeout, SIG_INT)
-                except KeyboardInterrupt, e:
-                    t.terminate()
-                    raise
-        exit()
-
-    def start(self):
         messageIgnored, again = self.repository.do(
             stateDir=join(self._stateDir, self.domainId),
             logDir=join(self._logDir, self.domainId),
