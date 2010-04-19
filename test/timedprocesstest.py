@@ -39,14 +39,16 @@ class TimedProcessTest(CQ2TestCase):
     def testSuccess(self):
         fd = open(self.tempfile,'w')
         try:
-            fd.write('pass')
+            fd.write("""import sys
+sys.exit(42)""")
         finally:
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript([self.tempfile], 10)
+        exitstatus = tp.executeScript([self.tempfile], 10)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
+        self.assertEquals(42, exitstatus)
     
     def testSuccessParameters(self):
         fd = open(self.tempfile,'w')

@@ -34,21 +34,22 @@ from harvesterlog import HarvesterLog
 from eventlogger import EventLogger, NilEventLogger, CompositeLogger, StreamEventLogger
 from harvester import Harvester
 from virtualuploader import LoggingUploader
-import sys, os, optparse
 from saharaget import SaharaGet
 from time import sleep
 import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
-from sys import stderr, stdout
+from sys import stderr, stdout, exit, argv
+from optparse import OptionParser
 
+AGAIN_EXITCODE = 42
 
 class StartHarvester(object):
     def __init__(self):
-        if len(sys.argv[1:]) == 0:
-                        sys.argv.append('-h')
-        self.parser = optparse.OptionParser()
+        if len(argv[1:]) == 0:
+            argv.append('-h')
+        self.parser = OptionParser()
         args = self.parse_args()
         self.__dict__.update(args.__dict__)
 
@@ -110,22 +111,24 @@ class StartHarvester(object):
 
     def restartWithLoop(self, domainId, processTimeout=60*60):
         for key in self.saharaget.getRepositoryIds(domainId):
-            args = sys.argv[:1] + ['--repository='+key] + sys.argv[1:]
-            t = TimedProcess()
-            try:
-                SIG_INT = 2
-                t.executeScript(args, processTimeout, SIG_INT)
-            except KeyboardInterrupt, e:
-                t.terminate()
-                raise
-        sys.exit()
+            args = argv[:1] + ['--repository='+key] + argv[1:]
+            exitstatus = AGAIN_EXITCODE
+            while exitstatus == AGAIN_EXITCODE:
+                t = TimedProcess()
+                try:
+                    SIG_INT = 2
+                    exitstatus = t.executeScript(args, processTimeout, SIG_INT)
+                except KeyboardInterrupt, e:
+                    t.terminate()
+                    raise
+        exit()
 
     def start(self):
-        again = True
-        while again:
-            messageIgnored, again = self.repository.do(
-                stateDir=join(self._stateDir, self.domainId),
-                logDir=join(self._logDir, self.domainId),
-                generalHarvestLog=self._generalHarvestLog)
+        messageIgnored, again = self.repository.do(
+            stateDir=join(self._stateDir, self.domainId),
+            logDir=join(self._logDir, self.domainId),
+            generalHarvestLog=self._generalHarvestLog)
         sleep(1)
+        if again:
+            exit(AGAIN_EXITCODE)
 

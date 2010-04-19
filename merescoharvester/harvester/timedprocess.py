@@ -64,9 +64,12 @@ class TimedProcess(object):
             [executable] + args)
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
-        waitpid(self._pid, 0)
+        resultpid, status = waitpid(self._pid, 0)
+        exitstatus = status >> 8
 
         if not self._wasTimeout:
             self.timer.cancel()
             self._wasSuccess = True
             self._wasTimeout = False
+        return exitstatus 
+
