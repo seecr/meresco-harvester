@@ -8,7 +8,7 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
@@ -47,6 +47,10 @@ recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
     </srw:record>
 </updateRequest>"""
 
+def reprException(anException):
+    """repr of an exception now like python2.5"""
+    return "%s%s" % (anException.__class__.__name__, repr(anException.args))
+
 class SruUpdateUploader(VirtualUploader):
     def __init__(self, sruUpdateTarget, eventlogger, collection="ignored"):
         VirtualUploader.__init__(self, eventlogger)
@@ -67,7 +71,7 @@ class SruUpdateUploader(VirtualUploader):
             self._sendData(recordUpdate % locals())
             self.logLine('UPLOAD.SEND', 'END', id = anId)
         except Exception, e:
-            raise UploaderException(uploadId=anId, message=repr(e))
+            raise UploaderException(uploadId=anId, message=reprException(e))
 
     def delete(self, anUpload):
         try:
@@ -79,7 +83,7 @@ class SruUpdateUploader(VirtualUploader):
             recordData = '<ignored/>'
             self._sendData(recordUpdate % locals())
         except Exception, e:
-            raise UploaderException(uploadId=anUpload.id, message=repr(e))
+            raise UploaderException(uploadId=anUpload.id, message=reprException(e))
 
 
     def info(self):
