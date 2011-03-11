@@ -8,10 +8,11 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl 
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -35,6 +36,8 @@ from virtualuploader import VirtualUploader, UploaderException
 import os
 from slowfoot import binderytools
 from xml.sax.saxutils import escape as xmlEscape
+from StringIO import StringIO
+from lxml.etree import parse, tostring
 from time import gmtime, strftime, time
 
 OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
@@ -49,9 +52,7 @@ OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
         metadataPrefix="%(metadataPrefix)s"
         identifier="%(identifier)s"
     >%(baseurl)s</request>
-    <GetRecord>
-        <record/>
-    </GetRecord>
+    <GetRecord/>
 </OAI-PMH>"""
 
 class FileSystemUploader(VirtualUploader):
@@ -68,7 +69,6 @@ class FileSystemUploader(VirtualUploader):
     def send(self, anUpload):
         """
         Writes the original header and metadata to a file.
-        The fields are ignored.
         """
         try:
             filename = self._filenameFor(anUpload)
@@ -77,29 +77,26 @@ class FileSystemUploader(VirtualUploader):
                 os.makedirs(os.path.dirname(filename))
             f = open(filename, 'w')
             try:
-                f.write(self._createOutput(anUpload).xml())
+                f.write(tostring(self._createOutput(anUpload), encoding="UTF-8", xml_declaration=True))
             finally:
                 f.close()
         except Exception, e:
             raise UploaderException(uploadId=anUpload.id, message=str(e))
 
     def _createOutput(self, anUpload):
-        theXml = binderytools.bind_string('<record xmlns="http://www.openarchives.org/OAI/2.0/"/>')
-        record = theXml.record
-        if str(self._target.oaiEnvelope) == 'true':
-            envelopedata = {
-                'identifier': xmlEscape(str(anUpload.header.identifier)),
-                'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
-                'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
-                'responseDate': self.tznow()
-            }
-            theXml = binderytools.bind_string(OAI_ENVELOPE % envelopedata)
-            record = theXml.OAI_PMH.GetRecord.record
-        record.xml_children.append(anUpload.header)
-        record.xml_children.append(anUpload.metadata)
-        if anUpload.about:
-            for about in anUpload.about:
-                record.xml_children.append(about)
+        record = parse(StringIO(anUpload.record.xml())).getroot()
+        if str(self._target.oaiEnvelope) != 'true':
+            return record
+        envelopedata = {
+            'identifier': xmlEscape(str(anUpload.record.header.identifier)),
+            'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
+            'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
+            'responseDate': self.tznow()
+        }
+        theXml = parse(StringIO(OAI_ENVELOPE % envelopedata)).getroot()
+        GetRecord = theXml.xpath('//oai:GetRecord', namespaces={'oai':
+            "http://www.openarchives.org/OAI/2.0/"})[0]
+        GetRecord.append(record)
         return theXml
 
 
@@ -125,14 +122,13 @@ class FileSystemUploader(VirtualUploader):
                 f.close()
         else:
             envelopedata = {
-                'identifier': xmlEscape(str(anUpload.header.identifier)),
+                'identifier': xmlEscape(str(anUpload.record.header.identifier)),
                 'metadataPrefix': xmlEscape(str(anUpload.repository.metadataPrefix)),
                 'baseurl': xmlEscape(str(anUpload.repository.baseurl)),
                 'responseDate': self.tznow()
             }
             theXml = binderytools.bind_string(OAI_ENVELOPE % envelopedata)
-            record = theXml.OAI_PMH.GetRecord.record
-            record.xml_children.append(anUpload.header)
+            theXml.OAI_PMH.GetRecord.xml_children.append(anUpload.record)
             fd = open(filename, 'w')
             try:
                 fd.write(theXml.xml())

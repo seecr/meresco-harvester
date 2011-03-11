@@ -8,10 +8,11 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl 
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -39,6 +40,7 @@ import os, shutil
 from slowfoot import binderytools
 from tempfile import mkdtemp
 from amara.binderytools import bind_string
+from merescoharvester.harvester.mapping import Upload, parse_xml
 
 from os.path import isfile, join
 
@@ -61,9 +63,8 @@ class FileSystemUploaderTest(CQ2TestCase):
             repository.repositoryGroupId = 'groupId'
             repository.id = 'repositoryId'
             
-            upload = CallTrace('Upload')
+            upload = Upload(repository=repository)
             upload.id = anId
-            upload.repository = repository
             return self.uploader._filenameFor(upload)
 
         self.assertEquals(self.tempdir + '/groupId/repositoryId/aa:bb_SLASH_cc.dd.record', getFilename('aa:bb/cc.dd'))
@@ -84,9 +85,8 @@ class FileSystemUploaderTest(CQ2TestCase):
         repository.id = 'repositoryId'
 
         
-        upload = CallTrace('Upload')
+        upload = Upload(repository=repository)
         upload.id = 'id'
-        upload.repository = repository
         
         self.uploader.delete(upload)
 
@@ -112,15 +112,12 @@ class FileSystemUploaderTest(CQ2TestCase):
         repository.baseurl = "http://repository"
         repository.id = 'repositoryId'
 
-        upload = CallTrace('Upload')
-        upload.id = 'id'
-        upload.repository = repository
 
-        header = bind_string("""<header xmlns="http://www.openarchives.org/OAI/2.0/" status="deleted">
+        record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header status="deleted">
                 <identifier>id.record</identifier>
-            </header>""").header
+            </header></record>""").record
+        upload = Upload(repository=repository, record=record)
 
-        upload.header = header
 
         self.assertFalse(isfile(RECORD_FILENAME))
         self.uploader.delete(upload)
@@ -148,7 +145,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.uploader.send(upload)
         
         self.assertTrue(isfile(recordFile))
-        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD, open(recordFile).read())
+        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD, open(recordFile).read())
 
     def testSendWithAbout(self):
         ABOUT = "<about>abouttext</about>"
@@ -159,7 +156,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.uploader.send(upload)
         
         self.assertTrue(isfile(recordFile))
-        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
     def testSendWithMultipleAbout(self):
         ABOUT = "<about>about_1</about><about>about_2</about>"
@@ -171,7 +168,7 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.uploader.send(upload)
         
         self.assertTrue(isfile(recordFile))
-        self.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\n'+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
     def testSendRaisesError(self):
         def raiseError(*args, **kwargs):
@@ -209,30 +206,22 @@ class FileSystemUploaderTest(CQ2TestCase):
         self.testSend()
 
 def createUpload():
-    upload = CallTrace("Upload")
-    record = wrapp(binderytools.bind_string("""<record xmlns="http://www.openarchives.org/OAI/2.0/">
-    <header>header</header>
-    <metadata>text</metadata>
-</record>"""))
+    record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>""")
+    repository = CallTrace('repository')
+    repository.id = 'repoId'
     
-    upload.header = record.record.header
-    upload.metadata = record.record.metadata
-    upload.about = record.record.about
+    upload = Upload(repository=repository, record=record)
     upload.id = 'id'
     return upload
     
 def createUploadWithAbout(about):
     upload = CallTrace("Upload")
-    record = wrapp(binderytools.bind_string("""<record xmlns="http://www.openarchives.org/OAI/2.0/">
-    <header>header</header>
-    <metadata>text</metadata>
-    %s
-</record>""" % about))
+    record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata>%s</record>""" % about)
     
-    upload.header = record.record.header
-    upload.metadata = record.record.metadata
-    upload.about = record.record.about
-
+    repository = CallTrace('repository')
+    repository.id = 'repoId'
+    
+    upload = Upload(repository=repository, record=record)
     upload.id = 'id'
     return upload
         
