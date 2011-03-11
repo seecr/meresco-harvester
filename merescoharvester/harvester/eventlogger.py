@@ -7,10 +7,10 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2009,2011 Tilburg University http://www.uvt.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -30,13 +30,13 @@
 #
 ## end license ##
 
-
-import time, re, datetime
+from re import compile
+from datetime import datetime
 from cStringIO import StringIO
 from os.path import dirname, isdir
 from os import makedirs
 
-LOGLINE_RE=re.compile(r'^\[([^\]]*)\]\t([\w ]+)\t\[([^\]]*)\]\t(.*)$')
+LOGLINE_RE=compile(r'^\[([^\]]*)\]\t([\w ]+)\t\[([^\]]*)\]\t(.*)$')
 
 class BasicEventLogger(object):
     def __init__(self, logfile):
@@ -58,7 +58,7 @@ class BasicEventLogger(object):
         self._flush()
 
     def _time(self):
-        now = datetime.datetime.now()
+        now = datetime.utcnow()
         ms = ('%03i'%now.microsecond)[:3]
         self._logfile.write('[' + now.strftime('%Y-%m-%d %H:%M:%S.') + ms + ']')
 

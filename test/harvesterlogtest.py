@@ -31,7 +31,8 @@
 #
 ## end license ##
 
-import unittest,os, time
+import unittest,os
+from time import strftime, gmtime
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.eventlogger import LOGLINE_RE
@@ -58,7 +59,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
         self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
         self.assert_(logger.hasWork())
-        logger.from_=time.strftime('%Y-%m-%d')
+        logger.from_=strftime('%Y-%m-%d', gmtime())
         self.assert_(not logger.hasWork())
         logger.token='SomeToken'
         self.assert_(logger.hasWork())

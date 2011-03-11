@@ -54,13 +54,13 @@ class ActionTestCase(CQ2TestCase):
 
     def writeMarkDeleted(self, year, month, day):
         h = self.newHarvesterLog()
-        h._state._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
+        h._state._gmtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
         h.markDeleted()
         h.close()
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
         h = self.newHarvesterLog()
-        h._state._localtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
+        h._state._gmtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
  
         h.startRepository()
         h.updateStatsfile(4,1,3)

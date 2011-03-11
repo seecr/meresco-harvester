@@ -5,8 +5,9 @@
 #    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
+#    Copyright (C) 2011 Tilburg University http://www.uvt.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -28,7 +29,7 @@
 
 from os.path import join, isfile
 from os import SEEK_END
-from time import strftime, localtime
+from time import strftime, gmtime
 import re
 
 class State(object):
@@ -104,11 +105,11 @@ class State(object):
         return "Done: Deleted all id's" in logline
 
     def getTime(self):
-        return strftime('%Y-%m-%d %H:%M:%S', self._localtime())
+        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
 
     @staticmethod
-    def _localtime():
-        return localtime()
+    def _gmtime():
+        return gmtime()
                 
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
