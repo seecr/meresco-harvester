@@ -40,59 +40,6 @@ from merescoharvester.harvester.eventlogger import StreamEventLogger
 from slowfoot.wrappers import wrapp
 
 class MappingTest(unittest.TestCase):
-    def testCreateUploadFields(self):
-        dcmap = Mapping('mappingId')
-        dcmap.code = mapping.execcode
-        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata>
-        <dc>
-        <identifier>bla</identifier>
-        <identifier>http://bla.example.org</identifier>
-        <title>Title</title>
-        <description>Description1</description>
-        <description>Description2</description>
-        <subject>sub1</subject>
-        <subject>sub2</subject>
-        <subject>sub3</subject>
-        <creator>Jonkers, J</creator></dc></metadata><about/></record>""").record
-
-        uploadfields = dcmap.createUpload(TestRepository(), record).fields
-        self.assertEquals('oai:ident:321', uploadfields['generic2'])
-        self.assertEquals(str, type(uploadfields['generic2']))
-        self.assertEquals('repository.id', uploadfields['generic1'])
-        self.assertEquals('repository.institute', uploadfields['generic3'])
-        self.assertEquals('Title', uploadfields['meta_dc.title'])
-        self.assertEquals('Title', uploadfields['title'])
-        self.assertEquals('Description1; Description2', uploadfields['meta_dc.description'])
-        self.assertEquals('sub1; sub2; sub3', uploadfields['meta_dc.subject'])
-        self.assertEquals('TitleDescription1; Description2sub1; sub2; sub3', uploadfields['data'])
-        self.assertEquals('bla; http://bla.example.org', uploadfields['url'])
-        self.assertEquals('bla; http://bla.example.org', uploadfields['meta_dc.identifier'])
-        self.assertEquals('Jonkers, J', uploadfields['meta_dc.creator'])
-        self.assertEquals('utf-8', uploadfields['charset'])
-
-    def testOtherFile(self):
-        testcode="""
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'"""
-
-        dcmap = Mapping('mappingId')
-        dcmap.code = testcode
-        fields = dcmap.createUpload(TestRepository(),wrapp('')).fields
-        self.assert_(fields)
-
-    def testValidMapping(self):
-        code = """
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'
-upload.fields['blah'] = input.header.identifier
-upload.fields['repository'] = input.repository.id"""
-        datamap = Mapping('mappingId')
-        datamap.code = code
-        self.assertTrue(datamap.isValid())
-        datamap.validate()
-
     def testInValidMapping(self):
         datamap = Mapping('mappingId')
         datamap.code ="""upload.parts['unfinishpython"""
@@ -106,11 +53,8 @@ upload.fields['repository'] = input.repository.id"""
     def testInValidWithImportMapping(self):
         datamap = Mapping('mappingId')
         datamap.code = """
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'
+upload.parts['record']="<somexml/>"
 import os
-#uploadfield['tikfout']='bla'
 """
         self.assert_(not datamap.isValid())
         try:
@@ -119,27 +63,10 @@ import os
         except DataMapException, e:
             self.assertEquals('Import not allowed', str(e))
 
-    def testInValidCodeMapping(self):
-        datamap = Mapping('mappingId')
-        datamap.code = """
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'
-upload.fields['tikfout']='bla
-"""
-        self.assert_(not datamap.isValid())
-        try:
-            datamap.validate()
-            self.fail()
-        except:
-            pass
-
     def testLogging(self):
         datamap = Mapping('mappingId')
         datamap.code = """
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'
+upload.parts['record']="<somexml/>"
 logger.error('Iets om te zeuren')
 """
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
@@ -151,14 +78,12 @@ logger.error('Iets om te zeuren')
     def testNoLogging(self):
         datamap = Mapping('mappingId')
         datamap.code = """
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'
+upload.parts['record']="<somexml/>"
 logger.error('Iets om te zeuren')
 """
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         upload = datamap.createUpload(TestRepository(), record)
-        self.assertEquals('Dit is een test',upload.fields['title'])
+        self.assertEquals('<somexml/>',upload.parts['record'])
 
     def testJoin(self):
         metadata = parse_xml("""<metadata><dc>
@@ -174,9 +99,8 @@ logger.error('Iets om te zeuren')
         datamap.code = """
 doAssert(1==1)
 doAssert(1==2, "1 not equal 2")
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = 'zo maar iets'
-upload.fields['title'] = 'Dit is een test'"""
+upload.parts['record']="<somexml/>"
+"""
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
@@ -199,22 +123,20 @@ upload.fields['title'] = 'Dit is een test'"""
         datamap.createUpload(TestRepository(),wrapp(''), logger, doAsserts=False)
         self.assertEquals('',stream.getvalue())
 
-    def assertField(self, expected, fieldname, code):
+    def assertPart(self, expected, partname, code):
         datamap = Mapping('mappingId')
         datamap.code = code
-        header = parse_xml("""<header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>""").header
-        metadata = parse_xml("""<metadata></metadata>""").metadata
-        about = parse_xml('<about/>').about
-        upload = datamap.createUpload(TestRepository(),header,metadata, about)
-        self.assertEquals(expected,upload.fields[fieldname])
+        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header></record>""").record
+        upload = datamap.createUpload(TestRepository(), record)
+        self.assertEquals(expected,upload.parts[partname])
 
     def testUrlEncode(self):
-        code = """upload.fields['url'] = 'http://some/one?'+urlencode({'id':'oai:id:3/2'})"""
-        self.assertField('http://some/one?id=oai%3Aid%3A3%2F2','url', code)
+        code = """upload.parts['url'] = 'http://some/one?'+urlencode({'id':'oai:id:3/2'})"""
+        self.assertPart('http://some/one?id=oai%3Aid%3A3%2F2','url', code)
 
     def testXmlEscape(self):
-        code = """upload.fields['xml'] = '<tag>' + xmlEscape('&<>') + '</tag>'"""
-        self.assertField('<tag>&amp;&lt;&gt;</tag>', 'xml', code)
+        code = """upload.parts['xml'] = '<tag>' + xmlEscape('&<>') + '</tag>'"""
+        self.assertPart('<tag>&amp;&lt;&gt;</tag>', 'xml', code)
 
     def testSkip(self):
         datamap = Mapping('mappingId')
@@ -227,26 +149,6 @@ skipRecord("Don't like it here.")
         upload = datamap.createUpload(TestRepository(), record, logger)
         self.assertEquals(None, upload)
         self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n",stream.getvalue()[26:])
-
-    def testUploadGetSetProperty(self):
-        upload = mapping.Upload()
-        upload.setProperty('sortfields', ['generic4', 'generic5'])
-
-        self.assertEquals(['generic4', 'generic5'], upload.getProperty('sortfields'))
-
-    def testUploadPropertyKeyMonkeyProof(self):
-        upload = mapping.Upload()
-
-        upload.setProperty('CAPS', 1)
-        self.assertEquals(1, upload.getProperty('caps'))
-
-        upload.setProperty('S p A c E d ', 1)
-        self.assertEquals(1, upload.getProperty('spaced'))
-
-    def testUploadGetUnknownProperty(self):
-        upload = mapping.Upload()
-
-        self.assertEquals('', upload.getProperty('doesnotexist'))
 
     def testCreateUploadParts(self):
         upload = mapping.Upload()

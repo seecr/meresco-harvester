@@ -68,10 +68,6 @@ class OnlineHarvest(object):
 
     def writeUpload(self, anUpload):
         self._writeId(anUpload)
-        self.writeLine('-v- upload.fields -v-')
-        for k,v in anUpload.fields.items():
-            self.writeLine('  '+k+'='+v)
-        self.writeLine('-^- upload.fields -^-')
         for partname, part in anUpload.parts.items():
             self.writeLine('-v- part %s -v-' % partname)
             self.writeLine(part)

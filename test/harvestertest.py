@@ -36,15 +36,18 @@ from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.state import getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
 from slowfoot.wrappers import wrapp, binderytools
-from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload, parse_xml
+from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
 import shelve
 import os
 import sys
 import re
-from merescoharvester.harvester import harvester
+from merescoharvester.harvester import harvester 
+from merescoharvester import namespaces
 from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
+from lxml.etree import parse
+from StringIO import StringIO
 
 class DeletedRecordHeader(object):
     def isDeleted(self):
@@ -53,7 +56,6 @@ class DeletedRecordHeader(object):
         return 'mockid'
 
 
-#TODO key == id
 class _MockRepository:
     def __init__(self,id,baseurl,set,repositoryGroupId, outer):
         self.repositoryGroupId=repositoryGroupId
@@ -67,7 +69,7 @@ class _MockRepository:
     def mapping(self):
         m = Mapping('id')
         m.name = self.repositoryGroupId
-        m.code = DEFAULT_DC_CODE
+        m.code = DEFAULT_CODE
         return m
 
 class HarvesterTest(unittest.TestCase):
@@ -76,7 +78,7 @@ class HarvesterTest(unittest.TestCase):
         self.sendReturn=None
         self.sendException = None
         self.upload = None
-        self.sendFields=[]
+        self.sendParts=[]
         self.sendId=[]
         self.listRecordsSet = None
         self.listRecordsToken = None
@@ -105,26 +107,15 @@ class HarvesterTest(unittest.TestCase):
         harvester.harvest()
         self.assertEquals((2,2),(self.startCalled,self.stopCalled))
 
-    def LIVE_test_LIVE_Data(self):
-        server = self.createServer('http://arno.uvt.nl/~arno/arno-1.2/oai/wo.uvt.nl.cgi')
-        record = server.getRecord(identifier=    'oai:wo.uvt.nl:155002', metadataPrefix='oai_dc')
-        print record.header.identifier
-        print record.metadata.dc.title
-
     def testDoUpload(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.harvest()
 
         self.assertEqual(3, self.sendCalled)
         self.assertEqual('tud:oai:tudelft.nl:007193', self.sendId[2])
-        self.assertEqual(u'quantitative electron microscopy; statistical experimental design; parameter estimation', self.sendFields[2]['meta_dc.subject'])
-        self.assertEqual(
-            u"http://content.library.tudelft.nl/intradoc-cgi/nph-idc_cgi.exe/as_aert_20030520.pdf?IdcService=GET_FILE&dID=8799&dDocName=007193; ISBN 90-6464-861-1",
-            self.sendFields[2]['url'])
-        self.assertEqual('tud', self.sendFields[2]['generic1'])
-        self.assertEqual('oai:tudelft.nl:007193', self.sendFields[2]['generic2'])
-        self.assertEquals('insttud', self.sendFields[2]['generic3'])
-        self.assertEqual(u'2003-05-20', self.sendFields[2]['generic4'])
+        record = parse(StringIO(self.sendParts[2]['record']))
+        subjects = record.xpath('/oai:record/oai:metadata/oai_dc:dc/dc:subject/text()', namespaces=namespaces)
+        self.assertEqual(['quantitative electron microscopy', 'statistical experimental design', 'parameter estimation'], subjects)
         self.assertEquals('ResumptionToken: TestToken', file(os.path.join(self.stateDir, 'tud.stats')).read()[-27:-1])
 
     def testLogIDsForRemoval(self):
@@ -334,7 +325,7 @@ class HarvesterTest(unittest.TestCase):
     def send(self, upload):
         self.sendCalled+=1
         self.sendId.append(upload.id)
-        self.sendFields.append(upload.fields)
+        self.sendParts.append(upload.parts)
         self.upload = upload
         if self.sendException:
             raise self.sendException
@@ -356,7 +347,7 @@ class HarvesterTest(unittest.TestCase):
         sleep(20)
 
     def MockRepository (self, key, set):
-            return _MockRepository(key, 'http://mock.server', set, 'inst'+key,self)
+        return _MockRepository(key, 'http://mock.server', set, 'inst'+key,self)
 
     def MockRepository2 (self, nr):
         return _MockRepository('reponame'+nr, 'url'+nr, 'set'+nr, 'instname'+nr,self)

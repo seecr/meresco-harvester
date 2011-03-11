@@ -41,15 +41,12 @@ from saharaobject import SaharaObject
 
 
 nillogger = NilEventLogger()
-execcode = DEFAULT_DC_CODE = """
+execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #Map template
 #
-#Fields:
-# input.metadata = Metadata object
-# input.header = Header object
+#Input
+# input.record = OAI Record object
 # input.repository = Repository object
-# upload.fields = a map, to filled with data that can be uploaded to
-#   the search engine.
 #
 #Available Methods:
 # isUrl(aString) determines if aString is a url.
@@ -67,37 +64,7 @@ execcode = DEFAULT_DC_CODE = """
 #     urlencode([('a','b'), ('c','d')]) --> 'a=b&c=d'
 # skipRecord( comments ) Skip a record for a certain reason.
 #
-upload.fields['url'] = join(input.metadata.dc.identifier)
-upload.fields['generic1'] = input.repository.id
-upload.fields['generic2'] = input.header.identifier
-upload.fields['generic3'] = input.repository.repositoryGroupId
-dcdate = input.metadata.dc.date
-if dcdate:
-    upload.fields['generic4'] = dcdate[0]
-
-upload.fields['meta_dc.contributor'] = join(input.metadata.dc.contributor)
-upload.fields['meta_dc.coverage'] = join(input.metadata.dc.coverage)
-upload.fields['meta_dc.creator'] = join(input.metadata.dc.creator)
-upload.fields['meta_dc.date'] = join(input.metadata.dc.date)
-upload.fields['meta_dc.dateint'] = join(input.metadata.dc.dateint)
-upload.fields['meta_dc.description'] = join(input.metadata.dc.description)
-upload.fields['meta_dc.format'] = join(input.metadata.dc.format)
-upload.fields['meta_dc.identifier'] = join(input.metadata.dc.identifier)
-upload.fields['meta_dc.language'] = join(input.metadata.dc.language)
-upload.fields['meta_dc.publisher'] = join(input.metadata.dc.publisher)
-upload.fields['meta_dc.relation'] = join(input.metadata.dc.relation)
-upload.fields['meta_dc.rights'] = join(input.metadata.dc.rights)
-upload.fields['meta_dc.source'] = join(input.metadata.dc.source)
-upload.fields['meta_dc.subject'] = join(input.metadata.dc.subject)
-upload.fields['meta_dc.title'] = join(input.metadata.dc.title)
-upload.fields['meta_dc.type'] = join(input.metadata.dc.type)
-
-data = upload.fields.get('meta_dc.title', '')
-data += upload.fields.get('meta_dc.description', '')
-data += upload.fields.get('meta_dc.subject', '')
-upload.fields['charset']=u'utf-8'
-upload.fields['data'] = data
-upload.fields['title'] = upload.fields.get('meta_dc.title','')
+upload.parts['record'] = input.record.xml()
 """
 
 def parse_xml(aString):
@@ -163,28 +130,12 @@ class UploadDict(dict):
 class Upload(object):
     def __init__(self, repository=None, record=None):
         self.fulltexturl = None
-        self._properties = {}
-        self.fields = UploadDict()
         self.parts = UploadDict()
         self.record = record
         self.repository = repository
         self.id = ''
         if repository != None and record != None:
             self.id = repository.id + ':' + record.header.identifier
-
-    def _monkeyProofKey(self, aString):
-        return filter(lambda x:not x.isspace(), aString).lower()
-
-    def setProperty(self, key, value):
-        self._properties[self._monkeyProofKey(key)] = value
-
-    def getProperty(self, key):
-        value = ''
-        try:
-            value = self._properties[self._monkeyProofKey(key)]
-        except KeyError:
-            pass
-        return value
 
     def ensureStrings(self):
         if self.id:
