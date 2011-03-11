@@ -42,8 +42,7 @@ class MappingTest(unittest.TestCase):
     def testCreateUploadFields(self):
         dcmap = Mapping('mappingId')
         dcmap.code = mapping.execcode
-        header = parse_xml("""<header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>""").header
-        metadata = parse_xml("""<metadata>
+        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata>
         <dc>
         <identifier>bla</identifier>
         <identifier>http://bla.example.org</identifier>
@@ -53,10 +52,9 @@ class MappingTest(unittest.TestCase):
         <subject>sub1</subject>
         <subject>sub2</subject>
         <subject>sub3</subject>
-        <creator>Jonkers, J</creator></dc></metadata>""").metadata
-        about = parse_xml('<about/>').about
+        <creator>Jonkers, J</creator></dc></metadata><about/></record>""").record
 
-        uploadfields = dcmap.createUpload(TestRepository(), header, metadata, about).fields
+        uploadfields = dcmap.createUpload(TestRepository(), record).fields
         self.assertEquals('oai:ident:321', uploadfields['generic2'])
         self.assertEquals(str, type(uploadfields['generic2']))
         self.assertEquals('repository.id', uploadfields['generic1'])
@@ -79,7 +77,7 @@ upload.fields['title'] = 'Dit is een test'"""
 
         dcmap = Mapping('mappingId')
         dcmap.code = testcode
-        fields = dcmap.createUpload(TestRepository(),wrapp(''),None, None).fields
+        fields = dcmap.createUpload(TestRepository(),wrapp('')).fields
         self.assert_(fields)
 
     def testValidMapping(self):
@@ -91,7 +89,7 @@ upload.fields['blah'] = input.header.identifier
 upload.fields['repository'] = input.repository.id"""
         datamap = Mapping('mappingId')
         datamap.code = code
-        self.assert_(datamap.isValid())
+        self.assertTrue(datamap.isValid())
         datamap.validate()
 
     def testInValidMapping(self):
@@ -143,12 +141,10 @@ upload.fields['data'] = 'zo maar iets'
 upload.fields['title'] = 'Dit is een test'
 logger.error('Iets om te zeuren')
 """
-        header = parse_xml("""<header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>""").header
-        metadata = parse_xml("""<metadata></metadata>""").metadata
-        about = parse_xml('<about/>').about
+        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        upload = datamap.createUpload(TestRepository(),header,metadata, about, logger)
+        upload = datamap.createUpload(TestRepository(), record, logger)
         self.assertEquals('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
 
     def testNoLogging(self):
@@ -159,10 +155,8 @@ upload.fields['data'] = 'zo maar iets'
 upload.fields['title'] = 'Dit is een test'
 logger.error('Iets om te zeuren')
 """
-        header = parse_xml("""<header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>""").header
-        metadata = parse_xml("""<metadata></metadata>""").metadata
-        about = parse_xml('<about/>').about
-        upload = datamap.createUpload(TestRepository(),header,metadata, about)
+        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+        upload = datamap.createUpload(TestRepository(), record)
         self.assertEquals('Dit is een test',upload.fields['title'])
 
     def testJoin(self):
@@ -186,22 +180,22 @@ upload.fields['title'] = 'Dit is een test'"""
         stream = StringIO()
         logger = StreamEventLogger(stream)
         try:
-            header = parse_xml("""<header><identifier>oai:ident:321</identifier></header>""").header
-            datamap.createUpload(TestRepository(),header,None, None, logger, doAsserts=True)
+            record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+            datamap.createUpload(TestRepository(), record, logger, doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('ERROR\t[repository.id:oai:ident:321]\tAssertion: 1 not equal 2\n',stream.getvalue()[26:])
             self.assertEquals('1 not equal 2', str(ex))
 
         try:
-            datamap.createUpload(TestRepository(),wrapp(''),None, None, doAsserts=True)
+            datamap.createUpload(TestRepository(), record=wrapp(''), doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('1 not equal 2', str(ex))
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        datamap.createUpload(TestRepository(),wrapp(''),None, None, logger, doAsserts=False)
+        datamap.createUpload(TestRepository(),wrapp(''), logger, doAsserts=False)
         self.assertEquals('',stream.getvalue())
 
     def assertField(self, expected, fieldname, code):
@@ -226,12 +220,10 @@ upload.fields['title'] = 'Dit is een test'"""
         datamap.code = """
 skipRecord("Don't like it here.")
 """
-        header = parse_xml("""<header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>""").header
-        metadata = parse_xml("""<metadata></metadata>""").metadata
-        about = parse_xml('<about/>').about
+        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        upload = datamap.createUpload(TestRepository(),header,metadata, about, logger)
+        upload = datamap.createUpload(TestRepository(), record, logger)
         self.assertEquals(None, upload)
         self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n",stream.getvalue()[26:])
 

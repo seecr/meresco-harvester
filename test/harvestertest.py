@@ -36,7 +36,7 @@ from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.state import getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
 from slowfoot.wrappers import wrapp, binderytools
-from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload
+from merescoharvester.harvester.mapping import Mapping, DEFAULT_DC_CODE, Upload, parse_xml
 import shelve
 import os
 import sys
@@ -284,35 +284,29 @@ class HarvesterTest(unittest.TestCase):
 
     def testUploadRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        header = wrapp(binderytools.bind_string('<header><identifier>mockid</identifier></header>').header)
-        metadata = wrapp(binderytools.bind_string('<metadata><dc><title>mocktitle</title></dc></metadata>').metadata)
-        about = wrapp(binderytools.bind_string('<about/>').about)
-        upload = Upload()
+        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        upload = Upload(record=record)
         upload.id = 'tud:mockid'
-        harvester._mapper.createUpload = lambda r,h,m,a,logger: upload
-        result = harvester.uploadRecord(header, metadata,about)
+        harvester._mapper.createUpload = lambda repository,record,logger: upload
+        result = harvester.uploadRecord(record)
         self.assertEquals(['tud:mockid'], self.sendId)
-        self.assert_(not hasattr(self, 'delete_id'))
+        self.assertFalse(hasattr(self, 'delete_id'))
         self.assertEquals((1,0), result)
 
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        header = wrapp(binderytools.bind_string('<header><identifier>mockid</identifier></header>').header)
-        metadata = wrapp(binderytools.bind_string('<metadata><dc><title>mocktitle</title></dc></metadata>').metadata)
-        about = wrapp(binderytools.bind_string('<about/>').about)
+        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
         upload = None
-        harvester._mapper.createUpload = lambda r,h,m,a,logger: upload
-        result = harvester.uploadRecord(header, metadata, about)
+        harvester._mapper.createUpload = lambda repository,record,logger: upload
+        result = harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
-        self.assert_(not hasattr(self, 'delete_id'))
+        self.assertFalse(hasattr(self, 'delete_id'))
         self.assertEquals((0,0), result)
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        header = wrapp(binderytools.bind_string('<header status="deleted"><identifier>mockid</identifier></header>').header)
-        metadata = 'true' # don't care
-        about = "still don't care"
-        result = harvester.uploadRecord(header, metadata, about)
+        record = parse_xml("""<record><header status="deleted"><identifier>mockid</identifier></header></record>""").record
+        result = harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertEquals('tud:mockid', self.delete_id)
         self.assertEquals((0,1), result)

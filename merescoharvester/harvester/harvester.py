@@ -81,23 +81,22 @@ class Harvester(object):
         self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
             harvestedRecords += 1
-            uploadcount, deletecount = self.uploadRecord(record.header, record.metadata,
-            record.about)
+            uploadcount, deletecount = self.uploadRecord(record)
             uploadedRecords += uploadcount
             deletedRecords += deletecount
             self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
         return uploadedRecords == harvestedRecords, newtoken
 
-    def uploadRecord(self, header, metadata, about):
-        upload = self._mapper.createEmptyUpload(self._repository, header, metadata, about)
+    def uploadRecord(self, record):
+        upload = self._mapper.createEmptyUpload(self._repository, record)
 
-        if header.status == "deleted":
+        if record.header.status == "deleted":
             self._uploader.delete(upload)
             self._logger.logDeletedID(upload.id)
             uploadresult = (0,1)
         else:
-            upload = self._mapper.createUpload(self._repository, header, metadata, about, logger=self._eventlogger)
+            upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
             if upload:
                 self._uploader.send(upload)
                 self._logger.logID(upload.id)

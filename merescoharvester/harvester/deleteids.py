@@ -99,9 +99,8 @@ class DeleteIds(object):
         try:
             for id in ids:
                 try:
-                    anUpload = Upload()
+                    anUpload = Upload(repository=self._repository)
                     anUpload.id = id
-                    anUpload.repository = self._repository
                     uploader.delete(anUpload)
                     done.add(id)
                 except:

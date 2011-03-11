@@ -93,7 +93,7 @@ class OnlineHarvestTest(unittest.TestCase):
 
 
     #mocking
-    def createUpload(self, repository, header, metadata, about, logger=None, doAssertions=False):
+    def createUpload(self, repository, record, logger=None, doAssertions=False):
         self.createUpload_args={'doAssertions':doAssertions}
         if self.mock_createUpload_exception:
             ex = self.mock_createUpload_exception
@@ -102,7 +102,6 @@ class OnlineHarvestTest(unittest.TestCase):
         upload = Upload()
         return upload
 
-    def createEmptyUpload(self, repository, header, metadata, about):
-        upload = Upload()
-        upload.init(repository, header, metadata, about)
+    def createEmptyUpload(self, repository, record):
+        upload = Upload(repository, record)
         return upload

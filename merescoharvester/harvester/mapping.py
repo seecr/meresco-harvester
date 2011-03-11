@@ -146,12 +146,13 @@ def doNotAssert(aBoolean, message="This should not happen"):
     pass
 
 class Input(object):
-    def __init__(self, header=None, metadata=None, about=None, repository=None, log=None):
-        self.header = header
-        self.metadata = metadata
-        self.about = about
+    def __init__(self, record=None, repository=None, log=None):
         self.repository = repository
         self.log = log
+        self.record = record
+        self.header = record.header if record != None else None
+        self.metadata = record.metadata if record != None else None
+        self.about = record.about if record != None else None
 
 class UploadDict(dict):
     def __setitem__(self, key, value):
@@ -159,19 +160,16 @@ class UploadDict(dict):
 
 
 class Upload(object):
-    def __init__(self):
+    def __init__(self, repository=None, record=None):
         self.fulltexturl = None
         self._properties = {}
         self.fields = UploadDict()
         self.parts = UploadDict()
-        self.id = ''
-
-    def init(self, repository, header, metadata, about):
-        self.id = repository.id + ':' + header.identifier
-        self.header = header
+        self.record = record
         self.repository = repository
-        self.metadata = metadata
-        self.about = about
+        self.id = ''
+        if repository != None and record != None:
+            self.id = repository.id + ':' + record.header.identifier
 
     def _monkeyProofKey(self, aString):
         return filter(lambda x:not x.isspace(), aString).lower()
@@ -199,23 +197,19 @@ class Mapping(SaharaObject):
     def setCode(self, aString):
         self.code = aString
 
-    def createEmptyUpload(self, repository, header, metadata, about):
-        # TJ/JJ this should be refactored into Upload. 30-8-2006
-        upload = Upload()
-        upload.init(repository, header, metadata, about)
-        return upload
+    def createEmptyUpload(self, repository, record):
+        return Upload(repository=repository, record=record)
 
-
-    def createUpload(self, repository, header, metadata, about, logger=nillogger, doAsserts=False):
+    def createUpload(self, repository, record, logger=nillogger, doAsserts=False):
         logger = logger
         builtinscopy = __builtins__.copy()
         builtinscopy['__import__']=noimport
-        upload = self.createEmptyUpload(repository, header, metadata, about)
+        upload = Upload(repository=repository, record=record)
 
         assertionMethod = doAsserts and doAssert or doNotAssert
 
         try:
-            exec(self.code, {'input':Input(header,metadata,about,repository),
+            exec(self.code, {'input':Input(repository=repository, record=record),
             'upload':upload,
             'isUrl':isUrl,
             'join':join,
@@ -249,8 +243,6 @@ class Mapping(SaharaObject):
             return False
 
     def validate(self):
-        header = parse_xml("""<header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header>""")
-        metadata = parse_xml("""<metadata><dc><identifier>test:identifier</identifier></dc></metadata>""")
-        about = parse_xml("""<about/>""")
-        upload = self.createUpload(TestRepository(), header,metadata,about)
+        record = parse_xml("""<record><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record>""")
+        upload = self.createUpload(TestRepository(), record)
 
