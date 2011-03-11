@@ -90,19 +90,3 @@ class UploaderFactory(object):
         uploaderClass = self.mapping[target.targetType]
         return uploaderClass(target, logger, collection)
 
-class LoggingUploader(VirtualUploader):
-    def __init__(self, eventlogger):
-        VirtualUploader.__init__(self, eventlogger)
-        
-    def send(self, anUpload):
-        self.logLine('LoggingUploader','START send',id=anUpload.id)
-        for k,v in anUpload.fields.items():
-            self.logLine('upload.fields','%s=%s'%(k,v), id=anUpload.id)
-        self.logLine('LoggingUploader','END send',id=anUpload.id)
-    
-    def delete(self, anUpload):
-        self.logLine('LoggingUploader','DELETE',id=anUpload.id)
-        
-    def info(self):
-        return 'Uploader connected to a logfile.'
-

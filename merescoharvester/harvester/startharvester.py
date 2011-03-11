@@ -33,7 +33,6 @@
 from harvesterlog import HarvesterLog
 from eventlogger import EventLogger, NilEventLogger, CompositeLogger, StreamEventLogger
 from harvester import Harvester
-from virtualuploader import LoggingUploader
 from saharaget import SaharaGet
 from time import sleep
 import traceback
@@ -95,10 +94,6 @@ class StartHarvester(object):
             help="Override the stateDir in the apache configuration.", 
             metavar="DIRECTORY", 
             default=None)
-        self.parser.add_option("--uploadLog", "", 
-            dest="uploadLog",
-            help="Set the mockUploadLogFile to which the fields are logged instead of uploading to a server.", 
-            metavar="FILE")
         self.parser.add_option("--force-target", "", 
             dest="forceTarget",
             help="Overrides the repository's target", 
@@ -162,9 +157,6 @@ class StartHarvester(object):
             (['*'], StreamEventLogger(stdout)),
             (['ERROR', 'WARN'], StreamEventLogger(stderr)),
         ])
-
-        if self.uploadLog:
-            self.repository.mockUploader = LoggingUploader(EventLogger(self.uploadLog))
 
         messageIgnored, again = self.repository.do(
             stateDir=join(self._stateDir, self.domainId),
