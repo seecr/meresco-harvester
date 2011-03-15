@@ -8,10 +8,11 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -33,7 +34,8 @@
 
 from xml.sax.saxutils import escape as xmlEscape
 from virtualuploader import VirtualUploader, UploaderException
-from httplib import HTTPConnection
+from httplib import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
+
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
 <updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="http://www.loc.gov/ucp">
@@ -89,12 +91,12 @@ class SruUpdateUploader(VirtualUploader):
         tries = 0
         while tries < 3:
             status, message = self._sendDataToRemote(data)
-            if status != 400:
+            if status != SERVICE_UNAVAILABLE:
                 break
-            self.logWarning("Status 400 received while trying to upload")
+            self.logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
                 
-        if status != 200 or 'srw:diagnostic' in message:
+        if status != HTTP_OK or 'srw:diagnostic' in message:
             raise Exception("HTTP %s: %s" % (str(status), message))
 
     def _sendDataToRemote(self, data):

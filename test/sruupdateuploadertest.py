@@ -8,10 +8,11 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -34,6 +35,7 @@ from cq2utils import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
 
 from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException
+from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
 
 class SruUpdateUploaderTest(CQ2TestCase):
     def setUp(self):
@@ -90,11 +92,11 @@ class SruUpdateUploaderTest(CQ2TestCase):
         except UploaderException, e:
             self.assertEquals(self.upload.id, e.uploadId)
 
-    def testRetryOn400(self):
+    def testRetryOnServiceUnavailable(self):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
 
-        answers = [(200, "ALL IS WELL")]
+        answers = [(HTTP_OK, "ALL IS WELL")]
         datas = []
         def sendDataToRemote(data):
             answer = answers.pop(0)
@@ -107,20 +109,20 @@ class SruUpdateUploaderTest(CQ2TestCase):
         self.assertEquals(0, len(answers))
         self.assertEquals(1, len(datas))
 
-        answers = [(400, ''), (200, "ALL IS WELL")]
+        answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, "ALL IS WELL")]
         datas = []
         uploader._sendData("HOW IS EVERYTHING")
         
         self.assertEquals(0, len(answers))
         self.assertEquals(2, len(datas))
         self.assertEquals(1, len(eventLogger.calledMethods))
-        self.assertEquals("Status 400 received while trying to upload", eventLogger.calledMethods[0].args[0])
+        self.assertEquals("Status 503, SERVICE_UNAVAILABLE received while trying to upload", eventLogger.calledMethods[0].args[0])
 
-    def testRetryOn400FailsAfter3Times(self):
+    def testRetryOnServiceUnavailableFailsAfter3Times(self):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
         
-        answers = [(400, ''), (400, ''), (400, ''), (200, "ALL IS WELL")]
+        answers = [(SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (HTTP_OK, "ALL IS WELL")]
         datas = []
         def sendDataToRemote(data):
             answer = answers.pop(0)
@@ -136,7 +138,7 @@ class SruUpdateUploaderTest(CQ2TestCase):
             exception = e
 
         self.assertFalse(exception == None)
-        self.assertEquals("HTTP 400: ", str(e))
+        self.assertEquals("HTTP 503: ", str(e))
         self.assertEquals(1, len(answers))
         self.assertEquals(3, len(datas))
         self.assertEquals(3, len(eventLogger.calledMethods))
