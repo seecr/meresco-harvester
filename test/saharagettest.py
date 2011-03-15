@@ -60,9 +60,6 @@ class SaharaGetTest(unittest.TestCase):
         self.assertEquals('aMappingId', repository.mappingId)
         self.assertEquals('true', repository.use)
         self.assertEquals('cq2Group2', repository.repositoryGroupId)
-        # Test deprecated stuff
-        self.assertEquals(repository.id, repository.key)
-        self.assertEquals(repository.repositoryGroupId, repository.institutionkey)
         # Test read call
         self.assertEquals(1, len(self.mock_read_args))
         self.assertEquals('GetRepository', self.mock_read_args[0]['verb'])

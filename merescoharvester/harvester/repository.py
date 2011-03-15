@@ -7,11 +7,11 @@
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
 #    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 #    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2010 Stichting Kennisnet http://www.kennisnet.nl
+#    Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -54,12 +54,6 @@ class Repository(SaharaObject):
         self.id = repositoryId
         self.mockUploader = None
         self.uploadfulltext = True
-        self._copyOldStuff()
-
-    def _copyOldStuff(self):
-        self.key = self.id
-        self.url = self.baseurl
-        self.institutionkey = self.repositoryGroupId
 
     def closedSlots(self):
         if not hasattr(self, '_closedslots'):

@@ -51,7 +51,6 @@ class SaharaGet(object):
         xml = response.saharaget.GetRepository.repository
         repository = Repository(domainId, repositoryId)
         repository.fill(self, xml)
-        repository._copyOldStuff()
         return repository
     
     def getTarget(self, domainId, targetId):
