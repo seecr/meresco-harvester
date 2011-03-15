@@ -62,22 +62,22 @@ class Harvester(object):
     def uploaderInfo(self):
         return self._uploader.info()
 
-    def listRecords(self, server, from_, token, set):
+    def listRecords(self, from_, token, set):
         if token:
-            return server.listRecords(resumptionToken=token)
+            return self._oairequest.listRecords(resumptionToken=token)
         elif from_:
             if set:
-                return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
-            return server.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+                return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+            return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
         elif set:
-            return server.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
-        return server.listRecords(metadataPrefix=self._repository.metadataPrefix)
+            return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+        return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
-    def fetchRecords(self, server, from_, token, total):
+    def fetchRecords(self, from_, token, total):
         harvestedRecords = 0
         uploadedRecords = 0
         deletedRecords = 0
-        records = self.listRecords(server, from_, token, self._repository.set)
+        records = self.listRecords(from_, token, self._repository.set)
         self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
             harvestedRecords += 1
@@ -109,7 +109,7 @@ class Harvester(object):
 
         try:
             self._logger.startRepository()
-            result, newtoken = self.fetchRecords(self._oairequest, self._logger.from_, self._logger.token, self._logger.total)
+            result, newtoken = self.fetchRecords(self._logger.from_, self._logger.token, self._logger.total)
             self._logger.endRepository(newtoken)
             return newtoken
         except:
