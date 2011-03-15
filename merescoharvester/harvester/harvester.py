@@ -106,7 +106,6 @@ class Harvester(object):
         return uploadresult
 
     def _harvestLoop(self):
-
         try:
             self._logger.startRepository()
             result, newtoken = self.fetchRecords(self._logger.from_, self._logger.token, self._logger.total)
