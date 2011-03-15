@@ -30,54 +30,53 @@
 #
 ## end license ##
 
-import unittest
-from mytestcase import MyTestCase
+from cq2utils import CQ2TestCase
 from merescoharvester.harvester.ids import Ids
 
-class IdsTest(MyTestCase):
+class IdsTest(CQ2TestCase):
     def tearDown(self):
         ids = getattr(self, 'ids', None)
         if ids: ids.close()
-        MyTestCase.tearDown(self)
+        CQ2TestCase.tearDown(self)
         
     def testAddOne(self):
-        self.ids = Ids(self.testdir + '/doesnotexistyet/', 'idstest')
+        self.ids = Ids(self.tempdir + '/doesnotexistyet/', 'idstest')
         self.ids.add('id:1')
         self.assertEquals(1, self.ids.total())
         
     def testAddTwice(self):
-        self.ids = Ids(self.testdir, 'idstest')
+        self.ids = Ids(self.tempdir, 'idstest')
         self.ids.add('id:1')
         self.ids.add('id:1')
         self.assertEquals(1, self.ids.total())
         
     def testInit(self):
         self.writeTestIds('one',['id:1'])
-        self.ids = Ids(self.testdir, 'one')
+        self.ids = Ids(self.tempdir, 'one')
         self.assertEquals(1, self.ids.total())
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-        self.ids = Ids(self.testdir, 'three')
+        self.ids = Ids(self.tempdir, 'three')
         self.assertEquals(3, self.ids.total())
         
     def testRemoveExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-        self.ids = Ids(self.testdir, 'three')
+        self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:1')
         self.assertEquals(2, self.ids.total())
         self.ids.close()
-        self.assertEquals(2, len(open(self.testdir + '/three.ids').readlines()))
+        self.assertEquals(2, len(open(self.tempdir + '/three.ids').readlines()))
         
     def testRemoveExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
-        self.ids = Ids(self.testdir, 'three')
+        self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:4')
         self.assertEquals(3, self.ids.total())
         self.ids.close()
-        self.assertEquals(3, len(open(self.testdir + '/three.ids').readlines()))
+        self.assertEquals(3, len(open(self.tempdir + '/three.ids').readlines()))
         
         
     def writeTestIds(self, name, ids):
-        w = open(self.testdir+ '/' + name + '.ids', 'w')
+        w = open(self.tempdir+ '/' + name + '.ids', 'w')
         try:
             for anId in ids:
                 w.write(anId + '\n')
