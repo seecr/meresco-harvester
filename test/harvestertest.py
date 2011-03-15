@@ -134,6 +134,7 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
         harvester = Harvester(self.MockRepository(name, set), stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger)
         harvester.addObserver(mockRequest or MockOaiRequest('mocktud'))
+        harvester.addObserver(self.logger)
         return harvester
 
     def testSimpleStat(self):
@@ -171,6 +172,7 @@ class HarvesterTest(unittest.TestCase):
         repository.metadataPrefix='lom'
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger)
         harvester.addObserver(MockOaiRequest('mocktud'))
+        harvester.addObserver(self.logger)
         harvester.harvest()
         self.assertEquals(['tud:oai:lorenet:147'],self.sendId)
 
@@ -204,6 +206,7 @@ class HarvesterTest(unittest.TestCase):
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
         h.addObserver(self)
+        h.addObserver(self.createLogger())
         self.listRecordsFrom = None
         self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
         h.harvest()
@@ -221,6 +224,7 @@ class HarvesterTest(unittest.TestCase):
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
         h.addObserver(self)
+        h.addObserver(self.createLogger())
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('1998-12-01', self.listRecordsFrom)
@@ -234,6 +238,7 @@ class HarvesterTest(unittest.TestCase):
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
         h.addObserver(self)
+        h.addObserver(self.createLogger())
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('aap', self.listRecordsFrom)
@@ -246,6 +251,7 @@ class HarvesterTest(unittest.TestCase):
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
         h.addObserver(self)
+        h.addObserver(self.createLogger())
         self.listRecordsToken = None
         h.harvest()
         self.assertEquals('ga+hier+verder', self.listRecordsToken)

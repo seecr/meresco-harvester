@@ -39,7 +39,6 @@ import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
 from slowfoot.wrappers import wrapp
-from oairequest import OaiRequest
 from meresco.core import Observable
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
@@ -79,13 +78,13 @@ class Harvester(Observable):
         uploadedRecords = 0
         deletedRecords = 0
         records = self.listRecords(from_, token, self._repository.set)
-        self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
+        self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
             harvestedRecords += 1
             uploadcount, deletecount = self.uploadRecord(record)
             uploadedRecords += uploadcount
             deletedRecords += deletecount
-            self._logger.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
+            self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
         return uploadedRecords == harvestedRecords, newtoken
 
@@ -94,13 +93,13 @@ class Harvester(Observable):
 
         if record.header.status == "deleted":
             self._uploader.delete(upload)
-            self._logger.logDeletedID(upload.id)
+            self.any.logDeletedID(upload.id)
             uploadresult = (0,1)
         else:
             upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
             if upload:
                 self._uploader.send(upload)
-                self._logger.logID(upload.id)
+                self.any.logID(upload.id)
                 uploadresult = (1,0)
             else:
                 uploadresult = (0,0)
@@ -108,12 +107,12 @@ class Harvester(Observable):
 
     def _harvestLoop(self):
         try:
-            self._logger.startRepository()
+            self.any.startRepository()
             result, newtoken = self.fetchRecords(self._logger.from_, self._logger.token, self._logger.total)
-            self._logger.endRepository(newtoken)
+            self.any.endRepository(newtoken)
             return newtoken
         except:
-            self._logger.endWithException()
+            self.any.endWithException()
             raise
 
     def _harvest(self):
@@ -131,11 +130,11 @@ class Harvester(Observable):
 
     def harvest(self):
         try:
-            if self._logger.hasWork():
+            if self.any.hasWork():
                 resumptionToken = self._harvest()
                 hasResumptionToken = bool(resumptionToken and str(resumptionToken) != 'None')
                 return HARVESTED, hasResumptionToken
             else:
                 return NOTHING_TO_DO, False
         finally:
-            self._logger.close()
+            self.any.close()
