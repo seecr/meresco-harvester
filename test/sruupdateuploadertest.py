@@ -33,8 +33,10 @@
 ## end license ##
 from cq2utils import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
+from lxml.etree import parse
+from StringIO import StringIO
 
-from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException
+from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, ValidationException, INVALID_DATA, INVALID_COMPONENT
 from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
 
 class SruUpdateUploaderTest(CQ2TestCase):
@@ -43,7 +45,7 @@ class SruUpdateUploaderTest(CQ2TestCase):
         self.target = CallTrace('SruUpdateTarget', verbose=True)
         self.uploader = SruUpdateUploader(self.target, CallTrace('eventlogger'))
         self.sentData = []
-        def sendData(data):
+        def sendData(anId, data):
             self.sentData.append(data)
         self.uploader._sendData = sendData
 
@@ -55,7 +57,6 @@ class SruUpdateUploaderTest(CQ2TestCase):
         }
         
     def testOne(self):
-
         self.uploader.send(self.upload)
         self.assertEquals(1, len(self.sentData))
 
@@ -72,31 +73,55 @@ class SruUpdateUploaderTest(CQ2TestCase):
 
     def testException(self):
         possibleSRUError="""<?xml version="1.0" encoding="UTF-8"?>
-<updateRequest xmlns:srw="info:srw/namespace/1/srw-schema" xmlns:ucp="info:srw/namespace/1/update">
+<srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:operationStatus>fail</ucp:operationStatus>
     <srw:diagnostics>
-            <diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+        <diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
             <diag:uri>info:srw/diagnostic/12/1</diag:uri>
             <diag:details>Traceback (most recent call last): File "../meresco/components/sru/srurecordupdate.py", line 47, in handleRequest File "../meresco/framework/transaction.py", line 63, in unknown File "../meresco/framework/observable.py", line 101, in __call__ File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 109, in _callonce File "../meresco/framework/observable.py", line 106, in _callonce KeyError: '__id__' </diag:details>
             <diag:message>Invalid component: record rejected</diag:message>
         </diag:diagnostic>
     </srw:diagnostics>
-</updateRequest>"""
-        def sendData(data):
-            raise Exception(possibleSRUError)
-        self.uploader._sendData = sendData
+</srw:updateResponse>"""
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
+        uploader._sendDataToRemote = lambda data: (HTTP_OK, possibleSRUError)
         try:
-            self.uploader.send(self.upload)
+            uploader.send(self.upload)
             self.fail()
-        except UploaderException, e:
+        except ValidationException, e:
             self.assertEquals(self.upload.id, e.uploadId)
+            self.assertEquals(INVALID_COMPONENT, e.type)
+
+    def testValidationException(self):
+        possibleSRUValidationError="""<?xml version="1.0" encoding="UTF-8"?>
+<srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
+    <srw:version>1.0</srw:version>
+    <ucp:operationStatus>fail</ucp:operationStatus>
+    <srw:diagnostics>
+        <diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+            <diag:uri>info:srw/diagnostic/12/12</diag:uri>
+            <diag:details>Xsd Validation error</diag:details>
+            <diag:message>Invalid data structure: record rejected</diag:message>
+        </diag:diagnostic>
+    </srw:diagnostics>
+</srw:updateResponse>"""
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
+        uploader._sendDataToRemote = lambda data: (HTTP_OK, possibleSRUValidationError)
+        try:
+            uploader.send(self.upload)
+            self.fail("Diagnostic code 12 should raise a validation exception")
+        except ValidationException, e:
+            self.assertEquals(self.upload.id, e.uploadId)
+            self.assertEquals(INVALID_DATA, e.type)
 
     def testRetryOnServiceUnavailable(self):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
 
-        answers = [(HTTP_OK, "ALL IS WELL")]
+        answers = [(HTTP_OK, SUCCES_RESPONSE)]
         datas = []
         def sendDataToRemote(data):
             answer = answers.pop(0)
@@ -104,14 +129,14 @@ class SruUpdateUploaderTest(CQ2TestCase):
             return answer
 
         uploader._sendDataToRemote = sendDataToRemote
-        uploader._sendData("HOW IS EVERYTHING")
+        uploader._sendData(1, "HOW IS EVERYTHING")
 
         self.assertEquals(0, len(answers))
         self.assertEquals(1, len(datas))
 
-        answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, "ALL IS WELL")]
+        answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
-        uploader._sendData("HOW IS EVERYTHING")
+        uploader._sendData(1, "HOW IS EVERYTHING")
         
         self.assertEquals(0, len(answers))
         self.assertEquals(2, len(datas))
@@ -122,7 +147,7 @@ class SruUpdateUploaderTest(CQ2TestCase):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
         
-        answers = [(SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (HTTP_OK, "ALL IS WELL")]
+        answers = [(SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
         def sendDataToRemote(data):
             answer = answers.pop(0)
@@ -132,13 +157,50 @@ class SruUpdateUploaderTest(CQ2TestCase):
         uploader._sendDataToRemote = sendDataToRemote
         exception = None
         try:
-            uploader._sendData("HOW IS EVERYTHING")
+            uploader._sendData(1, "HOW IS EVERYTHING")
             self.fail()
         except Exception, e:
             exception = e
 
         self.assertFalse(exception == None)
-        self.assertEquals("HTTP 503: ", str(e))
+        self.assertEquals('uploadId: "1", message: "HTTP 503: "', str(e))
         self.assertEquals(1, len(answers))
         self.assertEquals(3, len(datas))
         self.assertEquals(3, len(eventLogger.calledMethods))
+
+    def testParseMessageWithDiagnostic(self):
+        SRU_MESSAGE=parse(StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+<srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
+    <srw:version>1.0</srw:version>
+    <ucp:operationStatus>fail</ucp:operationStatus>
+    <srw:diagnostics>
+        <diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+            <diag:uri>info:srw/diagnostic/12/12</diag:uri>
+            <diag:details>Xsd Validation error</diag:details>
+            <diag:message>Invalid component: record rejected</diag:message>
+        </diag:diagnostic>
+    </srw:diagnostics>
+</srw:updateResponse>"""))
+
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
+        version, operationStatus, diagnostics = uploader._parseMessage(SRU_MESSAGE)
+        self.assertEquals("1.0", version)
+        self.assertEquals("fail", operationStatus)
+        self.assertEquals(("info:srw/diagnostic/12/12", "Xsd Validation error", "Invalid component: record rejected"), diagnostics)
+
+    def testParseMessage(self):
+        SRU_MESSAGE=parse(StringIO(SUCCES_RESPONSE))
+
+        eventLogger = CallTrace('eventlogger')
+        uploader = SruUpdateUploader(self.target, eventLogger)
+        version, operationStatus, diagnostics = uploader._parseMessage(SRU_MESSAGE)
+        self.assertEquals("1.0", version)
+        self.assertEquals("success", operationStatus)
+        self.assertEquals(None, diagnostics)
+        
+SUCCES_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
+<srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
+    <srw:version>1.0</srw:version>
+    <ucp:operationStatus>success</ucp:operationStatus>
+</srw:updateResponse>"""

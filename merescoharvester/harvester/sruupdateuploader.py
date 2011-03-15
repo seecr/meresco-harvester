@@ -33,12 +33,13 @@
 ## end license ##
 
 from xml.sax.saxutils import escape as xmlEscape
-from virtualuploader import VirtualUploader, UploaderException
+from virtualuploader import VirtualUploader, UploaderException, ValidationException, INVALID_DATA, INVALID_COMPONENT
 from httplib import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
-
+from lxml.etree import parse
+from StringIO import StringIO
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
-<updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="http://www.loc.gov/ucp">
+<updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:action>info:srw/action/1/%(action)s</ucp:action>
     <ucp:recordIdentifier>%(recordIdentifier)s</ucp:recordIdentifier>
@@ -49,6 +50,14 @@ recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
     </srw:record>
 </updateRequest>"""
 
+namespaces = {
+    'srw': 'http://www.loc.gov/zing/srw/',
+    'diag': 'http://www.loc.gov/zing/srw/diagnostic/',
+    'ucp':  "info:lc/xmlns/update-v1",
+}
+def xpath(node, path):
+    return node.xpath(path, namespaces=namespaces)
+
 class SruUpdateUploader(VirtualUploader):
     def __init__(self, sruUpdateTarget, eventlogger, collection="ignored"):
         VirtualUploader.__init__(self, eventlogger)
@@ -57,37 +66,30 @@ class SruUpdateUploader(VirtualUploader):
     def send(self, anUpload):
         anId = anUpload.id
         self.logLine('UPLOAD.SEND', 'START', id = anId)
-        try:
 
-            recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
-                    ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
+        recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
+                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
 
-            action = "replace"
-            recordIdentifier= xmlEscape(anId)
-            recordPacking = 'xml'
-            recordSchema = xmlEscape(partName)
-            self._sendData(recordUpdate % locals())
-            self.logLine('UPLOAD.SEND', 'END', id = anId)
-        except Exception, e:
-            raise UploaderException(uploadId=anId, message=repr(e))
+        action = "replace"
+        recordIdentifier= xmlEscape(anId)
+        recordPacking = 'xml'
+        recordSchema = xmlEscape(partName)
+        self._sendData(anId, recordUpdate % locals())
+        self.logLine('UPLOAD.SEND', 'END', id = anId)
 
     def delete(self, anUpload):
-        try:
-            self.logDelete(anUpload.id)
-            action = "delete"
-            recordIdentifier = xmlEscape(anUpload.id)
-            recordPacking = 'xml'
-            recordSchema = 'ignored'
-            recordData = '<ignored/>'
-            self._sendData(recordUpdate % locals())
-        except Exception, e:
-            raise UploaderException(uploadId=anUpload.id, message=repr(e))
-
+        self.logDelete(anUpload.id)
+        action = "delete"
+        recordIdentifier = xmlEscape(anUpload.id)
+        recordPacking = 'xml'
+        recordSchema = 'ignored'
+        recordData = '<ignored/>'
+        self._sendData(anUpload.id, recordUpdate % locals())
 
     def info(self):
         return 'Uploader connected to: %s:%s%s'%(self._target.baseurl, self._target.port, self._target.path)
 
-    def _sendData(self, data):
+    def _sendData(self, uploadId, data):
         tries = 0
         while tries < 3:
             status, message = self._sendDataToRemote(data)
@@ -96,8 +98,16 @@ class SruUpdateUploader(VirtualUploader):
             self.logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
                 
-        if status != HTTP_OK or 'srw:diagnostic' in message:
-            raise Exception("HTTP %s: %s" % (str(status), message))
+        if status != HTTP_OK:
+            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (str(status), message))
+
+        version, operationStatus, diagnostics = self._parseMessage(parse(StringIO(message)))
+
+        if operationStatus == 'fail':
+            if diagnostics[0] == 'info:srw/diagnostic/12/1':
+                raise ValidationException(uploadId=uploadId, message=message, type=INVALID_COMPONENT)
+            elif diagnostics[0] == 'info:srw/diagnostic/12/12':
+                raise ValidationException(uploadId=uploadId, message=message, type=INVALID_DATA)
 
     def _sendDataToRemote(self, data):
         connection = HTTPConnection(self._target.baseurl, self._target.port)
@@ -112,3 +122,14 @@ class SruUpdateUploader(VirtualUploader):
         message = result.read()
         return result.status, message
         
+    def _parseMessage(self, message):
+        version = xpath(message, "/srw:updateResponse/srw:version/text()")[0]
+        operationStatus = xpath(message, "/srw:updateResponse/ucp:operationStatus/text()")[0]
+        diagresult = None
+        diagnostics = xpath(message, "/srw:updateResponse/srw:diagnostics/diag:diagnostic")
+        if len(diagnostics) > 0:
+            diagnostic_uri = xpath(diagnostics[0], "diag:uri/text()")[0]
+            diagnostic_details = xpath(diagnostics[0], "diag:details/text()")[0]
+            diagnostic_message = xpath(diagnostics[0], "diag:message/text()")[0]
+            diagresult = (diagnostic_uri, diagnostic_details, diagnostic_message)
+        return version, operationStatus, diagresult

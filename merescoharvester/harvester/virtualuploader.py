@@ -33,10 +33,18 @@
 
 import sys
 
+INVALID_COMPONENT = 1
+INVALID_DATA = 2
+
 class UploaderException(Exception):
     def __init__(self, uploadId, message):
         Exception.__init__(self, 'uploadId: "%s", message: "%s"' % (uploadId, message))
         self.uploadId = uploadId
+
+class ValidationException(UploaderException):
+    def __init__(self, uploadId, message, type):
+        UploaderException.__init__(self, uploadId, message)
+        self.type = type
 
 class VirtualUploader(object):
     def __init__(self, eventlogger):
