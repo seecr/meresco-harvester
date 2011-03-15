@@ -34,7 +34,7 @@ import unittest
 from merescoharvester.harvester.harvester import Harvester
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.state import getHarvestedUploadedRecords
-from merescoharvester.harvester.oairequest import MockOAIRequest, OAIRequest
+from merescoharvester.harvester.oairequest import MockOaiRequest, OaiRequest
 from slowfoot.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
 import shelve
@@ -48,6 +48,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from lxml.etree import parse
 from StringIO import StringIO
+from cq2utils import CallTrace
 
 class DeletedRecordHeader(object):
     def isDeleted(self):
@@ -95,7 +96,7 @@ class HarvesterTest(unittest.TestCase):
         return self.logger
 
     def createServer(self, url='http://repository.tudelft.nl/oai'):
-        return OAIRequest(url)
+        return OaiRequest(url)
 
     def testCreateHarvester(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -131,7 +132,8 @@ class HarvesterTest(unittest.TestCase):
 
     def createHarvesterWithMockUploader(self, name, set=None, mockRequest = None):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
-        harvester = Harvester(self.MockRepository(name, set), stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger, mockRequest = mockRequest or MockOAIRequest('mocktud'))
+        harvester = Harvester(self.MockRepository(name, set), stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger)
+        harvester.addObserver(mockRequest or MockOaiRequest('mocktud'))
         return harvester
 
     def testSimpleStat(self):
@@ -167,7 +169,8 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='tud')
         repository = self.MockRepository('tud', None)
         repository.metadataPrefix='lom'
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger, mockRequest = MockOAIRequest('mocktud'))
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.logger)
+        harvester.addObserver(MockOaiRequest('mocktud'))
         harvester.harvest()
         self.assertEquals(['tud:oai:lorenet:147'],self.sendId)
 
@@ -191,7 +194,7 @@ class HarvesterTest(unittest.TestCase):
             self.assertTrue('exceptions.Exception' in str(sys.exc_type), str(sys.exc_type))
 
     def testIncrementalHarvest(self):
-        self.mockRepository = MockOAIRequest('mocktud')
+        self.mockRepository = MockOaiRequest('mocktud')
         f = open(self.stateDir + '/tud.stats', 'w')
         f.write(' Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 56/23/113, Done: 2004-12-31 16:39:15\n')
         f.close();
@@ -199,7 +202,8 @@ class HarvesterTest(unittest.TestCase):
         for i in range(113): f.write('oai:tudfakeid:%05i\n'%i)
         f.close()
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger(), mockRequest = self)
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
+        h.addObserver(self)
         self.listRecordsFrom = None
         self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
         h.harvest()
@@ -209,42 +213,45 @@ class HarvesterTest(unittest.TestCase):
         self.assertEquals(('3', '3', '0', '116'), getHarvestedUploadedRecords(lines[1]))
 
     def testNotIncrementalInCaseOfError(self):
-        self.mockRepository = MockOAIRequest('mocktud')
+        self.mockRepository = MockOaiRequest('mocktud')
         f = open(self.stateDir + '/tud.stats', 'w')
         f.write('Started: 1998-12-01 16:37:41, Harvested/Uploaded/Total: 113/113/113, Done: 2004-12-31 16:39:15\n')
         f.write('Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 113/113/113, Error: XXX\n')
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger(), mockRequest = self)
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
+        h.addObserver(self)
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('1998-12-01', self.listRecordsFrom)
 
     def testOnlyErrorInLogFile(self):
-        self.mockRepository = MockOAIRequest('mocktud')
+        self.mockRepository = MockOaiRequest('mocktud')
         f = open(self.stateDir + '/tud.stats', 'w')
         f.write('Started: 1998-12-01 16:37:41, Harvested/Uploaded/Total: 113/113/113, Error:\n')
         f.write('Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 113/113/113, Error: XXX\n')
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger(), mockRequest = self)
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
+        h.addObserver(self)
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('aap', self.listRecordsFrom)
 
     def testResumptionToken(self):
-        self.mockRepository = MockOAIRequest('mocktud')
+        self.mockRepository = MockOaiRequest('mocktud')
         f = open(self.stateDir + '/tud.stats', 'w')
         f.write('Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 113/113/113, Done: 2004-12-31 16:39:15, ResumptionToken: ga+hier+verder\n')
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger(), mockRequest = self)
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, mockLogger=self.createLogger())
+        h.addObserver(self)
         self.listRecordsToken = None
         h.harvest()
         self.assertEquals('ga+hier+verder', self.listRecordsToken)
 
     def testHarvestSet(self):
-        self.mockRepository = MockOAIRequest('mocktud')
+        self.mockRepository = MockOaiRequest('mocktud')
         harvester = self.createHarvesterWithMockUploader('um', set='withfulltext:yes', mockRequest = self)
         harvester.harvest()
         self.assertEquals('withfulltext:yes', self.listRecordsSet)
@@ -252,7 +259,7 @@ class HarvesterTest(unittest.TestCase):
     def mockHarvest(self, repository, logger, uploader):
         if not hasattr(self, 'mockHarvestArgs'):
             self.mockHarvestArgs=[]
-        self.mockHarvestArgs.append({'name':repository.key,'url':repository.url,'set':repository.set,'institutionkey':repository.institutionkey})
+        self.mockHarvestArgs.append({'name':repository.id,'baseurl':repository.baseurl,'set':repository.set,'repositoryGroupId':repository.repositoryGroupId})
 
     def testNoDateHarvester(self):
         "runs a test with xml containing no dates"
@@ -346,14 +353,14 @@ class HarvesterTest(unittest.TestCase):
     def listRecordsButWaitLong(self, a, b, c, d):
         sleep(20)
 
-    def MockRepository (self, key, set):
-        return _MockRepository(key, 'http://mock.server', set, 'inst'+key,self)
+    def MockRepository (self, id, set):
+        return _MockRepository(id, 'http://mock.server', set, 'inst'+id,self)
 
     def MockRepository2 (self, nr):
         return _MockRepository('reponame'+nr, 'url'+nr, 'set'+nr, 'instname'+nr,self)
 
-    def MockRepository3(self, key,url,set,institutionkey):
-        return _MockRepository(key,url,set,institutionkey,self)
+    def MockRepository3(self, id, baseurl, set, repositoryGroupId):
+        return _MockRepository(id, baseurl, set, repositoryGroupId, self)
 
     def mockssetarget(self):
         return self

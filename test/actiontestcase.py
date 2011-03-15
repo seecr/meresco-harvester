@@ -39,6 +39,7 @@ class ActionTestCase(CQ2TestCase):
         CQ2TestCase.setUp(self)
         self.repository = CallTrace("Repository")
         self.repository.id = 'repository'
+        self.repository.baseurl = 'base:url'
         self.repository.returnValues['shopClosed'] = False
     
     def testTheWriteLogLineTestMethod(self):

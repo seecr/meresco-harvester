@@ -41,6 +41,7 @@ from merescoharvester.harvester.deleteids import readIds
 from merescoharvester.harvester import action
 from sets import Set
 from merescoharvester.harvester.eventlogger import NilEventLogger
+from cq2utils import CallTrace
 
 class SmoothActionTest(ActionTestCase):
     def setUp(self):
@@ -156,19 +157,13 @@ class SmoothActionTest(ActionTestCase):
 
 
     def testHarvest(self):
-        class MockHarvester(object):
-            usedrep, usedStateDir, usedLogDir = None, 'some path', 'some path'
-            def __init__(self, rep, stateDir, logDir, generalHarvestLog):
-                MockHarvester.usedrep = rep
-                MockHarvester.usedStateDir = stateDir
-                MockHarvester.usedLogDir = logDir
-            def harvest(self):
-                return 'mockharvest', False
-        action.Harvester = MockHarvester
-        self.assertEquals(('mockharvest', False), self.smoothaction._harvest())
-        self.assertEquals(self.repo, MockHarvester.usedrep)
-        self.assertEquals(self.stateDir, MockHarvester.usedStateDir)
-        self.assertEquals(self.logDir, MockHarvester.usedLogDir)
+        harvester = CallTrace('harvester')
+        self.smoothaction._createHarvester = lambda: harvester
+        harvester.returnValues['harvest'] = ('result', True)
+
+        result = self.smoothaction._harvest()
+        self.assertEquals(['harvest'], [m.name for m in harvester.calledMethods]) 
+        self.assertEquals(('result', True), result)
 
     def testResetState_WithoutPreviousCleanState(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')

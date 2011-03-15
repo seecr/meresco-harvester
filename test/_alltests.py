@@ -56,7 +56,7 @@ from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest
 from mappingtest import MappingTest
-from oairequesttest import OAIRequestTest
+from oairequesttest import OaiRequestTest
 from onlineharvesttest import OnlineHarvestTest
 from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest

@@ -34,6 +34,7 @@ from actiontestcase import ActionTestCase
 from cq2utils import CallTrace
 from merescoharvester.harvester.action import HarvestAction
 from merescoharvester.harvester.eventlogger import NilEventLogger
+from merescoharvester.harvester.oairequest import OaiRequest
 from os.path import join
 
 class HarvestActionTest(ActionTestCase):
@@ -94,6 +95,14 @@ class HarvestActionTest(ActionTestCase):
 
         h = self.newHarvesterLog()
         self.assertEquals((None, None), (h.from_, h.token))
+
+    def testOriginalCreateHarvester(self):
+        HarvestAction._createHarvester = self._original_createHarvester
+        action = self.newHarvestAction()
+        harvester = action._createHarvester()
+        self.assertEquals(1, len(harvester._observers))
+        self.assertEquals(OaiRequest, type(harvester._observers[0]))
+        self.assertEquals(self.repository.baseurl, harvester._observers[0]._url)
 
     def newHarvestAction(self):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

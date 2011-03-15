@@ -39,39 +39,40 @@ import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
 from slowfoot.wrappers import wrapp
-from oairequest import OAIRequest
+from oairequest import OaiRequest
+from meresco.core import Observable
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
-class Harvester(object):
-    def __init__(self, repository, stateDir, logDir, mockRequest = None, mockLogger = None, generalHarvestLog=NilEventLogger()):
+class Harvester(Observable):
+    def __init__(self, repository, stateDir, logDir, mockLogger = None, generalHarvestLog=NilEventLogger()):
+        Observable.__init__(self)
         self._repository = repository
         self._logger = mockLogger or HarvesterLog(stateDir, logDir, repository.id)
         self._eventlogger = CompositeLogger([
             (['*'], self._logger.eventLogger()),
             (['ERROR', 'INFO', 'WARN'], generalHarvestLog)
         ])
-        self._oairequest = mockRequest or OAIRequest(self._repository.url)
         self._uploader = repository.createUploader(self._eventlogger)
         self._mapper = repository.mapping()
         self._MAXTIME= 30*60 # 30 minutes
 
     def getRecord(self, id):
-        return self._oairequest.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
+        return self.any.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
 
     def uploaderInfo(self):
         return self._uploader.info()
 
     def listRecords(self, from_, token, set):
         if token:
-            return self._oairequest.listRecords(resumptionToken=token)
+            return self.any.listRecords(resumptionToken=token)
         elif from_:
             if set:
-                return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
-            return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+                return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
         elif set:
-            return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
-        return self._oairequest.listRecords(metadataPrefix=self._repository.metadataPrefix)
+            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+        return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
     def fetchRecords(self, from_, token, total):
         harvestedRecords = 0

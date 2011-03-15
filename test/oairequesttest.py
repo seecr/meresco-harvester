@@ -33,18 +33,18 @@
 import unittest
 from slowfoot import binderytools
 from urllib import urlencode
-from merescoharvester.harvester.oairequest import OAIRequest, MockOAIRequest, OAIError
+from merescoharvester.harvester.oairequest import OaiRequest, MockOaiRequest, OAIError
 
-class OAIRequestTest(unittest.TestCase):
+class OaiRequestTest(unittest.TestCase):
     def setUp(self):
-        self.request = MockOAIRequest('mocktud')
+        self.request = MockOaiRequest('mocktud')
         
         
-    def testMockOAIRequest(self):
+    def testMockOaiRequest(self):
         binding = self.request.request({'verb':'ListRecords','metadataPrefix':'oai_dc'})
         self.assertEquals('2004-12-29T13:19:27Z',str(binding.OAI_PMH.responseDate))
         
-    def testOtherOAIRequest(self):
+    def testOtherOaiRequest(self):
         binding = self.request.request({'verb':'GetRecord','metadataPrefix':'oai_dc', 'identifier':'oai:rep:12345'})
         self.assertEquals('2005-04-28T12:16:27Z',str(binding.OAI_PMH.responseDate))
         
@@ -97,7 +97,7 @@ class OAIRequestTest(unittest.TestCase):
         
         
     def xtest_LIVE_Retrieve(self):
-        request = OAIRequest('http://library.wur.nl/oai')
+        request = OaiRequest('http://library.wur.nl/oai')
         amarabinding = request.request({'verb':'ListRecords','metadataPrefix':'oai_dc'})
         amarabinding.OAI_PMH
                     

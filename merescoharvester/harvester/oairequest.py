@@ -35,14 +35,14 @@ from urllib import urlencode, urlopen
 import os
 from slowfoot.wrappers import wrapp
 
-class OAIRequestException(Exception):
+class OaiRequestException(Exception):
     def __init__(self, url, message):
         Exception.__init__(self, 'occurred with repository at "%s", message: "%s"' % (url, message))
         self.url = url
 
-class OAIError(OAIRequestException):
+class OAIError(OaiRequestException):
     def __init__(self, url, message, response):
-        OAIRequestException.__init__(self, url, message)
+        OaiRequestException.__init__(self, url, message)
         self.response = response
 
     def _error(self):
@@ -52,7 +52,7 @@ class OAIError(OAIRequestException):
     def errorCode(self):
         return getattr(self._error(), 'code', '')
     
-class OAIRequest(object):
+class OaiRequest(object):
     def __init__(self, url):
         self._url = url
 
@@ -84,7 +84,7 @@ class OAIRequest(object):
             result = self._request(argslist)
             result.OAI_PMH #Make sure the xml is a OAI_PMH request
         except Exception, e:
-            raise OAIRequestException(self._url + '?' + urlencode(argslist), message=repr(e))
+            raise OaiRequestException(self._url + '?' + urlencode(argslist), message=repr(e))
         if hasattr(result.OAI_PMH, 'error'):
             raise OAIError(self._url + '?' + urlencode(argslist), str(result.OAI_PMH.error), result)
         return result
@@ -93,9 +93,9 @@ class OAIRequest(object):
         requesturl = self._url + '?' + urlencode(argslist)
         return binderytools.bind_uri(requesturl)
     
-class LoggingOAIRequest(OAIRequest):
+class LoggingOaiRequest(OaiRequest):
     def __init__(self, url, tempdir):
-        OAIRequest.__init__(self, url)
+        OaiRequest.__init__(self, url)
         self.tempdir = tempdir
         self.numberfilename = os.path.join(self.tempdir, 'number')
         
@@ -122,9 +122,9 @@ class LoggingOAIRequest(OAIRequest):
             writefile.close()
         return binderytools.bind_file(filename)
     
-class MockOAIRequest(OAIRequest):
+class MockOaiRequest(OaiRequest):
     def __init__(self, url):
-        OAIRequest.__init__(self,url)
+        OaiRequest.__init__(self,url)
         self._createMapping()
         
     def _request(self, argslist):
@@ -147,7 +147,7 @@ class MockOAIRequest(OAIRequest):
         
 def loggingListRecords(url, tempdir, **args):
     """loggingListRecords(url, tempdir, **listRecordsArgs"""
-    loair = LoggingOAIRequest(url, tempdir)
+    loair = LoggingOaiRequest(url, tempdir)
     listRecords = loair.listRecords(**args)
     resumptionToken = str(listRecords.parentNode.resumptionToken)
     print resumptionToken

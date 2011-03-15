@@ -33,10 +33,12 @@
 
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from merescoharvester.harvester.oairequest import OaiRequest
 from state import State
 from deleteids import DeleteIds, readIds, writeIds
 from os.path import isfile, join
 from os import remove, rename
+from meresco.core import be
 
 DONE = 'Done.'
 
@@ -55,7 +57,12 @@ class Action(object):
     def info(self):
         return  str(self.__class__.__name__)
     def _createHarvester(self):
-        return Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
+        helix = \
+        (Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog),
+            (OaiRequest(self._repository.baseurl),)
+        )
+        return be(helix)
+
 
 class NoneAction(Action):
     def do(self):
