@@ -62,7 +62,6 @@ class Action(object):
         (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
             (OaiRequest(self._repository.baseurl),),
             (harvesterLog,)
-            (self._repository.uploader(),)
         )
         return be(helix)
 

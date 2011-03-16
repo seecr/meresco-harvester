@@ -122,29 +122,6 @@ class LoggingOaiRequest(OaiRequest):
             writefile.close()
         return binderytools.bind_file(filename)
     
-class MockOaiRequest(OaiRequest):
-    def __init__(self, url):
-        OaiRequest.__init__(self,url)
-        self._createMapping()
-        
-    def _request(self, argslist):
-        filename = self.findFile(argslist)
-        return binderytools.bind_file(filename)
-
-    def findFile(self, argslist):
-        argslist.sort()
-        return self._mapping[urlencode(argslist)]
-        
-    def _createMapping(self):
-        f = open(os.path.join(self._url, 'mapping.txt'), 'r')
-        self._mapping = {}
-        while 1:
-            request = f.readline().strip()
-            responsefile = f.readline().strip()
-            if not request or not responsefile:
-                break
-            self._mapping[request] = os.path.join(self._url, responsefile)
-        
 def loggingListRecords(url, tempdir, **args):
     """loggingListRecords(url, tempdir, **listRecordsArgs"""
     loair = LoggingOaiRequest(url, tempdir)

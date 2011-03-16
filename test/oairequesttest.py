@@ -33,7 +33,8 @@
 import unittest
 from slowfoot import binderytools
 from urllib import urlencode
-from merescoharvester.harvester.oairequest import OaiRequest, MockOaiRequest, OAIError
+from merescoharvester.harvester.oairequest import OaiRequest, OAIError
+from mockoairequest import MockOaiRequest
 
 class OaiRequestTest(unittest.TestCase):
     def setUp(self):
@@ -101,3 +102,4 @@ class OaiRequestTest(unittest.TestCase):
         amarabinding = request.request({'verb':'ListRecords','metadataPrefix':'oai_dc'})
         amarabinding.OAI_PMH
                     
+

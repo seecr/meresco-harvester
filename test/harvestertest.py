@@ -34,7 +34,8 @@ import unittest
 from merescoharvester.harvester.harvester import Harvester
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.state import getHarvestedUploadedRecords
-from merescoharvester.harvester.oairequest import MockOaiRequest, OaiRequest
+from merescoharvester.harvester.oairequest import OaiRequest
+from mockoairequest import MockOaiRequest
 from slowfoot.wrappers import wrapp, binderytools
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
 import shelve
@@ -336,6 +337,14 @@ class HarvesterTest(unittest.TestCase):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester._MAXTIME=5
         harvester.listRecords = self.listRecordsButWaitLong
+        harvester.harvest()
+
+    def testHarvesterIgnoringInvalidDataErrors(self):
+        repository=CallTrace("repository")
+        logger=CallTrace("logger")
+        observer=CallTrace("observer")
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=logger.eventLogger())
+        harvester.addObserver(observer)
         harvester.harvest()
 
     #self shunt:
