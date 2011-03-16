@@ -30,33 +30,38 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-import unittest
-from merescoharvester.harvester.harvester import Harvester
-from merescoharvester.harvester.harvesterlog import HarvesterLog
-from merescoharvester.harvester.state import getHarvestedUploadedRecords
-from merescoharvester.harvester.oairequest import OaiRequest
-from mockoairequest import MockOaiRequest
-from slowfoot.wrappers import wrapp, binderytools
-from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
+
 import shelve
 import os
 import sys
 import re
-from merescoharvester.harvester import harvester 
-from merescoharvester import namespaces
+import unittest
 from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
-from lxml.etree import parse
 from StringIO import StringIO
+from lxml.etree import parse
+
 from cq2utils import CallTrace
+from slowfoot.wrappers import wrapp, binderytools
+
+from merescoharvester.harvester.harvester import Harvester
+from merescoharvester.harvester.harvesterlog import HarvesterLog
+from merescoharvester.harvester.state import getHarvestedUploadedRecords
+from merescoharvester.harvester.oairequest import OaiRequest
+from merescoharvester.harvester.virtualuploader import InvalidDataException
+from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
+from merescoharvester.harvester import harvester 
+from merescoharvester import namespaces
+
+from mockoairequest import MockOaiRequest
+
 
 class DeletedRecordHeader(object):
     def isDeleted(self):
         return True
     def identifier(self):
         return 'mockid'
-
 
 class _MockRepository:
     def __init__(self,id,baseurl,set,repositoryGroupId, outer):
@@ -300,7 +305,7 @@ class HarvesterTest(unittest.TestCase):
         result = harvester.uploadRecord(record)
         self.assertEquals(['tud:mockid'], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
-        self.assertEquals((1,0), result)
+        self.assertEquals("added", result)
 
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -310,7 +315,7 @@ class HarvesterTest(unittest.TestCase):
         result = harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
-        self.assertEquals((0,0), result)
+        self.assertEquals(None, result)
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -318,7 +323,7 @@ class HarvesterTest(unittest.TestCase):
         result = harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertEquals('tud:mockid', self.delete_id)
-        self.assertEquals((0,1), result)
+        self.assertEquals("deleted", result)
 
     def testDcIdentifierTake2(self):
         self.sendFulltexturl=None
@@ -340,12 +345,18 @@ class HarvesterTest(unittest.TestCase):
         harvester.harvest()
 
     def testHarvesterIgnoringInvalidDataErrors(self):
-        repository=CallTrace("repository")
-        logger=CallTrace("logger")
+        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        upload = Upload(record=record)
+        upload.id = 'mockid'
+        uploader=CallTrace("uploader")
+        uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
+        mapper=CallTrace("mapper", returnValues={'createUpload': upload})
+        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper})
         observer=CallTrace("observer")
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=logger.eventLogger())
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)
-        harvester.harvest()
+        harvester.uploadRecord(record)
+        self.assertEquals(["logIgnoredID"], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):

@@ -31,7 +31,6 @@
 #
 ## end license ##
 
-
 import os, sys, shelve, time, traceback,re
 from harvesterlog import HarvesterLog
 from eventlogger import CompositeLogger, NilEventLogger
@@ -40,6 +39,9 @@ from urllib2 import urlopen
 from urllib import urlencode
 from slowfoot.wrappers import wrapp
 from meresco.core import Observable
+from virtualuploader import InvalidDataException
+
+
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
@@ -80,35 +82,33 @@ class Harvester(Observable):
         self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
             harvestedRecords += 1
-            uploadcount, deletecount = self.uploadRecord(record)
-            uploadedRecords += uploadcount
-            deletedRecords += deletecount
+            uploadResult = self.uploadRecord(record)
+            uploadedRecords += int(uploadResult == 'added')
+            deletedRecords += int(uploadResult == 'deleted')
             self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
-        return uploadedRecords == harvestedRecords, newtoken
+        return newtoken
 
     def uploadRecord(self, record):
-        upload = self._mapper.createEmptyUpload(self._repository, record)
-
         if record.header.status == "deleted":
+            upload = self._mapper.createEmptyUpload(self._repository, record)
             self._uploader.delete(upload)
             self.any.logDeletedID(upload.id)
-            uploadresult = (0,1)
-        else:
-            upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
-            if upload:
+            return "deleted"
+        upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
+        if upload:
+            try:
                 self._uploader.send(upload)
                 self.any.logID(upload.id)
-                uploadresult = (1,0)
-            else:
-                uploadresult = (0,0)
-        return uploadresult
+                return "added"
+            except InvalidDataException, e:
+                self.any.logIgnoredID(upload.id)
 
     def _harvestLoop(self):
         try:
             self.any.startRepository()
             state=self.any.state()
-            result, newtoken = self.fetchRecords(state.startdate, state.token, state.total)
+            newtoken = self.fetchRecords(state.startdate, state.token, state.total)
             self.any.endRepository(newtoken)
             return newtoken
         except:

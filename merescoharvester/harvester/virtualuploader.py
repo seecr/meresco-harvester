@@ -41,10 +41,11 @@ class UploaderException(Exception):
         Exception.__init__(self, 'uploadId: "%s", message: "%s"' % (uploadId, message))
         self.uploadId = uploadId
 
-class ValidationException(UploaderException):
-    def __init__(self, uploadId, message, type):
-        UploaderException.__init__(self, uploadId, message)
-        self.type = type
+class InvalidComponentException(UploaderException):
+    pass
+
+class InvalidDataException(UploaderException):
+    pass
 
 class VirtualUploader(object):
     def __init__(self, eventlogger):
@@ -83,7 +84,6 @@ class VirtualUploader(object):
         self._logger.warning(*args, **kwargs)
 
 class UploaderFactory(object):
-
     def __init__(self):
         from sruupdateuploader import SruUpdateUploader
         from compositeuploader import CompositeUploader

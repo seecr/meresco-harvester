@@ -59,10 +59,10 @@ class Action(object):
     def _createHarvester(self):
         harvesterLog=HarvesterLog(self._stateDir, self._logDir, self._repository.id)
         helix = \
-        (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
-            (OaiRequest(self._repository.baseurl),),
-            (harvesterLog,)
-        )
+            (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
+                (OaiRequest(self._repository.baseurl),),
+                (harvesterLog,)
+            )
         return be(helix)
 
 

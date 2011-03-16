@@ -161,17 +161,19 @@ class Mapping(SaharaObject):
         assertionMethod = doAsserts and doAssert or doNotAssert
 
         try:
-            exec(self.code, {'input':Input(repository=repository, record=record),
-            'upload':upload,
-            'isUrl':isUrl,
-            'join':join,
-            'urljoin':urljoin,
-            'urlencode':urlencode,
-            'doAssert':assertionMethod,
-            'logger': logger,
-            'skipRecord': self.skipSimple,
-            'xmlEscape': xmlEscape,
-            '__builtins__':builtinscopy})
+            exec(self.code, {
+                'input': Input(repository=repository, record=record),
+                'upload': upload,
+                'isUrl': isUrl,
+                'join': join,
+                'urljoin': urljoin,
+                'urlencode': urlencode,
+                'doAssert': assertionMethod,
+                'logger': logger,
+                'skipRecord': self.skipSimple,
+                'xmlEscape': xmlEscape,
+                '__builtins__': builtinscopy
+            })
             upload.ensureStrings()
         except DataMapAssertionException, ex:
             logger.error(comments='Assertion: ' + str(ex), id=upload.id)

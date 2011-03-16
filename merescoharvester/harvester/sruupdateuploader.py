@@ -33,7 +33,7 @@
 ## end license ##
 
 from xml.sax.saxutils import escape as xmlEscape
-from virtualuploader import VirtualUploader, UploaderException, ValidationException, INVALID_DATA, INVALID_COMPONENT
+from virtualuploader import VirtualUploader, UploaderException, InvalidDataException, InvalidComponentException
 from httplib import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
 from lxml.etree import parse
 from StringIO import StringIO
@@ -105,9 +105,9 @@ class SruUpdateUploader(VirtualUploader):
 
         if operationStatus == 'fail':
             if diagnostics[0] == 'info:srw/diagnostic/12/1':
-                raise ValidationException(uploadId=uploadId, message=message, type=INVALID_COMPONENT)
+                raise InvalidComponentException(uploadId=uploadId, message=message)
             elif diagnostics[0] == 'info:srw/diagnostic/12/12':
-                raise ValidationException(uploadId=uploadId, message=message, type=INVALID_DATA)
+                raise InvalidDataException(uploadId=uploadId, message=message)
 
     def _sendDataToRemote(self, data):
         connection = HTTPConnection(self._target.baseurl, self._target.port)

@@ -31,12 +31,13 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
+
 from cq2utils import CQ2TestCase, CallTrace
 from amara.binderytools import bind_string
 from lxml.etree import parse
 from StringIO import StringIO
 
-from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, ValidationException, INVALID_DATA, INVALID_COMPONENT
+from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
 from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
 
 class SruUpdateUploaderTest(CQ2TestCase):
@@ -90,11 +91,10 @@ class SruUpdateUploaderTest(CQ2TestCase):
         try:
             uploader.send(self.upload)
             self.fail()
-        except ValidationException, e:
+        except InvalidComponentException, e:
             self.assertEquals(self.upload.id, e.uploadId)
-            self.assertEquals(INVALID_COMPONENT, e.type)
 
-    def testValidationException(self):
+    def testInvalidDataException(self):
         possibleSRUValidationError="""<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
@@ -113,9 +113,8 @@ class SruUpdateUploaderTest(CQ2TestCase):
         try:
             uploader.send(self.upload)
             self.fail("Diagnostic code 12 should raise a validation exception")
-        except ValidationException, e:
+        except InvalidDataException, e:
             self.assertEquals(self.upload.id, e.uploadId)
-            self.assertEquals(INVALID_DATA, e.type)
 
     def testRetryOnServiceUnavailable(self):
         eventLogger = CallTrace('eventlogger')
