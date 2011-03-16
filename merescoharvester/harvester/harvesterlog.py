@@ -105,3 +105,6 @@ class HarvesterLog(object):
 
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token
+    
+    def state(self):
+        return self._state

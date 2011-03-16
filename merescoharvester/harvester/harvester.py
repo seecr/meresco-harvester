@@ -44,12 +44,11 @@ NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
 class Harvester(Observable):
-    def __init__(self, repository, stateDir, logDir, mockLogger = None, generalHarvestLog=NilEventLogger()):
+    def __init__(self, repository, stateDir, logDir, eventLogger, generalHarvestLog=NilEventLogger()):
         Observable.__init__(self)
         self._repository = repository
-        self._logger = mockLogger or HarvesterLog(stateDir, logDir, repository.id)
         self._eventlogger = CompositeLogger([
-            (['*'], self._logger.eventLogger()),
+            (['*'], eventLogger),
             (['ERROR', 'INFO', 'WARN'], generalHarvestLog)
         ])
         self._uploader = repository.createUploader(self._eventlogger)
@@ -108,7 +107,8 @@ class Harvester(Observable):
     def _harvestLoop(self):
         try:
             self.any.startRepository()
-            result, newtoken = self.fetchRecords(self._logger.from_, self._logger.token, self._logger.total)
+            state=self.any.state()
+            result, newtoken = self.fetchRecords(state.startdate, state.token, state.total)
             self.any.endRepository(newtoken)
             return newtoken
         except:

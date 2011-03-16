@@ -57,10 +57,12 @@ class Action(object):
     def info(self):
         return  str(self.__class__.__name__)
     def _createHarvester(self):
+        harvesterLog=HarvesterLog(self._stateDir, self._logDir, self._repository.id)
         helix = \
-        (Harvester(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog),
+        (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
             (OaiRequest(self._repository.baseurl),),
-            (HarvesterLog(self._stateDir, self._logDir, self._repository.id),)
+            (harvesterLog,)
+            (self._repository.uploader(),)
         )
         return be(helix)
 
