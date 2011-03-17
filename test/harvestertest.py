@@ -350,9 +350,14 @@ class HarvesterTest(unittest.TestCase):
         uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
         mapper=CallTrace("mapper", returnValues={'createUpload': upload})
         repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper})
-        observer=CallTrace("observer")
+        repository.maxIgnore = None
+        observer=CallTrace("observer", returnValues={'totalIgnoredIds': 42})
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)
+        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
+        self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
+        observer.calledMethods = []
+        repository.maxIgnore = 43
         harvester.uploadRecord(record)
         self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds", "logIgnoredID"], [m.name for m in observer.calledMethods])
 

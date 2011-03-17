@@ -89,6 +89,7 @@ for name,id in targets:
       </tr>
 
       <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=repo.collection%>"></td></tr>
+      <tr><td>Max. validation errors:</td><td><input size="50" type="text" name="maxIgnore" value="<%=repo.maxIgnore%>"></td></tr>
 
 
 		<tr>

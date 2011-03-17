@@ -48,8 +48,11 @@ class RepositoryException(Exception):
 
 class Repository(SaharaObject):
     def __init__(self, domainId, repositoryId):
-        SaharaObject.__init__(self, ['repositoryGroupId', 'baseurl', 'set',
-            'collection', 'metadataPrefix', 'use',  'targetId', 'mappingId', 'action', 'complete'], ['shopclosed'])
+        SaharaObject.__init__(self, [
+            'repositoryGroupId', 'baseurl', 'set',
+            'collection', 'metadataPrefix', 'use',  
+            'targetId', 'mappingId', 'action', 
+            'complete', 'maxIgnore'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
         self.mockUploader = None

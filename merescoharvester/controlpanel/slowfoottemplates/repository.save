@@ -19,8 +19,11 @@ groupId = args.referrerGroup
   <metadataPrefix><% escape_xml(repository.metadataPrefix) %></metadataPrefix>
   <mappingId><% escape_xml(repository.mappingId) %></mappingId>
 <%
+if repository.maxIgnore:
+%>
+  <maxIgnore><% escape_xml(repository.maxIgnore) %></maxIgnore>
+<%
 for i in range(1,1+int(repository.numberOfTimeslots)):
-	#
 	if repository.get('deleteTimeslot_' + str(i)+".x", None) == None:
 		#
 %>   <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_'+str(i)),
