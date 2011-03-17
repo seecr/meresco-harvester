@@ -88,7 +88,7 @@ class OnlineHarvestTest(unittest.TestCase):
             harvest.performMapping(mapping, data)
             self.fail()
         except Exception, ex:
-            self.assertEquals('Mushroom, mushroom',str(ex))
+            self.assertEquals('Mushroom, mushroom', str(ex))
         self.assertEquals('',output.getvalue())
 
 
@@ -103,6 +103,3 @@ class OnlineHarvestTest(unittest.TestCase):
         upload = Upload()
         return upload
 
-    def createEmptyUpload(self, repository, record):
-        upload = Upload(repository, record)
-        return upload

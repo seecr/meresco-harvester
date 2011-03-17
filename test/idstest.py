@@ -42,27 +42,27 @@ class IdsTest(CQ2TestCase):
     def testAddOne(self):
         self.ids = Ids(self.tempdir + '/doesnotexistyet/', 'idstest')
         self.ids.add('id:1')
-        self.assertEquals(1, self.ids.total())
+        self.assertEquals(1, len(self.ids))
         
     def testAddTwice(self):
         self.ids = Ids(self.tempdir, 'idstest')
         self.ids.add('id:1')
         self.ids.add('id:1')
-        self.assertEquals(1, self.ids.total())
+        self.assertEquals(1, len(self.ids))
         
     def testInit(self):
         self.writeTestIds('one',['id:1'])
         self.ids = Ids(self.tempdir, 'one')
-        self.assertEquals(1, self.ids.total())
+        self.assertEquals(1, len(self.ids))
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
-        self.assertEquals(3, self.ids.total())
+        self.assertEquals(3, len(self.ids))
         
     def testRemoveExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:1')
-        self.assertEquals(2, self.ids.total())
+        self.assertEquals(2, len(self.ids))
         self.ids.close()
         self.assertEquals(2, len(open(self.tempdir + '/three.ids').readlines()))
         
@@ -70,7 +70,7 @@ class IdsTest(CQ2TestCase):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:4')
-        self.assertEquals(3, self.ids.total())
+        self.assertEquals(3, len(self.ids))
         self.ids.close()
         self.assertEquals(3, len(open(self.tempdir + '/three.ids').readlines()))
         

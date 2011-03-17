@@ -129,13 +129,14 @@ class UploadDict(dict):
 
 class Upload(object):
     def __init__(self, repository=None, record=None):
+        self.id = ''
+        if repository != None and record != None:
+            self.id = repository.id + ':' + record.header.identifier
         self.fulltexturl = None
         self.parts = UploadDict()
         self.record = record
         self.repository = repository
-        self.id = ''
-        if repository != None and record != None:
-            self.id = repository.id + ':' + record.header.identifier
+        self.skip = False
 
     def ensureStrings(self):
         if self.id:
@@ -149,14 +150,14 @@ class Mapping(SaharaObject):
     def setCode(self, aString):
         self.code = aString
 
-    def createEmptyUpload(self, repository, record):
-        return Upload(repository=repository, record=record)
-
     def createUpload(self, repository, record, logger=nillogger, doAsserts=False):
+        upload = Upload(repository=repository, record=record)
+        if record.header.status == 'deleted':
+            return upload
+
         logger = logger
         builtinscopy = __builtins__.copy()
-        builtinscopy['__import__']=noimport
-        upload = Upload(repository=repository, record=record)
+        builtinscopy['__import__'] = noimport
 
         assertionMethod = doAsserts and doAssert or doNotAssert
 
@@ -180,7 +181,7 @@ class Mapping(SaharaObject):
             raise ex
         except DataMapSkip, e:
             logger.logLine('SKIP', id=upload.id, comments=str(e))
-            return None
+            upload.skip = True
         return upload
 
     def skipSimple(self, comment):

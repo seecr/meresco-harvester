@@ -48,11 +48,10 @@ class OnlineHarvest(object):
         records = xml.OAI_PMH.ListRecords.record
         for record in records:
             try:
-                upload = mapping.createEmptyUpload(TestRepository, record)
+                upload = mapping.createUpload(TestRepository, record, self.eventlogger, doAssertions)
                 if record.header.status == "deleted":
                     self.writeDelete(upload)
                 else:
-                    upload = mapping.createUpload(TestRepository, record, self.eventlogger, doAssertions)
                     if upload != None:
                         self.writeUpload(upload)
             except DataMapAssertionException, ex:

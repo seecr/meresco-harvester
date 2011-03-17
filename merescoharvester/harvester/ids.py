@@ -47,7 +47,7 @@ class Ids(object):
         self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))
         self._idsfile = open(self._filename, 'a')
         
-    def total(self):
+    def __len__(self):
         return len(self._ids)
     
     def clear(self):

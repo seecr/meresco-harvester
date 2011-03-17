@@ -73,10 +73,10 @@ class HarvesterLog(object):
         self._deletedCount = 0
 
     def totalIds(self):
-        return self._ids.total()
+        return len(self._ids)
 
     def totalIgnoredIds(self):
-        return self._ignoredIds.total()
+        return len(self._ignoredIds)
 
     def eventLogger(self):
         return self._eventlogger
@@ -107,7 +107,8 @@ class HarvesterLog(object):
         self._ids.close()
         self._state.close()
 
-    def notifyHarvestedRecord(self):
+    def notifyHarvestedRecord(self, uploadid):
+        self._ignoredIds.remove(uploadid)
         self._harvestedCount += 1
 
     def logID(self, uploadid):

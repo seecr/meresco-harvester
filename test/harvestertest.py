@@ -309,12 +309,12 @@ class HarvesterTest(unittest.TestCase):
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
-        upload = None
+        upload = Upload(record=record)
+        upload.skip = True
         harvester._mapper.createUpload = lambda repository,record,logger: upload
-        result = harvester.uploadRecord(record)
+        harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
-        self.assertEquals(None, result)
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -354,7 +354,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)
         harvester.uploadRecord(record)
-        self.assertEquals(["logIgnoredID"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["notifyHarvestedRecord", "logIgnoredID"], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):

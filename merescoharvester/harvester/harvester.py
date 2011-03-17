@@ -77,24 +77,22 @@ class Harvester(Observable):
     def fetchRecords(self, from_, token):
         records = self.listRecords(from_, token, self._repository.set)
         for record in records:
-            self.any.notifyHarvestedRecord()
             self.uploadRecord(record)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
         return newtoken
 
     def uploadRecord(self, record):
+        upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
+        self.any.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
-            upload = self._mapper.createEmptyUpload(self._repository, record)
             self._uploader.delete(upload)
             self.any.logDeletedID(upload.id)
-        else:
-            upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
-            if upload:
-                try:
-                    self._uploader.send(upload)
-                    self.any.logID(upload.id)
-                except InvalidDataException, e:
-                    self.any.logIgnoredID(upload.id)
+        elif not upload.skip:
+            try:
+                self._uploader.send(upload)
+                self.any.logID(upload.id)
+            except InvalidDataException, e:
+                self.any.logIgnoredID(upload.id)
 
     def _harvestLoop(self):
         try:

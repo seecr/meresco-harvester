@@ -91,11 +91,11 @@ class HarvesterLogTest(unittest.TestCase):
     def testLogLine(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.startRepository()
-        logger.notifyHarvestedRecord()
+        logger.notifyHarvestedRecord("uploadId1")
         logger.logID("uploadId1")
-        logger.notifyHarvestedRecord()
+        logger.notifyHarvestedRecord("uploadId1")
         logger.logDeletedID("uploadId1")
-        logger.notifyHarvestedRecord()
+        logger.notifyHarvestedRecord("uploadId2")
         logger.logIgnoredID("uploadId2")
         logger.endRepository(None)
         logger.close()
@@ -112,9 +112,9 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.startRepository()
         try:
-            logger.notifyHarvestedRecord()
+            logger.notifyHarvestedRecord("uploadId1")
             logger.logID("uploadId1")
-            logger.notifyHarvestedRecord()
+            logger.notifyHarvestedRecord("uploadId2")
             raise Exception('FATAL')
         except:
             logger.endWithException()
@@ -146,10 +146,13 @@ class HarvesterLogTest(unittest.TestCase):
     def testLogIgnoredIDs(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
-        logger.logID('id:3')
+        logger.notifyHarvestedRecord('id:4')
         logger.logIgnoredID('id:4')
-        self.assertEquals(1,logger.totalIds())
-        self.assertEquals(1,logger.totalIgnoredIds())
+        self.assertEquals(1, logger.totalIgnoredIds())
+        logger.notifyHarvestedRecord('id:4')
+        self.assertEquals(0, logger.totalIgnoredIds())
+        logger.logID('id:4')
+        self.assertEquals(1, logger.totalIds())
 
     def testLogDeleted(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')

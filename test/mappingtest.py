@@ -147,8 +147,8 @@ skipRecord("Don't like it here.")
         stream = StringIO()
         logger = StreamEventLogger(stream)
         upload = datamap.createUpload(TestRepository(), record, logger)
-        self.assertEquals(None, upload)
-        self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n",stream.getvalue()[26:])
+        self.assertTrue(upload.skip)
+        self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n", stream.getvalue()[26:])
 
     def testCreateUploadParts(self):
         upload = mapping.Upload()
