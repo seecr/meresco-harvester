@@ -72,17 +72,10 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         self.assertTrue(logger.hasWork())
         logger.startRepository()
-        logger.updateStatsfile(0,0,0,0)
         logger.endRepository(None)
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         self.assertFalse(logger.hasWork())
-
-
-    def createMockMailer(self, name):
-        self.mockMailerName=name
-        self.mockMailer=MockMailer()
-        return self.mockMailer
 
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"
@@ -97,22 +90,29 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testLogLine(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
-        logger.updateStatsfile(1, 2, 3)
+        logger.startRepository()
+        logger.notifyHarvestedRecord()
+        logger.logID("uploadId1")
+        logger.notifyHarvestedRecord()
+        logger.logDeletedID("uploadId1")
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual('1/2/3/0, Done:',lines[0][:14])
-        date,event,id,comments = LOGLINE_RE.match(eventline).groups()
+        self.assertTrue('2/1/1/0, Done:' in lines[0], lines[0])
+        date, event, id, comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
-        self.assertEquals('Harvested/Uploaded/Deleted/Total: 1/2/3/0, ResumptionToken: None',comments)
+        self.assertEquals('Harvested/Uploaded/Deleted/Total: 2/1/1/0, ResumptionToken: None',comments)
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger.startRepository()
         try:
-            logger.updateStatsfile(1, 2, 3)
+            logger.notifyHarvestedRecord()
+            logger.logID("uploadId1")
+            logger.notifyHarvestedRecord()
             raise Exception('FATAL')
         except:
             logger.endWithException()
@@ -120,7 +120,7 @@ class HarvesterLogTest(unittest.TestCase):
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertEqual('1/2/3/0, Error: ',lines[0][:16])
+        self.assertTrue('2/1/0/1, Error: ' in lines[0], lines[0])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('ERROR', event.strip())
         self.assertEquals('name', id)
@@ -133,6 +133,7 @@ class HarvesterLogTest(unittest.TestCase):
         f.writelines(['id:1\n','id:2\n','id:1\n'])
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger.startRepository()
         self.assertEquals(2,logger.totalids())
         logger.logID('id:3')
         self.assertEquals(3,logger.totalids())

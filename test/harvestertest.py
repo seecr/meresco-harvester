@@ -302,10 +302,9 @@ class HarvesterTest(unittest.TestCase):
         upload = Upload(record=record)
         upload.id = 'tud:mockid'
         harvester._mapper.createUpload = lambda repository,record,logger: upload
-        result = harvester.uploadRecord(record)
+        harvester.uploadRecord(record)
         self.assertEquals(['tud:mockid'], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
-        self.assertEquals("added", result)
 
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -320,10 +319,9 @@ class HarvesterTest(unittest.TestCase):
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         record = parse_xml("""<record><header status="deleted"><identifier>mockid</identifier></header></record>""").record
-        result = harvester.uploadRecord(record)
+        harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertEquals('tud:mockid', self.delete_id)
-        self.assertEquals("deleted", result)
 
     def testDcIdentifierTake2(self):
         self.sendFulltexturl=None

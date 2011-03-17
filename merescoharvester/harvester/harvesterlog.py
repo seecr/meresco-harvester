@@ -57,13 +57,19 @@ class HarvesterLog(object):
         self.from_ = self._state.startdate
         self.token = self._state.token
         self.total = self._state.total
-        self._lastline = ''
+        self._resetCounts()
 
     def isCurrentDay(self, yyyy_mm_dd):
         return yyyy_mm_dd == self._state.getTime()[:10]    
         
     def startRepository(self):
+        self._resetCounts()
         self._state._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state.getTime())
+
+    def _resetCounts(self):
+        self._harvestedCount = 0
+        self._uploadedCount = 0
+        self._deletedCount = 0
 
     def totalids(self):
         return self._ids.total()
@@ -77,31 +83,36 @@ class HarvesterLog(object):
         self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
-        self._state._write(self._lastline)
+        self._state._write(self.countsSummary())
         self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
-        self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s'%(self._lastline,token),id=self._name)
+        self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
 
     def endWithException(self):
         error = str(sys.exc_type) + ': ' + str(sys.exc_value)
         xtype,xval,xtb = sys.exc_info()
         error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
         self._eventlogger.error(error2, id=self._name)
-        self._state._write(self._lastline)
+        self._state._write(self.countsSummary())
         self._state._write( ', Error: ' + error)
+
+    def countsSummary(self):
+        return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalids())
 
     def close(self):
         self._eventlogger.close()
         self._ids.close()
         self._state.close()
 
+    def notifyHarvestedRecord(self):
+        self._harvestedCount += 1
+
     def logID(self, uploadid):
         self._ids.add(uploadid)
+        self._uploadedCount += 1
         
     def logDeletedID(self, uploadid):
         self._ids.remove(uploadid)
-        
-    def updateStatsfile(self, harvested, uploaded, deleted, totalWillBeIgnored=None):
-        self._lastline = '%d/%d/%d/%d' % (harvested, uploaded, deleted, self.totalids())
+        self._deletedCount += 1
 
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token

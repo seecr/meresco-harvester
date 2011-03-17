@@ -75,17 +75,10 @@ class Harvester(Observable):
         return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
     def fetchRecords(self, from_, token, total):
-        harvestedRecords = 0
-        uploadedRecords = 0
-        deletedRecords = 0
         records = self.listRecords(from_, token, self._repository.set)
-        self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
         for record in records:
-            harvestedRecords += 1
-            uploadResult = self.uploadRecord(record)
-            uploadedRecords += int(uploadResult == 'added')
-            deletedRecords += int(uploadResult == 'deleted')
-            self.any.updateStatsfile(harvestedRecords, uploadedRecords, deletedRecords, total + uploadedRecords)
+            self.any.notifyHarvestedRecord()
+            self.uploadRecord(record)
         newtoken = getattr(records.parentNode, 'resumptionToken', None)
         return newtoken
 
@@ -94,20 +87,19 @@ class Harvester(Observable):
             upload = self._mapper.createEmptyUpload(self._repository, record)
             self._uploader.delete(upload)
             self.any.logDeletedID(upload.id)
-            return "deleted"
-        upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
-        if upload:
-            try:
-                self._uploader.send(upload)
-                self.any.logID(upload.id)
-                return "added"
-            except InvalidDataException, e:
-                self.any.logIgnoredID(upload.id)
+        else:
+            upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
+            if upload:
+                try:
+                    self._uploader.send(upload)
+                    self.any.logID(upload.id)
+                except InvalidDataException, e:
+                    self.any.logIgnoredID(upload.id)
 
     def _harvestLoop(self):
         try:
             self.any.startRepository()
-            state=self.any.state()
+            state = self.any.state()
             newtoken = self.fetchRecords(state.startdate, state.token, state.total)
             self.any.endRepository(newtoken)
             return newtoken
