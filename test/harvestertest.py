@@ -49,7 +49,7 @@ from merescoharvester.harvester.harvester import Harvester
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester.state import getHarvestedUploadedRecords
 from merescoharvester.harvester.oairequest import OaiRequest
-from merescoharvester.harvester.virtualuploader import InvalidDataException
+from merescoharvester.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
 from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
 from merescoharvester.harvester import harvester 
 from merescoharvester import namespaces
@@ -63,8 +63,8 @@ class DeletedRecordHeader(object):
     def identifier(self):
         return 'mockid'
 
-class _MockRepository:
-    def __init__(self,id,baseurl,set,repositoryGroupId, outer):
+class _MockRepository(object):
+    def __init__(self, id, baseurl, set, repositoryGroupId, outer):
         self.repositoryGroupId=repositoryGroupId
         self.id = id
         self.baseurl = baseurl
@@ -354,7 +354,22 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)
         harvester.uploadRecord(record)
-        self.assertEquals(["notifyHarvestedRecord", "logIgnoredID"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds", "logIgnoredID"], [m.name for m in observer.calledMethods])
+
+    def testHarvesterStopsIgnoringAfter100records(self):
+        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        upload = Upload(record=record)
+        upload.id = 'mockid'
+        uploader=CallTrace("uploader")
+        uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
+        mapper=CallTrace("mapper", returnValues={'createUpload': upload})
+        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper})
+        repository.maxIgnore = 100
+        observer=CallTrace("observer", returnValues={'totalIgnoredIds': 100})
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
+        harvester.addObserver(observer)
+        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
+        self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):

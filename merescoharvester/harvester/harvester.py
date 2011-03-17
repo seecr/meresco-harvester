@@ -39,7 +39,7 @@ from urllib2 import urlopen
 from urllib import urlencode
 from slowfoot.wrappers import wrapp
 from meresco.core import Observable
-from virtualuploader import InvalidDataException
+from virtualuploader import InvalidDataException, TooMuchInvalidDataException
 
 
 NOTHING_TO_DO = 'Nothing to do!'
@@ -92,7 +92,10 @@ class Harvester(Observable):
                 self._uploader.send(upload)
                 self.any.logID(upload.id)
             except InvalidDataException, e:
-                self.any.logIgnoredID(upload.id)
+                if self.any.totalIgnoredIds() < self._repository.maxIgnore:
+                    self.any.logIgnoredID(upload.id)
+                else:
+                    raise TooMuchInvalidDataException(upload.id, self._repository.maxIgnore)
 
     def _harvestLoop(self):
         try:

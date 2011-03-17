@@ -47,6 +47,10 @@ class InvalidComponentException(UploaderException):
 class InvalidDataException(UploaderException):
     pass
 
+class TooMuchInvalidDataException(UploaderException):
+    def __init__(self, uploadId, maxIgnore):
+        UploaderException.__init__(self, uploadId, "Exceeded maximum number (%d) of invalid data records." % maxIgnore)
+
 class VirtualUploader(object):
     def __init__(self, eventlogger):
         self._logger = eventlogger
