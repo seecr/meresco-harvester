@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<mapping>
+  <id>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</id>
+  <name>default</name>
+  <description>This mapping is what has become the default mapping for most Meresco based projects.
+</description>
+  <code>upload.parts['metadata'] = input.metadata.xml()
+
+upload.parts['header'] = input.header.xml()
+
+upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester/meta"&gt;
+  &lt;upload&gt;&lt;id&gt;%(id)s&lt;/id&gt;&lt;/upload&gt;
+  &lt;record&gt;
+    &lt;id&gt;%(recordId)s&lt;/id&gt;
+  &lt;/record&gt;
+  &lt;repository&gt;
+    &lt;id&gt;%(repository)s&lt;/id&gt;
+    &lt;set&gt;%(set)s&lt;/set&gt;
+    &lt;baseurl&gt;%(baseurl)s&lt;/baseurl&gt;
+    &lt;repositoryGroupId&gt;%(repositoryGroupId)s&lt;/repositoryGroupId&gt;
+    &lt;metadataPrefix&gt;%(metadataPrefix)s&lt;/metadataPrefix&gt;
+    &lt;collection&gt;%(collection)s&lt;/collection&gt;
+  &lt;/repository&gt;
+&lt;/meta&gt;""" % dict([(k,xmlEscape(v)) for k,v in {
+  'id': upload.id,
+  'set': input.repository.set,
+  'baseurl': input.repository.baseurl,
+  'repositoryGroupId':  input.repository.repositoryGroupId,
+  'repository': input.repository.id,
+  'metadataPrefix': input.repository.metadataPrefix,
+  'collection': input.repository.collection,
+  'recordId': input.header.identifier,
+}.items()])
+</code>
+</mapping>

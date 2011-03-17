@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<target>
+  <id>DUMP</id>
+  <name>DUMP</name>
+  <username></username>
+  <port>8008</port>
+  <targetType>sruUpdate</targetType>
+
+
+  <path>/nix/neer</path>
+  <baseurl>localhost</baseurl>
+
+</target>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<repository>
+  <id>integrationtest</id>
+  <repositoryGroupId>IntegrationTest</repositoryGroupId>
+  <use>true</use>
+  <complete></complete>
+  <action></action>
+  <baseurl>http://edurepdev.cq2.org:8001/edurep/oai</baseurl>
+  <set></set>
+  <collection>Integration</collection>
+  <targetId>DUMP</targetId>
+  <metadataPrefix>header</metadataPrefix>
+  <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
+
+  <maxIgnore>10</maxIgnore>
+
+
+
+
+
+</repository>
