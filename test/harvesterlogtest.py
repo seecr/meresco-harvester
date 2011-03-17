@@ -95,16 +95,18 @@ class HarvesterLogTest(unittest.TestCase):
         logger.logID("uploadId1")
         logger.notifyHarvestedRecord()
         logger.logDeletedID("uploadId1")
+        logger.notifyHarvestedRecord()
+        logger.logIgnoredID("uploadId2")
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
         #Total is now counted based upon the id's
-        self.assertTrue('2/1/1/0, Done:' in lines[0], lines[0])
+        self.assertTrue('3/1/1/0, Done:' in lines[0], lines[0])
         date, event, id, comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
-        self.assertEquals('Harvested/Uploaded/Deleted/Total: 2/1/1/0, ResumptionToken: None',comments)
+        self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
@@ -134,12 +136,20 @@ class HarvesterLogTest(unittest.TestCase):
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
         logger.startRepository()
-        self.assertEquals(2,logger.totalids())
+        self.assertEquals(2,logger.totalIds())
         logger.logID('id:3')
-        self.assertEquals(3,logger.totalids())
+        self.assertEquals(3,logger.totalIds())
         logger.logID('id:3')
         logger.logID('id:2')
-        self.assertEquals(3,logger.totalids())
+        self.assertEquals(3,logger.totalIds())
+
+    def testLogIgnoredIDs(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+        logger.startRepository()
+        logger.logID('id:3')
+        logger.logIgnoredID('id:4')
+        self.assertEquals(1,logger.totalIds())
+        self.assertEquals(1,logger.totalIgnoredIds())
 
     def testLogDeleted(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')

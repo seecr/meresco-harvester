@@ -15,10 +15,10 @@ logDir = req.get_options()['logDir']
 
 def writeStatus(repositoryId, repositoryGroupId):
   rs = RepositoryStatus()
-  statsfile = os.path.join(logDir, domainId, repositoryId + '.events')
-  if os.path.isfile(statsfile):
+  eventsfile = os.path.join(logDir, domainId, repositoryId + '.events')
+  if os.path.isfile(eventsfile):
     try:
-      f = open(statsfile)
+      f = open(eventsfile)
 %><status repositoryId="<%= repositoryId %>" repositoryGroupId="<%= repositoryGroupId %>"><%
       rs.innerXml(f, req)
       req.write("</status>")

@@ -52,6 +52,7 @@ class HarvesterLog(object):
         self._name=name
         ensureDirectory(stateDir)
         self._ids = Ids(stateDir, name)
+        self._ignoredIds = Ids(stateDir, name + "_ignored")
         self._state = State(stateDir, name)
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
         self.from_ = self._state.startdate
@@ -71,8 +72,11 @@ class HarvesterLog(object):
         self._uploadedCount = 0
         self._deletedCount = 0
 
-    def totalids(self):
+    def totalIds(self):
         return self._ids.total()
+
+    def totalIgnoredIds(self):
+        return self._ignoredIds.total()
 
     def eventLogger(self):
         return self._eventlogger
@@ -96,7 +100,7 @@ class HarvesterLog(object):
         self._state._write( ', Error: ' + error)
 
     def countsSummary(self):
-        return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalids())
+        return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())
 
     def close(self):
         self._eventlogger.close()
@@ -113,6 +117,9 @@ class HarvesterLog(object):
     def logDeletedID(self, uploadid):
         self._ids.remove(uploadid)
         self._deletedCount += 1
+
+    def logIgnoredID(self, uploadid):
+        self._ignoredIds.add(uploadid)
 
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token

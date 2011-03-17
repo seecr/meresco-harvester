@@ -74,7 +74,7 @@ class Harvester(Observable):
             return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
         return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
-    def fetchRecords(self, from_, token, total):
+    def fetchRecords(self, from_, token):
         records = self.listRecords(from_, token, self._repository.set)
         for record in records:
             self.any.notifyHarvestedRecord()
@@ -100,7 +100,7 @@ class Harvester(Observable):
         try:
             self.any.startRepository()
             state = self.any.state()
-            newtoken = self.fetchRecords(state.startdate, state.token, state.total)
+            newtoken = self.fetchRecords(state.startdate, state.token)
             self.any.endRepository(newtoken)
             return newtoken
         except:
