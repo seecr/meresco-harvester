@@ -43,6 +43,7 @@ from os import system, kill, WNOHANG, waitpid, listdir
 from os.path import isdir, isfile, join
 from sys import exit, exc_info
 from unittest import main
+from urllib import urlopen
 from random import randint
 from time import time, sleep
 from lxml.etree import parse, tostring
@@ -55,41 +56,48 @@ from cq2utils import CQ2TestCase
 
 integrationTempdir = '/tmp/mh-integration-test'
 dumpDir = join(integrationTempdir, "dump")
+harvesterLogDir = join(integrationTempdir, "log")
+harvesterStateDir = join(integrationTempdir, "state")
+
 
 class IntegrationTest(CQ2TestCase):
+    def setUp(self):
+        CQ2TestCase.setUp(self)
+        system("rm -rf %s/*" % dumpDir)
+        system("rm -rf %s" % harvesterLogDir)
+        system("rm -rf %s" % harvesterStateDir)
+        urlopen("http://localhost:%s/starttest" % dumpPortNumber)
+
     def testHarvestToDump(self):
-        self.assertEquals(10, len(listdir(dumpDir)))
+        startHarvester()
+        self.assertEquals(14, len(listdir(dumpDir)))
+        self.assertEquals(2, len([f for f in listdir(dumpDir) if "info:srw/action/1/delete" in open(join(dumpDir, f)).read()]))
+        ids = open(join(harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
+        self.assertEquals(10, len(ids))
+        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest.ignored.ids")).readlines()
+        self.assertEquals(0, len(ignoredIds))
+
+    def testInvalidIgnoredUptoMaxIgnore(self):
+        urlopen("http://localhost:%s/starttest?name=testInvalidIgnoredUptoMaxIgnore" % dumpPortNumber)
+        startHarvester()
+        self.assertEquals(0, len(listdir(dumpDir)))
+        ids = open(join(harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
+        self.assertEquals(0, len(ids))
+        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest.ignored.ids")).readlines()
+        self.assertEquals(0, len(ignoredIds))
+        
+        
+
+def fileSubstVars(filepath, **kwargs):
+    contents = open(filepath).read()
+    for k, v in kwargs.items():
+        contents = contents.replace("${%s}" % k, str(v))
+    open(filepath, "w").write(contents)
 
 def initData(targetDir, dumpPortNumber, oaiPortNumber):
     copytree("integration-data", targetDir)
-    with open(join(targetDir, "data", "DUMP.target"), 'w') as f:
-        f.write("""<?xml version="1.0"?>
-<target>
-  <id>DUMP</id>
-  <name>DUMP</name>
-  <username></username>
-  <port>%s</port>
-  <targetType>sruUpdate</targetType>
-  <path>/nix/neer</path>
-  <baseurl>localhost</baseurl>
-</target>""" % dumpPortNumber)
-
-    with open(join(targetDir, "data", "integration.test.repository"), 'w') as f:
-        f.write("""<?xml version="1.0"?>
-<repository>
-  <id>integrationtest</id>
-  <repositoryGroupId>IntegrationTest</repositoryGroupId>
-  <use>true</use>
-  <complete></complete>
-  <action></action>
-  <baseurl>http://localhost:%s/listrecords.oai</baseurl>
-  <set></set>
-  <collection>Integration</collection>
-  <targetId>DUMP</targetId>
-  <metadataPrefix>header</metadataPrefix>
-  <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
-  <maxIgnore>10</maxIgnore>
-</repository>""" % oaiPortNumber)
+    fileSubstVars(join(targetDir, "data", "DUMP.target"), dumpPortNumber=dumpPortNumber)
+    fileSubstVars(join(targetDir, "data", "integration.test.repository"), oaiPortNumber=oaiPortNumber)
 
 def startDumpServer(dumpPort):
     stdoutfile = join(integrationTempdir, "stdouterr-dump.log")
@@ -105,13 +113,13 @@ def startDumpServer(dumpPort):
 def startHarvester():
     stdoutfile = join(integrationTempdir, "stdouterr-harvester.log")
     stdouterrlog = open(stdoutfile, 'w')
-    processInfo = Popen(
-        args=[join(integrationTempdir, "start-integrationtest-harvester.py"), "-d", "ignored", "--logDir=%s" % join(integrationTempdir, "log"), "--stateDir=%s" % join(integrationTempdir, "state")], 
+    harvesterProcessInfo = Popen(
+        args=[join(integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % harvesterLogDir, "--stateDir=%s" % harvesterStateDir], 
         cwd=integrationTempdir,
         stdout=stdouterrlog,
         stderr=stdouterrlog)
-    print "Harvester PID", processInfo.pid
-    return processInfo
+    print "Harvester PID", harvesterProcessInfo.pid
+    waitpid(harvesterProcessInfo.pid, 0)
 
 def startOaiFileServer(portNumber):
     stdoutfile = join(integrationTempdir, "stdouterr-oaifileserver.log")
@@ -140,12 +148,9 @@ if __name__ == '__main__':
     dumpServerProcessInfo = startDumpServer(dumpPortNumber)
     oaiServerProcessInfo = startOaiFileServer(oaiPortNumber)
     sleep(2)
-    harvesterProcessInfo = startHarvester()
-    sleep(4)
     try:
         main()
     finally:
-        stopProcess(harvesterProcessInfo)
         stopProcess(dumpServerProcessInfo)
         stopProcess(oaiServerProcessInfo)
 

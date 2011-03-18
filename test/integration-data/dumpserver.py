@@ -39,7 +39,7 @@ from weightless.io import Reactor
 from sys import stdout
 from os.path import abspath, dirname, join, isdir, basename
 from os import makedirs
-from meresco.components.http import ObservableHttpServer
+from meresco.components.http import ObservableHttpServer, PathFilter
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.core import Observable, be
 from re import compile
@@ -49,54 +49,79 @@ mydir = dirname(abspath(__file__))
 notWordCharRE = compile('\W+')
 
 
+class InvalidDataException(Exception):
+    pass
 
+INVALID_COMPONENT_DIAGNOSTIC_XML = DIAGNOSTIC_XML
+INVALID_DATA_DIAGNOSTIC_XML = DIAGNOSTIC_XML.replace("12/1", "12/12")
 
 class Dump(object):
-    def __init__(self, dumpdir, maxCount=10):
+    def __init__(self, dumpdir):
         self._dumpdir = dumpdir
         self._number = self._findLastNumber()
-        self._maxCountNumber = self._number + maxCount
-        self._maxCount = maxCount
 
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
         try:
+            if self._ignoreAll:
+                raise InvalidDataException()
             updateRequest = bind_string(Body).updateRequest
             recordId = str(updateRequest.recordIdentifier)
             normalizedRecordId = notWordCharRE.sub('_', recordId)
             self._number +=1
-            if self._number <= self._maxCountNumber:
-                filename = '%05d_%s.updateRequest' %(self._number, normalizedRecordId)
-                with open(join(self._dumpdir, filename), 'w') as f:
-                    print recordId
-                    stdout.flush()
-                    updateRequest.xml(f)
-                answer = RESPONSE_XML % {
-                    "operationStatus": "success",
-                    "diagnostics": ""}
-            else:
-                self._maxCountNumber = self._number + self._maxCount
-                print 'Reached maxCount'
-                answer = RESPONSE_XML % {
-                    "operationStatus": "fail",
-                    "diagnostics": DIAGNOSTIC_XML % escapeXml("Enough is enough")}
+            filename = '%05d_%s.updateRequest' %(self._number, normalizedRecordId)
+            with open(join(self._dumpdir, filename), 'w') as f:
+                print recordId
+                stdout.flush()
+                updateRequest.xml(f)
+            answer = RESPONSE_XML % {
+                "operationStatus": "success",
+                "diagnostics": ""}
+        except InvalidDataException, e:
+            answer = RESPONSE_XML % {
+                "operationStatus": "fail",
+                "diagnostics": INVALID_DATA_DIAGNOSTIC_XML % escapeXml(format_exc())}
         except Exception, e:
             answer = RESPONSE_XML % {
                 "operationStatus": "fail",
-                "diagnostics": DIAGNOSTIC_XML % escapeXml(format_exc())}
-
+                "diagnostics": INVALID_COMPONENT_DIAGNOSTIC_XML % escapeXml(format_exc())}
         yield answer
 
     def _findLastNumber(self):
         return max([int(basename(f)[:5]) for f in glob(join(self._dumpdir, '*.updateRequest'))]+[0])
 
+    def reset(self):
+        self._ignoreAll = False
+
+    def ignoreAll(self):
+        self._ignoreAll = True
+
+
+class StartTest(Observable):
+    def handleRequest(self, arguments, **kwargs):
+        name = arguments.get('name', [None])[0]
+        self.any.reset()
+        if name == "testInvalidIgnoredUptoMaxIgnore":
+            self.any.ignoreAll()
+        yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
+
+
+
 
 def main(reactor, portNumber, dumpdir):
     isdir(dumpdir) or makedirs(dumpdir)
+    dump = Dump(dumpdir)
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
-                (Dump(dumpdir),)
+                (PathFilter("/nix/neer"),
+                    (dump,)
+                ),
+                (PathFilter("/starttest"),
+                    (StartTest(),
+                        (dump,)
+                    )
+                )
             )
         )
     )

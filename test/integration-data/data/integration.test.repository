@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!-- Will be overwritten by integration test -->
 <repository>
   <id>integrationtest</id>
   <repositoryGroupId>IntegrationTest</repositoryGroupId>
@@ -12,11 +11,5 @@
   <targetId>DUMP</targetId>
   <metadataPrefix>header</metadataPrefix>
   <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
-
-  <maxIgnore>10</maxIgnore>
-
-
-
-
-
+  <maxIgnore>5</maxIgnore>
 </repository>
