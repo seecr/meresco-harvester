@@ -28,6 +28,8 @@
 #
 ## end license ##
 
+from __future__ import with_statement
+
 import os, sys
 os.system('find .. -name "*.pyc" | xargs rm -f')
 
@@ -37,52 +39,64 @@ for path in glob('../deps.d/*'):
 
 sys.path.insert(0, "..")
 
-from os import system, kill, WNOHANG, waitpid
+from os import system, kill, WNOHANG, waitpid, listdir
 from os.path import isdir, isfile, join
 from sys import exit, exc_info
 from unittest import main
 from random import randint
 from time import time, sleep
-from glob import glob
 from lxml.etree import parse, tostring
 from StringIO import StringIO
-from amara.binderytools import bind_file, bind_string
 from signal import SIGTERM, SIGKILL
 from subprocess import Popen
-from urllib import urlopen, urlencode
+from shutil import copytree
 
 from cq2utils import CQ2TestCase 
 
 integrationTempdir = '/tmp/mh-integration-test'
-reactor = Reactor()
+dumpDir = join(integrationTempdir, "dump")
 
 class IntegrationTest(CQ2TestCase):
-    pass
+    def testHarvestToDump(self):
+        self.assertEquals(10, len(listdir(dumpDir)))
 
-def createDatabase(port):
-    recordPacking = 'xml'
-    start = time()
-    print "Creating database in", integrationTempdir
-    sourceFiles = glob('harvester_output/*.updateRequest')
-    for updateRequestFile in sorted(sourceFiles):
-        print 'Sending:', updateRequestFile
-        header, body = postRequest(reactor, port, '/update', open(updateRequestFile).read())
-        if '200 Ok' not in header:
-            print 'No 200 Ok response, but:'
-            print header
-            print body.xml()
-            exit(123)
-        if "srw:diagnostics" in body.xml():
-            print body.xml()
-            exit(1234)
-    print "Finished creating database in %s seconds" % (time() - start)
+def initData(targetDir, dumpPortNumber):
+    copytree("integration-data", targetDir)
+    with open(join(targetDir, "data", "DUMP.target"), 'w') as f:
+        f.write("""<?xml version="1.0"?>
+<target>
+  <id>DUMP</id>
+  <name>DUMP</name>
+  <username></username>
+  <port>%s</port>
+  <targetType>sruUpdate</targetType>
+  <path>/nix/neer</path>
+  <baseurl>localhost</baseurl>
+</target>""" % dumpPortNumber)
 
-def startOwlimHttpServer(owlimHttpServerPort, owlimHttpServerPath, rdfStorePath):
-    processInfo = Popen(["/usr/bin/start-owlimhttpserver", str(owlimHttpServerPort), owlimHttpServerPath, "triplestore", rdfStorePath])
-    print "OwlimHttpServer PID", processInfo.pid
+def startDumpServer(dumpPort):
+    stdoutfile = join(integrationTempdir, "stdouterr-dump.log")
+    stdouterrlog = open(stdoutfile, 'w')
+    processInfo = Popen(
+        args=[join(integrationTempdir, "dumpserver.py"), str(dumpPort), dumpDir], 
+        cwd=integrationTempdir, 
+        stdout=stdouterrlog,
+        stderr=stdouterrlog)
+    print "DumpServer PID", processInfo.pid
     sleep(4)
     return processInfo
 
+def startHarvester():
+    stdoutfile = join(integrationTempdir, "stdouterr-harvester.log")
+    stdouterrlog = open(stdoutfile, 'w')
+    processInfo = Popen(
+        args=[join(integrationTempdir, "start-integrationtest-harvester.py"), "-d", "ignored", "--logDir=%s" % join(integrationTempdir, "log"), "--stateDir=%s" % join(integrationTempdir, "state")], 
+        cwd=integrationTempdir,
+        stdout=stdouterrlog,
+        stderr=stdouterrlog)
+    print "Harvester PID", processInfo.pid
+    sleep(4)
+    return processInfo
 
 def stopProcess(processInfo):
     print "Stopping process", processInfo.pid
@@ -93,27 +107,16 @@ def stopProcess(processInfo):
     waitpid(processInfo.pid, WNOHANG)
 
 if __name__ == '__main__':
-    from sys import argv
-    if not '--fast' in argv:
-        system('rm -rf ' + integrationTempdir)
-        system('mkdir --parents '+ integrationTempdir)
+    system('rm -rf ' + integrationTempdir)
+    dumpPortNumber = randint(50000,60000)
 
-    portNumber = randint(50000,60000)
-    config = {
-    }
-
-    owlimHttpServerProcessInfo = startOwlimHttpServer(config['owlim.portNumber'], config['databasePath'], join(integrationTempdir, config['rdf.store.path']))
+    initData(integrationTempdir, dumpPortNumber)
+    
+    dumpServerProcessInfo = startDumpServer(dumpPortNumber)
+    harvesterProcessInfo = startHarvester()
     try:
-        server.once.observer_init()
-
-        if '--fast' in argv and isdir(integrationTempdir):
-            argv.remove('--fast')
-            print "Reusing database in", integrationTempdir
-        else:
-            createDatabase()
-            from merescoharvester.harvester.startharvester import StartHarvester
-            StartHarvester().start()
         main()
     finally:
-        stopProcess(owlimHttpServerProcessInfo)
+        stopProcess(dumpServerProcessInfo)
+        stopProcess(harvesterProcessInfo)
 

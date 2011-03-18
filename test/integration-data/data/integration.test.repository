@@ -5,7 +5,7 @@
   <use>true</use>
   <complete></complete>
   <action></action>
-  <baseurl>http://edurepdev.cq2.org:8001/edurep/oai</baseurl>
+  <baseurl>http://localhost:8001/edurep/oai</baseurl>
   <set></set>
   <collection>Integration</collection>
   <targetId>DUMP</targetId>

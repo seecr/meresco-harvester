@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
+<!-- will be overwritten by integration test -->
 <target>
   <id>DUMP</id>
   <name>DUMP</name>
   <username></username>
-  <port>8008</port>
+  <port>${dumpPortNumber}</port>
   <targetType>sruUpdate</targetType>
-
-
   <path>/nix/neer</path>
   <baseurl>localhost</baseurl>
-
 </target>
