@@ -60,7 +60,7 @@ class IntegrationTest(CQ2TestCase):
     def testHarvestToDump(self):
         self.assertEquals(10, len(listdir(dumpDir)))
 
-def initData(targetDir, dumpPortNumber):
+def initData(targetDir, dumpPortNumber, oaiPortNumber):
     copytree("integration-data", targetDir)
     with open(join(targetDir, "data", "DUMP.target"), 'w') as f:
         f.write("""<?xml version="1.0"?>
@@ -74,6 +74,23 @@ def initData(targetDir, dumpPortNumber):
   <baseurl>localhost</baseurl>
 </target>""" % dumpPortNumber)
 
+    with open(join(targetDir, "data", "integration.test.repository"), 'w') as f:
+        f.write("""<?xml version="1.0"?>
+<repository>
+  <id>integrationtest</id>
+  <repositoryGroupId>IntegrationTest</repositoryGroupId>
+  <use>true</use>
+  <complete></complete>
+  <action></action>
+  <baseurl>http://localhost:%s/listrecords.oai</baseurl>
+  <set></set>
+  <collection>Integration</collection>
+  <targetId>DUMP</targetId>
+  <metadataPrefix>header</metadataPrefix>
+  <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
+  <maxIgnore>10</maxIgnore>
+</repository>""" % oaiPortNumber)
+
 def startDumpServer(dumpPort):
     stdoutfile = join(integrationTempdir, "stdouterr-dump.log")
     stdouterrlog = open(stdoutfile, 'w')
@@ -83,7 +100,6 @@ def startDumpServer(dumpPort):
         stdout=stdouterrlog,
         stderr=stdouterrlog)
     print "DumpServer PID", processInfo.pid
-    sleep(4)
     return processInfo
 
 def startHarvester():
@@ -95,28 +111,41 @@ def startHarvester():
         stdout=stdouterrlog,
         stderr=stdouterrlog)
     print "Harvester PID", processInfo.pid
-    sleep(4)
     return processInfo
+
+def startOaiFileServer(portNumber):
+    stdoutfile = join(integrationTempdir, "stdouterr-oaifileserver.log")
+    stdouterrlog = open(stdoutfile, 'w')
+    processInfo = Popen(
+        args=[join(integrationTempdir, "oaifileserver.py"), str(portNumber)], 
+        cwd=integrationTempdir,
+        stdout=stdouterrlog,
+        stderr=stdouterrlog)
+    print "Oai Fileserver PID", processInfo.pid
+    return processInfo
+
 
 def stopProcess(processInfo):
     print "Stopping process", processInfo.pid
     kill(processInfo.pid, SIGTERM)
-    sleep(1)
-    kill(processInfo.pid, SIGKILL)
-    sleep(1)
     waitpid(processInfo.pid, WNOHANG)
 
 if __name__ == '__main__':
     system('rm -rf ' + integrationTempdir)
     dumpPortNumber = randint(50000,60000)
+    oaiPortNumber = dumpPortNumber + 1
 
-    initData(integrationTempdir, dumpPortNumber)
+    initData(integrationTempdir, dumpPortNumber, oaiPortNumber)
     
     dumpServerProcessInfo = startDumpServer(dumpPortNumber)
+    oaiServerProcessInfo = startOaiFileServer(oaiPortNumber)
+    sleep(2)
     harvesterProcessInfo = startHarvester()
+    sleep(4)
     try:
         main()
     finally:
-        stopProcess(dumpServerProcessInfo)
         stopProcess(harvesterProcessInfo)
+        stopProcess(dumpServerProcessInfo)
+        stopProcess(oaiServerProcessInfo)
 
