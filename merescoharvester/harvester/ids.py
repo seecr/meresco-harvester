@@ -69,5 +69,7 @@ class Ids(object):
         self._idsfile.flush()
 
     def remove(self, uploadid):
-        uploadid in self._ids and self._ids.remove(uploadid)
+        if uploadid in self._ids:
+            self._ids.remove(uploadid)
+
         

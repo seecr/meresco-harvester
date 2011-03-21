@@ -105,6 +105,7 @@ class HarvesterLog(object):
     def close(self):
         self._eventlogger.close()
         self._ids.close()
+        self._ignoredIds.close()
         self._state.close()
 
     def notifyHarvestedRecord(self, uploadid):

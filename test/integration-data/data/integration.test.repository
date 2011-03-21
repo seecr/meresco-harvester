@@ -11,5 +11,5 @@
   <targetId>DUMP</targetId>
   <metadataPrefix>header</metadataPrefix>
   <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
-  <maxIgnore>5</maxIgnore>
+  <maximumIgnore>5</maximumIgnore>
 </repository>

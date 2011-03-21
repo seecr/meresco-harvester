@@ -349,15 +349,14 @@ class HarvesterTest(unittest.TestCase):
         uploader=CallTrace("uploader")
         uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
         mapper=CallTrace("mapper", returnValues={'createUpload': upload})
-        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper})
-        repository.maxIgnore = None
+        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 0})
         observer=CallTrace("observer", returnValues={'totalIgnoredIds': 42})
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)
         self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
         self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
         observer.calledMethods = []
-        repository.maxIgnore = 43
+        repository.returnValues['maxIgnore'] = 43
         harvester.uploadRecord(record)
         self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds", "logIgnoredID"], [m.name for m in observer.calledMethods])
 
@@ -368,8 +367,7 @@ class HarvesterTest(unittest.TestCase):
         uploader=CallTrace("uploader")
         uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
         mapper=CallTrace("mapper", returnValues={'createUpload': upload})
-        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper})
-        repository.maxIgnore = 100
+        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 100})
         observer=CallTrace("observer", returnValues={'totalIgnoredIds': 100})
         harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, eventLogger=None)
         harvester.addObserver(observer)

@@ -52,7 +52,7 @@ class Repository(SaharaObject):
             'repositoryGroupId', 'baseurl', 'set',
             'collection', 'metadataPrefix', 'use',  
             'targetId', 'mappingId', 'action', 
-            'complete', 'maxIgnore'], ['shopclosed'])
+            'complete', 'maximumIgnore'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
         self.mockUploader = None
@@ -74,6 +74,9 @@ class Repository(SaharaObject):
 
     def mapping(self):
         return self._saharaget.getMapping(self.domainId, self.mappingId)
+
+    def maxIgnore(self):
+        return int(self.maximumIgnore) if self.maximumIgnore else 0
 
     def createUploader(self, logger):
         if self.mockUploader:

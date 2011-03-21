@@ -63,9 +63,10 @@ class Dump(object):
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
         try:
-            if self._ignoreAll:
-                raise InvalidDataException()
             updateRequest = bind_string(Body).updateRequest
+            print self._ignoreAll, str(updateRequest.action)
+            if self._ignoreAll and str(updateRequest.action) == "info:srw/action/1/replace":
+                raise InvalidDataException()
             recordId = str(updateRequest.recordIdentifier)
             normalizedRecordId = notWordCharRE.sub('_', recordId)
             self._number +=1

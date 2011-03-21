@@ -80,13 +80,11 @@ class IntegrationTest(CQ2TestCase):
     def testInvalidIgnoredUptoMaxIgnore(self):
         urlopen("http://localhost:%s/starttest?name=testInvalidIgnoredUptoMaxIgnore" % dumpPortNumber)
         startHarvester()
-        self.assertEquals(0, len(listdir(dumpDir)))
+        self.assertEquals(2, len(listdir(dumpDir)))
         ids = open(join(harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
         self.assertEquals(0, len(ids))
         ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
-        self.assertEquals(0, len(ignoredIds))
-        
-        
+        self.assertEquals(5, len(ignoredIds), ignoredIds)
 
 def fileSubstVars(filepath, **kwargs):
     contents = open(filepath).read()
@@ -147,7 +145,7 @@ if __name__ == '__main__':
     
     dumpServerProcessInfo = startDumpServer(dumpPortNumber)
     oaiServerProcessInfo = startOaiFileServer(oaiPortNumber)
-    sleep(2)
+    sleep(3)
     try:
         main()
     finally:
