@@ -60,7 +60,7 @@ integrationTempdir = '/tmp/mh-integration-test'
 dumpDir = join(integrationTempdir, "dump")
 harvesterLogDir = join(integrationTempdir, "log")
 harvesterStateDir = join(integrationTempdir, "state")
-
+binDir = join(dirname(myDir), 'bin')
 
 class IntegrationTest(CQ2TestCase):
     def setUp(self):
@@ -137,6 +137,17 @@ def startOaiFileServer(portNumber):
     print "Oai Fileserver PID", processInfo.pid
     return processInfo
 
+def startHarvesterServer(portNumber):
+    stdoutfile = join(integrationTempdir, "stdouterr-harvesterserver.log")
+    stdouterrlog = open(stdoutfile, 'w')
+    configFile = join(integrationTempdir, 'harvester.config') 
+    open(configFile, 'w').write("portNumber=%s" % portNumber)
+    processInfo = Popen(
+        args=[join(binDir, "harvester-server"), configFile], 
+        stdout=stdouterrlog,
+        stderr=stdouterrlog)
+    print "Harvester Server PID", processInfo.pid
+    return processInfo
 
 def stopProcess(processInfo):
     print "Stopping process", processInfo.pid
@@ -147,15 +158,18 @@ if __name__ == '__main__':
     system('rm -rf ' + integrationTempdir)
     dumpPortNumber = randint(50000,60000)
     oaiPortNumber = dumpPortNumber + 1
+    harvesterPortNumber = dumpPortNumber + 2
 
     initData(integrationTempdir, dumpPortNumber, oaiPortNumber)
     
     dumpServerProcessInfo = startDumpServer(dumpPortNumber)
     oaiServerProcessInfo = startOaiFileServer(oaiPortNumber)
+    harvesterServerProcessInfo = startHarvesterServer(harvesterPortNumber)
     sleep(3)
     try:
         main()
     finally:
         stopProcess(dumpServerProcessInfo)
         stopProcess(oaiServerProcessInfo)
+        stopProcess(harvesterServerProcessInfo)
 
