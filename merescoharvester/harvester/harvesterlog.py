@@ -37,12 +37,16 @@ if sys.version_info[:2] == (2,3):
 from eventlogger import EventLogger
 from ids import Ids
 import traceback
-from os.path import join as pathjoin, isdir
-from os import makedirs
+from os.path import join, isdir, isfile, dirname
+from os import makedirs, remove
 from state import State
 
 def idfilename(stateDir, repositorykey):
-    return pathjoin(stateDir, repositorykey+'.ids')
+    return join(stateDir, repositorykey+'.ids')
+
+def ignoreFilepath(logDir, uploadid):
+    repositoryId, recordId = uploadid.split(":", 1)
+    return join(logDir, "ignored", repositoryId, recordId)
 
 def ensureDirectory(directoryPath):
     isdir(directoryPath) or makedirs(directoryPath)
@@ -50,6 +54,7 @@ def ensureDirectory(directoryPath):
 class HarvesterLog(object):
     def __init__(self, stateDir, logDir, name):
         self._name=name
+        self._logDir = logDir
         ensureDirectory(stateDir)
         self._ids = Ids(stateDir, name)
         self._ignoredIds = Ids(stateDir, name + "_ignored")
@@ -110,6 +115,9 @@ class HarvesterLog(object):
 
     def notifyHarvestedRecord(self, uploadid):
         self._ignoredIds.remove(uploadid)
+        ignoreFile = ignoreFilepath(self._logDir, uploadid)
+        if isfile(ignoreFile):
+            remove(ignoreFile)
         self._harvestedCount += 1
 
     def logID(self, uploadid):
@@ -120,7 +128,10 @@ class HarvesterLog(object):
         self._ids.remove(uploadid)
         self._deletedCount += 1
 
-    def logIgnoredID(self, uploadid):
+    def logIgnoredID(self, uploadid, exception):
+        ignoreFile = ignoreFilepath(self._logDir, uploadid)
+        ensureDirectory(dirname(ignoreFile))
+        open(ignoreFile, 'w').write(exception.message)
         self._ignoredIds.add(uploadid)
 
     def hasWork(self):

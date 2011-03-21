@@ -36,6 +36,7 @@ from time import strftime, gmtime
 from merescoharvester.harvester.harvesterlog import HarvesterLog
 from merescoharvester.harvester import harvesterlog
 from merescoharvester.harvester.eventlogger import LOGLINE_RE
+from merescoharvester.harvester.virtualuploader import UploaderException
 from tempfile import mkdtemp
 from shutil import rmtree
 
@@ -96,17 +97,19 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord("uploadId1")
         logger.logDeletedID("uploadId1")
         logger.notifyHarvestedRecord("uploadId2")
-        logger.logIgnoredID("uploadId2")
+        logger.logIgnoredID("name:uploadId2", UploaderException(uploadId="uploadId2", message="Test Exception"))
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
+        ignoredUploadId2 = open(self.logDir+'/ignored/name/uploadId2').read()
         #Total is now counted based upon the id's
         self.assertTrue('3/1/1/0, Done:' in lines[0], lines[0])
         date, event, id, comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
+        self.assertEquals('uploadId: "uploadId2", message: "Test Exception"', ignoredUploadId2) 
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
@@ -147,7 +150,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('id:4')
-        logger.logIgnoredID('id:4')
+        logger.logIgnoredID('id:4', UploaderException(uploadId="id:4", message="Error"))
         self.assertEquals(1, logger.totalIgnoredIds())
         logger.notifyHarvestedRecord('id:4')
         self.assertEquals(0, logger.totalIgnoredIds())

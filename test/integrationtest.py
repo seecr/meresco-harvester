@@ -87,6 +87,10 @@ class IntegrationTest(CQ2TestCase):
         self.assertEquals(0, len(ids))
         ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
         self.assertEquals(5, len(ignoredIds), ignoredIds)
+        ignoreDir = join(harvesterLogDir, "adomain", "ignored", "integrationtest")
+        self.assertEquals(5, len(listdir(ignoreDir)))
+        ignoreId1Error = open(join(ignoreDir, "recordID1")).read()
+        self.assertTrue('uploadId: "integrationtest:recordID1"', ignoreId1Error)
 
 def fileSubstVars(filepath, **kwargs):
     contents = open(filepath).read()
