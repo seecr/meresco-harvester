@@ -74,7 +74,7 @@ class IntegrationTest(CQ2TestCase):
         self.assertEquals(2, len([f for f in listdir(dumpDir) if "info:srw/action/1/delete" in open(join(dumpDir, f)).read()]))
         ids = open(join(harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
         self.assertEquals(10, len(ids))
-        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest.ignored.ids")).readlines()
+        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
         self.assertEquals(0, len(ignoredIds))
 
     def testInvalidIgnoredUptoMaxIgnore(self):
@@ -83,7 +83,7 @@ class IntegrationTest(CQ2TestCase):
         self.assertEquals(0, len(listdir(dumpDir)))
         ids = open(join(harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
         self.assertEquals(0, len(ids))
-        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest.ignored.ids")).readlines()
+        ignoredIds = open(join(harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
         self.assertEquals(0, len(ignoredIds))
         
         
