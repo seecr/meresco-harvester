@@ -59,9 +59,9 @@ class TimedProcess(object):
         self.timer.cancel()
 
     def executeScript(self, args, timeout, signal=9):
+        executable="/usr/bin/python"
         self._signal = signal
-        self._pid = spawnvp(P_NOWAIT, executable,
-            [executable] + args)
+        self._pid = spawnvp(P_NOWAIT, executable, [executable] + args)
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
         resultpid, status = waitpid(self._pid, 0)
@@ -71,5 +71,6 @@ class TimedProcess(object):
             self.timer.cancel()
             self._wasSuccess = True
             self._wasTimeout = False
+
         return exitstatus 
 

@@ -31,13 +31,15 @@
 from __future__ import with_statement
 
 import os, sys
+from os.path import dirname, abspath
 os.system('find .. -name "*.pyc" | xargs rm -f')
 
 from glob import glob
 for path in glob('../deps.d/*'):
     sys.path.insert(0, path)
 
-sys.path.insert(0, "..")
+myDir = dirname(abspath(__file__))
+sys.path.insert(0, dirname(myDir))
 
 from os import system, kill, WNOHANG, waitpid, listdir
 from os.path import isdir, isfile, join
@@ -112,8 +114,9 @@ def startHarvester():
     stdoutfile = join(integrationTempdir, "stdouterr-harvester.log")
     stdouterrlog = open(stdoutfile, 'w')
     harvesterProcessInfo = Popen(
-        args=[join(integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % harvesterLogDir, "--stateDir=%s" % harvesterStateDir], 
+        args=["python", join(integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % harvesterLogDir, "--stateDir=%s" % harvesterStateDir], 
         cwd=integrationTempdir,
+        env={'PYTHONPATH': sys.path[0], 'LANG': 'en_US.UTF-8'},
         stdout=stdouterrlog,
         stderr=stdouterrlog)
     print "Harvester PID", harvesterProcessInfo.pid

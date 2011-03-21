@@ -29,9 +29,6 @@
 # This script should be run by a user with write access to the logDir and stateDir
 # specified in the apache configuration
 
-import sys
-sys.path.insert(0, "/home/edurep/mh")
-
 from time import gmtime, strftime
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string, bind_file
