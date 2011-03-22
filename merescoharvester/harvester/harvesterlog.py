@@ -139,3 +139,6 @@ class HarvesterLog(object):
     
     def state(self):
         return self._state
+
+    def ignoredIds(self):
+        return [id for id in self._ignoredIds]

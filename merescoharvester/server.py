@@ -10,11 +10,13 @@ from dynamichtml import DynamicHtml
 from meresco.components import readConfig
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer
 
+from harvester.harvesterlog import HarvesterLog
+from harvester.saharaget import SaharaGet
+
 myPath = dirname(abspath(__file__))
-dynamicHtmlPath = join(myPath, 'html')
+dynamicHtmlPath = join(myPath, 'controlpanel', 'html')
 
-def dna(reactor, observableHttpServer, config):
-
+def dna(reactor, observableHttpServer, config, saharaUrl):
     return \
         (Observable(),
             (observableHttpServer,
@@ -26,6 +28,7 @@ def dna(reactor, observableHttpServer, config):
                             additionalGlobals = {},
                             indexPage="/index.html",
                             ),
+                            (SaharaGet(saharaurl=saharaUrl),)
                         )
                     )
                 )
@@ -36,11 +39,12 @@ def startServer(configFile):
     config = readConfig(configFile)
 
     portNumber = int(config['portNumber'])
+    saharaUrl = config['saharaUrl']
 
     reactor = Reactor()
     observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
-    server = be(dna(reactor, observableHttpServer, config))
+    server = be(dna(reactor, observableHttpServer, config, saharaUrl))
     server.once.observer_init()
 
     print "Ready to rumble at", portNumber

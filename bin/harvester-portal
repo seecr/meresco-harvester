@@ -17,10 +17,10 @@ from sys import argv, exit
 
 if __name__ == '__main__':
     if len(argv[1:]) != 1:
-        print 'Usage: %s edurep.config' % argv[0]
+        print 'Usage: %s harvester.config' % argv[0]
         exit(123)
     configFile = argv[1]
 
-    from merescoharvester.controlpanel.server import startServer
+    from merescoharvester.server import startServer
     startServer(configFile)
 

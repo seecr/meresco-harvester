@@ -49,7 +49,11 @@ class Ids(object):
         
     def __len__(self):
         return len(self._ids)
-    
+
+    def __iter__(self):
+        for id in self._ids:
+            yield id
+
     def clear(self):
         self._ids = []
         

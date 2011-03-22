@@ -157,6 +157,15 @@ class HarvesterLogTest(unittest.TestCase):
         logger.logID('id:4')
         self.assertEquals(1, logger.totalIds())
 
+    def testListIgnoredIDs(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+        logger.startRepository()
+        logger.notifyHarvestedRecord('id:1')
+        logger.logIgnoredID('id:1', UploaderException(uploadId="id:1", message="Error"))
+        logger.notifyHarvestedRecord('id:2')
+        logger.logIgnoredID('id:2', UploaderException(uploadId="id:2", message="Error"))
+        self.assertEquals(['id:1', 'id:2'], logger.ignoredIds())
+
     def testLogDeleted(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')
         self.assertEquals(None,logger.from_)
