@@ -26,9 +26,14 @@ if __name__ == '__main__':
     runner = TestRunner()
     runner.addGroup('default', [
             'integration.harvestertest.HarvesterTest',
-            'integration.portaltest.PortalTest',
         ],
         groupSetUp = lambda: globalSetUp(fastMode, 'default'),
+        groupTearDown = lambda: globalTearDown())
+
+    runner.addGroup('portal', [
+            'integration.portaltest.PortalTest',
+        ],
+        groupSetUp = lambda: globalSetUp(fastMode, 'portal'),
         groupTearDown = lambda: globalTearDown())
 
     testnames = argv[1:]

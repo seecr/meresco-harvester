@@ -29,11 +29,10 @@
 ## end license ##
 from __future__ import with_statement
 
+from test.mocksaharaget import MockSaharaGet
+
 from glob import glob
 from sys import path, argv, exit
-for directory in glob('../deps.d/*'):
-    path.insert(0, directory)
-path.insert(0, '..')
 
 from weightless.io import Reactor
 from sys import stdout
@@ -121,7 +120,10 @@ def main(reactor, portNumber, dumpdir):
                     )
                 ),
                 (PathFilter("/files"),
-                    (FileServer(mydir),),
+                    (FileServer(mydir),)
+                ),
+                (PathFilter("/saharaget"),
+                    (MockSaharaGet(),)
                 )
             )
         )

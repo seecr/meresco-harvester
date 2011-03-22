@@ -50,6 +50,7 @@ from traceback import print_exc
 mypath = dirname(abspath(__file__))
 binDir = join(dirname(dirname(mypath)), 'bin')
 documentationPath = join(dirname(dirname(mypath)), 'doc')
+harvesterDir = dirname(dirname(dirname(abspath(__file__))))
 
 if not isdir(binDir):
     binDir = '/usr/bin'
@@ -116,7 +117,8 @@ class IntegrationState(object):
         fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), helperServerPortNumber=self.helperServerPortNumber)
 
         self.startHelperServer()
-        self.startHarvesterPortal()
+        if self.stateName == 'portal':
+            self.startHarvesterPortal()
 
         sleep(3)
 
@@ -124,7 +126,8 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=[join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.dumpDir], 
+            args=["python", join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.dumpDir], 
+            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,
             stderr=stdouterrlog)
@@ -135,9 +138,10 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterportal.log")
         stdouterrlog = open(stdoutfile, 'w')
         configFile = join(self.integrationTempdir, 'harvester.config') 
-        open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (self.harvesterPortalPortNumber, self.harvesterPortalPortNumber))
+        open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (self.harvesterPortalPortNumber, self.helperServerPortNumber))
         processInfo = Popen(
             args=[join(binDir, "harvester-portal"), configFile], 
+            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)

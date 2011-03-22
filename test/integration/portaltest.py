@@ -36,4 +36,5 @@ class PortalTest(IntegrationTestCase):
 
     def testListAllRepositories(self):
         header, result = getRequest(self.harvesterPortalPortNumber, '/index.html', {'domainId': 'integrationtest'}, parse=False)
-        self.assertTrue("name" in result, result)
+        self.assertTrue("""<a href="/repository?domain=integrationtest&repositoryId=integrationtest">integrationtest</a>""" in result, result)
+

@@ -79,3 +79,16 @@ def read(self, verb, **kwargs):
     print verb, kwargs
     return globals()[verb](**kwargs)
 
+class MockSaharaGet(object):
+
+    def handleRequest(self, arguments, **kwargs):
+        yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
+
+        verb = arguments.get('verb', [None])[0]
+        domainId = arguments.get('domainId', [None])[0]
+        repositoryId = arguments.get('repositoryId', [None])[0]
+        targetId = arguments.get('targetId', [None])[0]
+        mappingId = arguments.get('mappingId', [None])[0]
+        yield read(**locals()).xml()
+
+
