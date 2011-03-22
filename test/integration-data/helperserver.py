@@ -39,7 +39,7 @@ from weightless.io import Reactor
 from sys import stdout
 from os.path import abspath, dirname, join, isdir, basename
 from os import makedirs
-from meresco.components.http import ObservableHttpServer, PathFilter
+from meresco.components.http import ObservableHttpServer, PathFilter, FileServer
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.core import Observable, be
 from re import compile
@@ -47,7 +47,6 @@ from traceback import format_exc
 
 mydir = dirname(abspath(__file__))
 notWordCharRE = compile('\W+')
-
 
 class InvalidDataException(Exception):
     pass
@@ -106,12 +105,10 @@ class StartTest(Observable):
             self.any.ignoreAll()
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
 
-
-
-
 def main(reactor, portNumber, dumpdir):
     isdir(dumpdir) or makedirs(dumpdir)
     dump = Dump(dumpdir)
+    print mydir
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
@@ -122,6 +119,9 @@ def main(reactor, portNumber, dumpdir):
                     (StartTest(),
                         (dump,)
                     )
+                ),
+                (PathFilter("/files"),
+                    (FileServer(mydir),),
                 )
             )
         )

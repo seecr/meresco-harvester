@@ -85,8 +85,7 @@ class IntegrationState(object):
         self.integrationTempdir = '/tmp/mh-integrationtest-%s' % stateName 
         system('rm -rf ' + self.integrationTempdir)
 
-        self.dumpPortNumber = PortNumberGenerator.next()
-        self.oaiPortNumber = PortNumberGenerator.next()
+        self.helperServerPortNumber = PortNumberGenerator.next()
         self.harvesterPortalPortNumber = PortNumberGenerator.next()
 
         self.dumpDir = join(self.integrationTempdir, 'dump')
@@ -113,35 +112,23 @@ class IntegrationState(object):
 
     def initialize(self):
         copytree("integration-data", self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "DUMP.target"), dumpPortNumber=self.dumpPortNumber)
-        fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), oaiPortNumber=self.oaiPortNumber)
+        fileSubstVars(join(self.integrationTempdir, "data", "DUMP.target"), dumpPortNumber=self.helperServerPortNumber)
+        fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), helperServerPortNumber=self.helperServerPortNumber)
 
-        self.startDumpServer()
-        self.startOaiFileServer()
+        self.startHelperServer()
         self.startHarvesterPortal()
 
         sleep(3)
 
-    def startDumpServer(self):
-        stdoutfile = join(self.integrationTempdir, "stdouterr-dump.log")
+    def startHelperServer(self):
+        stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=[join(self.integrationTempdir, "dumpserver.py"), str(self.dumpPortNumber), self.dumpDir], 
+            args=[join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.dumpDir], 
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,
             stderr=stdouterrlog)
-        print "DumpServer PID", processInfo.pid
-        self._pids.append(processInfo.pid)
-
-    def startOaiFileServer(self):
-        stdoutfile = join(self.integrationTempdir, "stdouterr-oaifileserver.log")
-        stdouterrlog = open(stdoutfile, 'w')
-        processInfo = Popen(
-            args=[join(self.integrationTempdir, "oaifileserver.py"), str(self.oaiPortNumber)], 
-            cwd=self.integrationTempdir,
-            stdout=stdouterrlog,
-            stderr=stdouterrlog)
-        print "Oai Fileserver PID", processInfo.pid
+        print "Helper Server PID", processInfo.pid
         self._pids.append(processInfo.pid)
 
     def startHarvesterPortal(self):

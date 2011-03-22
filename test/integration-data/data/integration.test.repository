@@ -5,7 +5,7 @@
   <use>true</use>
   <complete></complete>
   <action></action>
-  <baseurl>http://localhost:${oaiPortNumber}/listrecords.oai</baseurl>
+  <baseurl>http://localhost:${helperServerPortNumber}/files/listrecords.oai</baseurl>
   <set></set>
   <collection>Integration</collection>
   <targetId>DUMP</targetId>
