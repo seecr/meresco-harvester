@@ -54,7 +54,8 @@ from signal import SIGTERM, SIGKILL
 from subprocess import Popen
 from shutil import copytree
 
-from cq2utils import CQ2TestCase 
+from cq2utils import CQ2TestCase
+from utils import getRequest
 
 integrationTempdir = '/tmp/mh-integration-test'
 dumpDir = join(integrationTempdir, "dump")
@@ -91,6 +92,10 @@ class IntegrationTest(CQ2TestCase):
         self.assertEquals(5, len(listdir(ignoreDir)))
         ignoreId1Error = open(join(ignoreDir, "recordID1")).read()
         self.assertTrue('uploadId: "integrationtest:recordID1"', ignoreId1Error)
+
+    def testListAllRepositories(self):
+        header, result = getRequest(harvesterPortalPortNumber, '/index.html', {'domainId': 'integrationtest'}, parse=False)
+        self.assertTrue("name" in result, result)
 
 def fileSubstVars(filepath, **kwargs):
     contents = open(filepath).read()
@@ -137,16 +142,17 @@ def startOaiFileServer(portNumber):
     print "Oai Fileserver PID", processInfo.pid
     return processInfo
 
-def startHarvesterServer(portNumber):
-    stdoutfile = join(integrationTempdir, "stdouterr-harvesterserver.log")
+def startHarvesterPortal(portNumber):
+    stdoutfile = join(integrationTempdir, "stdouterr-harvesterportal.log")
     stdouterrlog = open(stdoutfile, 'w')
     configFile = join(integrationTempdir, 'harvester.config') 
-    open(configFile, 'w').write("portNumber=%s" % portNumber)
+    open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (portNumber, harvesterPortalPortNumber))
     processInfo = Popen(
-        args=[join(binDir, "harvester-server"), configFile], 
+        args=[join(binDir, "harvester-portal"), configFile], 
+        cwd=binDir,
         stdout=stdouterrlog,
         stderr=stdouterrlog)
-    print "Harvester Server PID", processInfo.pid
+    print "Harvester Portal PID", processInfo.pid
     return processInfo
 
 def stopProcess(processInfo):
@@ -158,18 +164,18 @@ if __name__ == '__main__':
     system('rm -rf ' + integrationTempdir)
     dumpPortNumber = randint(50000,60000)
     oaiPortNumber = dumpPortNumber + 1
-    harvesterPortNumber = dumpPortNumber + 2
+    harvesterPortalPortNumber = dumpPortNumber + 2
 
     initData(integrationTempdir, dumpPortNumber, oaiPortNumber)
     
     dumpServerProcessInfo = startDumpServer(dumpPortNumber)
     oaiServerProcessInfo = startOaiFileServer(oaiPortNumber)
-    harvesterServerProcessInfo = startHarvesterServer(harvesterPortNumber)
+    harvesterPortalProcessInfo = startHarvesterPortal(harvesterPortalPortNumber)
     sleep(3)
     try:
         main()
     finally:
         stopProcess(dumpServerProcessInfo)
         stopProcess(oaiServerProcessInfo)
-        stopProcess(harvesterServerProcessInfo)
+        stopProcess(harvesterPortalProcessInfo)
 
