@@ -101,7 +101,8 @@ class StartTest(Observable):
     def handleRequest(self, arguments, **kwargs):
         name = arguments.get('name', [None])[0]
         self.any.reset()
-        if name == "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore":
+        if name == "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore" or \
+            name == "integration.portaltest.PortalTest.testGetStatus":
             self.any.ignoreAll()
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
 

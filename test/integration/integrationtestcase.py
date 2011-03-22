@@ -74,12 +74,24 @@ class IntegrationTestCase(CQ2TestCase):
         CQ2TestCase.setUp(self)
         global state
         self.state = state
+        urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id()))
 
     def __getattr__(self, name):
         if name.startswith('_'):
             raise AttributeError(name)
         return getattr(self.state, name)
 
+    def startHarvester(self):
+        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
+        stdouterrlog = open(stdoutfile, 'w')
+        harvesterProcessInfo = Popen(
+            args=["python", join(self.integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir], 
+            cwd=self.integrationTempdir,
+            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
+            stdout=stdouterrlog,
+            stderr=stdouterrlog)
+        print "Harvester PID", harvesterProcessInfo.pid
+        waitpid(harvesterProcessInfo.pid, 0)
 
 class IntegrationState(object):
     def __init__(self, stateName, fastMode):

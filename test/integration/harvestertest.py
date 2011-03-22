@@ -40,15 +40,12 @@ from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
-myDir = dirname(dirname(dirname(abspath(__file__))))
-
 class HarvesterTest(IntegrationTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
         system("rm -rf %s/*" % self.dumpDir)
         system("rm -rf %s" % self.harvesterLogDir)
         system("rm -rf %s" % self.harvesterStateDir)
-        urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id()))
 
     def testHarvestToDump(self):
         self.startHarvester()
@@ -70,16 +67,4 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(5, len(listdir(ignoreDir)))
         ignoreId1Error = open(join(ignoreDir, "recordID1")).read()
         self.assertTrue('uploadId: "integrationtest:recordID1"', ignoreId1Error)
-
-    def startHarvester(self):
-        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
-        stdouterrlog = open(stdoutfile, 'w')
-        harvesterProcessInfo = Popen(
-            args=["python", join(self.integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir], 
-            cwd=self.integrationTempdir,
-            env={'PYTHONPATH': myDir, 'LANG': 'en_US.UTF-8'},
-            stdout=stdouterrlog,
-            stderr=stdouterrlog)
-        print "Harvester PID", harvesterProcessInfo.pid
-        waitpid(harvesterProcessInfo.pid, 0)
 

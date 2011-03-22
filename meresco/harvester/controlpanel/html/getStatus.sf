@@ -1,0 +1,16 @@
+
+def main(arguments, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
+    repositoryId = arguments.get('repositoryId', [None])[0]
+
+    yield """<?xml version="1.0" encoding="UTF-8"?>
+<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">"""
+    yield """<responseDate>%s</responseDate>""" % time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    yield """<request>
+    <verb>GetStatus</verb>
+    <domainId>%(domainId)s</domainId>
+    <repositoryId>%(repositoryId)s</repositoryId>
+  </request>""" % locals()
+    yield any.getStatus(domainId, repositoryId)
+    yield """</saharaget>"""
+

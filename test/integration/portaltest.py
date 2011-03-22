@@ -32,9 +32,21 @@ from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
+def xpath(node, xpath):
+    return node.xpath(xpath, namespaces={'s': 'http://sahara.cq2.org/xsd/saharaget.xsd'})
+
 class PortalTest(IntegrationTestCase):
 
     def testListAllRepositories(self):
         header, result = getRequest(self.harvesterPortalPortNumber, '/index.html', {'domainId': 'integrationtest'}, parse=False)
         self.assertTrue("""<a href="/repository?domain=integrationtest&repositoryId=integrationtest">integrationtest</a>""" in result, result)
+
+    def testGetStatus(self):
+        self.startHarvester()
+        header, result = getRequest(self.harvesterPortalPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals("GetStatus", xpath(result, "/s:saharaget/s:request/s:verb/text()")[0])
+        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
+        self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])
+        self.assertEquals("5", xpath(result, "/s:saharaget/s:GetStatus/s:status[@repositoryId='integrationtest']/s:ignored/text()")[0])
+        
 

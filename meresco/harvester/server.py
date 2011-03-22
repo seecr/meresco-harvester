@@ -31,6 +31,7 @@ from meresco.core import Observable, be
 from os.path import join, abspath, dirname
 from sys import stdout
 
+import time
 from weightless.io import Reactor
 from dynamichtml import DynamicHtml
 
@@ -39,13 +40,13 @@ from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServ
 from meresco.components.http.utils import ContentTypePlainText
 from meresco.harvester import VERSION_STRING
 
-from harvesterlog import HarvesterLog
 from saharaget import SaharaGet
+from status import Status
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html')
 
-def dna(reactor, observableHttpServer, config, saharaUrl):
+def dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath):
     return \
         (Observable(),
             (observableHttpServer,
@@ -57,10 +58,11 @@ def dna(reactor, observableHttpServer, config, saharaUrl):
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
-                            additionalGlobals = {},
+                            additionalGlobals = {'time': time},
                             indexPage="/index.html",
                             ),
-                            (SaharaGet(saharaurl=saharaUrl),)
+                            (SaharaGet(saharaurl=saharaUrl),),
+                            (Status(logPath, statePath),)
                         )
                     )
                 )
@@ -79,7 +81,7 @@ def startServer(configFile):
     reactor = Reactor()
     observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
-    server = be(dna(reactor, observableHttpServer, config, saharaUrl))
+    server = be(dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath))
     server.once.observer_init()
 
     print "Ready to rumble at", portNumber
