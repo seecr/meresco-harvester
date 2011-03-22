@@ -48,7 +48,7 @@ class HarvesterTest(IntegrationTestCase):
         system("rm -rf %s/*" % self.dumpDir)
         system("rm -rf %s" % self.harvesterLogDir)
         system("rm -rf %s" % self.harvesterStateDir)
-        urlopen("http://localhost:%s/starttest" % self.helperServerPortNumber)
+        urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id()))
 
     def testHarvestToDump(self):
         self.startHarvester()
@@ -60,7 +60,6 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(0, len(ignoredIds))
 
     def testInvalidIgnoredUptoMaxIgnore(self):
-        urlopen("http://localhost:%s/starttest?name=testInvalidIgnoredUptoMaxIgnore" % self.helperServerPortNumber)
         self.startHarvester()
         self.assertEquals(2, len(listdir(self.dumpDir)))
         ids = open(join(self.harvesterStateDir, "adomain", "integrationtest.ids")).readlines()

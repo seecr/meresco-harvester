@@ -100,18 +100,17 @@ class StartTest(Observable):
     def handleRequest(self, arguments, **kwargs):
         name = arguments.get('name', [None])[0]
         self.any.reset()
-        if name == "testInvalidIgnoredUptoMaxIgnore":
+        if name == "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore":
             self.any.ignoreAll()
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
 
 def main(reactor, portNumber, dumpdir):
     isdir(dumpdir) or makedirs(dumpdir)
     dump = Dump(dumpdir)
-    print mydir
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
-                (PathFilter("/nix/neer"),
+                (PathFilter("/dump"),
                     (dump,)
                 ),
                 (PathFilter("/starttest"),

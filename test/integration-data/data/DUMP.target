@@ -5,6 +5,6 @@
   <username></username>
   <port>${dumpPortNumber}</port>
   <targetType>sruUpdate</targetType>
-  <path>/nix/neer</path>
+  <path>/dump</path>
   <baseurl>localhost</baseurl>
 </target>
