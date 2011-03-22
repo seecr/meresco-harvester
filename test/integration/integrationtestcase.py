@@ -95,7 +95,9 @@ class IntegrationState(object):
         self.harvesterLogDir = join(self.integrationTempdir, "log")
         self.harvesterStateDir = join(self.integrationTempdir, "state")
 
-        self.initialize()
+        copytree("integration-data", self.integrationTempdir)
+        fileSubstVars(join(self.integrationTempdir, "data", "DUMP.target"), dumpPortNumber=self.helperServerPortNumber)
+        fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), helperServerPortNumber=self.helperServerPortNumber)
         config = readConfig(join(documentationPath, 'harvester.config'))
         
         # test example config has neccessary parameters
@@ -103,26 +105,22 @@ class IntegrationState(object):
             assert config[parameter]
             config[parameter] = value
         setConfig(config, 'portNumber', self.harvesterPortalPortNumber)
-        setConfig(config, 'saharaUrl', "http://localhost:%s" % self.harvesterPortalPortNumber)
+        setConfig(config, 'saharaUrl', "http://localhost:%s" % self.helperServerPortNumber)
+        setConfig(config, 'dataPath', join(self.integrationTempdir, 'data'))
+        setConfig(config, 'statePath', join(self.integrationTempdir, 'state'))
+        setConfig(config, 'logPath', join(self.integrationTempdir, 'log'))
 
         self._writeConfig(config, 'harvester')
+
+        self.startHelperServer()
+        if self.stateName == 'portal':
+            self.startHarvesterPortal()
 
     def _writeConfig(self, config, name):
         configFile = join(self.integrationTempdir, '%s.config' % name)
         with open(configFile, 'w') as f:
             for item in config.items():
                 f.write('%s = %s\n' % item)
-
-    def initialize(self):
-        copytree("integration-data", self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "DUMP.target"), dumpPortNumber=self.helperServerPortNumber)
-        fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), helperServerPortNumber=self.helperServerPortNumber)
-
-        self.startHelperServer()
-        if self.stateName == 'portal':
-            self.startHarvesterPortal()
-
-        sleep(3)
 
     def startHelperServer(self):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
@@ -135,12 +133,15 @@ class IntegrationState(object):
             stderr=stdouterrlog)
         print "Helper Server PID", processInfo.pid
         self._pids.append(processInfo.pid)
+        self._check(serverProcess=processInfo, 
+                serviceName='TestHelper', 
+                serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber, 
+                stdoutfile=stdoutfile)
 
     def startHarvesterPortal(self):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterportal.log")
         stdouterrlog = open(stdoutfile, 'w')
         configFile = join(self.integrationTempdir, 'harvester.config') 
-        open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (self.harvesterPortalPortNumber, self.helperServerPortNumber))
         processInfo = Popen(
             args=[join(binDir, "harvester-portal"), configFile], 
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
@@ -149,6 +150,25 @@ class IntegrationState(object):
             stderr=stdouterrlog)
         print "Harvester Portal PID", processInfo.pid
         self._pids.append(processInfo.pid)
+        self._check(serverProcess=processInfo, 
+                serviceName='Harvester-Portal', 
+                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterPortalPortNumber, 
+                stdoutfile=stdoutfile)
+
+    def _check(self, serverProcess, serviceName, serviceReadyUrl, stdoutfile):
+        stdoutWrite("Starting service '%s', for state '%s' : v" % (serviceName, self.stateName))
+        done = False
+        while not done:
+            try:
+                stdoutWrite('r')
+                sleep(0.1)
+                urlopen(serviceReadyUrl).read()
+                done = True
+            except IOError:
+                if serverProcess.poll() != None:
+                    self._pids.remove(serverProcess.pid)
+                    exit('Service "%s" died, check "%s"' % (serviceName, stdoutfile))
+        stdoutWrite('oom!\n')
 
     def tearDown(self):
         for pid in self._pids:

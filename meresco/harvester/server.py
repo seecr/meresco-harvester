@@ -35,7 +35,9 @@ from weightless.io import Reactor
 from dynamichtml import DynamicHtml
 
 from meresco.components import readConfig
-from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer
+from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer
+from meresco.components.http.utils import ContentTypePlainText
+from meresco.harvester import VERSION_STRING
 
 from harvesterlog import HarvesterLog
 from saharaget import SaharaGet
@@ -48,7 +50,10 @@ def dna(reactor, observableHttpServer, config, saharaUrl):
         (Observable(),
             (observableHttpServer,
                 (ApacheLogger(stdout),
-                    (PathFilter('/'),
+                    (PathFilter("/info/version"),
+                        (StringServer(VERSION_STRING, ContentTypePlainText), )
+                    ),
+                    (PathFilter('/', excluding=['/info/version']),
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
@@ -67,6 +72,9 @@ def startServer(configFile):
 
     portNumber = int(config['portNumber'])
     saharaUrl = config['saharaUrl']
+    dataPath = config['dataPath']
+    logPath = config['logPath']
+    statePath = config['statePath']
 
     reactor = Reactor()
     observableHttpServer = ObservableHttpServer(reactor, portNumber)

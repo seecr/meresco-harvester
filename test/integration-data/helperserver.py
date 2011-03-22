@@ -38,7 +38,8 @@ from weightless.io import Reactor
 from sys import stdout
 from os.path import abspath, dirname, join, isdir, basename
 from os import makedirs
-from meresco.components.http import ObservableHttpServer, PathFilter, FileServer
+from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
+from meresco.components.http.utils import ContentTypePlainText
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.core import Observable, be
 from re import compile
@@ -123,6 +124,9 @@ def main(reactor, portNumber, dumpdir):
                 ),
                 (PathFilter("/saharaget"),
                     (MockSaharaGet(),)
+                ),
+                (PathFilter("/ready"),
+                    (StringServer('yes', ContentTypePlainText),)
                 )
             )
         )

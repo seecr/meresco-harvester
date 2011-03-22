@@ -5,13 +5,8 @@
 #    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
-#    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009,2011 Seek You Too (CQ2) http://www.cq2.nl
-#    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
-#       http://www.kennisnetictopschool.nl
-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl 
+#    Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl 
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -30,5 +25,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-from namespaces import namespaces
-from __version__ import VERSION, VERSION_STRING
+VERSION = '$Version: trunk$'[9:-1].strip()
+VERSION_STRING = """This is Meresco Harvester version %s.""" % VERSION
+
