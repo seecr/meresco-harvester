@@ -1,6 +1,6 @@
 <%
 from slowfoot import binderytools
-from merescoharvester.controlpanel.tools import checkName
+from meresco.harvester.controlpanel.tools import checkName
 
 f = asform(input)
 id = f.id

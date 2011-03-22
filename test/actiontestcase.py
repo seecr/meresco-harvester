@@ -31,7 +31,7 @@
 #
 ## end license ##
 from cq2utils import CallTrace, CQ2TestCase
-from merescoharvester.harvester.harvesterlog import HarvesterLog
+from meresco.harvester.harvester.harvesterlog import HarvesterLog
 from os.path import join
 
 class ActionTestCase(CQ2TestCase):

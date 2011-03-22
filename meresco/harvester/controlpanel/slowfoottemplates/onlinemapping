@@ -1,8 +1,8 @@
 <%
 type('text/plain')
 prepareHeaders('private')
-from merescoharvester.harvester.onlineharvest import OnlineHarvest
-from merescoharvester.harvester.mapping import Mapping
+from meresco.harvester.harvester.onlineharvest import OnlineHarvest
+from meresco.harvester.harvester.mapping import Mapping
 f = asform(input)
 %>
 Gebruikte url:

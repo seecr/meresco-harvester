@@ -32,11 +32,11 @@
 ## end license ##
 
 import unittest
-from merescoharvester.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException, parse_xml
+from meresco.harvester.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException, parse_xml
 import os, tempfile
-from merescoharvester.harvester import mapping
+from meresco.harvester.harvester import mapping
 from StringIO import StringIO
-from merescoharvester.harvester.eventlogger import StreamEventLogger
+from meresco.harvester.harvester.eventlogger import StreamEventLogger
 from slowfoot.wrappers import wrapp
 
 class MappingTest(unittest.TestCase):

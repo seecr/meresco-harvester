@@ -34,5 +34,5 @@
 # This script should be run by a user with write access to the logDir and stateDir
 # specified in the apache configuration
 
-from merescoharvester.harvester.startharvester import StartHarvester
+from meresco.harvester.harvester.startharvester import StartHarvester
 StartHarvester().start()

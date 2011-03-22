@@ -37,7 +37,7 @@ from amara.binderytools import bind_string
 from lxml.etree import parse
 from StringIO import StringIO
 
-from merescoharvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
+from meresco.harvester.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
 from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
 
 class SruUpdateUploaderTest(CQ2TestCase):

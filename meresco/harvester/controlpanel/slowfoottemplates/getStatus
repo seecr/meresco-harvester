@@ -10,7 +10,7 @@ repositoryId = args.repositoryId
 repositoryGroupId = args.repositoryGroupId
 
 import os
-from merescoharvester.harvester.repositorystatus import RepositoryStatus
+from meresco.harvester.harvester.repositorystatus import RepositoryStatus
 logDir = req.get_options()['logDir']
 
 def writeStatus(repositoryId, repositoryGroupId):

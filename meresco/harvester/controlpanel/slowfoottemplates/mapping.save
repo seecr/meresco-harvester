@@ -1,5 +1,5 @@
 <%
-from merescoharvester.harvester.mapping import Mapping
+from meresco.harvester.harvester.mapping import Mapping
 import os
 
 f = asform(input)

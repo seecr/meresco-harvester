@@ -21,6 +21,6 @@ if __name__ == '__main__':
         exit(123)
     configFile = argv[1]
 
-    from merescoharvester.server import startServer
+    from meresco.harvester.server import startServer
     startServer(configFile)
 

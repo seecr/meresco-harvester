@@ -1,5 +1,5 @@
 <%
-from merescoharvester.controlpanel.tools import getDomainId
+from meresco.harvester.controlpanel.tools import getDomainId
 req.req.headers_out['Cache-control'] = 'no-cache'
 group = xml.repositoryGroup
 domainId = getDomainId(req.uri)

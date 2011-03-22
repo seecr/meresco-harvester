@@ -1,6 +1,6 @@
 <%
 from slowfoot import binderytools
-from merescoharvester.controlpanel.tools import checkName, getDomainId
+from meresco.harvester.controlpanel.tools import checkName, getDomainId
 
 f = asform(input)
 repositoryId = f.id

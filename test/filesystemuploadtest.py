@@ -32,15 +32,15 @@
 #
 ## end license ##
 import unittest
-from merescoharvester.harvester.filesystemuploader import FileSystemUploader
-from merescoharvester.harvester.virtualuploader import UploaderException
+from meresco.harvester.harvester.filesystemuploader import FileSystemUploader
+from meresco.harvester.harvester.virtualuploader import UploaderException
 from cq2utils import CallTrace, CQ2TestCase
 from slowfoot.wrappers import wrapp
 import os, shutil
 from slowfoot import binderytools
 from tempfile import mkdtemp
 from amara.binderytools import bind_string
-from merescoharvester.harvester.mapping import Upload, parse_xml
+from meresco.harvester.harvester.mapping import Upload, parse_xml
 
 from os.path import isfile, join
 

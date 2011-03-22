@@ -31,7 +31,7 @@
 ## end license ##
 
 import unittest
-from merescoharvester.controlpanel.disallowfileplugin import DisallowFilePlugin
+from meresco.harvester.controlpanel.disallowfileplugin import DisallowFilePlugin
 import tempfile,os
 
 class MockRequest(object):

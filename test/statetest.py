@@ -31,7 +31,7 @@
 #
 ## end license ##
 
-from merescoharvester.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
+from meresco.harvester.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
 from cq2utils import CQ2TestCase
 from os.path import join
 

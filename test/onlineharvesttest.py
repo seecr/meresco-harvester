@@ -32,9 +32,9 @@
 ## end license ##
 
 import unittest
-from merescoharvester.harvester.onlineharvest import OnlineHarvest
+from meresco.harvester.harvester.onlineharvest import OnlineHarvest
 from StringIO import StringIO
-from merescoharvester.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
+from meresco.harvester.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
 from slowfoot.wrappers import wrapp
 import os
 

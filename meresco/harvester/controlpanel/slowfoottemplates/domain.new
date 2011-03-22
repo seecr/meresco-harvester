@@ -3,7 +3,7 @@ f = asform(input)
 id = f.id
 
 from os import path
-from merescoharvester.controlpanel.tools import checkName
+from meresco.harvester.controlpanel.tools import checkName
 
 if id == '':
   redirect('/page/domains/show?error=No%20name%20given.')

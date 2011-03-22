@@ -29,8 +29,8 @@
 # This script should be run by a user with write access to the logDir and stateDir
 # specified in the apache configuration
 
-from merescoharvester.harvester.startharvester import StartHarvester
-from merescoharvester.harvester.saharaget import SaharaGet
+from meresco.harvester.harvester.startharvester import StartHarvester
+from meresco.harvester.harvester.saharaget import SaharaGet
 
 from test import mocksaharaget
 

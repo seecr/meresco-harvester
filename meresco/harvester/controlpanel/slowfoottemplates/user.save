@@ -1,6 +1,6 @@
 <%
 users = asxml(url('/users.xml')).users
-from merescoharvester.controlpanel.tools import getElements
+from meresco.harvester.controlpanel.tools import getElements
 from slowfoot.wrappers import wrapp
 f = asform(input)
 target(filepath('users.xml'))

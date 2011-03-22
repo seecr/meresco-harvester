@@ -33,14 +33,14 @@ from actiontestcase import ActionTestCase
 import shutil, os
 from os.path import join
 from tempfile import mkdtemp
-from merescoharvester.harvester.repository import Repository
-from merescoharvester.harvester.action import SmoothAction, DONE
+from meresco.harvester.harvester.repository import Repository
+from meresco.harvester.harvester.action import SmoothAction, DONE
 from slowfoot.wrappers import wrapp
-from merescoharvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
-from merescoharvester.harvester.deleteids import readIds
-from merescoharvester.harvester import action
+from meresco.harvester.harvester.harvester import HARVESTED, NOTHING_TO_DO
+from meresco.harvester.harvester.deleteids import readIds
+from meresco.harvester.harvester import action
 from sets import Set
-from merescoharvester.harvester.eventlogger import NilEventLogger
+from meresco.harvester.harvester.eventlogger import NilEventLogger
 from cq2utils import CallTrace
 
 class SmoothActionTest(ActionTestCase):

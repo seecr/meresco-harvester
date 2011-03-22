@@ -32,14 +32,14 @@
 from distutils.core import setup
 
 setup(
-    name='merescoharvester',
+    name='meresco-harvester',
     packages=[
-        'merescoharvester',
-        'merescoharvester.controlpanel',
-        'merescoharvester.harvester',
+        'meresco.harvester',
+        'meresco.harvester.controlpanel',
+        'meresco.harvester.harvester',
     ],
     package_data={
-        'merescoharvester.controlpanel': [
+        'meresco.harvester.controlpanel': [
             'slowfoottemplates/*'
         ]
     },

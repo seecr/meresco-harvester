@@ -30,7 +30,7 @@
 #
 ## end license ##
 import unittest
-from merescoharvester.harvester.repositorystatus import RepositoryStatus
+from meresco.harvester.harvester.repositorystatus import RepositoryStatus
 import tempfile
 from StringIO import StringIO
 

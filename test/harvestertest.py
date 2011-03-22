@@ -45,14 +45,14 @@ from lxml.etree import parse
 from cq2utils import CallTrace
 from slowfoot.wrappers import wrapp, binderytools
 
-from merescoharvester.harvester.harvester import Harvester
-from merescoharvester.harvester.harvesterlog import HarvesterLog
-from merescoharvester.harvester.state import getHarvestedUploadedRecords
-from merescoharvester.harvester.oairequest import OaiRequest
-from merescoharvester.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
-from merescoharvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
-from merescoharvester.harvester import harvester 
-from merescoharvester import namespaces
+from meresco.harvester.harvester.harvester import Harvester
+from meresco.harvester.harvester.harvesterlog import HarvesterLog
+from meresco.harvester.harvester.state import getHarvestedUploadedRecords
+from meresco.harvester.harvester.oairequest import OaiRequest
+from meresco.harvester.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
+from meresco.harvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
+from meresco.harvester.harvester import harvester 
+from meresco.harvester import namespaces
 
 from mockoairequest import MockOaiRequest
 

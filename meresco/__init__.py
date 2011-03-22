@@ -5,12 +5,8 @@
 #    "Meresco Harvester" is originally called "Sahara" and was developed for
 #    SURFnet by:
 #        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
-#    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2009 Seek You Too (CQ2) http://www.cq2.nl
-#    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
-#       http://www.kennisnetictopschool.nl
-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
+#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl 
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -29,23 +25,5 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-import unittest
-from meresco.harvester.controlpanel import tools
-
-class ToolsTest(unittest.TestCase):
-	def testCheckName(self):
-		assert tools.checkName('domain')
-		assert not tools.checkName('doma:in')
-		assert tools.checkName('doD432_main')
-		assert tools.checkName('doD432-main')
-		assert not tools.checkName('doma:in')
-		assert not tools.checkName(' domain')
-		assert not tools.checkName('do main')
-		assert not tools.checkName('doma?in')
-		assert not tools.checkName('doma@in')
-
-	def testDomainId(self):
-		self.assertEquals('cq2Mock', tools.getDomainId('/cq2Mock.hoi.st'))
-		self.assertEquals('cq2Mock', tools.getDomainId('cq2Mock.hoi.st'))
-		self.assertEquals('cq2Mock', tools.getDomainId('/asf/asdf/cq2Mock.hoi.st'))
-
+from pkgutil import extend_path
+__path__ = extend_path(__path__, __name__)
