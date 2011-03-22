@@ -64,8 +64,8 @@ class ActionTestCase(CQ2TestCase):
         h._state._gmtime = lambda: (year, month, day, 12, 15, 0, 0, 0, 0)
  
         h.startRepository()
-        h.notifyHarvestedRecord("uploadId1")
-        h.logID("uploadId1")
+        h.notifyHarvestedRecord("repo:uploadId1")
+        h.logID("repo:uploadId1")
         if exception != None:
             try:
                 raise Exception(exception)

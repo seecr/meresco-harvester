@@ -310,6 +310,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = self.createHarvesterWithMockUploader('tud')
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
         upload = Upload(record=record)
+        upload.id = "tud:mockid"
         upload.skip = True
         harvester._mapper.createUpload = lambda repository,record,logger: upload
         harvester.uploadRecord(record)
