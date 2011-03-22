@@ -118,6 +118,7 @@ class IntegrationState(object):
 
         self.startDumpServer()
         self.startOaiFileServer()
+        self.startHarvesterPortal()
 
         sleep(3)
 
@@ -143,11 +144,11 @@ class IntegrationState(object):
         print "Oai Fileserver PID", processInfo.pid
         self._pids.append(processInfo.pid)
 
-    def startHarvesterPortal(self, portNumber):
+    def startHarvesterPortal(self):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterportal.log")
         stdouterrlog = open(stdoutfile, 'w')
         configFile = join(self.integrationTempdir, 'harvester.config') 
-        open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (portNumber, harvesterPortalPortNumber))
+        open(configFile, 'w').write("portNumber=%s\r\nsaharaUrl=http://localhost:%s" % (self.harvesterPortalPortNumber, self.harvesterPortalPortNumber))
         processInfo = Popen(
             args=[join(binDir, "harvester-portal"), configFile], 
             cwd=binDir,
