@@ -31,11 +31,11 @@
 ## end license ##
 
 from cq2utils import CallTrace, CQ2TestCase
-from meresco.harvester.harvester import harvesterlog
-from meresco.harvester.harvester.deleteids import DeleteIds, readIds
+from meresco.harvester import harvesterlog
+from meresco.harvester.deleteids import DeleteIds, readIds
 from sets import Set
-from meresco.harvester.harvester.virtualuploader import UploaderException, VirtualUploader
-from meresco.harvester.harvester import deleteids
+from meresco.harvester.virtualuploader import UploaderException, VirtualUploader
+from meresco.harvester import deleteids
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isfile

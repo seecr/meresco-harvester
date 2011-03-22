@@ -32,9 +32,9 @@
 ## end license ##
 from actiontestcase import ActionTestCase
 from cq2utils import CallTrace
-from meresco.harvester.harvester.action import HarvestAction
-from meresco.harvester.harvester.eventlogger import NilEventLogger
-from meresco.harvester.harvester.oairequest import OaiRequest
+from meresco.harvester.action import HarvestAction
+from meresco.harvester.eventlogger import NilEventLogger
+from meresco.harvester.oairequest import OaiRequest
 from os.path import join
 
 class HarvestActionTest(ActionTestCase):

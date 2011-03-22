@@ -2,7 +2,7 @@ from slowfoot import binderytools
 from os.path import join
 from urllib import urlencode
 
-from meresco.harvester.harvester.oairequest import OaiRequest
+from meresco.harvester.oairequest import OaiRequest
 
 class MockOaiRequest(OaiRequest):
     def __init__(self, url):

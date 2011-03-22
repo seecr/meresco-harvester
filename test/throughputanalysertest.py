@@ -32,7 +32,7 @@
 
 import unittest
 import datetime, tempfile, os, shutil
-from meresco.harvester.harvester.throughputanalyser import parseToTime, ThroughputAnalyser, ThroughputReport
+from meresco.harvester.throughputanalyser import parseToTime, ThroughputAnalyser, ThroughputReport
 
 class ThroughputAnalyserTest(unittest.TestCase):
     

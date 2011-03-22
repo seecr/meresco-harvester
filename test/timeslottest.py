@@ -34,7 +34,7 @@ import datetime
 import time
 import re
 
-from meresco.harvester.harvester.timeslot import Timeslot, Wildcard, _parse as parse, ParseException
+from meresco.harvester.timeslot import Timeslot, Wildcard, _parse as parse, ParseException
 
 class TimeslotTest(unittest.TestCase):
 

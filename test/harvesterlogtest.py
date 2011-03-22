@@ -33,10 +33,10 @@
 
 import unittest,os
 from time import strftime, gmtime
-from meresco.harvester.harvester.harvesterlog import HarvesterLog
-from meresco.harvester.harvester import harvesterlog
-from meresco.harvester.harvester.eventlogger import LOGLINE_RE
-from meresco.harvester.harvester.virtualuploader import UploaderException
+from meresco.harvester.harvesterlog import HarvesterLog
+from meresco.harvester import harvesterlog
+from meresco.harvester.eventlogger import LOGLINE_RE
+from meresco.harvester.virtualuploader import UploaderException
 from tempfile import mkdtemp
 from shutil import rmtree
 

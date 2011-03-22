@@ -45,13 +45,12 @@ from lxml.etree import parse
 from cq2utils import CallTrace
 from slowfoot.wrappers import wrapp, binderytools
 
-from meresco.harvester.harvester.harvester import Harvester
-from meresco.harvester.harvester.harvesterlog import HarvesterLog
-from meresco.harvester.harvester.state import getHarvestedUploadedRecords
-from meresco.harvester.harvester.oairequest import OaiRequest
-from meresco.harvester.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
-from meresco.harvester.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
-from meresco.harvester.harvester import harvester 
+from meresco.harvester.harvester import Harvester
+from meresco.harvester.harvesterlog import HarvesterLog
+from meresco.harvester.state import getHarvestedUploadedRecords
+from meresco.harvester.oairequest import OaiRequest
+from meresco.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
+from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
 from meresco.harvester import namespaces
 
 from mockoairequest import MockOaiRequest
@@ -92,7 +91,6 @@ class HarvesterTest(unittest.TestCase):
         self.startCalled=0
         self.stopCalled=0
         self.logDir = self.stateDir = mkdtemp()
-        harvester.p=lambda x:None
 
     def tearDown(self):
         rmtree(self.logDir)

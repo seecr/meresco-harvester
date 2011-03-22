@@ -31,7 +31,7 @@
 ## end license ##
 
 import unittest
-from meresco.harvester.harvester.saharaget import SaharaGet, SaharaGetException
+from meresco.harvester.saharaget import SaharaGet, SaharaGetException
 from slowfoot.wrappers import wrapp
 from slowfoot import binderytools
 

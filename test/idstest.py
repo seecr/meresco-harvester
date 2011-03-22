@@ -31,7 +31,7 @@
 ## end license ##
 
 from cq2utils import CQ2TestCase
-from meresco.harvester.harvester.ids import Ids
+from meresco.harvester.ids import Ids
 
 class IdsTest(CQ2TestCase):
     def tearDown(self):

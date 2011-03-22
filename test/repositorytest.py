@@ -30,15 +30,15 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-from meresco.harvester.harvester.saharaget import SaharaGet, SaharaGetException
-from meresco.harvester.harvester.eventlogger import NilEventLogger
-from meresco.harvester.harvester.harvesterlog import HarvesterLog
-from meresco.harvester.harvester.repository import Repository
-from meresco.harvester.harvester.action import Action, DONE, ActionFactory, ActionFactoryException
-from meresco.harvester.harvester.oairequest import OAIError
+from meresco.harvester.saharaget import SaharaGet, SaharaGetException
+from meresco.harvester.eventlogger import NilEventLogger
+from meresco.harvester.harvesterlog import HarvesterLog
+from meresco.harvester.repository import Repository
+from meresco.harvester.action import Action, DONE, ActionFactory, ActionFactoryException
+from meresco.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string
-from meresco.harvester.harvester.timeslot import Timeslot, Wildcard
+from meresco.harvester.timeslot import Timeslot, Wildcard
 from cq2utils import CallTrace
 import tempfile, os, shutil
 import unittest

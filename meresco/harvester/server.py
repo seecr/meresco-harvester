@@ -37,8 +37,8 @@ from dynamichtml import DynamicHtml
 from meresco.components import readConfig
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer
 
-from harvester.harvesterlog import HarvesterLog
-from harvester.saharaget import SaharaGet
+from harvesterlog import HarvesterLog
+from saharaget import SaharaGet
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html')

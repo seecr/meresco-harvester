@@ -33,7 +33,7 @@
 import unittest
 from slowfoot import binderytools
 from urllib import urlencode
-from meresco.harvester.harvester.oairequest import OaiRequest, OAIError
+from meresco.harvester.oairequest import OaiRequest, OAIError
 from mockoairequest import MockOaiRequest
 
 class OaiRequestTest(unittest.TestCase):

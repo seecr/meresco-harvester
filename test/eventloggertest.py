@@ -31,7 +31,7 @@
 ## end license ##
 
 import unittest,os,re
-from meresco.harvester.harvester.eventlogger import StreamEventLogger, EventLogger, LOGLINE_RE, CompositeLogger
+from meresco.harvester.eventlogger import StreamEventLogger, EventLogger, LOGLINE_RE, CompositeLogger
 from StringIO import StringIO
 
 EVENTLOGFILE = '/tmp/EventLoggerTestFile'

@@ -31,7 +31,7 @@
 ## end license ##
 
 from cq2utils import CQ2TestCase
-from meresco.harvester.harvester.timedprocess import TimedProcess
+from meresco.harvester.timedprocess import TimedProcess
 from os.path import join
 
 class TimedProcessTest(CQ2TestCase):
