@@ -1,0 +1,10 @@
+def main(arguments, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
+    repositoryId = arguments.get('repositoryId', [None])[0]
+    recordId = arguments.get('recordId', [None])[0]
+
+    yield """<div>
+    <h1>%s - %s</h1>""" % (repositoryId, recordId)
+
+    yield "<pre>%s</pre>" % escapeHtml(any.getIgnoredRecord(domainId, repositoryId, recordId))
+    yield "</div>"""

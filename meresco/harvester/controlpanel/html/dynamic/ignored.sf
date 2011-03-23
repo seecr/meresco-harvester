@@ -2,9 +2,16 @@ def main(arguments, **kwargs):
     domainId = arguments.get('domainId', [None])[0]
     repositoryId = arguments.get('repositoryId', [None])[0]
 
-    yield "<h1>%s</h1>" % repositoryId
+    orginalArgs = dict(domainId=domainId, repositoryId=repositoryId)
+
+    yield """<div>
+    <h1>%s</h1>""" % repositoryId
 
     yield "<ul>"
     for id in any.ignoredRecords(domainId, repositoryId):
-        yield '<li><a href="">%s</a></li>' % id
-    yield "</ul>"
+        recordId = id.split(":", 1)[-1]
+        args = {'recordId': recordId}
+        args.update(orginalArgs)
+        yield '<li><a href="/page/ignoredRecord?%s">%s</a></li>' % (escapeHtml(urlencode(args)), recordId)
+    yield """</ul>
+    </div>"""
