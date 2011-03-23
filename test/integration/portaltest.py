@@ -38,8 +38,8 @@ def xpath(node, xpath):
 class PortalTest(IntegrationTestCase):
 
     def testListAllRepositories(self):
-        header, result = getRequest(self.harvesterPortalPortNumber, '/index.html', {'domainId': 'integrationtest'}, parse=False)
-        self.assertTrue("""<a href="/repository?domain=integrationtest&repositoryId=integrationtest">integrationtest</a>""" in result, result)
+        header, result = getRequest(self.harvesterPortalPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals(["integrationtest:recordID1", "integrationtest:recordID2", "integrationtest:recordID5", "integrationtest:recordID4", "integrationtest:recordID7"], result.xpath("/ul/li/a/text()"))
 
     def testGetStatus(self):
         self.startHarvester()

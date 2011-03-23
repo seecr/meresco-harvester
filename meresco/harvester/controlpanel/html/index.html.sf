@@ -1,4 +1,0 @@
-def main(arguments, **kwargs):
-    domainId = arguments.get('domainId', [None])[0]
-    for repository in any.getRepositoryIds(domainId):
-        yield """<a href="/repository?domain=%s&repositoryId=%s">%s</a><br/>""" % (domainId, repository, repository)

@@ -10,7 +10,7 @@ version = '$Version: trunk$'[9:-1].strip()
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta http-equiv="Cache-Control" content="no-cache"/>
     <meta http-equiv="Expires" content="-1"/>
-  <link href="/css/stylesheet.css" rel="stylesheet" type="text/css"/>
+  <link href="<%= req.get_options()['dynamicHtmlUrl'] %>/static/stylesheet.css" rel="stylesheet" type="text/css"/>
   <link href="/css/form.css" rel="stylesheet" type="text/css"/>
   <script type="text/javascript" src="/scripts.js"></script>
 </head>

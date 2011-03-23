@@ -29,14 +29,14 @@ background-color: #E5E3DE;
 
 td.button {
 	padding: 0px 6px 6px 40px;
-	background: #FFFFFF url(images/button.jpg) no-repeat 0% 100%;
+	background: #FFFFFF url(button.jpg) no-repeat 0% 100%;
 	font: bold 12px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
         height: 26px;
         align: left;
         valign: top;
 }
 td.sahara {
-	background: #FFFFFF url(images/meresco.jpg) no-repeat 100% 0;
+	background: #FFFFFF url(meresco.jpg) no-repeat 100% 0;
 	height:70px;
 }
 td.horline {

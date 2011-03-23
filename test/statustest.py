@@ -71,3 +71,15 @@ class StatusTest(CQ2TestCase):
                 <ignored>1</ignored>
             </status>
         </GetStatus>""", ''.join(s.getStatus(domainId, None)))
+
+    def testGetAllIgnoredRecords(self):
+        stateDir = join(self.tempdir, "state")
+        logDir = join(self.tempdir, "log")
+        domainId = "domainId"
+        makedirs(join(stateDir, domainId))
+        makedirs(join(logDir, domainId, "ignored", "repoId1"))
+        makedirs(join(logDir, domainId, "ignored", "repoId2"))
+        open(join(stateDir, domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
+        open(join(stateDir, domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
+        s = Status(logDir, stateDir)
+        self.assertEquals(["ignoredId1", "ignoredId2"], s.ignoredRecords("domainId", "repoId1"))

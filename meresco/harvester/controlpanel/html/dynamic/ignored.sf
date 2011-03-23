@@ -1,0 +1,10 @@
+def main(arguments, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
+    repositoryId = arguments.get('repositoryId', [None])[0]
+
+    yield "<h1>%s</h1>" % repositoryId
+
+    yield "<ul>"
+    for id in any.ignoredRecords(domainId, repositoryId):
+        yield '<li><a href="">%s</a></li>' % id
+    yield "</ul>"

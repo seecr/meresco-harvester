@@ -42,9 +42,15 @@ class Status(object):
             repositoryIds = listdir(ignoredDir)
         yield "<GetStatus>"
         for repoId in repositoryIds:
-            yield '<status repositoryId="%s"><ignored>%s</ignored></status>' % (repoId, self.ignored(domainId, repoId))
+            yield '<status repositoryId="%s"><ignored>%s</ignored></status>' % (repoId, self.ignoredCount(domainId, repoId))
         yield "</GetStatus>"
 
-    def ignored(self, domainId, repositoryId):
+    def ignoredCount(self, domainId, repositoryId):
         ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
         return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0
+
+    def ignoredRecords(self, domainId, repositoryId):
+        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
+        if not isfile(ignoredFile):
+            return []
+        return open(ignoredFile).read().strip().split("\n")

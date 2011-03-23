@@ -57,7 +57,7 @@ for status in statuses:
   if status.repositoryId in ignored:
     args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
 %>
-    <a href="<%= req.get_options()['dynamicHtmlUrl'] %>/ignored?<%= args %>">Ignored</a>
+    <a href="<%= req.get_options()['dynamicHtmlUrl'] %>/page/ignored?<%= args %>">Ignored</a>
 <%
   #
 %>

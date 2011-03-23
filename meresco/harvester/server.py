@@ -36,7 +36,7 @@ from weightless.io import Reactor
 from dynamichtml import DynamicHtml
 
 from meresco.components import readConfig
-from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer
+from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer
 from meresco.components.http.utils import ContentTypePlainText
 from __version__ import VERSION_STRING
 
@@ -44,7 +44,8 @@ from saharaget import SaharaGet
 from status import Status
 
 myPath = dirname(abspath(__file__))
-dynamicHtmlPath = join(myPath, 'controlpanel', 'html')
+dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
+staticHtmlPath = join(myPath, 'controlpanel', 'html')
 
 def dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath):
     return \
@@ -54,7 +55,10 @@ def dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath):
                     (PathFilter("/info/version"),
                         (StringServer(VERSION_STRING, ContentTypePlainText), )
                     ),
-                    (PathFilter('/', excluding=['/info/version']),
+                    (PathFilter("/static"),
+                        (FileServer(staticHtmlPath),)
+                    ),
+                    (PathFilter('/', excluding=['/info/version', '/static']),
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
