@@ -75,7 +75,7 @@ class StatusTest(CQ2TestCase):
         </GetStatus>""", ''.join(self.status.getStatus(self.domainId, None)))
 
     def testGetAllIgnoredRecords(self):
-        self.assertEquals(["ignoredId1", "ignoredId2"], self.status.ignoredRecords(self.domainId, "repoId1"))
+        self.assertEquals(["ignoredId2", "ignoredId1"], self.status.ignoredRecords(self.domainId, "repoId1"))
         self.assertEquals(["ignoredId3"], self.status.ignoredRecords(self.domainId, "repoId2"))
 
     def testGetIgnoredRecord(self):

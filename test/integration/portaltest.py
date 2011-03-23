@@ -47,8 +47,8 @@ class PortalTest(IntegrationTestCase):
     def testListAllRepositories(self):
         self.startHarvester()
         header, result = getRequest(self.harvesterPortalPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(["recordID1", "recordID2", "recordID5", "recordID4", "recordID7"], result.xpath("/div/ul/li/a/text()"))
-        self.assertEquals("/page/ignoredRecord?recordId=recordID1&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/ul/li/a")[0].attrib['href'])
+        self.assertEquals(["recordID7", "recordID5", "recordID4", "recordID2", "recordID1"], result.xpath("/div/ul/li/a/text()"))
+        self.assertEquals("/page/ignoredRecord?recordId=recordID7&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/ul/li/a")[0].attrib['href'])
 
     def testViewIgnoredRecord(self):
         self.startHarvester()
@@ -63,4 +63,3 @@ class PortalTest(IntegrationTestCase):
         self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])
         self.assertEquals("5", xpath(result, "/s:saharaget/s:GetStatus/s:status[@repositoryId='integrationtest']/s:ignored/text()")[0])
         
-

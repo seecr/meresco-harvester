@@ -53,7 +53,7 @@ class Status(object):
         ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
         if not isfile(ignoredFile):
             return []
-        return open(ignoredFile).read().strip().split("\n")
+        return [record for record in reversed(open(ignoredFile).read().strip().split("\n"))]
 
     def getIgnoredRecord(self, domainId, repositoryId, recordId):
         return open(join(self._logPath, domainId, "ignored", repositoryId, recordId)).read()

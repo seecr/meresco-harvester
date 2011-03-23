@@ -44,7 +44,11 @@ def idfilename(stateDir, name):
 class Ids(object):
     def __init__(self, stateDir, name):
         self._filename = idfilename(stateDir, name)
-        self._ids = set(map(lambda f:f.strip(), open(self._filename, 'a+').readlines()))
+        self._ids = []
+        for id in [id.strip() for id in open(self._filename, 'a+').readlines()]:
+            if id  in self._ids:
+                continue
+            self._ids.append(id)
         self._idsfile = open(self._filename, 'a')
         
     def __len__(self):
@@ -68,7 +72,9 @@ class Ids(object):
         os.rename(self._filename + '.new', self._filename)
 
     def add(self, uploadid):
-        self._ids.add(uploadid)
+        if uploadid in self._ids:
+            return
+        self._ids.append(uploadid)
         self._idsfile.write( uploadid + '\n')
         self._idsfile.flush()
 
