@@ -28,8 +28,9 @@
 #
 ## end license ##
 
+from os import system
 from utils import getRequest
-
+from lxml.etree import tostring
 from integrationtestcase import IntegrationTestCase
 
 def xpath(node, xpath):
@@ -37,9 +38,22 @@ def xpath(node, xpath):
 
 class PortalTest(IntegrationTestCase):
 
+    def setUp(self):
+        IntegrationTestCase.setUp(self)
+        system("rm -rf %s/*" % self.dumpDir)
+        system("rm -rf %s" % self.harvesterLogDir)
+        system("rm -rf %s" % self.harvesterStateDir)
+
     def testListAllRepositories(self):
+        self.startHarvester()
         header, result = getRequest(self.harvesterPortalPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(["integrationtest:recordID1", "integrationtest:recordID2", "integrationtest:recordID5", "integrationtest:recordID4", "integrationtest:recordID7"], result.xpath("/ul/li/a/text()"))
+        self.assertEquals(["recordID1", "recordID2", "recordID5", "recordID4", "recordID7"], result.xpath("/div/ul/li/a/text()"))
+        self.assertEquals("/page/ignoredRecord?recordId=recordID1&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/ul/li/a")[0].attrib['href'])
+
+    def testViewIgnoredRecord(self):
+        self.startHarvester()
+        header, result = getRequest(self.harvesterPortalPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'recordID2'}, parse='lxml')
+        self.assertEquals("integrationtest - recordID2", result.xpath("//h1/text()")[0])
 
     def testGetStatus(self):
         self.startHarvester()

@@ -35,34 +35,36 @@ from meresco.harvester.status import Status
 
 class StatusTest(CQ2TestCase):
 
-    def testGetStatusForRepoIdAndDomainId(self):
+    def setUp(self):
+        CQ2TestCase.setUp(self)
         stateDir = join(self.tempdir, "state")
-        domainId = "domainId"
-        repositoryId = "repoId"
-        makedirs(join(stateDir, domainId))
-        open(join(stateDir, domainId, "%s_ignored.ids" % repositoryId), 'w').write("ignoredId1\nignoredId2")
-        s = Status(join(self.tempdir, "log"), stateDir)
+        logDir = join(self.tempdir, "log")
+        self.domainId = "adomain"
+        makedirs(join(stateDir, self.domainId))
+        repoId1LogDir = join(logDir, self.domainId, "ignored", "repoId1")
+        repoId2LogDir = join(logDir, self.domainId, "ignored", "repoId2")
+        makedirs(repoId1LogDir)
+        makedirs(repoId2LogDir)
+        open(join(repoId1LogDir, "ignoredId1"), 'w').write("ERROR1")
+        open(join(repoId1LogDir, "ignoredId2"), 'w').write("ERROR2")
+        open(join(repoId2LogDir, "ignoredId3"), 'w').write("ERROR3")
+        open(join(stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
+        open(join(stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
+        self.status = Status(logDir, stateDir)
+
+    def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId">
+            <status repositoryId="repoId1">
                 <ignored>2</ignored>
             </status>
-        </GetStatus>""", ''.join(s.getStatus(domainId, repositoryId)))
+        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, "repoId1")))
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="anotherRepoId">
                 <ignored>0</ignored>
             </status>
-        </GetStatus>""", ''.join(s.getStatus(domainId, "anotherRepoId")))
+        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, "anotherRepoId")))
 
     def testGetStatusForDomainId(self):
-        stateDir = join(self.tempdir, "state")
-        logDir = join(self.tempdir, "log")
-        domainId = "domainId"
-        makedirs(join(stateDir, domainId))
-        makedirs(join(logDir, domainId, "ignored", "repoId1"))
-        makedirs(join(logDir, domainId, "ignored", "repoId2"))
-        open(join(stateDir, domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
-        open(join(stateDir, domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
-        s = Status(logDir, stateDir)
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="repoId1">
                 <ignored>2</ignored>
@@ -70,16 +72,13 @@ class StatusTest(CQ2TestCase):
             <status repositoryId="repoId2">
                 <ignored>1</ignored>
             </status>
-        </GetStatus>""", ''.join(s.getStatus(domainId, None)))
+        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, None)))
 
     def testGetAllIgnoredRecords(self):
-        stateDir = join(self.tempdir, "state")
-        logDir = join(self.tempdir, "log")
-        domainId = "domainId"
-        makedirs(join(stateDir, domainId))
-        makedirs(join(logDir, domainId, "ignored", "repoId1"))
-        makedirs(join(logDir, domainId, "ignored", "repoId2"))
-        open(join(stateDir, domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
-        open(join(stateDir, domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
-        s = Status(logDir, stateDir)
-        self.assertEquals(["ignoredId1", "ignoredId2"], s.ignoredRecords("domainId", "repoId1"))
+        self.assertEquals(["ignoredId1", "ignoredId2"], self.status.ignoredRecords(self.domainId, "repoId1"))
+        self.assertEquals(["ignoredId3"], self.status.ignoredRecords(self.domainId, "repoId2"))
+
+    def testGetIgnoredRecord(self):
+        self.assertEquals("ERROR1", self.status.getIgnoredRecord(self.domainId, "repoId1", "ignoredId1")) 
+        self.assertEquals("ERROR2", self.status.getIgnoredRecord(self.domainId, "repoId1", "ignoredId2")) 
+        self.assertEquals("ERROR3", self.status.getIgnoredRecord(self.domainId, "repoId2", "ignoredId3")) 
