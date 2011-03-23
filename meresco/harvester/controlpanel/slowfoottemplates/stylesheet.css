@@ -63,6 +63,10 @@ table.event{
 	color: red;
 	font-weight: bold;
 }
+.event .ignored a{
+	color: #006C71;
+	font-weight: bold;
+}
 .zkveld { 
 	border: 1px; border-style: solid; 
 	border-color:#5B9EB9; width:200px;

@@ -38,7 +38,7 @@ from dynamichtml import DynamicHtml
 from meresco.components import readConfig
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer
 from meresco.components.http.utils import ContentTypePlainText
-from meresco.harvester import VERSION_STRING
+from __version__ import VERSION_STRING
 
 from saharaget import SaharaGet
 from status import Status

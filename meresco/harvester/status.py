@@ -26,7 +26,7 @@
 #
 ## end license ##
 
-from os.path import join
+from os.path import join, isfile, isdir
 from os import listdir
 
 class Status(object):
@@ -36,11 +36,15 @@ class Status(object):
         self._statePath = statePath
 
     def getStatus(self, domainId, repositoryIds):
-        repositoryIds = [repositoryIds] if repositoryIds else listdir(join(self._logPath, domainId, "ignored"))
+        ignoredDir = join(self._logPath, domainId, "ignored")
+        repositoryIds = [repositoryIds] if repositoryIds else []
+        if not repositoryIds and isdir(ignoredDir):
+            repositoryIds = listdir(ignoredDir)
         yield "<GetStatus>"
         for repoId in repositoryIds:
             yield '<status repositoryId="%s"><ignored>%s</ignored></status>' % (repoId, self.ignored(domainId, repoId))
         yield "</GetStatus>"
 
     def ignored(self, domainId, repositoryId):
-        return len(open(join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)).readlines())
+        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
+        return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0

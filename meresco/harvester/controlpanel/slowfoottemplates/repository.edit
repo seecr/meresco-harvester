@@ -2,7 +2,7 @@
 req.req.headers_out['Cache-Control'] = 'no-cache'
 
 from meresco.harvester.controlpanel.tools import getDomainId
-from meresco.harvester.harvester.timeslot import Timeslot
+from meresco.harvester.timeslot import Timeslot
 
 repositoryFile = args.name
 groupId = args.referrerGroup

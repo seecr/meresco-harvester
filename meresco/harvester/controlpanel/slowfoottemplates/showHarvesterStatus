@@ -2,10 +2,17 @@
 <h3>Harvester Status.</h3>
 </p>
 <%
-theUrl = url('/getStatus?domainId=%s&repositoryGroupId=%s&repositoryId=%s' %(args.domainId, args.repositoryGroupId, args.repositoryId))
+domainId = args.domainId
+args = urlencode(dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId))
+theUrl = url('/getStatus?%s' % args)
 
 statuses = asxml(theUrl).saharaget.GetStatus.status
 
+statusUrl = url('%s/getStatus?%s' % (req.get_options()['dynamicHtmlUrl'], args))
+ignored = {}
+for status in asxml(statusUrl).saharaget.GetStatus.status:
+    ignored[status.repositoryId] = status
+#
 %>
 <table class="event">
 <tr class="eventheader">
@@ -15,6 +22,8 @@ statuses = asxml(theUrl).saharaget.GetStatus.status
 <td>Total records</td>
 <td>Harvested<br>Uploaded<br>Deleted</td>
 <td>#Errors</td>
+<td></td>
+<td>#Ignores</td>
 <td></td>
 </tr>
 <%
@@ -34,7 +43,7 @@ for status in statuses:
 <%
   if errorsnr:
 %>
-<td><a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>">Errors</a></td>
+<td class="error"><a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>">Errors</a></td>
 <%
   else:
 %>
@@ -42,6 +51,17 @@ for status in statuses:
 <% 
   #
 %>
+<td><% escape_html(ignored[status.repositoryId].ignored if status.repositoryId in ignored else 0) %></td>
+<td class="ignored">
+<%
+  if status.repositoryId in ignored:
+    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
+%>
+    <a href="<%= req.get_options()['dynamicHtmlUrl'] %>/ignored?<%= args %>">Ignored</a>
+<%
+  #
+%>
+</td>
 </tr>
 <%
 #
