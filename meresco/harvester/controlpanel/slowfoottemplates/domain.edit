@@ -41,7 +41,7 @@ isAdmin = session.get('isAdmin', '')
  <fieldset><legend>Existing groups (id)</legend>
   <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
-for groupId in domain.repositoryGroupId:
+for groupId in sorted(domain.repositoryGroupId):
   #
   name = asxml(url('/' + domain.id + '.' + groupId + '.repositoryGroup')).repositoryGroup.name
 %>
