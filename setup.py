@@ -42,6 +42,9 @@ setup(
             'slowfoottemplates/*'
         ]
     },
+    scripts=[
+        'bin/start-harvester-internal-server',
+    ],
     version='%VERSION%',
     url='http://www.meresco.org',
     author='Seek You Too',
