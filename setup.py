@@ -36,7 +36,6 @@ setup(
     packages=[
         'meresco.harvester',
         'meresco.harvester.controlpanel',
-        'meresco.harvester.harvester',
     ],
     package_data={
         'meresco.harvester.controlpanel': [
