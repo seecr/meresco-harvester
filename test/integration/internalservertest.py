@@ -49,6 +49,7 @@ class InternalServerTest(IntegrationTestCase):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals(["recordID7", "recordID5", "recordID4", "recordID2", "recordID1"], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
         self.assertEquals("/page/ignoredRecord/?recordId=recordID7&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
+        self.assertEquals("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testViewIgnoredRecord(self):
         self.startHarvester()

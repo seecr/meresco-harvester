@@ -15,4 +15,5 @@ def main(arguments, **kwargs):
         args.update(orginalArgs)
         yield '<tr><td class="link"><a href="/page/ignoredRecord/?%s">%s</a></td></tr>' % (escapeHtml(urlencode(args)), recordId)
     yield """</table>
-    </div>"""
+    <p><a href="/page/showHarvesterStatus/show?%s">Back to harvester status of this repository</a></p>
+    </div>""" % (escapeHtml(urlencode(orginalArgs)))
