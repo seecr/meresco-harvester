@@ -63,7 +63,7 @@ table.event{
 	color: red;
 	font-weight: bold;
 }
-.event .ignored a{
+.event .link a{
 	color: #006C71;
 	font-weight: bold;
 }

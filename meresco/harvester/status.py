@@ -28,6 +28,7 @@
 
 from os.path import join, isfile, isdir
 from os import listdir
+from lxml.etree import parse
 
 class Status(object):
 
@@ -53,8 +54,8 @@ class Status(object):
         ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
         if not isfile(ignoredFile):
             return []
-        return [record for record in reversed(open(ignoredFile).read().strip().split("\n"))]
+        return reversed([line.strip() for line in open(ignoredFile) if line.strip()])
 
     def getIgnoredRecord(self, domainId, repositoryId, recordId):
-        return open(join(self._logPath, domainId, "ignored", repositoryId, recordId)).read()
+        return parse(open(join(self._logPath, domainId, "ignored", repositoryId, recordId)))
 

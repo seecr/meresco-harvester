@@ -5,13 +5,14 @@ def main(arguments, **kwargs):
     orginalArgs = dict(domainId=domainId, repositoryId=repositoryId)
 
     yield """<div>
-    <h1>%s</h1>""" % repositoryId
+    <h3>Repository %s</h3>""" % repositoryId
 
-    yield "<ul>"
+    yield '<table class="event">'
+    yield '<tr><td class="eventheader">Ignored records</td></tr>'
     for id in any.ignoredRecords(domainId, repositoryId):
         recordId = id.split(":", 1)[-1]
         args = {'recordId': recordId}
         args.update(orginalArgs)
-        yield '<li><a href="/page/ignoredRecord?%s">%s</a></li>' % (escapeHtml(urlencode(args)), recordId)
-    yield """</ul>
+        yield '<tr><td class="link"><a href="/page/ignoredRecord/?%s">%s</a></td></tr>' % (escapeHtml(urlencode(args)), recordId)
+    yield """</table>
     </div>"""

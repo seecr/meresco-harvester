@@ -32,6 +32,7 @@ from os.path import join
 from cq2utils import CQ2TestCase
 
 from meresco.harvester.status import Status
+from lxml.etree import tostring
 
 class StatusTest(CQ2TestCase):
 
@@ -45,11 +46,12 @@ class StatusTest(CQ2TestCase):
         repoId2LogDir = join(logDir, self.domainId, "ignored", "repoId2")
         makedirs(repoId1LogDir)
         makedirs(repoId2LogDir)
-        open(join(repoId1LogDir, "ignoredId1"), 'w').write("ERROR1")
-        open(join(repoId1LogDir, "ignoredId2"), 'w').write("ERROR2")
-        open(join(repoId2LogDir, "ignoredId3"), 'w').write("ERROR3")
+        open(join(repoId1LogDir, "ignoredId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
+        open(join(repoId1LogDir, "ignoredId2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
+        open(join(repoId2LogDir, "ignoredId3"), 'w').write("<diagnostic>ERROR3</diagnostic>")
         open(join(stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
         open(join(stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
+        open(join(stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
         self.status = Status(logDir, stateDir)
 
     def testGetStatusForRepoIdAndDomainId(self):
@@ -75,10 +77,16 @@ class StatusTest(CQ2TestCase):
         </GetStatus>""", ''.join(self.status.getStatus(self.domainId, None)))
 
     def testGetAllIgnoredRecords(self):
-        self.assertEquals(["ignoredId2", "ignoredId1"], self.status.ignoredRecords(self.domainId, "repoId1"))
-        self.assertEquals(["ignoredId3"], self.status.ignoredRecords(self.domainId, "repoId2"))
+        def ignoredRecords(repoId):
+            return list(self.status.ignoredRecords(self.domainId, repoId))
+        self.assertEquals(["ignoredId2", "ignoredId1"], ignoredRecords("repoId1"))
+        self.assertEquals(["ignoredId3"], ignoredRecords("repoId2"))
+        self.assertEquals([], ignoredRecords("repoId3"))
+        self.assertEquals([], ignoredRecords("repoId4"))
 
     def testGetIgnoredRecord(self):
-        self.assertEquals("ERROR1", self.status.getIgnoredRecord(self.domainId, "repoId1", "ignoredId1")) 
-        self.assertEquals("ERROR2", self.status.getIgnoredRecord(self.domainId, "repoId1", "ignoredId2")) 
-        self.assertEquals("ERROR3", self.status.getIgnoredRecord(self.domainId, "repoId2", "ignoredId3")) 
+        def getIgnoredRecord(repoId, recordId):
+            return tostring(self.status.getIgnoredRecord(self.domainId, repoId, recordId)) 
+        self.assertEquals("<diagnostic>ERROR1</diagnostic>", getIgnoredRecord("repoId1", "ignoredId1")) 
+        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getIgnoredRecord("repoId1", "ignoredId2")) 
+        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getIgnoredRecord("repoId2", "ignoredId3")) 

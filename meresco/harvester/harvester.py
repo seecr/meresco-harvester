@@ -83,29 +83,29 @@ class Harvester(Observable):
 
     def uploadRecord(self, record):
         upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
-        self.any.notifyHarvestedRecord(upload.id)
+        self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
             self._uploader.delete(upload)
-            self.any.logDeletedID(upload.id)
+            self.do.logDeletedID(upload.id)
         elif not upload.skip:
             try:
                 self._uploader.send(upload)
-                self.any.logID(upload.id)
+                self.do.logID(upload.id)
             except InvalidDataException, e:
                 maxIgnore = self._repository.maxIgnore()
                 if self.any.totalIgnoredIds() >= maxIgnore:
                     raise TooMuchInvalidDataException(upload.id, maxIgnore)
-                self.any.logIgnoredID(upload.id, e)
+                self.do.logIgnoredID(upload.id, e.originalMessage)
 
     def _harvestLoop(self):
         try:
-            self.any.startRepository()
+            self.do.startRepository()
             state = self.any.state()
             newtoken = self.fetchRecords(state.startdate, state.token)
-            self.any.endRepository(newtoken)
+            self.do.endRepository(newtoken)
             return newtoken
         except:
-            self.any.endWithException()
+            self.do.endWithException()
             raise
 
     def _harvest(self):
@@ -130,4 +130,4 @@ class Harvester(Observable):
             else:
                 return NOTHING_TO_DO, False
         finally:
-            self.any.close()
+            self.do.close()

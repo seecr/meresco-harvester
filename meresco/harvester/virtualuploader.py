@@ -40,6 +40,7 @@ class UploaderException(Exception):
     def __init__(self, uploadId, message):
         Exception.__init__(self, 'uploadId: "%s", message: "%s"' % (uploadId, message))
         self.uploadId = uploadId
+        self.originalMessage = message
 
 class InvalidComponentException(UploaderException):
     pass

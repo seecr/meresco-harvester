@@ -30,10 +30,10 @@ if __name__ == '__main__':
         groupSetUp = lambda: globalSetUp(fastMode, 'default'),
         groupTearDown = lambda: globalTearDown())
 
-    runner.addGroup('portal', [
-            'integration.portaltest.PortalTest',
+    runner.addGroup('internal-server', [
+            'integration.internalservertest.InternalServerTest',
         ],
-        groupSetUp = lambda: globalSetUp(fastMode, 'portal'),
+        groupSetUp = lambda: globalSetUp(fastMode, 'internal-server'),
         groupTearDown = lambda: globalTearDown())
 
     testnames = argv[1:]

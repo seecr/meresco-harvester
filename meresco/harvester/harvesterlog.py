@@ -128,11 +128,12 @@ class HarvesterLog(object):
         self._ids.remove(uploadid)
         self._deletedCount += 1
 
-    def logIgnoredID(self, uploadid, exception):
+    def logIgnoredID(self, uploadid, message):
         ignoreFile = ignoreFilepath(self._logDir, uploadid)
         ensureDirectory(dirname(ignoreFile))
-        open(ignoreFile, 'w').write(exception.message)
+        open(ignoreFile, 'w').write(message)
         self._ignoredIds.add(uploadid)
+        self._eventlogger.warning('IGNORED', uploadid)
 
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token

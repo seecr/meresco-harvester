@@ -101,7 +101,7 @@ class IntegrationState(object):
         system('rm -rf ' + self.integrationTempdir)
 
         self.helperServerPortNumber = PortNumberGenerator.next()
-        self.harvesterPortalPortNumber = PortNumberGenerator.next()
+        self.harvesterInternalServerPortNumber = PortNumberGenerator.next()
 
         self.dumpDir = join(self.integrationTempdir, 'dump')
         self.harvesterLogDir = join(self.integrationTempdir, "log")
@@ -116,7 +116,7 @@ class IntegrationState(object):
         def setConfig(config, parameter, value):
             assert config[parameter]
             config[parameter] = value
-        setConfig(config, 'portNumber', self.harvesterPortalPortNumber)
+        setConfig(config, 'portNumber', self.harvesterInternalServerPortNumber)
         setConfig(config, 'saharaUrl', "http://localhost:%s" % self.helperServerPortNumber)
         setConfig(config, 'dataPath', join(self.integrationTempdir, 'data'))
         setConfig(config, 'statePath', join(self.integrationTempdir, 'state'))
@@ -125,8 +125,8 @@ class IntegrationState(object):
         self._writeConfig(config, 'harvester')
 
         self.startHelperServer()
-        if self.stateName == 'portal':
-            self.startHarvesterPortal()
+        if self.stateName == 'internal-server':
+            self.startHarvesterInternalServer()
 
     def _writeConfig(self, config, name):
         configFile = join(self.integrationTempdir, '%s.config' % name)
@@ -150,21 +150,21 @@ class IntegrationState(object):
                 serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber, 
                 stdoutfile=stdoutfile)
 
-    def startHarvesterPortal(self):
-        stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterportal.log")
+    def startHarvesterInternalServer(self):
+        stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterinternalserver.log")
         stdouterrlog = open(stdoutfile, 'w')
         configFile = join(self.integrationTempdir, 'harvester.config') 
         processInfo = Popen(
-            args=[join(binDir, "harvester-portal"), configFile], 
+            args=[join(binDir, "start-harvester-internal-server"), configFile], 
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
-        print "Harvester Portal PID", processInfo.pid
+        print "Harvester Internal Server PID", processInfo.pid
         self._pids.append(processInfo.pid)
         self._check(serverProcess=processInfo, 
-                serviceName='Harvester-Portal', 
-                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterPortalPortNumber, 
+                serviceName='Harvester-Internal-Server', 
+                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber, 
                 stdoutfile=stdoutfile)
 
     def _check(self, serverProcess, serviceName, serviceReadyUrl, stdoutfile):

@@ -32,6 +32,8 @@
 
 from slowfoot.slowfoothandler import Request, handlepsp, util, _psp_login, retrieveSession, apache
 from disallowfileplugin import DisallowFilePlugin
+from urllib import urlencode
+from urllib2 import urlopen
 from os.path import dirname, join
 
 templatesPath = join(dirname(__file__), 'slowfoottemplates')
@@ -64,11 +66,34 @@ dfp = DisallowFilePlugin([
     'user.save'
     ])
 
+internalServerStatus=[]
+
+class StatusException(Exception):
+    def __init__(self, code, message=None):
+        Exception.__init__(self, message if message != None else code)
+        self.code = code
 
 def handler(req):
+    if internalServerStatus != ['OK']:
+        try:
+            checkServerStatus(req)
+            internalServerStatus.append('OK')
+        except StatusException, e:
+            req.uri = '/internalServerError?' + urlencode({'originalUri': req.uri, 'error': e.code, 'message': str(e)})
+
     req.get_options()['templatesPath'] = templatesPath
     req = Request(req, handlepsp, util, _psp_login, retrieveSession)
     
     req.addPlugin('PREOPEN', dfp)
     req.go()
     return apache.OK
+
+def checkServerStatus(req):
+    internalServer = req.get_options().get('internalServer', None)
+    if internalServer == None:
+        raise StatusException('internalServerNotFound')
+    try:
+        urlopen(internalServer + '/info/version').read()
+    except:
+        from traceback import format_exc
+        raise StatusException('internalServerNotReachable', format_exc())

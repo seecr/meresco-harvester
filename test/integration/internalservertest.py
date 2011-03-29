@@ -36,7 +36,7 @@ from integrationtestcase import IntegrationTestCase
 def xpath(node, xpath):
     return node.xpath(xpath, namespaces={'s': 'http://sahara.cq2.org/xsd/saharaget.xsd'})
 
-class PortalTest(IntegrationTestCase):
+class InternalServerTest(IntegrationTestCase):
 
     def setUp(self):
         IntegrationTestCase.setUp(self)
@@ -46,18 +46,19 @@ class PortalTest(IntegrationTestCase):
 
     def testListAllRepositories(self):
         self.startHarvester()
-        header, result = getRequest(self.harvesterPortalPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(["recordID7", "recordID5", "recordID4", "recordID2", "recordID1"], result.xpath("/div/ul/li/a/text()"))
-        self.assertEquals("/page/ignoredRecord?recordId=recordID7&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/ul/li/a")[0].attrib['href'])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals(["recordID7", "recordID5", "recordID4", "recordID2", "recordID1"], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
+        self.assertEquals("/page/ignoredRecord/?recordId=recordID7&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
 
     def testViewIgnoredRecord(self):
         self.startHarvester()
-        header, result = getRequest(self.harvesterPortalPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'recordID2'}, parse='lxml')
-        self.assertEquals("integrationtest - recordID2", result.xpath("//h1/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'recordID2'}, parse='lxml')
+        self.assertEquals("Repository integrationtest - Record recordID2", result.xpath("//h3/text()")[0])
+        self.assertEquals("/page/ignored/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testGetStatus(self):
         self.startHarvester()
-        header, result = getRequest(self.harvesterPortalPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("GetStatus", xpath(result, "/s:saharaget/s:request/s:verb/text()")[0])
         self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
         self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])

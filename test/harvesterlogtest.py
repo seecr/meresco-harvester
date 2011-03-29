@@ -97,11 +97,11 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord("name:uploadId1")
         logger.logDeletedID("name:uploadId1")
         logger.notifyHarvestedRecord("name:uploadId2")
-        logger.logIgnoredID("name:uploadId2", UploaderException(uploadId="name:uploadId2", message="Test Exception"))
+        logger.logIgnoredID("name:uploadId2", "Test Exception")
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
-        eventline = open(self.logDir+'/name.events').readlines()[0].strip()
+        eventline = open(self.logDir+'/name.events').readlines()[1].strip()
         ignoredUploadId2 = open(self.logDir+'/ignored/name/uploadId2').read()
         #Total is now counted based upon the id's
         self.assertTrue('3/1/1/0, Done:' in lines[0], lines[0])
@@ -109,7 +109,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
-        self.assertEquals('uploadId: "name:uploadId2", message: "Test Exception"', ignoredUploadId2) 
+        self.assertEquals('Test Exception', ignoredUploadId2) 
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
@@ -150,7 +150,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('id:4')
-        logger.logIgnoredID('id:4', UploaderException(uploadId="id:4", message="Error"))
+        logger.logIgnoredID('id:4', "Error")
         self.assertEquals(1, logger.totalIgnoredIds())
         logger.notifyHarvestedRecord('id:4')
         self.assertEquals(0, logger.totalIgnoredIds())
@@ -161,9 +161,9 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('id:1')
-        logger.logIgnoredID('id:1', UploaderException(uploadId="id:1", message="Error"))
+        logger.logIgnoredID('id:1', "Error")
         logger.notifyHarvestedRecord('id:2')
-        logger.logIgnoredID('id:2', UploaderException(uploadId="id:2", message="Error"))
+        logger.logIgnoredID('id:2', "Error")
         self.assertEquals(['id:1', 'id:2'], logger.ignoredIds())
 
     def testLogDeleted(self):

@@ -49,7 +49,7 @@ class Ids(object):
             if id  in self._ids:
                 continue
             self._ids.append(id)
-        self._idsfile = open(self._filename, 'a')
+        self.open()
         
     def __len__(self):
         return len(self._ids)
@@ -60,7 +60,10 @@ class Ids(object):
 
     def clear(self):
         self._ids = []
-        
+       
+    def open(self):
+        self._idsfile = open(self._filename, 'a')
+
     def close(self):
         self._idsfile.close()
         idfilenew = open(self._filename + '.new', 'w')
@@ -81,5 +84,7 @@ class Ids(object):
     def remove(self, uploadid):
         if uploadid in self._ids:
             self._ids.remove(uploadid)
+            self.close()
+            self.open()
 
         

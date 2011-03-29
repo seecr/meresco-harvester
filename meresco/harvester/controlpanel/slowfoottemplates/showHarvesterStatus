@@ -8,7 +8,7 @@ theUrl = url('/getStatus?%s' % args)
 
 statuses = asxml(theUrl).saharaget.GetStatus.status
 
-statusUrl = url('%s/getStatus?%s' % (req.get_options()['dynamicHtmlUrl'], args))
+statusUrl = url('%s/getStatus?%s' % (req.get_options()['internalServer'], args))
 ignored = {}
 for status in asxml(statusUrl).saharaget.GetStatus.status:
     ignored[status.repositoryId] = status
@@ -52,12 +52,12 @@ for status in statuses:
   #
 %>
 <td><% escape_html(ignored[status.repositoryId].ignored if status.repositoryId in ignored else 0) %></td>
-<td class="ignored">
+<td class="link">
 <%
   if status.repositoryId in ignored:
     args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
 %>
-    <a href="<%= req.get_options()['dynamicHtmlUrl'] %>/page/ignored?<%= args %>">Ignored</a>
+    <a href="/page/ignored/?<%= args %>">Ignored</a>
 <%
   #
 %>

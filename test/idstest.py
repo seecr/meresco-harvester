@@ -49,6 +49,7 @@ class IdsTest(CQ2TestCase):
         self.ids.add('id:1')
         self.ids.add('id:1')
         self.assertEquals(1, len(self.ids))
+        self.assertEquals(1, len(open(self.tempdir + '/idstest.ids').readlines()))
         
     def testInit(self):
         self.writeTestIds('one',['id:1'])
@@ -63,10 +64,10 @@ class IdsTest(CQ2TestCase):
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:1')
         self.assertEquals(2, len(self.ids))
-        self.ids.close()
         self.assertEquals(2, len(open(self.tempdir + '/three.ids').readlines()))
+        self.ids.close()
         
-    def testRemoveExistingId(self):
+    def testRemoveNonExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:4')

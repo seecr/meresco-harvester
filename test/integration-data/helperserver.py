@@ -102,9 +102,9 @@ class StartTest(Observable):
         name = arguments.get('name', [None])[0]
         self.any.reset()
         if name == "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore" or \
-            name == "integration.portaltest.PortalTest.testGetStatus" or \
-            name == "integration.portaltest.PortalTest.testListAllRepositories" or \
-            name == "integration.portaltest.PortalTest.testViewIgnoredRecord":
+            name == "integration.internalservertest.InternalServerTest.testGetStatus" or \
+            name == "integration.internalservertest.InternalServerTest.testListAllRepositories" or \
+            name == "integration.internalservertest.InternalServerTest.testViewIgnoredRecord":
             self.any.ignoreAll()
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
 

@@ -1,0 +1,34 @@
+<%
+type('text/html')
+
+error = args.error
+%><html>
+<head>
+<title>ERROR</title>
+</head>
+<body>
+<h1>Error in Meresco Harvester</h1>
+<%
+if error == 'internalServerNotFound':
+    #
+%>
+<h3>The internalServer is not configured for Meresco Harvester.</h3>
+<p>Please configure the internalServer in the Apache configuration, e.g.</p>
+<pre>
+PythonOption internalServer "http://localhost:8080"
+</pre>
+<%
+internalServer = req.get_options()['internalServer']
+if error == 'internalServerNotReachable':
+    #
+%>
+<h3>The internalServer for Meresco Harvester can not be reached.</h3>
+<p>It is configured to run at <%=internalServer%>.</p>
+<p>Please check your configuration.</p>
+<%
+#
+%>
+<pre><%=args.message%></pre>
+
+</body>
+</html>
