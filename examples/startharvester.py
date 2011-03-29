@@ -12,6 +12,7 @@
 #    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
 #       http://www.kennisnetictopschool.nl
 #    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 #    This file is part of "Meresco Harvester"
 #
@@ -34,5 +35,5 @@
 # This script should be run by a user with write access to the logDir and stateDir
 # specified in the apache configuration
 
-from meresco.harvester.harvester.startharvester import StartHarvester
+from meresco.harvester.startharvester import StartHarvester
 StartHarvester().start()
