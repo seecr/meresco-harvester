@@ -20,45 +20,40 @@ for status in asxml(statusUrl).saharaget.GetStatus.status:
 <td>Repository</td>
 <td>Last successful harvest</td>
 <td>Total records</td>
-<td>Harvested<br>Uploaded<br>Deleted</td>
+<td>Harvested<br/>Uploaded<br/>Deleted</td>
+<td>#Validation<br/>Errors</td>
 <td>#Errors</td>
-<td></td>
-<td>#Ignores</td>
-<td></td>
 </tr>
 <%
-for status in sorted(statuses, key=lambda s: str(s.repositoryGroupId).lower()):
+for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),str(s.repositoryId))):
   total = 0
   total += int(str(status.total) or '0')
   errorsnr = int(str(status.totalerrors))
   style = errorsnr and 'style="font-weight:bold"' or ''
 %>
 <tr>
-<td <%=style%>><% escape_xml(status.repositoryGroupId) %></td>
-<td <%=style%>><% escape_html(status.repositoryId) %></td>
+<td <%=style%> class="link"><a href="/page/repositoryGroup.edit/<%=domainId%>.<%=status.repositoryGroupId%>.repositoryGroup"><% escape_html(status.repositoryGroupId) %></a></td>
+<td <%=style%> class="link"><a href="/page/repository.edit/<%=domainId%>.<%=status.repositoryId%>.repository?<%=urlencode(dict(referrerGroup=status.repositoryGroupId))%>""><% escape_html(status.repositoryId) %></a></td>
 <td <%=style%>><% escape_html(status.lastHarvestDate) %></td>
 <td><% escape_html(status.total) %></td>
 <td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
-<td><% escape_html(status.totalerrors) %></td>
+<td class="link">
+<% 
+  nrOfValidationErrors = int(ignored[status.repositoryId].ignored) if status.repositoryId in ignored else 0
+  if nrOfValidationErrors > 0:
+    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
+%>
+    <a href="/page/ignored/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
+<%
+  #
+%>
+</td>
+<td class="error">
 <%
   if errorsnr:
 %>
-<td class="error"><a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>">Errors</a></td>
-<%
-  else:
-%>
-<td>&nbsp;</td>
+    <a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>"><%=errorsnr%> error<%='s' if errorsnr != 1 else ''%></a>
 <% 
-  #
-%>
-<td><% escape_html(ignored[status.repositoryId].ignored if status.repositoryId in ignored else 0) %></td>
-<td class="link">
-<%
-  if status.repositoryId in ignored:
-    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
-%>
-    <a href="/page/ignored/?<%= args %>">Ignored</a>
-<%
   #
 %>
 </td>
@@ -67,7 +62,7 @@ for status in sorted(statuses, key=lambda s: str(s.repositoryGroupId).lower()):
 #
 %>
 </table>
-<br>
+<br/>
 
 <p>
 <h3>Harvester Errors.</h3>
