@@ -39,7 +39,8 @@ setup(
     ],
     package_data={
         'meresco.harvester.controlpanel': [
-            'slowfoottemplates/*'
+            'slowfoottemplates/*',
+            'html/dynamic/*.sf',
         ]
     },
     scripts=[
