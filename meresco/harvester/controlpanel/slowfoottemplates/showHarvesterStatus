@@ -27,7 +27,7 @@ for status in asxml(statusUrl).saharaget.GetStatus.status:
 <td></td>
 </tr>
 <%
-for status in statuses:
+for status in sorted(statuses, key=lambda s: str(s.repositoryGroupId).lower()):
   total = 0
   total += int(str(status.total) or '0')
   errorsnr = int(str(status.totalerrors))

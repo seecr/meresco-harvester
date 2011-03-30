@@ -41,28 +41,26 @@ fileName = "%s.%s.repositoryGroup"%(domainId,group.id)
 <fieldset><legend>Existing repositories</legend>
  <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
-repositories = map(None, group.repositoryId)
-repositories.sort()
-for id in repositories:
+for repositoryId in sorted(group.repositoryId, key=lambda x:str(x).lower()):
   #
 %>
   <tr>
-   <td><%= id %></id>
+   <td><%= repositoryId %></id>
    <td>
-    <a href="/page/repository.edit/<%= domainId %>.<%= id %>.repository?referrerGroup=<%= group.id %>">
+    <a href="/page/repository.edit/<%= domainId %>.<%= repositoryId %>.repository?referrerGroup=<%= group.id %>">
 	  <img src="/images/edit.png" border="0"> Edit / View
     </a>
    </td>
    <td>
     <a href="/page/areYouSure/show?<%=
-       urlencode({'filename':'repository '+id,
-       'ok':'/repositoryGroup.deleteRepository/' + fileName + '?repository=' + id })%>">
+       urlencode({'filename':'repository '+repositoryId,
+       'ok':'/repositoryGroup.deleteRepository/' + fileName + '?repository=' + repositoryId })%>">
      <img src="/images/delete.jpg" width="14" height="14" border="0">
 	  Delete
     </a>
    </td>
    <td>
-	 <a href="/testrepository/<%= domainId %>.<%= id %>.repository">
+	 <a href="/testrepository/<%= domainId %>.<%= repositoryId %>.repository">
 	  <img src="/images/exec.png" border="0">
 	  Test mapping
 	 </a>
