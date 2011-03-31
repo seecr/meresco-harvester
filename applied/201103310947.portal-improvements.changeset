@@ -1,0 +1,134 @@
+Changeset created on Thu Mar 31 09:47:50 CEST 2011 by Seek You Too
+
+Description: Some slowfoot improvements 
+
+    Better sorting of repositoryGroup's and repositories. 
+    Link to repositoryGroup/repository in the showHarvesterStatus page.
+    Better column names in showHarvesterStatus page.
+
+Baseline version: meresco-harvester/tags/version_7.0
+
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.0/meresco/harvester/controlpanel/slowfoottemplates/domain.edit version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/domain.edit
+--- version_7.0/meresco/harvester/controlpanel/slowfoottemplates/domain.edit	2011-03-29 17:08:20.000000000 +0200
++++ version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/domain.edit	2011-03-31 09:39:20.000000000 +0200
+@@ -41,7 +41,7 @@
+  <fieldset><legend>Existing groups (id)</legend>
+   <table width="100%" border="0" cellspacing="4" cellpadding="0">
+ <%
+-for groupId in sorted(domain.repositoryGroupId):
++for groupId in sorted(domain.repositoryGroupId, key=lambda x:str(x).lower()):
+   #
+   name = asxml(url('/' + domain.id + '.' + groupId + '.repositoryGroup')).repositoryGroup.name
+ %>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.0/meresco/harvester/controlpanel/slowfoottemplates/repositoryGroup.edit version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/repositoryGroup.edit
+--- version_7.0/meresco/harvester/controlpanel/slowfoottemplates/repositoryGroup.edit	2011-03-29 17:08:20.000000000 +0200
++++ version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/repositoryGroup.edit	2011-03-31 09:39:20.000000000 +0200
+@@ -41,28 +41,26 @@
+ <fieldset><legend>Existing repositories</legend>
+  <table width="100%" border="0" cellspacing="4" cellpadding="0">
+ <%
+-repositories = map(None, group.repositoryId)
+-repositories.sort()
+-for id in repositories:
++for repositoryId in sorted(group.repositoryId, key=lambda x:str(x).lower()):
+   #
+ %>
+   <tr>
+-   <td><%= id %></id>
++   <td><%= repositoryId %></id>
+    <td>
+-    <a href="/page/repository.edit/<%= domainId %>.<%= id %>.repository?referrerGroup=<%= group.id %>">
++    <a href="/page/repository.edit/<%= domainId %>.<%= repositoryId %>.repository?referrerGroup=<%= group.id %>">
+ 	  <img src="/images/edit.png" border="0"> Edit / View
+     </a>
+    </td>
+    <td>
+     <a href="/page/areYouSure/show?<%=
+-       urlencode({'filename':'repository '+id,
+-       'ok':'/repositoryGroup.deleteRepository/' + fileName + '?repository=' + id })%>">
++       urlencode({'filename':'repository '+repositoryId,
++       'ok':'/repositoryGroup.deleteRepository/' + fileName + '?repository=' + repositoryId })%>">
+      <img src="/images/delete.jpg" width="14" height="14" border="0">
+ 	  Delete
+     </a>
+    </td>
+    <td>
+-	 <a href="/testrepository/<%= domainId %>.<%= id %>.repository">
++	 <a href="/testrepository/<%= domainId %>.<%= repositoryId %>.repository">
+ 	  <img src="/images/exec.png" border="0">
+ 	  Test mapping
+ 	 </a>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.0/meresco/harvester/controlpanel/slowfoottemplates/showHarvesterStatus version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/showHarvesterStatus
+--- version_7.0/meresco/harvester/controlpanel/slowfoottemplates/showHarvesterStatus	2011-03-29 17:08:20.000000000 +0200
++++ version_7.0.1/meresco/harvester/controlpanel/slowfoottemplates/showHarvesterStatus	2011-03-31 09:39:20.000000000 +0200
+@@ -20,45 +20,40 @@
+ <td>Repository</td>
+ <td>Last successful harvest</td>
+ <td>Total records</td>
+-<td>Harvested<br>Uploaded<br>Deleted</td>
++<td>Harvested<br/>Uploaded<br/>Deleted</td>
++<td>#Validation<br/>Errors</td>
+ <td>#Errors</td>
+-<td></td>
+-<td>#Ignores</td>
+-<td></td>
+ </tr>
+ <%
+-for status in statuses:
++for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),str(s.repositoryId))):
+   total = 0
+   total += int(str(status.total) or '0')
+   errorsnr = int(str(status.totalerrors))
+   style = errorsnr and 'style="font-weight:bold"' or ''
+ %>
+ <tr>
+-<td <%=style%>><% escape_xml(status.repositoryGroupId) %></td>
+-<td <%=style%>><% escape_html(status.repositoryId) %></td>
++<td <%=style%> class="link"><a href="/page/repositoryGroup.edit/<%=domainId%>.<%=status.repositoryGroupId%>.repositoryGroup"><% escape_html(status.repositoryGroupId) %></a></td>
++<td <%=style%> class="link"><a href="/page/repository.edit/<%=domainId%>.<%=status.repositoryId%>.repository?<%=urlencode(dict(referrerGroup=status.repositoryGroupId))%>""><% escape_html(status.repositoryId) %></a></td>
+ <td <%=style%>><% escape_html(status.lastHarvestDate) %></td>
+ <td><% escape_html(status.total) %></td>
+ <td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
+-<td><% escape_html(status.totalerrors) %></td>
+-<%
+-  if errorsnr:
++<td class="link">
++<% 
++  nrOfValidationErrors = int(ignored[status.repositoryId].ignored) if status.repositoryId in ignored else 0
++  if nrOfValidationErrors > 0:
++    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
+ %>
+-<td class="error"><a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>">Errors</a></td>
++    <a href="/page/ignored/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
+ <%
+-  else:
+-%>
+-<td>&nbsp;</td>
+-<% 
+   #
+ %>
+-<td><% escape_html(ignored[status.repositoryId].ignored if status.repositoryId in ignored else 0) %></td>
+-<td class="link">
++</td>
++<td class="error">
+ <%
+-  if status.repositoryId in ignored:
+-    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
++  if errorsnr:
+ %>
+-    <a href="/page/ignored/?<%= args %>">Ignored</a>
+-<%
++    <a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>"><%=errorsnr%> error<%='s' if errorsnr != 1 else ''%></a>
++<% 
+   #
+ %>
+ </td>
+@@ -67,7 +62,7 @@
+ #
+ %>
+ </table>
+-<br>
++<br/>
+ 
+ <p>
+ <h3>Harvester Errors.</h3>
