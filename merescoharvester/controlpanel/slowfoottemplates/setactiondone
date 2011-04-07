@@ -1,28 +1,11 @@
 <%
-from merescoharvester.controlpanel.tools import getDomainId
-domainId = args.domainId
-repositoryId = args.repositoryId
+from merescoharvester.controlpanel import RepositoryData
 
-filename = '%s.%s.repository'%(domainId, repositoryId)
-repository = asxml(url('/xml/%s'%filename)).repository
+filename = '%s.%s.repository' % (args.domainId, args.repositoryId)
+repositoryData = RepositoryData.read(filepath(filename))
+repositoryData.action = ''
+repositoryData.save(filepath(filename))
 
-target(filepath(filename))
-%><?xml version="1.0"?>
-<repository>
-  <id><% escape_xml(repository.id) %></id>
-  <repositoryGroupId><% escape_xml(repository.repositoryGroupId) %></repositoryGroupId>
-  <use><% escape_xml(repository.use) %></use>
-  <action></action>
-  <complete><% escape_xml(repository.complete) %></complete>
-  <baseurl><% escape_xml(repository.baseurl) %></baseurl>
-  <set><% escape_xml(repository.set) %></set>
-  <collection><% escape_xml(repository.collection) %></collection>
-  <targetId><% escape_xml(repository.targetId) %></targetId>
-  <metadataPrefix><% escape_xml(repository.metadataPrefix) %></metadataPrefix>
-  <mappingId><% escape_xml(repository.mappingId) %></mappingId>
-</repository>
-<%
-target()
 type('text/xml; charset=utf-8')
 %><?xml version="1.0"?>
 <result>success</result>
