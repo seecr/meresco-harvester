@@ -29,11 +29,11 @@
 
 from cq2utils import CQ2TestCase
 from os.path import join
-from meresco.harvester.controlpanel import RepositoryXml
+from meresco.harvester.controlpanel import RepositoryData
 
-class RepositoryXmlTest(CQ2TestCase):
+class RepositoryDataTest(CQ2TestCase):
     def testSave(self):
-        r = RepositoryXml('identifier')
+        r = RepositoryData('identifier')
         r.repositoryGroupId='repositoryGroupId'
         r.baseurl = 'http://base.url/oai?query=param&value=yes'
         r.metadataPrefix = 'oai_dc'

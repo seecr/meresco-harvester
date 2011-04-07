@@ -70,7 +70,7 @@ from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest
 from toolstest import ToolsTest
 
-from controlpanel.repositoryxmltest import RepositoryXmlTest
+from controlpanel.repositorydatatest import RepositoryDataTest
 
 if __name__ == '__main__':
         unittest.main()

@@ -29,7 +29,7 @@ from __future__ import with_statement
 
 from xml.sax.saxutils import escape as escapeXml
 
-class RepositoryXml(object):
+class RepositoryData(object):
     def __init__(self, identifier):
         self.id = identifier
         self.repositoryGroupId = ''

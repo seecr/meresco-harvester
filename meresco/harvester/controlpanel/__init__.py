@@ -31,4 +31,4 @@
 #
 ## end license ##
 
-from repositoryxml import RepositoryXml
+from repositorydata import RepositoryData
