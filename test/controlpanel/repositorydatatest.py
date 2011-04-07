@@ -27,6 +27,7 @@
 #
 ## end license ##
 
+from __future__ import with_statement
 from cq2utils import CQ2TestCase
 from os.path import join
 from meresco.harvester.controlpanel import RepositoryData
@@ -108,3 +109,22 @@ class RepositoryDataTest(CQ2TestCase):
         filename2 = join(self.tempdir, 'repository2.xml')
         rd.save(filename2)
         self.assertEquals(open(filename).read(), open(filename2).read())
+
+    def testReadWithMissingTags(self):
+        filename = join(self.tempdir, 'repository.xml')
+        with open(filename, 'w') as f:
+            f.write("""<?xml version="1.0" encoding="utf-8"?>
+<repository>
+    <id>identifier</id>
+    <repositoryGroupId>repositoryGroupId</repositoryGroupId>
+    <baseurl>http://base.url/oai?query=param&amp;value=yes</baseurl>
+    <set>set</set>
+    <metadataPrefix>oai_dc</metadataPrefix>
+    <mappingId>mapping</mappingId>
+    <targetId>target</targetId>
+    <collection>collection</collection>
+</repository>""")
+
+        r = RepositoryData.read(filename)
+        self.assertEquals('', r.maximumIgnore)
+
