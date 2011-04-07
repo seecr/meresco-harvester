@@ -28,21 +28,16 @@
 from __future__ import with_statement
 
 from xml.sax.saxutils import escape as escapeXml
+from lxml.etree import parse
+
 
 class RepositoryData(object):
+    singularFields = ['repositoryGroupId', 'baseurl', 'set', 'metadataPrefix', 'mappingId', 'targetId', 'collection', 'maximumIgnore', 'use', 'complete', 'action']
+
     def __init__(self, identifier):
         self.id = identifier
-        self.repositoryGroupId = ''
-        self.baseurl = ''
-        self.set = ''
-        self.metadataPrefix = ''
-        self.mappingId = ''
-        self.targetId = ''
-        self.collection = ''
-        self.maximumIgnore = ''
-        self.use = ''
-        self.complete = ''
-        self.action = ''
+        for name in self.singularFields:
+            setattr(self, name, '')
         self.shopclosed = []
 
     def save(self, filename):
@@ -50,16 +45,18 @@ class RepositoryData(object):
             f.write('<?xml version="1.0" encoding="utf-8"?>\n')
             f.write('<repository>\n')
             f.write('<id>%s</id>\n' % escapeXml(self.id))
-            f.write('<repositoryGroupId>%s</repositoryGroupId>\n' % escapeXml(self.repositoryGroupId))
-            f.write('<baseurl>%s</baseurl>\n' % escapeXml(self.baseurl))
-            f.write('<set>%s</set>\n' % escapeXml(self.set))
-            f.write('<metadataPrefix>%s</metadataPrefix>\n' % escapeXml(self.metadataPrefix))
-            f.write('<mappingId>%s</mappingId>\n' % escapeXml(self.mappingId))
-            f.write('<targetId>%s</targetId>\n' % escapeXml(self.targetId))
-            f.write('<collection>%s</collection>\n' % escapeXml(self.collection))
-            f.write('<maximumIgnore>%s</maximumIgnore>\n' % escapeXml(self.maximumIgnore))
-            f.write('<use>%s</use>\n' % escapeXml(self.use))
-            f.write('<complete>%s</complete>\n' % escapeXml(self.complete))
-            f.write('<action>%s</action>\n' % escapeXml(self.action))
+            for name in self.singularFields:
+                f.write('<%s>%s</%s>\n' % (name, escapeXml(getattr(self, name)), name))
+            for entry in self.shopclosed:
+                f.write('<shopclosed>%s</shopclosed>\n' % escapeXml(entry))
             f.write('</repository>\n')
+
+    @classmethod
+    def read(cls, filename):
+        lxmlNode = parse(open(filename))
+        r = cls(''.join(lxmlNode.xpath('/repository/id/text()')))
+        for name in cls.singularFields:
+            setattr(r, name, ''.join(lxmlNode.xpath('/repository/%s/text()' % name)))
+        r.shopclosed = [str(shopclosed) for shopclosed in lxmlNode.xpath('/repository/shopclosed/text()')]
+        return r
 

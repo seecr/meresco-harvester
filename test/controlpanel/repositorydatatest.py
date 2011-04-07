@@ -61,6 +61,50 @@ class RepositoryDataTest(CQ2TestCase):
     <action></action>
 </repository>""", open(filename).read())
 
+    def testSaveWithShopClosed(self):
+        r = RepositoryData('identifier')
+        r.repositoryGroupId='repositoryGroupId'
+        r.baseurl = 'http://base.url/oai?query=param&value=yes'
+        r.metadataPrefix = 'oai_dc'
+        r.targetId = 'target'
+        r.shopclosed.append("10:0:7:00-10:0:18:00")
+        r.shopclosed.append("12:1:6:00-12:1:19:00")
+        filename = join(self.tempdir, 'repository.xml')
 
+        r.save(filename)
 
+        self.assertEqualsWS("""<?xml version="1.0" encoding="utf-8"?>
+<repository>
+    <id>identifier</id>
+    <repositoryGroupId>repositoryGroupId</repositoryGroupId>
+    <baseurl>http://base.url/oai?query=param&amp;value=yes</baseurl>
+    <set></set>
+    <metadataPrefix>oai_dc</metadataPrefix>
+    <mappingId></mappingId>
+    <targetId>target</targetId>
+    <collection></collection>
+    <maximumIgnore></maximumIgnore>
+    <use></use>
+    <complete></complete>
+    <action></action>
+    <shopclosed>10:0:7:00-10:0:18:00</shopclosed>
+    <shopclosed>12:1:6:00-12:1:19:00</shopclosed>
+</repository>""", open(filename).read())
 
+    def testRead(self):
+        r = RepositoryData('identifier')
+        r.repositoryGroupId='repositoryGroupId'
+        r.baseurl = 'http://base.url/oai?query=param&value=yes'
+        r.metadataPrefix = 'oai_dc'
+        r.targetId = 'target'
+        r.shopclosed.append("10:0:7:00-10:0:18:00")
+        r.shopclosed.append("12:1:6:00-12:1:19:00")
+        filename = join(self.tempdir, 'repository.xml')
+        r.save(filename)
+
+        rd = RepositoryData.read(filename)
+
+        self.assertEquals('identifier', rd.id)
+        filename2 = join(self.tempdir, 'repository2.xml')
+        rd.save(filename2)
+        self.assertEquals(open(filename).read(), open(filename2).read())
