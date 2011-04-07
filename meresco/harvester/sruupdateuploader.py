@@ -129,7 +129,7 @@ class SruUpdateUploader(VirtualUploader):
         diagnostics = xpath(message, "/srw:updateResponse/srw:diagnostics/diag:diagnostic")
         if len(diagnostics) > 0:
             diagnostic_uri = xpath(diagnostics[0], "diag:uri/text()")[0]
-            diagnostic_details = xpath(diagnostics[0], "diag:details/text()")[0]
-            diagnostic_message = xpath(diagnostics[0], "diag:message/text()")[0]
+            diagnostic_details = ''.join(xpath(diagnostics[0], "diag:details/text()"))
+            diagnostic_message = ''.join(xpath(diagnostics[0], "diag:message/text()"))
             diagresult = (diagnostic_uri, diagnostic_details, diagnostic_message)
         return version, operationStatus, diagresult

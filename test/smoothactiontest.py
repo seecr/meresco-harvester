@@ -189,7 +189,7 @@ class SmoothActionTest(ActionTestCase):
         h = self.newHarvesterLog()
         self.assertEquals((None, None), (h.from_, h.token))
 
-    def xtestResetState_ToStartAllOver(self):
+    def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
         self.writeLogLine(2010, 3, 4, exception='Exception')
         action = self.newSmoothAction()

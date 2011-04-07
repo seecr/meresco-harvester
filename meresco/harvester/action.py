@@ -40,6 +40,7 @@ from os.path import isfile, join
 from os import remove, rename
 from meresco.core import be
 
+
 DONE = 'Done.'
 
 class Action(object):
@@ -48,22 +49,29 @@ class Action(object):
         self._stateDir = stateDir
         self._logDir = logDir
         self._generalHarvestLog = generalHarvestLog
+
     def do(self):
         """
         perform action and return
         (if the action is finished/done, a Message about what happened.)
         """
         raise NotImplementedError
+
     def info(self):
         return  str(self.__class__.__name__)
+
     def _createHarvester(self):
-        harvesterLog=HarvesterLog(self._stateDir, self._logDir, self._repository.id)
+        harvesterLog = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
         helix = \
             (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
                 (OaiRequest(self._repository.baseurl),),
                 (harvesterLog,)
             )
         return be(helix)
+
+    def _createDeleteIds(self):
+        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
+        return d
 
 
 class NoneAction(Action):
@@ -93,7 +101,7 @@ class DeleteIdsAction(Action):
         if self._repository.shopClosed():
             return False, 'Not deleting outside timeslots.', False
 
-        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
+        d = self_createDeleteIds()
         d.delete()
         return True, 'Deleted', False
 
@@ -146,7 +154,7 @@ class SmoothAction(Action):
         return DONE
 
     def _delete(self, filename):
-        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
+        d = self._createDeleteIds()
         d.deleteFile(filename)
 
     def _harvest(self):

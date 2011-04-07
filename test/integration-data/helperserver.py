@@ -51,9 +51,6 @@ notWordCharRE = compile('\W+')
 class InvalidDataException(Exception):
     pass
 
-INVALID_COMPONENT_DIAGNOSTIC_XML = DIAGNOSTIC_XML
-INVALID_DATA_DIAGNOSTIC_XML = DIAGNOSTIC_XML.replace("12/1", "12/12")
-
 class Dump(object):
     def __init__(self, dumpdir):
         self._dumpdir = dumpdir
@@ -65,7 +62,7 @@ class Dump(object):
             updateRequest = bind_string(Body).updateRequest
             print self._ignoreAll, str(updateRequest.action)
             if self._ignoreAll and str(updateRequest.action) == "info:srw/action/1/replace":
-                raise InvalidDataException()
+                raise InvalidDataException('Data not valid.')
             recordId = str(updateRequest.recordIdentifier)
             normalizedRecordId = notWordCharRE.sub('_', recordId)
             self._number +=1
@@ -80,11 +77,20 @@ class Dump(object):
         except InvalidDataException, e:
             answer = RESPONSE_XML % {
                 "operationStatus": "fail",
-                "diagnostics": INVALID_DATA_DIAGNOSTIC_XML % escapeXml(format_exc())}
+                "diagnostics": DIAGNOSTIC_XML % {
+                    'uri': 'info:srw/diagnostic/12/12',
+                    'details': escapeXml(str(e)),
+                    'message': 'Invalid data:  record rejected'}}
         except Exception, e:
             answer = RESPONSE_XML % {
                 "operationStatus": "fail",
-                "diagnostics": INVALID_COMPONENT_DIAGNOSTIC_XML % escapeXml(format_exc())}
+                "diagnostics": DIAGNOSTIC_XML % {
+                    'uri': 'info:srw/diagnostic/12/1', 
+                    'details': escapeXml(format_exc()), 
+                    'message': 'Invalid component:  record rejected'}}
+        print answer
+        import sys
+        sys.stdout.flush()
         yield answer
 
     def _findLastNumber(self):

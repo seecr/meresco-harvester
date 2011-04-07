@@ -43,6 +43,7 @@ from sets import Set
 from mapping import Upload
 from traceback import format_exception
 
+
 def readIds(filename):
     ids = Set()
     f = open(filename)
