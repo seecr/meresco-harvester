@@ -1,6 +1,7 @@
 <%
 from slowfoot import binderytools
 from meresco.harvester.controlpanel.tools import checkName, getDomainId
+from meresco.harvester.controlpanel import RepositoryData
 
 f = asform(input)
 repositoryId = f.id
@@ -25,21 +26,9 @@ else:
   target(filepath(groupFileName))
   req.write(group.xml())
 
-  target(filepath(fileName))
-%><?xml version="1.0"?>
-<repository>
-  <id><%escape_xml(repositoryId)%></id>
-  <repositoryGroupId><%escape_xml(group.repositoryGroup.id)%></repositoryGroupId>
-  <use/>
-  <action/>
-  <baseurl/>
-  <set/>
-  <collection/>
-  <targetId/>
-  <metadataPrefix/>
-  <targetId/>
-</repository>
-<%
+  repositoryData = RepositoryData(repositoryId)
+  repositoryData.repositoryGroupId = group.repositoryGroup.id
+  repositoryData.save(filepath(fileName))
   redirect('/page/repository.edit/' + fileName + '?referrerGroup=' + group.repositoryGroup.id)
 #
 %>

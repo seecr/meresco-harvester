@@ -1,72 +1,41 @@
 <%
 from meresco.harvester.controlpanel.tools import getDomainId
-repository = asform(input)
+from meresco.harvester.controlpanel import RepositoryData
+
+formData = asform(input)
 domainId = getDomainId(req.uri)
 fileName = args.name
-target(filepath(fileName))
 groupId = args.referrerGroup
-%><?xml version="1.0"?>
-<repository>
-  <id><% escape_xml(repository.id) %></id>
-  <repositoryGroupId><% escape_xml(repository.repositoryGroupId) %></repositoryGroupId>
-  <use><% escape_xml(repository.use) %></use>
-  <complete><% escape_xml(repository.complete) %></complete>
-  <action><% escape_xml(repository.repositoryAction) %></action>
-  <baseurl><% escape_xml(repository.baseurl) %></baseurl>
-  <set><% escape_xml(repository.set) %></set>
-  <collection><% escape_xml(repository.collection) %></collection>
-  <targetId><% escape_xml(repository.targetId) %></targetId>
-  <metadataPrefix><% escape_xml(repository.metadataPrefix) %></metadataPrefix>
-  <mappingId><% escape_xml(repository.mappingId) %></mappingId>
-<%
-if repository.maximumIgnore:
-%>
-  <maximumIgnore><% escape_xml(repository.maximumIgnore) %></maximumIgnore>
-<%
-for i in range(1,1+int(repository.numberOfTimeslots)):
-	if repository.get('deleteTimeslot_' + str(i)+".x", None) == None:
-		#
-%>   <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_'+str(i)),
-	repository.getfirst('shopclosedWeekDay_'+str(i)),
-	repository.getfirst('shopclosedBegin_'+str(i)),
-	repository.getfirst('shopclosedWeek_'+str(i)),
-	repository.getfirst('shopclosedWeekDay_'+str(i)),
-	repository.getfirst('shopclosedEnd_'+str(i))) %></shopclosed>
-<%
-	#
-#
-if repository.get('addTimeslot', None) != None:
-  #
-%>
-  <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'),
-	repository.getfirst('shopclosedBegin_0'),
-	repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'),
-	repository.getfirst('shopclosedEnd_0')) %>
-  </shopclosed>
-<%
-#
-%>
+repositoryData = RepositoryData(formData.id)
+repositoryData.repositoryGroupId = formData.repositoryGroupId
+repositoryData.use = formData.use
+repositoryData.complete = formData.complete
+repositoryData.action = formData.repositoryAction
+repositoryData.baseurl = formData.baseurl
+repositoryData.set = formData.set
+repositoryData.collection = formData.collection
+repositoryData.targetId = formData.targetId
+repositoryData.metadataPrefix = formData.metadataPrefix
+repositoryData.mappingId = formData.mappingId
+repositoryData.maximumIgnore = formData.maximumIgnore
 
-<%
-#
-if repository.get('deleteTimeslot', None) != None:
-  #
-%>
-  <shopclosed><%= '%s:%s:%s:00-%s:%s:%s:00' % (repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'),
-	repository.getfirst('shopclosedBegin_0'),
-	repository.getfirst('shopclosedWeek_0'),
-	repository.getfirst('shopclosedWeekDay_0'),
-	repository.getfirst('shopclosedEnd_0')) %>
-  </shopclosed>
-<%
-#
-%>
+def getShopclosed(i):
+    return '%s:%s:%s:00-%s:%s:%s:00' % (
+        formData.getfirst('shopclosedWeek_%s' % i),
+        formData.getfirst('shopclosedWeekDay_%s' % i),
+        formData.getfirst('shopclosedBegin_%s' % i),
+        formData.getfirst('shopclosedWeek_%s' % i),
+        formData.getfirst('shopclosedWeekDay_%s' % i),
+        formData.getfirst('shopclosedEnd_%s' % i)
+    )
 
+for i in range(1,1+int(formData.numberOfTimeslots)):
+    if formData.get('deleteTimeslot_%s.x' % i, None) == None:
+        repositoryData.shopclosed.append(getShopclosed(i))
 
-</repository>
-<%
+if formData.get('addTimeslot', None) != None:
+    repositoryData.shopclosed.append(getShopclosed(0))
+
+repositoryData.save(filepath(fileName))
 redirect('/page/repository.edit/' + fileName + '?referrerGroup='+groupId)
 %>
