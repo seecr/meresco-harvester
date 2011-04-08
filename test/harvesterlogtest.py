@@ -31,14 +31,16 @@
 #
 ## end license ##
 
-import unittest,os
+import unittest, os
 from time import strftime, gmtime
+from os.path import isfile
+from shutil import rmtree
+from tempfile import mkdtemp
+
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester import harvesterlog
 from meresco.harvester.eventlogger import LOGLINE_RE
 from meresco.harvester.virtualuploader import UploaderException
-from tempfile import mkdtemp
-from shutil import rmtree
 
 
 class HarvesterLogTest(unittest.TestCase):
@@ -146,15 +148,16 @@ class HarvesterLogTest(unittest.TestCase):
         logger.logID('id:2')
         self.assertEquals(3,logger.totalIds())
 
-    def testLogIgnoredIDs(self):
+    def testLogIgnoredID(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
-        logger.notifyHarvestedRecord('id:4')
-        logger.logIgnoredID('id:4', "Error")
+        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
+        logger.logIgnoredID('repoid:oai:bla/bla', "Error")
         self.assertEquals(1, logger.totalIgnoredIds())
-        logger.notifyHarvestedRecord('id:4')
+        self.assertEquals("Error", open(self.logDir+'/ignored/repoid/oai:bla%2Fbla').read())
+        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
         self.assertEquals(0, logger.totalIgnoredIds())
-        logger.logID('id:4')
+        logger.logID('repoid:oai:bla/bla')
         self.assertEquals(1, logger.totalIds())
 
     def testListIgnoredIDs(self):
@@ -165,6 +168,25 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord('id:2')
         logger.logIgnoredID('id:2', "Error")
         self.assertEquals(['id:1', 'id:2'], logger.ignoredIds())
+        
+    def testClearIgnored(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+        logger.startRepository()
+        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
+        logger.logIgnoredID('repoid:oai:bla/bla', "Error")
+        self.assertTrue(isfile(self.logDir + '/ignored/repoid/oai:bla%2Fbla'))
+        logger.notifyHarvestedRecord('repoid:recordid')
+        logger.logIgnoredID('repoid:recordid', "Error")
+        self.assertTrue(isfile(self.logDir + '/ignored/repoid/recordid'))
+        logger.notifyHarvestedRecord('repo2:1')
+        logger.logIgnoredID('repo2:1', "Error")
+        self.assertTrue(isfile(self.logDir + '/ignored/repo2/1'))
+        self.assertEquals(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.ignoredIds())
+        logger.clearIgnored('repoid')
+        self.assertEquals(['repo2:1'], logger.ignoredIds())
+        self.assertFalse(isfile(self.logDir + '/ignored/repoid/oai:bla%2Fbla'))
+        self.assertFalse(isfile(self.logDir + '/ignored/repoid/recordid'))
+        self.assertTrue(isfile(self.logDir + '/ignored/repo2/1'))
 
     def testLogDeleted(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')

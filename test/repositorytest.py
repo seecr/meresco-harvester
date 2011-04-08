@@ -168,7 +168,6 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals('someaction', self.repo.action)
 
     def _testAction(self, use, action, expectedTypeName):
-        factory = ActionFactory()
         self.repo.use = use
         self.repo.action = action
         createdAction = self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())

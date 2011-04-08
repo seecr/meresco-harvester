@@ -84,7 +84,7 @@ class Repository(SaharaObject):
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
     def _createAction(self, stateDir, logDir, generalHarvestLog):
-        return ActionFactory().createAction(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+        return ActionFactory.createAction(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 
     def do(self, stateDir, logDir, generalHarvestLog=nillogger):
         try:

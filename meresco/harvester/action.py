@@ -165,14 +165,18 @@ class ActionFactoryException(Exception):
     pass
 
 class ActionFactory(object):
-    def createAction(self, repository, stateDir, logDir, generalHarvestLog):
+    @staticmethod
+    def createAction(repository, stateDir, logDir, generalHarvestLog):
+        actionClass = None
         if repository.action == 'clear':
-            return DeleteIdsAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+            actionClass = DeleteIdsAction
         if repository.action == 'refresh':
-            return SmoothAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+            actionClass = SmoothAction
         if repository.use == 'true' and repository.action == '':
-            return HarvestAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+            actionClass = HarvestAction
         if repository.use == "" and repository.action == '':
-            return NoneAction(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
-        raise ActionFactoryException("Action '%s' not supported."%repository.action)
+            actionClass = NoneAction
+        if actionClass is None:
+            raise ActionFactoryException("Action '%s' not supported."%repository.action)
+        return actionClass(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 

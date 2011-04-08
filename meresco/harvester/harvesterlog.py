@@ -39,14 +39,17 @@ from ids import Ids
 import traceback
 from os.path import join, isdir, isfile, dirname
 from os import makedirs, remove
+from shutil import rmtree
 from state import State
+from escaping import escapeFilename
+
 
 def idfilename(stateDir, repositorykey):
     return join(stateDir, repositorykey+'.ids')
 
 def ignoreFilepath(logDir, uploadid):
     repositoryId, recordId = uploadid.split(":", 1)
-    return join(logDir, "ignored", repositoryId, recordId)
+    return join(logDir, "ignored", repositoryId, escapeFilename(recordId))
 
 def ensureDirectory(directoryPath):
     isdir(directoryPath) or makedirs(directoryPath)
@@ -114,10 +117,7 @@ class HarvesterLog(object):
         self._state.close()
 
     def notifyHarvestedRecord(self, uploadid):
-        self._ignoredIds.remove(uploadid)
-        ignoreFile = ignoreFilepath(self._logDir, uploadid)
-        if isfile(ignoreFile):
-            remove(ignoreFile)
+        self._removeFromIgnored(uploadid)
         self._harvestedCount += 1
 
     def logID(self, uploadid):
@@ -135,6 +135,13 @@ class HarvesterLog(object):
         self._ignoredIds.add(uploadid)
         self._eventlogger.warning('IGNORED', uploadid)
 
+    def clearIgnored(self, repositoryId):
+        repositoryIgnoredIds = [id for id in self._ignoredIds 
+                                if id.startswith("%s:" % repositoryId)]
+        for id in repositoryIgnoredIds:
+            self._ignoredIds.remove(id)
+        rmtree(join(self._logDir, "ignored", repositoryId))
+
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token
     
@@ -143,3 +150,10 @@ class HarvesterLog(object):
 
     def ignoredIds(self):
         return [id for id in self._ignoredIds]
+
+    def _removeFromIgnored(self, uploadid):
+        self._ignoredIds.remove(uploadid)
+        ignoreFile = ignoreFilepath(self._logDir, uploadid)
+        if isfile(ignoreFile):
+            remove(ignoreFile)
+

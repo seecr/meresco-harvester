@@ -58,32 +58,32 @@ class SmoothActionTest(ActionTestCase):
         writefile(self.idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n')
 
-        self.assert_(not os.path.isfile(self.old_idfilename))
+        self.assertFalse(os.path.isfile(self.old_idfilename))
 
         done,message, hasResumptionToken = self.smoothaction.do()
 
-        self.assert_(os.path.isfile(self.old_idfilename))
-        self.assert_(os.path.isfile(self.idfilename))
+        self.assertTrue(os.path.isfile(self.old_idfilename))
+        self.assertTrue(os.path.isfile(self.idfilename))
         self.assertEquals('rep:id:1\nrep:id:2\n', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
-        self.assert_('Done: Deleted all id\'s' in  readfile(self.statsfilename))
+        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
-        self.assert_(not done)
+        self.assertFalse(done)
 
     def testSmooth_InitWithNothingHarvestedYetRepository(self):
-        self.assert_(not os.path.isfile(self.idfilename))
-        self.assert_(not os.path.isfile(self.old_idfilename))
-        self.assert_(not os.path.isfile(self.statsfilename))
+        self.assertFalse(os.path.isfile(self.idfilename))
+        self.assertFalse(os.path.isfile(self.old_idfilename))
+        self.assertFalse(os.path.isfile(self.statsfilename))
 
         done,message, hasResumptionToken = self.smoothaction.do()
 
-        self.assert_(os.path.isfile(self.old_idfilename))
-        self.assert_(os.path.isfile(self.idfilename))
+        self.assertTrue(os.path.isfile(self.old_idfilename))
+        self.assertTrue(os.path.isfile(self.idfilename))
         self.assertEquals('', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
-        self.assert_('Done: Deleted all id\'s' in  readfile(self.statsfilename))
+        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
-        self.assert_(not done)
+        self.assertFalse(done)
 
 
     def testSmooth_Harvest(self):
@@ -96,7 +96,7 @@ class SmoothActionTest(ActionTestCase):
         done,message,hasResumptionToken = self.smoothaction.do()
 
         self.assertEquals('Smooth reharvest: Harvested.', message)
-        self.assert_(not done)
+        self.assertFalse(done)
 
     def testSmooth_HarvestAgain(self):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
@@ -108,7 +108,7 @@ class SmoothActionTest(ActionTestCase):
         done, message, hasResumptionToken = self.smoothaction.do()
 
         self.assertEquals('Smooth reharvest: Harvested.', message)
-        self.assert_(not done)
+        self.assertFalse(done)
 
     def testSmooth_NothingToDo(self):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
@@ -121,7 +121,7 @@ class SmoothActionTest(ActionTestCase):
         done, message, hasResumptionToken = self.smoothaction.do()
 
         self.assertEquals('Smooth reharvest: ' + DONE, message)
-        self.assert_(done)
+        self.assertTrue(done)
 
     def mockdelete(self, filename):
         self.mockdelete_filename = filename
@@ -134,7 +134,7 @@ class SmoothActionTest(ActionTestCase):
         self.smoothaction._delete=self.mockdelete
         result = self.smoothaction._finish()
 
-        self.assert_(not os.path.isfile(self.old_idfilename))
+        self.assertFalse(os.path.isfile(self.old_idfilename))
         self.assertEquals(DONE, result)
         self.assertEquals(self.idfilename+'.delete', self.mockdelete_filename)
         self.assertEquals(Set(['rep:id:1']), self.mockdelete_ids)
