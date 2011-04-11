@@ -34,7 +34,7 @@ from meresco.harvester.saharaget import SaharaGet, SaharaGetException
 from meresco.harvester.eventlogger import NilEventLogger
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.repository import Repository
-from meresco.harvester.action import Action, DONE, ActionFactory, ActionFactoryException
+from meresco.harvester.action import Action, DONE, ActionException
 from meresco.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string
@@ -173,8 +173,7 @@ class RepositoryTest(unittest.TestCase):
         createdAction = self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())
         self.assertEquals(expectedTypeName, createdAction.__class__.__name__)
 
-
-    def testActionFactory(self):
+    def testCreateAction(self):
         self._testAction('', '', 'NoneAction')
         self._testAction('true', '', 'HarvestAction')
         self._testAction('', 'clear', 'DeleteIdsAction')
@@ -184,7 +183,7 @@ class RepositoryTest(unittest.TestCase):
         try:
             self._testAction('true', 'nonexisting', 'ignored')
             self.fail()
-        except ActionFactoryException, afe:
+        except ActionException, afe:
             self.assertEquals("Action 'nonexisting' not supported.", str(afe))
 
     def testDoWithoutLogpath(self):

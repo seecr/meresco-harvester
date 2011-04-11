@@ -39,7 +39,7 @@ from timeslot import Timeslot
 from sys import exc_info
 from traceback import format_exception
 from time import localtime
-from action import ActionFactory
+from action import Action
 
 nillogger = NilEventLogger()
 
@@ -84,7 +84,7 @@ class Repository(SaharaObject):
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
     def _createAction(self, stateDir, logDir, generalHarvestLog):
-        return ActionFactory.createAction(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+        return Action.create(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 
     def do(self, stateDir, logDir, generalHarvestLog=nillogger):
         try:

@@ -40,8 +40,10 @@ from os.path import isfile, join
 from os import remove, rename
 from meresco.core import be
 
-
 DONE = 'Done.'
+
+class ActionException(Exception):
+    pass
 
 class Action(object):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
@@ -49,6 +51,19 @@ class Action(object):
         self._stateDir = stateDir
         self._logDir = logDir
         self._generalHarvestLog = generalHarvestLog
+
+    @staticmethod
+    def create(repository, stateDir, logDir, generalHarvestLog):
+        actionUse2Class = {
+            'clear': lambda use: DeleteIdsAction,
+            'refresh': lambda use: SmoothAction,
+            '': lambda use: {'true': HarvestAction, '': NoneAction}[use]
+        }
+        try:
+            actionClass = actionUse2Class[repository.action](repository.use)
+            return actionClass(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
+        except KeyError:
+            raise ActionException("Action '%s' not supported."%repository.action)
 
     def do(self):
         """
@@ -160,23 +175,4 @@ class SmoothAction(Action):
     def _harvest(self):
         harvester = self._createHarvester()
         return harvester.harvest()
-
-class ActionFactoryException(Exception):
-    pass
-
-class ActionFactory(object):
-    @staticmethod
-    def createAction(repository, stateDir, logDir, generalHarvestLog):
-        actionClass = None
-        if repository.action == 'clear':
-            actionClass = DeleteIdsAction
-        if repository.action == 'refresh':
-            actionClass = SmoothAction
-        if repository.use == 'true' and repository.action == '':
-            actionClass = HarvestAction
-        if repository.use == "" and repository.action == '':
-            actionClass = NoneAction
-        if actionClass is None:
-            raise ActionFactoryException("Action '%s' not supported."%repository.action)
-        return actionClass(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 
