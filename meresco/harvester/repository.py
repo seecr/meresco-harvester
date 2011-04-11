@@ -101,18 +101,18 @@ class Repository(SaharaObject):
                 generalHarvestLog.logLine('END', message, id = self.id)
             completeHarvest = hasResumptionToken and self.complete == 'true'
             if completeHarvest:
-                generalHarvestLog.info('Repository will be completed in one attempt', id=self.id)
+                generalHarvestLog.logInfo('Repository will be completed in one attempt', id=self.id)
             return message, completeHarvest
         except OAIError, e:
             errorMessage = _errorMessage()
-            generalHarvestLog.error(errorMessage, id=self.id)
+            generalHarvestLog.logError(errorMessage, id=self.id)
             if e.errorCode() == 'badResumptionToken':
                 action.resetState()
                 return errorMessage, self.complete == 'true'
             return errorMessage, False
         except:
             errorMessage = _errorMessage()
-            generalHarvestLog.error(errorMessage, id=self.id)
+            generalHarvestLog.logError(errorMessage, id=self.id)
             return errorMessage, False
 
 def _errorMessage():

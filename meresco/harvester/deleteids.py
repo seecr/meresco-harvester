@@ -107,7 +107,7 @@ class DeleteIds(object):
                 except:
                     xtype,xval,xtb = sys.exc_info()
                     errorMessage = '|'.join(map(str.strip,format_exception(xtype,xval,xtb)))
-                    self._eventLogger.error(errorMessage, id=id)
+                    self._eventLogger.logError(errorMessage, id=id)
                     raise
             return ids - done
         finally:

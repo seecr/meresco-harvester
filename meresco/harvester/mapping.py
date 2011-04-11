@@ -177,7 +177,7 @@ class Mapping(SaharaObject):
             })
             upload.ensureStrings()
         except DataMapAssertionException, ex:
-            logger.error(comments='Assertion: ' + str(ex), id=upload.id)
+            logger.logError(comments='Assertion: ' + str(ex), id=upload.id)
             raise ex
         except DataMapSkip, e:
             logger.logLine('SKIP', id=upload.id, comments=str(e))

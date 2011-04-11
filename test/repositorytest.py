@@ -193,7 +193,7 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue('RepositoryException: Missing stateDir and/or logDir' in message)
         self.assertEquals((message,), generalHarvestLog.calledMethods[-1].args)
         self.assertEquals({'id':self.repo.id}, generalHarvestLog.calledMethods[-1].kwargs)
-        self.assertEquals('error', generalHarvestLog.calledMethods[-1].name)
+        self.assertEquals('logError', generalHarvestLog.calledMethods[-1].name)
 
     # mock saharaget
     def repositoryActionDone(self, domainId, repositoryId):

@@ -40,7 +40,7 @@ LOGLINE_RE=compile(r'^\[([^\]]*)\]\t([\w ]+)\t\[([^\]]*)\]\t(.*)$')
 
 class BasicEventLogger(object):
     def __init__(self, logfile):
-        self._logfile = self.openlogfile(logfile)
+        self._logfile = self._openlogfile(logfile)
 
     def close(self):
         if self._logfile:
@@ -83,28 +83,31 @@ class BasicEventLogger(object):
     def _flush(self):
         self._logfile.flush()
 
+    def getEventLogger(self):
+        return self
+
 class EventLogger(BasicEventLogger):
     def __init__(self,logfile):
         BasicEventLogger.__init__(self, logfile)
 
-    def openlogfile(self, logfile):
+    def _openlogfile(self, logfile):
         isdir(dirname(logfile)) or makedirs(dirname(logfile))
         return open(logfile, 'a+')
 
-    def succes(self,comments='', id=''):
+    def logSuccess(self,comments='', id=''):
         self.logLine('SUCCES', comments=comments, id=id)
 
-    def failure(self,comments='', id=''):
+    def logFailure(self,comments='', id=''):
         self.logLine('FAILURE', comments=comments, id=id)
-    fail = failure
+    #fail = failure
 
-    def error(self,comments='', id=''):
+    def logError(self,comments='', id=''):
         self.logLine('ERROR', comments=comments, id=id)
 
-    def info(self, comments='', id=''):
+    def logInfo(self, comments='', id=''):
         self.logLine('INFO', comments=comments, id=id)
 
-    def warning(self, comments='', id=''):
+    def logWarning(self, comments='', id=''):
         self.logLine('WARNING', comments=comments, id=id)
 
 class StreamEventLogger(EventLogger):
@@ -112,7 +115,7 @@ class StreamEventLogger(EventLogger):
         self._stream = stream
         EventLogger.__init__(self, None)
 
-    def openlogfile(self, logfile):
+    def _openlogfile(self, logfile):
         return self._stream
 
 class CompositeLogger(EventLogger):
@@ -120,7 +123,7 @@ class CompositeLogger(EventLogger):
         EventLogger.__init__(self, None)
         self._loggers = loggers
         
-    def openlogfile(self, logfile):
+    def _openlogfile(self, logfile):
         return None
 
     def logLine(self, event, comments, id=''):
@@ -132,7 +135,7 @@ class NilEventLogger(EventLogger):
         def __init__(self):
             EventLogger.__init__(self, None)
 
-        def openlogfile(self, logfile):
+        def _openlogfile(self, logfile):
             pass
 
         def logLine(self, event, comments, id=''):

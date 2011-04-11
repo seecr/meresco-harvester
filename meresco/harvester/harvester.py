@@ -111,8 +111,8 @@ class Harvester(Observable):
     def _harvest(self):
         try:
             self._eventlogger.logLine('STARTHARVEST', '',id=self._repository.id)
-            self._eventlogger.info(self.uploaderInfo(), id=self._repository.id)
-            self._eventlogger.info("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
+            self._eventlogger.logInfo(self.uploaderInfo(), id=self._repository.id)
+            self._eventlogger.logInfo("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
             self._uploader.start()
             try:
                 return self._harvestLoop()

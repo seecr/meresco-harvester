@@ -53,7 +53,7 @@ class StartHarvester(object):
         self.__dict__.update(args.__dict__)
 
         if not self.domainId:
-            self.parser.error("Specify domain")
+            self.parser.logError("Specify domain")
 
         if self._logDir == None:
             self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()

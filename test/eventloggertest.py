@@ -73,26 +73,26 @@ class EventLoggerTest(unittest.TestCase):
         self.assertEquals('error err\t[uu_234]\tbbb ddd', self.logfile.readline().strip()[DATELENGTH:])
 
     def testSucces(self):
-        self.logger.succes('really succesful')
-        self.logger.succes('really succesful','aa')
+        self.logger.logSuccess('really succesful')
+        self.logger.logSuccess('really succesful','aa')
         date,event,id,logtext = self.readLogLine()
         self.assertEquals('', id)
         self.assertEquals('SUCCES', event)
         self.assertEquals('really succesful',logtext)
         self.assertEquals('SUCCES\t[aa]\treally succesful', self.logfile.readline().strip()[DATELENGTH:])
 
-    def testFail(self):
-        self.logger.fail()
-        self.logger.fail('uh oh','11')
-        self.logger.failure('comm','id')
+    def testFailure(self):
+        self.logger.logFailure()
+        self.logger.logFailure('uh oh','11')
+        self.logger.logFailure('comm','id')
         self.assertEquals('FAILURE\t[]\t', self.logfile.readline()[DATELENGTH:-1])
         self.assertEquals('FAILURE\t[11]\tuh oh', self.logfile.readline().strip()[DATELENGTH:])
         self.assertEquals('FAILURE\t[id]\tcomm', self.logfile.readline().strip()[DATELENGTH:])
 
     def testError(self):
-        self.logger.error()
-        self.logger.error('uh oh','11')
-        self.logger.error('comm','id')
+        self.logger.logError()
+        self.logger.logError('uh oh','11')
+        self.logger.logError('comm','id')
         self.assertEquals('ERROR\t[]\t', self.logfile.readline()[DATELENGTH:-1])
         self.assertEquals('ERROR\t[11]\tuh oh', self.logfile.readline().strip()[DATELENGTH:])
         self.assertEquals('ERROR\t[id]\tcomm', self.logfile.readline().strip()[DATELENGTH:])
@@ -101,7 +101,7 @@ class EventLoggerTest(unittest.TestCase):
         stream = StringIO()
         logger = StreamEventLogger(stream)
         logger.logLine('BLA','something')
-        logger.error('this should not happen.')
+        logger.logError('this should not happen.')
         lines = []
         stream.seek(0)
         for line in stream:
@@ -111,7 +111,7 @@ class EventLoggerTest(unittest.TestCase):
     def testLogNone(self):
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        logger.error(None)
+        logger.logError(None)
         logger.logLine(None, None)
         lines = []
         stream.seek(0)
@@ -132,12 +132,12 @@ class EventLoggerTest(unittest.TestCase):
 
     def testCompositeLogger(self):
         stream1, stream2, comp = self.compositLogger()
-        comp.info('info', 'id')
+        comp.logInfo('info', 'id')
         self.assertEquals('', stream2.getvalue())
         self.assertEquals('INFO\t[id]\tinfo\n', stream1.getvalue()[DATELENGTH:])
 
     def testCompositeLogger2(self):
         stream1, stream2, comp = self.compositLogger()
-        comp.error('error', 'id')
+        comp.logError('error', 'id')
         self.assertEquals('ERROR\t[id]\terror\n', stream1.getvalue()[DATELENGTH:])
         self.assertEquals('ERROR\t[id]\terror\n', stream2.getvalue()[DATELENGTH:])

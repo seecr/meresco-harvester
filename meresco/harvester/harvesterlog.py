@@ -92,18 +92,18 @@ class HarvesterLog(object):
     def markDeleted(self):
         self._ids.clear()
         self._state.markDeleted()
-        self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
+        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
     def endRepository(self, token):
         self._state._write(self.countsSummary())
         self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
-        self._eventlogger.succes('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
+        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
 
     def endWithException(self):
         error = str(sys.exc_type) + ': ' + str(sys.exc_value)
         xtype,xval,xtb = sys.exc_info()
         error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
-        self._eventlogger.error(error2, id=self._name)
+        self._eventlogger.logError(error2, id=self._name)
         self._state._write(self.countsSummary())
         self._state._write( ', Error: ' + error)
 
@@ -133,7 +133,7 @@ class HarvesterLog(object):
         ensureDirectory(dirname(ignoreFile))
         open(ignoreFile, 'w').write(message)
         self._ignoredIds.add(uploadid)
-        self._eventlogger.warning('IGNORED', uploadid)
+        self._eventlogger.logWarning('IGNORED', uploadid)
 
     def clearIgnored(self, repositoryId):
         repositoryIgnoredIds = [id for id in self._ignoredIds 

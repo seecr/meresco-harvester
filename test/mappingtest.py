@@ -67,7 +67,7 @@ import os
         datamap = Mapping('mappingId')
         datamap.code = """
 upload.parts['record']="<somexml/>"
-logger.error('Iets om te zeuren')
+logger.logError('Iets om te zeuren')
 """
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         stream = StringIO()
@@ -79,7 +79,7 @@ logger.error('Iets om te zeuren')
         datamap = Mapping('mappingId')
         datamap.code = """
 upload.parts['record']="<somexml/>"
-logger.error('Iets om te zeuren')
+logger.logError('Iets om te zeuren')
 """
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         upload = datamap.createUpload(TestRepository(), record)

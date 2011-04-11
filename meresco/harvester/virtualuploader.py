@@ -80,13 +80,13 @@ class VirtualUploader(object):
         self._logger.logLine(*args, **kwargs)
 
     def logError(self, *args, **kwargs):
-        self._logger.error(*args, **kwargs)
+        self._logger.logError(*args, **kwargs)
 
     def logDelete(self, anId):
         self.logLine('DELETE', "Delete document", id=anId)
 
     def logWarning(self, *args, **kwargs):
-        self._logger.warning(*args, **kwargs)
+        self._logger.logWarning(*args, **kwargs)
 
 class UploaderFactory(object):
     def __init__(self):
