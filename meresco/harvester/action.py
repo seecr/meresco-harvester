@@ -116,7 +116,7 @@ class DeleteIdsAction(Action):
         if self._repository.shopClosed():
             return False, 'Not deleting outside timeslots.', False
 
-        d = self_createDeleteIds()
+        d = self._createDeleteIds()
         d.delete()
         return True, 'Deleted', False
 
