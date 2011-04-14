@@ -45,10 +45,12 @@ class Ids(object):
     def __init__(self, stateDir, name):
         self._filename = idfilename(stateDir, name)
         self._ids = []
-        for id in [id.strip() for id in open(self._filename, 'a+').readlines()]:
-            if id  in self._ids:
+        uniqueIds = set()
+        for id in (id.strip() for id in open(self._filename, 'a+')):
+            if id  in uniqueIds:
                 continue
             self._ids.append(id)
+            uniqueIds.add(id)
         self.open()
         
     def __len__(self):
