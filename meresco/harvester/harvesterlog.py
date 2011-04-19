@@ -87,6 +87,7 @@ class HarvesterLog(object):
         return len(self._ignoredIds)
 
     def eventLogger(self):
+        # Should be removed, but is still used in Harvester.
         return self._eventlogger
             
     def markDeleted(self):

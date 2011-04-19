@@ -33,7 +33,6 @@
 
 import os, sys, shelve, time, traceback,re
 from harvesterlog import HarvesterLog
-from eventlogger import CompositeLogger, NilEventLogger
 import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
@@ -46,14 +45,12 @@ NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
 class Harvester(Observable):
-    def __init__(self, repository, stateDir, logDir, eventLogger, generalHarvestLog=NilEventLogger()):
+    def __init__(self, repository, stateDir, logDir, eventLogger=None, uploader=None):
         Observable.__init__(self)
         self._repository = repository
-        self._eventlogger = CompositeLogger([
-            (['*'], eventLogger),
-            (['ERROR', 'INFO', 'WARN'], generalHarvestLog)
-        ])
-        self._uploader = repository.createUploader(self._eventlogger)
+        if eventLogger != None:
+            raise Exception('PROGRAMMER ERROR')
+        self._uploader = uploader
         self._mapper = repository.mapping()
         self._MAXTIME= 30*60 # 30 minutes
 
@@ -82,7 +79,7 @@ class Harvester(Observable):
         return newtoken
 
     def uploadRecord(self, record):
-        upload = self._mapper.createUpload(self._repository, record, logger=self._eventlogger)
+        upload = self._mapper.createUpload(self._repository, record, logger=self.any.eventLogger()) ##HACK!
         self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
             self._uploader.delete(upload)
@@ -110,16 +107,16 @@ class Harvester(Observable):
 
     def _harvest(self):
         try:
-            self._eventlogger.logLine('STARTHARVEST', '',id=self._repository.id)
-            self._eventlogger.logInfo(self.uploaderInfo(), id=self._repository.id)
-            self._eventlogger.logInfo("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
+            self.do.logLine('STARTHARVEST', '',id=self._repository.id)
+            self.do.logInfo(self.uploaderInfo(), id=self._repository.id)
+            self.do.logInfo("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
             self._uploader.start()
             try:
                 return self._harvestLoop()
             finally:
                 self._uploader.stop()
         finally:
-            self._eventlogger.logLine('ENDHARVEST','',id=self._repository.id)
+            self.do.logLine('ENDHARVEST','',id=self._repository.id)
 
     def harvest(self):
         try:

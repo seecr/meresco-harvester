@@ -33,6 +33,7 @@
 
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from eventlogger import CompositeLogger
 from oairequest import OaiRequest
 from state import State
 from deleteids import DeleteIds, readIds, writeIds
@@ -77,10 +78,16 @@ class Action(object):
 
     def _createHarvester(self):
         harvesterLog = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
+        eventlogger = CompositeLogger([
+            (['*'], harvesterLog.eventLogger()),
+            (['ERROR', 'INFO', 'WARN'], self._generalHarvestLog)
+        ])
+        uploader = self._repository.createUploader(eventlogger) #HACK!!!
         helix = \
-            (Harvester(self._repository, self._stateDir, self._logDir, eventLogger=harvesterLog.eventLogger(), generalHarvestLog=self._generalHarvestLog),
+            (Harvester(self._repository, self._stateDir, self._logDir, uploader=uploader),
                 (OaiRequest(self._repository.baseurl),),
-                (harvesterLog,)
+                (harvesterLog,),
+                (eventlogger,),
             )
         return be(helix)
 

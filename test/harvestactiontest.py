@@ -100,7 +100,7 @@ class HarvestActionTest(ActionTestCase):
         HarvestAction._createHarvester = self._original_createHarvester
         action = self.newHarvestAction()
         harvester = action._createHarvester()
-        self.assertEquals(2, len(harvester._observers))
+        self.assertEquals(3, len(harvester._observers))
         self.assertEquals(OaiRequest, type(harvester._observers[0]))
         self.assertEquals(self.repository.baseurl, harvester._observers[0]._url)
 
