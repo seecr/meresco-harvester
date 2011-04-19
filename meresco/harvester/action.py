@@ -84,10 +84,11 @@ class Action(object):
         ])
         uploader = self._repository.createUploader(eventlogger) #HACK!!!
         helix = \
-            (Harvester(self._repository, self._stateDir, self._logDir, uploader=uploader),
+            (Harvester(self._repository, self._stateDir, self._logDir),
                 (OaiRequest(self._repository.baseurl),),
                 (harvesterLog,),
                 (eventlogger,),
+                (uploader,),
             )
         return be(helix)
 

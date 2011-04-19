@@ -138,9 +138,10 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
         repository = self.MockRepository(name, set)
         uploader = repository.createUploader(self.logger.eventLogger())
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=uploader)
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         harvester.addObserver(mockRequest or MockOaiRequest('mocktud'))
         harvester.addObserver(self.logger)
+        harvester.addObserver(uploader)
         return harvester
 
     def testSimpleStat(self):
@@ -176,9 +177,10 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='tud')
         repository = self.MockRepository('tud', None)
         repository.metadataPrefix='lom'
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader(self.logger.eventLogger))
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         harvester.addObserver(MockOaiRequest('mocktud'))
         harvester.addObserver(self.logger)
+        harvester.addObserver(repository.createUploader(self.logger.eventLogger))
         harvester.harvest()
         self.assertEquals(['tud:oai:lorenet:147'],self.sendId)
 
@@ -211,9 +213,10 @@ class HarvesterTest(unittest.TestCase):
         f.close()
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader(logger.eventLogger))
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         h.addObserver(self)
         h.addObserver(logger)
+        h.addObserver(repository.createUploader(logger.eventLogger))
         self.listRecordsFrom = None
         self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
         h.harvest()
@@ -230,9 +233,10 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader(logger.eventLogger))
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         h.addObserver(self)
         h.addObserver(logger)
+        h.addObserver(repository.createUploader(logger.eventLogger))
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('1998-12-01', self.listRecordsFrom)
@@ -245,9 +249,10 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader(logger.eventLogger))
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         h.addObserver(self)
         h.addObserver(logger)
+        h.addObserver(repository.createUploader(logger.eventLogger))
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('aap', self.listRecordsFrom)
@@ -259,9 +264,10 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader(logger.eventLogger))
+        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         h.addObserver(self)
         h.addObserver(logger)
+        h.addObserver(repository.createUploader(logger.eventLogger))
         self.listRecordsToken = None
         h.harvest()
         self.assertEquals('ga+hier+verder', self.listRecordsToken)
@@ -352,14 +358,15 @@ class HarvesterTest(unittest.TestCase):
         mapper=CallTrace("mapper", returnValues={'createUpload': upload})
         repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 0})
         observer=CallTrace("observer", returnValues={'totalIgnoredIds': 42})
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader())
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         harvester.addObserver(observer)
+        harvester.addObserver(repository.createUploader())
         self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
         observer.calledMethods = []
         repository.returnValues['maxIgnore'] = 43
         harvester.uploadRecord(record)
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "totalIgnoredIds", "ignoreIdentifier"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds", "ignoreIdentifier"], [m.name for m in observer.calledMethods])
 
     def testHarvesterStopsIgnoringAfter100records(self):
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
@@ -370,10 +377,11 @@ class HarvesterTest(unittest.TestCase):
         mapper=CallTrace("mapper", returnValues={'createUpload': upload})
         repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 100})
         observer=CallTrace("observer", returnValues={'totalIgnoredIds': 100})
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir, uploader=repository.createUploader())
+        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
         harvester.addObserver(observer)
+        harvester.addObserver(repository.createUploader())
         self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):

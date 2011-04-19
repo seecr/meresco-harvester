@@ -48,9 +48,6 @@ class Harvester(Observable):
     def __init__(self, repository, stateDir, logDir, eventLogger=None, uploader=None):
         Observable.__init__(self)
         self._repository = repository
-        if eventLogger != None:
-            raise Exception('PROGRAMMER ERROR')
-        self._uploader = uploader
         self._mapper = repository.mapping()
         self._MAXTIME= 30*60 # 30 minutes
 
@@ -58,7 +55,7 @@ class Harvester(Observable):
         return self.any.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
 
     def uploaderInfo(self):
-        return self._uploader.info()
+        return self.any.info()
 
     def listRecords(self, from_, token, set):
         if token:
@@ -82,11 +79,11 @@ class Harvester(Observable):
         upload = self._mapper.createUpload(self._repository, record, logger=self.any.eventLogger()) ##HACK!
         self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
-            self._uploader.delete(upload)
+            self.do.delete(upload)
             self.do.deleteIdentifier(upload.id)
         elif not upload.skip:
             try:
-                self._uploader.send(upload)
+                self.do.send(upload)
                 self.do.uploadIdentifier(upload.id)
             except InvalidDataException, e:
                 maxIgnore = self._repository.maxIgnore()
@@ -110,11 +107,11 @@ class Harvester(Observable):
             self.do.logLine('STARTHARVEST', '',id=self._repository.id)
             self.do.logInfo(self.uploaderInfo(), id=self._repository.id)
             self.do.logInfo("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
-            self._uploader.start()
+            self.any.start()
             try:
                 return self._harvestLoop()
             finally:
-                self._uploader.stop()
+                self.any.stop()
         finally:
             self.do.logLine('ENDHARVEST','',id=self._repository.id)
 
