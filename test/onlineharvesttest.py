@@ -37,69 +37,67 @@ from StringIO import StringIO
 from meresco.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
 from slowfoot.wrappers import wrapp
 import os
+from cq2utils import CallTrace
 
 class OnlineHarvestTest(unittest.TestCase):
     def setUp(self):
         self.mock_createUpload_exception = ''
         self._testpath = os.path.realpath(os.path.curdir)
+        self.output = StringIO()
+        self.harvest = OnlineHarvest(self.output, 'saharaUrl')
+        self.saharaGet = CallTrace('SaharaGet')
+        self.harvest._saharaGet = self.saharaGet
 
     def testRealMapping(self):
-        output = StringIO()
         mapping = Mapping('mappingId')
         mapping.code = DEFAULT_DC_CODE
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        harvest = OnlineHarvest(output)
-        harvest.performMapping(mapping, data)
-        self.assertEquals(3,output.getvalue().count('upload.id='))
+        self.saharaGet.returnValues['getMapping'] = mapping
+        self.harvest.performMapping(mapping, data)
+        self.assertEquals(3,self.output.getvalue().count('upload.id='))
 
     def testMapping(self):
-        output = StringIO()
-        mapping = self
+        mapping = CallTrace('mapping')
+        self.saharaGet.returnValues['getMapping'] = mapping
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        harvest = OnlineHarvest(output)
-        harvest.performMapping(mapping, data)
-        self.assertEquals(True, self.createUpload_args['doAssertions'])
+        self.harvest.performMapping(mapping, data)
+        self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
+        for createUploadMethod in mapping.calledMethods[2:]:
+            self.assertTrue(createUploadMethod.kwargs['doAsserts'])
 
     def testMappingWithDeletedRecord(self):
-        output = StringIO()
         mapping = Mapping('mappingId')
         mapping.code = DEFAULT_DC_CODE
+        mapping.name = 'My Mapping'
         data = 'file://%s/mocktud/00003.xml' % self._testpath
-        harvest = OnlineHarvest(output)
-        harvest.performMapping(mapping, data)
-        self.assertEquals("upload.id=repository.id:oai:tudelft.nl:107087\nDELETED", output.getvalue().strip())
+        self.saharaGet.returnValues['getMapping'] = mapping
+        self.harvest.performMapping(mapping, data)
+        self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
 
     def testMappingRaisesDataMapAssertionException(self):
-        output = StringIO()
-        mapping = self
-        self.mock_createUpload_exception=DataMapAssertionException('O no, it\'s a snake!!')
+        mapping = CallTrace('mapping')
+        calls = []
+        def createUpload(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 1:
+                raise DataMapAssertionException('O no, it\'s a snake!!')
+            return Upload('id')
+        mapping.methods['createUpload'] = createUpload
+        self.saharaGet.returnValues['getMapping'] = mapping
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        harvest = OnlineHarvest(output)
-        harvest.performMapping(mapping, data)
-        self.assertEquals(2,output.getvalue().count('upload.id='))
+        self.harvest.performMapping('mappingId', data)
+        self.assertEquals(2,self.output.getvalue().count('upload.id='))
 
     def testMappingRaisesException(self):
-        output = StringIO()
-        mapping = self
-        self.mock_createUpload_exception=Exception('Mushroom, mushroom')
+        mapping = CallTrace('mapping')
+        self.saharaGet.returnValues['getMapping'] = mapping
+        mapping.exceptions['createUpload'] = Exception('Mushroom, mushroom')
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        harvest = OnlineHarvest(output)
         try:
-            harvest.performMapping(mapping, data)
+            self.harvest.performMapping(mapping, data)
             self.fail()
         except Exception, ex:
             self.assertEquals('Mushroom, mushroom', str(ex))
-        self.assertEquals('',output.getvalue())
+        self.assertEquals('\n',self.output.getvalue())
 
-
-
-    #mocking
-    def createUpload(self, repository, record, logger=None, doAssertions=False):
-        self.createUpload_args={'doAssertions':doAssertions}
-        if self.mock_createUpload_exception:
-            ex = self.mock_createUpload_exception
-            self.mock_createUpload_exception = None
-            raise ex
-        upload = Upload()
-        return upload
 

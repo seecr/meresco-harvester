@@ -82,13 +82,17 @@ class Action(object):
             (['*'], harvesterLog.eventLogger()),
             (['ERROR', 'INFO', 'WARN'], self._generalHarvestLog)
         ])
-        uploader = self._repository.createUploader(eventlogger) #HACK!!!
+        uploader = self._repository.createUploader(eventlogger)
+        mapping = self._repository.mapping()
         helix = \
-            (Harvester(self._repository, self._stateDir, self._logDir),
+            (Harvester(self._repository),
                 (OaiRequest(self._repository.baseurl),),
                 (harvesterLog,),
                 (eventlogger,),
                 (uploader,),
+                (mapping,
+                    (eventlogger,)
+                ),
             )
         return be(helix)
 

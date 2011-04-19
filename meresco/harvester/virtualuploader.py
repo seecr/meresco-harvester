@@ -76,6 +76,9 @@ class VirtualUploader(object):
         """Return information on yourself."""
         raise NotImplementedError(self.info.__doc__)
 
+    def uploaderInfo(self):
+        return self.info()
+
     def logLine(self, *args, **kwargs):
         self._logger.logLine(*args, **kwargs)
 

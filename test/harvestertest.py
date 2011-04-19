@@ -138,10 +138,12 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
         repository = self.MockRepository(name, set)
         uploader = repository.createUploader(self.logger.eventLogger())
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        self.mapper = repository.mapping()
+        harvester = Harvester(repository)
         harvester.addObserver(mockRequest or MockOaiRequest('mocktud'))
         harvester.addObserver(self.logger)
         harvester.addObserver(uploader)
+        harvester.addObserver(self.mapper)
         return harvester
 
     def testSimpleStat(self):
@@ -177,10 +179,11 @@ class HarvesterTest(unittest.TestCase):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='tud')
         repository = self.MockRepository('tud', None)
         repository.metadataPrefix='lom'
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        harvester = Harvester(repository)
         harvester.addObserver(MockOaiRequest('mocktud'))
         harvester.addObserver(self.logger)
         harvester.addObserver(repository.createUploader(self.logger.eventLogger))
+        harvester.addObserver(repository.mapping())
         harvester.harvest()
         self.assertEquals(['tud:oai:lorenet:147'],self.sendId)
 
@@ -213,10 +216,11 @@ class HarvesterTest(unittest.TestCase):
         f.close()
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        h = Harvester(repository)
         h.addObserver(self)
         h.addObserver(logger)
         h.addObserver(repository.createUploader(logger.eventLogger))
+        h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
         h.harvest()
@@ -233,10 +237,11 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        h = Harvester(repository)
         h.addObserver(self)
         h.addObserver(logger)
         h.addObserver(repository.createUploader(logger.eventLogger))
+        h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('1998-12-01', self.listRecordsFrom)
@@ -249,10 +254,11 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        h = Harvester(repository)
         h.addObserver(self)
         h.addObserver(logger)
         h.addObserver(repository.createUploader(logger.eventLogger))
+        h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
         self.assertEquals('aap', self.listRecordsFrom)
@@ -264,10 +270,11 @@ class HarvesterTest(unittest.TestCase):
         f.close();
         repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud')
         logger = self.createLogger()
-        h = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        h = Harvester(repository)
         h.addObserver(self)
         h.addObserver(logger)
         h.addObserver(repository.createUploader(logger.eventLogger))
+        h.addObserver(repository.mapping())
         self.listRecordsToken = None
         h.harvest()
         self.assertEquals('ga+hier+verder', self.listRecordsToken)
@@ -307,7 +314,7 @@ class HarvesterTest(unittest.TestCase):
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
         upload = Upload(record=record)
         upload.id = 'tud:mockid'
-        harvester._mapper.createUpload = lambda repository,record,logger: upload
+        self.mapper.createUpload = lambda repository,record: upload
         harvester.uploadRecord(record)
         self.assertEquals(['tud:mockid'], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
@@ -318,7 +325,7 @@ class HarvesterTest(unittest.TestCase):
         upload = Upload(record=record)
         upload.id = "tud:mockid"
         upload.skip = True
-        harvester._mapper.createUpload = lambda repository,record,logger: upload
+        self.mapper.createUpload = lambda repository,record: upload
         harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
@@ -337,51 +344,33 @@ class HarvesterTest(unittest.TestCase):
         harvester.harvest()
         lines = open(self.stateDir+'/tud.stats').readlines()
 
-    def testMapping(self):
-        harvester = self.createHarvesterWithMockUploader('tud')
-        self.assertEquals('insttud',harvester._mapper.name)
-        harvester = self.createHarvesterWithMockUploader('other')
-        self.assertEquals('instother',harvester._mapper.name)
-
-    def xtestHarvestNottoolong(self):
-        harvester = self.createHarvesterWithMockUploader('tud')
-        harvester._MAXTIME=5
-        harvester.listRecords = self.listRecordsButWaitLong
-        harvester.harvest()
+    def testHarvesterStopsIgnoringAfter100records(self):
+        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        observer = CallTrace('observer')
+        upload = Upload(record=record)
+        upload.id = 'mockid'
+        observer.returnValues['createUpload'] = upload
+        observer.returnValues['totalIgnoredIds'] = 100
+        observer.exceptions['send'] =  InvalidDataException(upload.id, "message")
+        repository=CallTrace("repository", returnValues={'maxIgnore': 100})
+        harvester = Harvester(repository)
+        harvester.addObserver(observer)
+        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
+        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
 
     def testHarvesterIgnoringInvalidDataErrors(self):
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        observer = CallTrace('observer')
         upload = Upload(record=record)
         upload.id = 'mockid'
-        uploader=CallTrace("uploader")
-        uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
-        mapper=CallTrace("mapper", returnValues={'createUpload': upload})
-        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 0})
-        observer=CallTrace("observer", returnValues={'totalIgnoredIds': 42})
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
+        observer.returnValues['createUpload'] = upload
+        observer.returnValues['totalIgnoredIds'] = 0
+        observer.exceptions['send'] =  InvalidDataException(upload.id, "message")
+        repository=CallTrace("repository", returnValues={'maxIgnore': 100})
+        harvester = Harvester(repository)
         harvester.addObserver(observer)
-        harvester.addObserver(repository.createUploader())
-        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
-        observer.calledMethods = []
-        repository.returnValues['maxIgnore'] = 43
         harvester.uploadRecord(record)
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds", "ignoreIdentifier"], [m.name for m in observer.calledMethods])
-
-    def testHarvesterStopsIgnoringAfter100records(self):
-        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
-        upload = Upload(record=record)
-        upload.id = 'mockid'
-        uploader=CallTrace("uploader")
-        uploader.exceptions['send'] =  InvalidDataException(upload.id, "message")
-        mapper=CallTrace("mapper", returnValues={'createUpload': upload})
-        repository=CallTrace("repository", returnValues={'createUploader': uploader, 'mapping': mapper, 'maxIgnore': 100})
-        observer=CallTrace("observer", returnValues={'totalIgnoredIds': 100})
-        harvester = Harvester(repository, stateDir=self.stateDir, logDir=self.logDir)
-        harvester.addObserver(observer)
-        harvester.addObserver(repository.createUploader())
-        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
-        self.assertEquals(["eventLogger", "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
+        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "totalIgnoredIds", 'ignoreIdentifier'], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):
@@ -396,7 +385,7 @@ class HarvesterTest(unittest.TestCase):
     def delete(self, anUpload):
         self.delete_id = anUpload.id
 
-    def info(self):
+    def uploaderInfo(self):
         return 'The uploader is connected to /dev/null'
 
     def start(self):

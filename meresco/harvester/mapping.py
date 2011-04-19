@@ -38,6 +38,7 @@ from slowfoot import wrappers
 from urlparse import urljoin
 from urllib import urlencode
 from saharaobject import SaharaObject
+from meresco.core import Observable
 
 
 nillogger = NilEventLogger()
@@ -142,20 +143,23 @@ class Upload(object):
         if self.id:
             self.id = str(self.id)
 
-class Mapping(SaharaObject):
+class Mapping(SaharaObject, Observable):
     def __init__(self, mappingId):
         SaharaObject.__init__(self,['name', 'description', 'code'])
+        Observable.__init__(self)
         self.id = mappingId
+
+    def mappingInfo(self):
+        return "Mappingname '%s'" % self.name       
 
     def setCode(self, aString):
         self.code = aString
 
-    def createUpload(self, repository, record, logger=nillogger, doAsserts=False):
+    def createUpload(self, repository, record, doAsserts=False):
         upload = Upload(repository=repository, record=record)
         if record.header.status == 'deleted':
             return upload
 
-        logger = logger
         builtinscopy = __builtins__.copy()
         builtinscopy['__import__'] = noimport
 
@@ -170,17 +174,17 @@ class Mapping(SaharaObject):
                 'urljoin': urljoin,
                 'urlencode': urlencode,
                 'doAssert': assertionMethod,
-                'logger': logger,
+                'logger': self.do,
                 'skipRecord': self.skipSimple,
                 'xmlEscape': xmlEscape,
                 '__builtins__': builtinscopy
             })
             upload.ensureStrings()
         except DataMapAssertionException, ex:
-            logger.logError(comments='Assertion: ' + str(ex), id=upload.id)
+            self.do.logError(comments='Assertion: ' + str(ex), id=upload.id)
             raise ex
         except DataMapSkip, e:
-            logger.logLine('SKIP', id=upload.id, comments=str(e))
+            self.do.logLine('SKIP', id=upload.id, comments=str(e))
             upload.skip = True
         return upload
 

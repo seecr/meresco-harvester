@@ -45,10 +45,9 @@ NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'
 
 class Harvester(Observable):
-    def __init__(self, repository, stateDir, logDir, eventLogger=None, uploader=None):
+    def __init__(self, repository):
         Observable.__init__(self)
         self._repository = repository
-        self._mapper = repository.mapping()
         self._MAXTIME= 30*60 # 30 minutes
 
     def getRecord(self, id):
@@ -76,7 +75,7 @@ class Harvester(Observable):
         return newtoken
 
     def uploadRecord(self, record):
-        upload = self._mapper.createUpload(self._repository, record, logger=self.any.eventLogger()) ##HACK!
+        upload = self.any.createUpload(self._repository, record)
         self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
             self.do.delete(upload)
@@ -105,13 +104,13 @@ class Harvester(Observable):
     def _harvest(self):
         try:
             self.do.logLine('STARTHARVEST', '',id=self._repository.id)
-            self.do.logInfo(self.uploaderInfo(), id=self._repository.id)
-            self.do.logInfo("Mappingname '%s'"%self._mapper.name, id=self._repository.id)
-            self.any.start()
+            self.do.logInfo(self.any.uploaderInfo(), id=self._repository.id)
+            self.do.logInfo(self.any.mappingInfo(), id=self._repository.id)
+            self.do.start()
             try:
                 return self._harvestLoop()
             finally:
-                self.any.stop()
+                self.do.stop()
         finally:
             self.do.logLine('ENDHARVEST','',id=self._repository.id)
 

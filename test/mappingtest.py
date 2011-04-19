@@ -72,7 +72,8 @@ logger.logError('Iets om te zeuren')
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        upload = datamap.createUpload(TestRepository(), record, logger)
+        datamap.addObserver(logger)
+        upload = datamap.createUpload(TestRepository(), record)
         self.assertEquals('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
 
     def testNoLogging(self):
@@ -104,9 +105,10 @@ upload.parts['record']="<somexml/>"
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
+        datamap.addObserver(logger)
         try:
             record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
-            datamap.createUpload(TestRepository(), record, logger, doAsserts=True)
+            datamap.createUpload(TestRepository(), record, doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('ERROR\t[repository.id:oai:ident:321]\tAssertion: 1 not equal 2\n',stream.getvalue()[26:])
@@ -120,7 +122,7 @@ upload.parts['record']="<somexml/>"
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        datamap.createUpload(TestRepository(),wrapp(''), logger, doAsserts=False)
+        datamap.createUpload(TestRepository(),wrapp(''), doAsserts=False)
         self.assertEquals('',stream.getvalue())
 
     def assertPart(self, expected, partname, code):
@@ -146,7 +148,8 @@ skipRecord("Don't like it here.")
         record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        upload = datamap.createUpload(TestRepository(), record, logger)
+        datamap.addObserver(logger)
+        upload = datamap.createUpload(TestRepository(), record)
         self.assertTrue(upload.skip)
         self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n", stream.getvalue()[26:])
 

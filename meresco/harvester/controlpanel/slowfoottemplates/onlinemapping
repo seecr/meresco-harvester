@@ -10,15 +10,8 @@ Gebruikte url:
 
 Gebruikte mapping:
 <%
-harvest = OnlineHarvest(req)
+harvest = OnlineHarvest(req, saharaUrl=get_options()['localhostUrl'])
 
-mappingXml = asxml(url('/' + args.mapping)).mapping
-mapping = Mapping(mappingXml.id)
-mapping.code = str(mappingXml.code)
-mapping.name = mappingXml.name
-%><%=mapping.name%>
-
-<%
 xmlurl = str(f.inputurl)
-harvest.performMapping(mapping,xmlurl)
+harvest.performMapping(mappingId=args.mapping, urlString=xmlurl)
 %>

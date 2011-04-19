@@ -36,19 +36,23 @@ from slowfoot import binderytools
 from slowfoot.wrappers import wrapp
 from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
+from saharaget import SaharaGet
 
 class OnlineHarvest(object):
-    def __init__(self, outputstream):
+    def __init__(self, outputstream, saharaUrl):
         self._output = outputstream
-        self.eventlogger = StreamEventLogger(self._output)
+        self._saharaGet = SaharaGet(saharaUrl)
 
-    def performMapping(self, mapping, urlString):
-        doAssertions=True
+    def performMapping(self, mappingId, urlString):
+        mapping = self._saharaGet.getMapping(mappingId)
+        mapping.addObserver(StreamEventLogger(self._output))
+        self._output.write(mapping.mappingInfo())
+        self._output.write('\n')
         xml = wrapp(binderytools.bind_uri(urlString))
         records = xml.OAI_PMH.ListRecords.record
         for record in records:
             try:
-                upload = mapping.createUpload(TestRepository, record, self.eventlogger, doAssertions)
+                upload = mapping.createUpload(TestRepository, record, doAsserts=True)
                 if record.header.status == "deleted":
                     self.writeDelete(upload)
                 else:
