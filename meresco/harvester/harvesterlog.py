@@ -120,15 +120,15 @@ class HarvesterLog(object):
         self._removeFromIgnored(uploadid)
         self._harvestedCount += 1
 
-    def logID(self, uploadid):
+    def uploadIdentifier(self, uploadid):
         self._ids.add(uploadid)
         self._uploadedCount += 1
         
-    def logDeletedID(self, uploadid):
+    def deleteIdentifier(self, uploadid):
         self._ids.remove(uploadid)
         self._deletedCount += 1
 
-    def logIgnoredID(self, uploadid, message):
+    def ignoreIdentifier(self, uploadid, message):
         ignoreFile = ignoreFilepath(self._logDir, uploadid)
         ensureDirectory(dirname(ignoreFile))
         open(ignoreFile, 'w').write(message)

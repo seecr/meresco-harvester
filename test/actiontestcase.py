@@ -65,7 +65,7 @@ class ActionTestCase(CQ2TestCase):
  
         h.startRepository()
         h.notifyHarvestedRecord("repo:uploadId1")
-        h.logID("repo:uploadId1")
+        h.uploadIdentifier("repo:uploadId1")
         if exception != None:
             try:
                 raise Exception(exception)

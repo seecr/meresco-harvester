@@ -357,7 +357,7 @@ class HarvesterTest(unittest.TestCase):
         observer.calledMethods = []
         repository.returnValues['maxIgnore'] = 43
         harvester.uploadRecord(record)
-        self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds", "logIgnoredID"], [m.name for m in observer.calledMethods])
+        self.assertEquals(["notifyHarvestedRecord", "totalIgnoredIds", "ignoreIdentifier"], [m.name for m in observer.calledMethods])
 
     def testHarvesterStopsIgnoringAfter100records(self):
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record

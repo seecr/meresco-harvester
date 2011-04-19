@@ -86,16 +86,16 @@ class Harvester(Observable):
         self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
             self._uploader.delete(upload)
-            self.do.logDeletedID(upload.id)
+            self.do.deleteIdentifier(upload.id)
         elif not upload.skip:
             try:
                 self._uploader.send(upload)
-                self.do.logID(upload.id)
+                self.do.uploadIdentifier(upload.id)
             except InvalidDataException, e:
                 maxIgnore = self._repository.maxIgnore()
                 if self.any.totalIgnoredIds() >= maxIgnore:
                     raise TooMuchInvalidDataException(upload.id, maxIgnore)
-                self.do.logIgnoredID(upload.id, e.originalMessage)
+                self.do.ignoreIdentifier(upload.id, e.originalMessage)
 
     def _harvestLoop(self):
         try:
