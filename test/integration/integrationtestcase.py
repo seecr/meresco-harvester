@@ -43,6 +43,8 @@ from subprocess import Popen
 from signal import SIGTERM
 from os import waitpid, kill, WNOHANG
 from urllib import urlopen, urlencode
+from urlparse import urlparse
+from cgi import parse_qs
 from shutil import copytree
 
 from meresco.components import readConfig
@@ -172,7 +174,14 @@ class IntegrationState(object):
 
     def getLogs(self):
         header, result = getRequest(self.helperServerPortNumber, '/log', {}, parse=False)
-        return result.split('\n')
+        return list(self._getLogs(result))
+
+    @staticmethod
+    def _getLogs(result):
+        for line in result.split('\n'):
+            p = urlparse(line)
+            yield dict(path=p.path, arguments=parse_qs(p.query))
+
 
     def _check(self, serverProcess, serviceName, serviceReadyUrl, stdoutfile):
         stdoutWrite("Starting service '%s', for state '%s' : v" % (serviceName, self.stateName))

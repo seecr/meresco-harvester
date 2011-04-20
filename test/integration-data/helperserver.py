@@ -128,13 +128,12 @@ class StartTest(Observable):
             self.do.ignoreAll()
         yield "Ready to start"
 
-def Log(Observable):
+class Log(Observable):
     def __init__(self):
         Observable.__init__(self)
         self._log = []
 
     def handleRequest(self, RequestURI, **kwargs):
-        print RequestURI
         self._log.append(RequestURI)
         return self.all.handleRequest(RequestURI=RequestURI, **kwargs)
 
@@ -144,10 +143,10 @@ def Log(Observable):
     def logs(self):
         return self._log
 
-def RetrieveLog(Observable):
+class RetrieveLog(Observable):
     def handleRequest(self, **kwargs):
         yield okPlainText
-        yield '\n'.join(self.all.logs())
+        yield '\n'.join(self.any.logs())
 
 
 def main(reactor, portNumber, dir):
@@ -156,36 +155,37 @@ def main(reactor, portNumber, dir):
     dump = Dump(dumpdir)
     oaiStorage = StorageComponent(join(dir, 'storage'))
     oaiJazz = OaiJazz(join(dir, 'oai'))
+    log = Log()
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
-                (log,
-                    (PathFilter("/dump"),
-                        (dump,)
-                    ),
-                    (PathFilter("/starttest"),
-                        (StartTest(),
-                            (dump,)
-                            (log,)
-                        )
-                    ),
-                    (PathFilter('/oai'),
+                (PathFilter("/dump"),
+                    (dump,)
+                ),
+                (PathFilter("/starttest"),
+                    (StartTest(),
+                        (dump,),
+                        (log,),
+                    )
+                ),
+                (PathFilter('/oai'),
+                    (log,
                         (OaiPmh(repositoryName="Oai Test Server", adminEmail="admin@example.org", batchSize=10),
                             (oaiStorage,),
                             (oaiJazz,),
                         )
-                    ),
-                    (PathFilter("/saharaget"),
-                        (MockSaharaGet(),)
-                    ),
-                    (PathFilter("/log"),
-                        (RetrieveLog(),
-                            (log,)
-                        )
-                    ),
-                    (PathFilter("/ready"),
-                        (StringServer('yes', ContentTypePlainText),)
                     )
+                ),
+                (PathFilter("/saharaget"),
+                    (MockSaharaGet(),)
+                ),
+                (PathFilter("/log"),
+                    (RetrieveLog(),
+                        (log,)
+                    )
+                ),
+                (PathFilter("/ready"),
+                    (StringServer('yes', ContentTypePlainText),)
                 )
             )
         )

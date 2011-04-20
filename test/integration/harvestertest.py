@@ -50,7 +50,7 @@ class HarvesterTest(IntegrationTestCase):
         system("rm -rf %s" % self.harvesterStateDir)
 
     def testHarvestToDump(self):
-        print self.getLogs()
+        # initial harvest
         self.startHarvester()
         self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
         self.assertEquals(2, len([f for f in listdir(self.dumpDir) if "info:srw/action/1/delete" in open(join(self.dumpDir, f)).read()]))
@@ -58,11 +58,24 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(8, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
         self.assertEquals(0, len(ignoredIds))
+        logs = self.getLogs()
+        self.assertEquals(1, len(logs))
+        self.assertEquals('/oai', logs[0]['path'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc']}, logs[0]['arguments'])
+
+        # resumptionToken
         self.startHarvester()
         self.assertEquals(15, len(listdir(self.dumpDir)))
         ids = open(join(self.harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
         self.assertEquals(13, len(ids))
-        print self.getLogs()
+        logs = self.getLogs()
+        self.assertEquals(2, len(logs))
+        self.assertEquals('/oai', logs[1]['path'])
+        self.assertEquals(set(['verb','resumptionToken']), set(logs[1]['arguments'].keys()))
+
+        # Nothing
+        self.startHarvester()
+        self.assertEquals(2, len(self.getLogs()))
 
     def testInvalidIgnoredUptoMaxIgnore(self):
         self.startHarvester()
