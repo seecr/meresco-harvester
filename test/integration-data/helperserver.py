@@ -39,7 +39,7 @@ from sys import stdout
 from os.path import abspath, dirname, join, isdir, basename
 from os import makedirs
 from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
-from meresco.components.http.utils import ContentTypePlainText
+from meresco.components.http.utils import ContentTypePlainText, okPlainText
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.core import Observable, be
 from re import compile
@@ -103,6 +103,7 @@ class Dump(object):
         self._ignoreAll = True
 
 ALL_TESTNAMES = [
+        "integration.harvestertest.HarvesterTest.testHarvestToDump",
         "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
         "integration.internalservertest.InternalServerTest.testGetStatus",
         "integration.internalservertest.InternalServerTest.testListAllRepositories",
@@ -111,13 +112,19 @@ ALL_TESTNAMES = [
 class StartTest(Observable):
     def handleRequest(self, arguments, **kwargs):
         name = arguments.get('name', [None])[0]
+        yield okPlainText
+        if name not in ALL_TESTNAMES:
+            yield 'ERROR: name "%s" not found' % name
+            return
         self.any.reset()
-        if name == "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore" or \
-            name == "integration.internalservertest.InternalServerTest.testGetStatus" or \
-            name == "integration.internalservertest.InternalServerTest.testListAllRepositories" or \
-            name == "integration.internalservertest.InternalServerTest.testViewIgnoredRecord":
+        if name in [
+                "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
+                "integration.internalservertest.InternalServerTest.testGetStatus",
+                "integration.internalservertest.InternalServerTest.testListAllRepositories",
+                "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
+            ]:
             self.any.ignoreAll()
-        yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/plain, charset=utf-8\r\n', ''])
+        yield "Ready to start"
 
 def main(reactor, portNumber, dumpdir):
     isdir(dumpdir) or makedirs(dumpdir)

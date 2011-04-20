@@ -31,7 +31,7 @@
 #
 ## end license ##
 
-from oairequest import OAIError
+from oairequest import OAIError, OaiRequest
 from saharaobject import SaharaObject
 from eventlogger import NilEventLogger
 from virtualuploader import UploaderFactory

@@ -34,7 +34,6 @@
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
 from eventlogger import CompositeLogger, EventLogger
-from oairequest import OaiRequest
 from state import State
 from deleteids import DeleteIds, readIds, writeIds
 from os.path import isfile, join

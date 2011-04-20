@@ -74,7 +74,9 @@ class IntegrationTestCase(CQ2TestCase):
         CQ2TestCase.setUp(self)
         global state
         self.state = state
-        urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id()))
+        result = urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id())).read()
+        if result.startswith('ERROR'):
+            self.fail(result)
 
     def __getattr__(self, name):
         if name.startswith('_'):
