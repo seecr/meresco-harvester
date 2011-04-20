@@ -33,7 +33,7 @@ from os.path import isdir, join, abspath, dirname, basename
 from os import system, listdir, makedirs
 from sys import stdout
 
-from utils import postRequest
+from utils import postRequest, getRequest
 
 from cq2utils import CQ2TestCase
 from random import randint
@@ -169,6 +169,10 @@ class IntegrationState(object):
                 serviceName='Harvester-Internal-Server', 
                 serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber, 
                 stdoutfile=stdoutfile)
+
+    def getLogs(self):
+        header, result = getRequest(self.helperServerPortNumber, '/log', {}, parse=False)
+        return result.split('\n')
 
     def _check(self, serverProcess, serviceName, serviceReadyUrl, stdoutfile):
         stdoutWrite("Starting service '%s', for state '%s' : v" % (serviceName, self.stateName))

@@ -50,6 +50,7 @@ class HarvesterTest(IntegrationTestCase):
         system("rm -rf %s" % self.harvesterStateDir)
 
     def testHarvestToDump(self):
+        print self.getLogs()
         self.startHarvester()
         self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
         self.assertEquals(2, len([f for f in listdir(self.dumpDir) if "info:srw/action/1/delete" in open(join(self.dumpDir, f)).read()]))
@@ -61,6 +62,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(15, len(listdir(self.dumpDir)))
         ids = open(join(self.harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
         self.assertEquals(13, len(ids))
+        print self.getLogs()
 
     def testInvalidIgnoredUptoMaxIgnore(self):
         self.startHarvester()

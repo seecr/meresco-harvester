@@ -118,15 +118,37 @@ class StartTest(Observable):
         if name not in ALL_TESTNAMES:
             yield 'ERROR: name "%s" not found' % name
             return
-        self.any.reset()
+        self.do.reset()
         if name in [
                 "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
                 "integration.internalservertest.InternalServerTest.testGetStatus",
                 "integration.internalservertest.InternalServerTest.testListIgnoredRecordsForOneRepository",
                 "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
             ]:
-            self.any.ignoreAll()
+            self.do.ignoreAll()
         yield "Ready to start"
+
+def Log(Observable):
+    def __init__(self):
+        Observable.__init__(self)
+        self._log = []
+
+    def handleRequest(self, RequestURI, **kwargs):
+        print RequestURI
+        self._log.append(RequestURI)
+        return self.all.handleRequest(RequestURI=RequestURI, **kwargs)
+
+    def reset(self):
+        del self._log[:]
+
+    def logs(self):
+        return self._log
+
+def RetrieveLog(Observable):
+    def handleRequest(self, **kwargs):
+        yield okPlainText
+        yield '\n'.join(self.all.logs())
+
 
 def main(reactor, portNumber, dir):
     dumpdir = join(dir, 'dump')
@@ -137,25 +159,33 @@ def main(reactor, portNumber, dir):
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
-                (PathFilter("/dump"),
-                    (dump,)
-                ),
-                (PathFilter("/starttest"),
-                    (StartTest(),
+                (log,
+                    (PathFilter("/dump"),
                         (dump,)
+                    ),
+                    (PathFilter("/starttest"),
+                        (StartTest(),
+                            (dump,)
+                            (log,)
+                        )
+                    ),
+                    (PathFilter('/oai'),
+                        (OaiPmh(repositoryName="Oai Test Server", adminEmail="admin@example.org", batchSize=10),
+                            (oaiStorage,),
+                            (oaiJazz,),
+                        )
+                    ),
+                    (PathFilter("/saharaget"),
+                        (MockSaharaGet(),)
+                    ),
+                    (PathFilter("/log"),
+                        (RetrieveLog(),
+                            (log,)
+                        )
+                    ),
+                    (PathFilter("/ready"),
+                        (StringServer('yes', ContentTypePlainText),)
                     )
-                ),
-                (PathFilter('/oai'),
-                    (OaiPmh(repositoryName="Oai Test Server", adminEmail="admin@example.org", batchSize=10),
-                        (oaiStorage,),
-                        (oaiJazz,),
-                    )
-                ),
-                (PathFilter("/saharaget"),
-                    (MockSaharaGet(),)
-                ),
-                (PathFilter("/ready"),
-                    (StringServer('yes', ContentTypePlainText),)
                 )
             )
         )
