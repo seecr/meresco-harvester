@@ -82,6 +82,9 @@ class Repository(SaharaObject):
         if self.mockUploader:
             return self.mockUploader
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
+    
+    def oairequest(self):
+        return OaiRequest(self.baseurl)
 
     def _createAction(self, stateDir, logDir, generalHarvestLog):
         return Action.create(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)

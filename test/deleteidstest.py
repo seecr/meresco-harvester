@@ -36,6 +36,7 @@ from meresco.harvester.deleteids import DeleteIds, readIds
 from sets import Set
 from meresco.harvester.virtualuploader import UploaderException, VirtualUploader
 from meresco.harvester import deleteids
+from meresco.harvester.eventlogger import NilEventLogger
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isfile
@@ -55,18 +56,15 @@ class DeleteIdsTest(CQ2TestCase):
         idfile.write('mock:1\nmock:2\n\n\t\nmock:raises:server:crash\nmock:2\nmock:2\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
+        dt.addObserver(repository.createUploader(NilEventLogger()))
         self.assertEquals(Set(['mock:1','mock:2','mock:raises:server:crash']),dt.ids())
         try:
             dt.delete()
             self.fail()
         except UploaderException, e:
             self.assertTrue('crashed' in str(e))
-        dlogfile = join(self.logDir,'deleteids.log')
-        self.assertTrue(isfile(dlogfile))
-        dlog = open(dlogfile).read()
-        self.assertTrue('[mock:raises:server:crash]' in dlog, dlog)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertTrue('mock:raises:server:crash' in dt.ids(), dt.ids())
         
     def testDelete(self):
@@ -75,10 +73,10 @@ class DeleteIdsTest(CQ2TestCase):
         idfile.write('mock:5\nmock:6\nmock:7\nmock:8\nmock:9\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertEquals(5, len(dt.ids()))
         dt.delete()
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertEquals(0, len(dt.ids()))
         logger = harvesterlog.HarvesterLog(self.stateDir, self.logDir, repository.id)
         self.assert_(not logger.from_)
@@ -92,7 +90,7 @@ class DeleteIdsTest(CQ2TestCase):
         idfile.write('mock:5\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertEquals(0, len(repository.uploads))
         dt.delete()
         self.assertEquals(1, len(repository.uploads))
@@ -105,7 +103,7 @@ class DeleteIdsTest(CQ2TestCase):
         idfile.write('mock:5\nmock:6\nmock:7\nmock:8\nmock:9\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         dt.deleteFile(filename)
         self.assertEquals(0, len(readIds(filename)))
         self.assertEquals(Set(['mock:5','mock:6','mock:7','mock:8','mock:9']),repository.deleted_ids)
@@ -118,14 +116,14 @@ class DeleteIdsTest(CQ2TestCase):
         idfile.write('mock:b\n\n\t\nmock:raises:system:exit\nmock:14\nmock:15\n')
         idfile.close()
         self.createStatsFile(repository)
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertEquals(4, len(dt.ids()))
         try:
             dt.delete()
             self.fail()
         except SystemExit, e:
             pass
-        dt = DeleteIds(repository, self.stateDir, self.logDir)
+        dt = DeleteIds(repository, self.stateDir)
         self.assertEquals(3, len(dt.ids()))
         
     def createStatsFile(self,repository):

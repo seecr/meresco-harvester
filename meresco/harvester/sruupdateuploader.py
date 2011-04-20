@@ -65,7 +65,7 @@ class SruUpdateUploader(VirtualUploader):
 
     def send(self, anUpload):
         anId = anUpload.id
-        self.logLine('UPLOAD.SEND', 'START', id = anId)
+        self._logLine('UPLOAD.SEND', 'START', id = anId)
 
         recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
                 ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
@@ -75,10 +75,10 @@ class SruUpdateUploader(VirtualUploader):
         recordPacking = 'xml'
         recordSchema = xmlEscape(partName)
         self._sendData(anId, recordUpdate % locals())
-        self.logLine('UPLOAD.SEND', 'END', id = anId)
+        self._logLine('UPLOAD.SEND', 'END', id = anId)
 
     def delete(self, anUpload):
-        self.logDelete(anUpload.id)
+        self._logDelete(anUpload.id)
         action = "delete"
         recordIdentifier = xmlEscape(anUpload.id)
         recordPacking = 'xml'
@@ -95,7 +95,7 @@ class SruUpdateUploader(VirtualUploader):
             status, message = self._sendDataToRemote(data)
             if status != SERVICE_UNAVAILABLE:
                 break
-            self.logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
+            self._logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
                 
         if status != HTTP_OK:

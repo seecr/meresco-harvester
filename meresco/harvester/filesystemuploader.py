@@ -135,7 +135,7 @@ class FileSystemUploader(VirtualUploader):
             finally:
                 fd.close()
 
-        self.logDelete(anUpload.id)
+        self._logDelete(anUpload.id)
     
     def info(self):
         return 'Writing records to path:%s' % (self._target.path)

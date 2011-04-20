@@ -102,7 +102,12 @@ class Dump(object):
     def ignoreAll(self):
         self._ignoreAll = True
 
-
+ALL_TESTNAMES = [
+        "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
+        "integration.internalservertest.InternalServerTest.testGetStatus",
+        "integration.internalservertest.InternalServerTest.testListAllRepositories",
+        "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
+]
 class StartTest(Observable):
     def handleRequest(self, arguments, **kwargs):
         name = arguments.get('name', [None])[0]

@@ -32,9 +32,7 @@
 ## end license ##
 
 from virtualuploader import UploaderException
-from eventlogger import NilEventLogger, EventLogger
-from harvesterlog import idfilename, HarvesterLog
-from eventlogger import CompositeLogger, NilEventLogger
+from harvesterlog import idfilename
 from string import strip
 from slowfoot import binderytools
 from slowfoot import wrappers
@@ -43,6 +41,7 @@ from sets import Set
 from mapping import Upload
 from traceback import format_exception
 
+from meresco.core import Observable
 
 def readIds(filename):
     ids = Set()
@@ -64,17 +63,11 @@ def writeIds(filename, ids):
         f.close()
 
 
-class DeleteIds(object):
-    def __init__(self, repository, stateDir, logDir, generalHarvestLog=NilEventLogger()):
+class DeleteIds(Observable):
+    def __init__(self, repository, stateDir):
+        Observable.__init__(self)
         self._stateDir = stateDir
-        self._logDir = logDir
         self._repository = repository
-        self._logger = HarvesterLog(stateDir, logDir, repository.id)
-        self._eventLogger = CompositeLogger([
-            (['*'], EventLogger(os.path.join(self._logDir, 'deleteids.log'))),
-            (['*'], self._logger.eventLogger()),
-            (['ERROR', 'INFO', 'WARN'], generalHarvestLog),
-        ])
         self._filename = idfilename(self._stateDir, self._repository.id)
         self._markLogger = True
                     
@@ -82,19 +75,18 @@ class DeleteIds(object):
         return readIds(self._filename)
         
     def delete(self):
-        uploader = self._repository.createUploader(self._eventLogger)
-        uploader.start()
+        self.do.start()
         try:
-            self._delete(uploader)
+            self._delete()
         finally:
-            uploader.stop()
+            self.do.stop()
     
     def deleteFile(self, filename):
         self._filename = filename
         self._markLogger = False
         self.delete()
         
-    def _delete(self, uploader):
+    def _delete(self):
         ids = self.ids()
         done = Set()
         try:
@@ -102,12 +94,12 @@ class DeleteIds(object):
                 try:
                     anUpload = Upload(repository=self._repository)
                     anUpload.id = id
-                    uploader.delete(anUpload)
+                    self.do.delete(anUpload)
                     done.add(id)
                 except:
                     xtype,xval,xtb = sys.exc_info()
                     errorMessage = '|'.join(map(str.strip,format_exception(xtype,xval,xtb)))
-                    self._eventLogger.logError(errorMessage, id=id)
+                    self.do.logError(errorMessage, id=id)
                     raise
             return ids - done
         finally:
@@ -116,8 +108,7 @@ class DeleteIds(object):
     def _finish(self, remainingIDs):
         writeIds(self._filename, remainingIDs)
         if self._markLogger and not remainingIDs:
-            logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
             try:
-                logger.markDeleted()
+                self.do.markDeleted()
             finally:
-                logger.close()
+                self.do.close()

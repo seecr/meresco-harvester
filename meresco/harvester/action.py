@@ -33,7 +33,7 @@
 
 from harvesterlog import HarvesterLog
 from harvester import Harvester, HARVESTED, NOTHING_TO_DO
-from eventlogger import CompositeLogger
+from eventlogger import CompositeLogger, EventLogger
 from oairequest import OaiRequest
 from state import State
 from deleteids import DeleteIds, readIds, writeIds
@@ -84,9 +84,10 @@ class Action(object):
         ])
         uploader = self._repository.createUploader(eventlogger)
         mapping = self._repository.mapping()
+        oairequest = self._repository.oairequest()
         helix = \
             (Harvester(self._repository),
-                (OaiRequest(self._repository.baseurl),),
+                (oairequest,),
                 (harvesterLog,),
                 (eventlogger,),
                 (uploader,),
@@ -97,8 +98,20 @@ class Action(object):
         return be(helix)
 
     def _createDeleteIds(self):
-        d = DeleteIds(self._repository, self._stateDir, self._logDir, generalHarvestLog=self._generalHarvestLog)
-        return d
+        harvesterLog = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
+        eventlogger = CompositeLogger([
+            (['*'], EventLogger(join(self._logDir, 'deleteids.log'))),
+            (['*'], harvesterLog.eventLogger()),
+            (['ERROR', 'INFO', 'WARN'], self._generalHarvestLog),
+        ])
+        uploader = self._repository.createUploader(eventlogger)
+        helix =\
+            (DeleteIds(self._repository, self._stateDir),
+                (harvesterLog,),
+                (eventlogger,),
+                (uploader,),
+            )
+        return be(helix)
 
 
 class NoneAction(Action):
