@@ -5,11 +5,11 @@
   <use>true</use>
   <complete></complete>
   <action></action>
-  <baseurl>http://localhost:${helperServerPortNumber}/files/listrecords.oai</baseurl>
+  <baseurl>http://localhost:${helperServerPortNumber}/oai</baseurl>
   <set></set>
   <collection>Integration</collection>
   <targetId>DUMP</targetId>
-  <metadataPrefix>header</metadataPrefix>
+  <metadataPrefix>oai_dc</metadataPrefix>
   <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
   <maximumIgnore>5</maximumIgnore>
 </repository>

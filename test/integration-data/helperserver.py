@@ -41,6 +41,8 @@ from os import makedirs
 from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
+from meresco.components import StorageComponent
+from meresco.oai import OaiPmh, OaiJazz
 from meresco.core import Observable, be
 from re import compile
 from traceback import format_exc
@@ -106,7 +108,7 @@ ALL_TESTNAMES = [
         "integration.harvestertest.HarvesterTest.testHarvestToDump",
         "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
         "integration.internalservertest.InternalServerTest.testGetStatus",
-        "integration.internalservertest.InternalServerTest.testListAllRepositories",
+        "integration.internalservertest.InternalServerTest.testListIgnoredRecordsForOneRepository",
         "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
 ]
 class StartTest(Observable):
@@ -120,15 +122,18 @@ class StartTest(Observable):
         if name in [
                 "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
                 "integration.internalservertest.InternalServerTest.testGetStatus",
-                "integration.internalservertest.InternalServerTest.testListAllRepositories",
+                "integration.internalservertest.InternalServerTest.testListIgnoredRecordsForOneRepository",
                 "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
             ]:
             self.any.ignoreAll()
         yield "Ready to start"
 
-def main(reactor, portNumber, dumpdir):
+def main(reactor, portNumber, dir):
+    dumpdir = join(dir, 'dump')
     isdir(dumpdir) or makedirs(dumpdir)
     dump = Dump(dumpdir)
+    oaiStorage = StorageComponent(join(dir, 'storage'))
+    oaiJazz = OaiJazz(join(dir, 'oai'))
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
@@ -140,8 +145,11 @@ def main(reactor, portNumber, dumpdir):
                         (dump,)
                     )
                 ),
-                (PathFilter("/files"),
-                    (FileServer(mydir),)
+                (PathFilter('/oai'),
+                    (OaiPmh(repositoryName="Oai Test Server", adminEmail="admin@example.org", batchSize=10),
+                        (oaiStorage,),
+                        (oaiJazz,),
+                    )
                 ),
                 (PathFilter("/saharaget"),
                     (MockSaharaGet(),)
@@ -153,17 +161,23 @@ def main(reactor, portNumber, dumpdir):
         )
     )
     server.once.observer_init()
+    for i in range(1,16):
+        identifier = 'oai:record:%02d' % i
+        oaiStorage.add(identifier=identifier, partname='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % identifier)
+        oaiJazz.addOaiRecord(identifier=identifier, metadataFormats=[('oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd', 'http://www.openarchives.org/OAI/2.0/oai_dc/')])
+        if i in [3,6]:
+            oaiJazz.delete(identifier=identifier)
 
 if __name__== '__main__':
     args = argv[1:]
     if len(args) != 2:
-        print "Usage %s <portnumber> <dumpdir>" % argv[0]
+        print "Usage %s <portnumber> <dir>" % argv[0]
         exit(1)
     portNumber = int(args[0])
-    dumpdir = args[1]
+    dir = args[1]
     reactor = Reactor()
-    main(reactor, portNumber, dumpdir)
+    main(reactor, portNumber, dir)
     print 'Ready to rumble the dumpserver at', portNumber
-    print '  - dumps are written to', dumpdir
+    print '  - dumps are written to', join(dir, 'dump')
     stdout.flush()
     reactor.loop()

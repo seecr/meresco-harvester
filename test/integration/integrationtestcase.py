@@ -105,7 +105,8 @@ class IntegrationState(object):
         self.helperServerPortNumber = PortNumberGenerator.next()
         self.harvesterInternalServerPortNumber = PortNumberGenerator.next()
 
-        self.dumpDir = join(self.integrationTempdir, 'dump')
+        self.helperDir = join(self.integrationTempdir, 'helper')
+        self.dumpDir = join(self.helperDir, 'dump')
         self.harvesterLogDir = join(self.integrationTempdir, "log")
         self.harvesterStateDir = join(self.integrationTempdir, "state")
 
@@ -140,7 +141,7 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python", join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.dumpDir], 
+            args=["python", join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,

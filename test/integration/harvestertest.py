@@ -40,6 +40,8 @@ from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
+BATCHSIZE=10
+
 class HarvesterTest(IntegrationTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
@@ -49,12 +51,16 @@ class HarvesterTest(IntegrationTestCase):
 
     def testHarvestToDump(self):
         self.startHarvester()
-        self.assertEquals(14, len(listdir(self.dumpDir)))
+        self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
         self.assertEquals(2, len([f for f in listdir(self.dumpDir) if "info:srw/action/1/delete" in open(join(self.dumpDir, f)).read()]))
         ids = open(join(self.harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
-        self.assertEquals(10, len(ids))
+        self.assertEquals(8, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, "adomain", "integrationtest_ignored.ids")).readlines()
         self.assertEquals(0, len(ignoredIds))
+        self.startHarvester()
+        self.assertEquals(15, len(listdir(self.dumpDir)))
+        ids = open(join(self.harvesterStateDir, "adomain", "integrationtest.ids")).readlines()
+        self.assertEquals(13, len(ids))
 
     def testInvalidIgnoredUptoMaxIgnore(self):
         self.startHarvester()
@@ -65,6 +71,6 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(5, len(ignoredIds), ignoredIds)
         ignoreDir = join(self.harvesterLogDir, "adomain", "ignored", "integrationtest")
         self.assertEquals(5, len(listdir(ignoreDir)))
-        ignoreId1Error = open(join(ignoreDir, "recordID1")).read()
-        self.assertTrue('uploadId: "integrationtest:recordID1"', ignoreId1Error)
+        ignoreId1Error = open(join(ignoreDir, "oai:record:01")).read()
+        self.assertTrue('uploadId: "integrationtest:oai:record:01"', ignoreId1Error)
 

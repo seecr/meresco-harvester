@@ -44,17 +44,17 @@ class InternalServerTest(IntegrationTestCase):
         system("rm -rf %s" % self.harvesterLogDir)
         system("rm -rf %s" % self.harvesterStateDir)
 
-    def testListAllRepositories(self):
+    def testListIgnoredRecordsForOneRepository(self):
         self.startHarvester()
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(["recordID7", "recordID5", "recordID4", "recordID2", "recordID1"], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
-        self.assertEquals("/page/ignoredRecord/?recordId=recordID7&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
+        self.assertEquals(['oai:record:07', 'oai:record:05', 'oai:record:04', 'oai:record:02', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
+        self.assertEquals("/page/ignoredRecord/?recordId=oai%3Arecord%3A07&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
         self.assertEquals("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testViewIgnoredRecord(self):
         self.startHarvester()
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'recordID2'}, parse='lxml')
-        self.assertEquals("Repository integrationtest - Record recordID2", result.xpath("//h3/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02'}, parse='lxml')
+        self.assertEquals("Repository integrationtest - Record oai:record:02", result.xpath("//h3/text()")[0])
         self.assertEquals("/page/ignored/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testGetStatus(self):
