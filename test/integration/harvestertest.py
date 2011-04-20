@@ -40,6 +40,8 @@ from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
+from meresco.harvester.state import getResumptionToken
+
 BATCHSIZE=10
 
 class HarvesterTest(IntegrationTestCase):
@@ -60,8 +62,10 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(0, len(ignoredIds))
         logs = self.getLogs()
         self.assertEquals(1, len(logs))
-        self.assertEquals('/oai', logs[0]['path'])
-        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc']}, logs[0]['arguments'])
+        self.assertEquals('/oai', logs[-1]['path'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc']}, logs[-1]['arguments'])
+        statsFile = join(self.harvesterStateDir, 'adomain', 'integrationtest.stats')
+        token = getResumptionToken(open(statsFile).readlines()[-1])
 
         # resumptionToken
         self.startHarvester()
@@ -70,12 +74,13 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(13, len(ids))
         logs = self.getLogs()
         self.assertEquals(2, len(logs))
-        self.assertEquals('/oai', logs[1]['path'])
-        self.assertEquals(set(['verb','resumptionToken']), set(logs[1]['arguments'].keys()))
+        self.assertEquals('/oai', logs[-1]['path'])
+        self.assertEquals({'verb':['ListRecords'], 'resumptionToken':[token]}, logs[-1]['arguments'])
 
         # Nothing
         self.startHarvester()
         self.assertEquals(2, len(self.getLogs()))
+        self.assertEquals(None, getResumptionToken(open(statsFile).readlines()[-1]))
 
     def testInvalidIgnoredUptoMaxIgnore(self):
         self.startHarvester()
