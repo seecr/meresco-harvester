@@ -37,9 +37,10 @@ from virtualuploader import VirtualUploader, UploaderException, InvalidDataExcep
 from httplib import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
 from lxml.etree import parse
 from StringIO import StringIO
+from meresco.harvester.namespaces import xpath
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
-<updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
+<ucp:updateRequest xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:action>info:srw/action/1/%(action)s</ucp:action>
     <ucp:recordIdentifier>%(recordIdentifier)s</ucp:recordIdentifier>
@@ -48,15 +49,7 @@ recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
         <srw:recordSchema>%(recordSchema)s</srw:recordSchema>
         <srw:recordData>%(recordData)s</srw:recordData>
     </srw:record>
-</updateRequest>"""
-
-namespaces = {
-    'srw': 'http://www.loc.gov/zing/srw/',
-    'diag': 'http://www.loc.gov/zing/srw/diagnostic/',
-    'ucp':  "info:lc/xmlns/update-v1",
-}
-def xpath(node, path):
-    return node.xpath(path, namespaces=namespaces)
+</ucp:updateRequest>"""
 
 class SruUpdateUploader(VirtualUploader):
     def __init__(self, sruUpdateTarget, eventlogger, collection="ignored"):

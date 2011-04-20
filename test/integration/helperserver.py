@@ -29,7 +29,7 @@
 ## end license ##
 from __future__ import with_statement
 
-from test.mocksaharaget import MockSaharaGet
+from mocksaharaget import MockSaharaGet
 
 from glob import glob
 from sys import path, argv, exit
@@ -37,9 +37,9 @@ from sys import path, argv, exit
 from weightless.io import Reactor
 from sys import stdout
 from os.path import abspath, dirname, join, isdir, basename
-from os import makedirs
+from os import makedirs, remove
 from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
-from meresco.components.http.utils import ContentTypePlainText, okPlainText
+from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.components import StorageComponent
 from meresco.oai import OaiPmh, OaiJazz
@@ -57,20 +57,21 @@ class Dump(object):
     def __init__(self, dumpdir):
         self._dumpdir = dumpdir
         self._number = self._findLastNumber()
+        self._ignoreAll = False
+        self._raiseExceptionOnIds = set()
 
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
         try:
             updateRequest = bind_string(Body).updateRequest
-            print self._ignoreAll, str(updateRequest.action)
             if self._ignoreAll and str(updateRequest.action) == "info:srw/action/1/replace":
                 raise InvalidDataException('Data not valid.')
             recordId = str(updateRequest.recordIdentifier)
-            normalizedRecordId = notWordCharRE.sub('_', recordId)
+            if recordId in self._raiseExceptionOnIds:
+                raise Exception('ERROR')
             self._number +=1
-            filename = '%05d_%s.updateRequest' %(self._number, normalizedRecordId)
+            filename = '%05d_%s.updateRequest' %(self._number, str(updateRequest.action).rsplit('/')[-1])
             with open(join(self._dumpdir, filename), 'w') as f:
-                print recordId
                 stdout.flush()
                 updateRequest.xml(f)
             answer = RESPONSE_XML % {
@@ -90,7 +91,6 @@ class Dump(object):
                     'uri': 'info:srw/diagnostic/12/1', 
                     'details': escapeXml(format_exc()), 
                     'message': 'Invalid component:  record rejected'}}
-        print answer
         import sys
         sys.stdout.flush()
         yield answer
@@ -100,48 +100,40 @@ class Dump(object):
 
     def reset(self):
         self._ignoreAll = False
+        for f in glob(join(self._dumpdir, '*.updateRequest')):
+            remove(f)
+        self._number = 0
+        self._raiseExceptionOnIds = set()
 
     def ignoreAll(self):
         self._ignoreAll = True
 
-ALL_TESTNAMES = [
-        "integration.harvestertest.HarvesterTest.testHarvestToDump",
-        "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
-        "integration.internalservertest.InternalServerTest.testGetStatus",
-        "integration.internalservertest.InternalServerTest.testListIgnoredRecordsForOneRepository",
-        "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
-]
-class StartTest(Observable):
+    def raiseExceptionOnIds(self, ids):
+        self._raiseExceptionOnIds = set(ids)
+
+class Control(Observable):
     def handleRequest(self, arguments, **kwargs):
-        name = arguments.get('name', [None])[0]
+        action = arguments.get('action', [None])[0]
         yield okPlainText
-        if name not in ALL_TESTNAMES:
-            yield 'ERROR: name "%s" not found' % name
-            return
-        self.do.reset()
-        if name in [
-                "integration.harvestertest.HarvesterTest.testInvalidIgnoredUptoMaxIgnore",
-                "integration.internalservertest.InternalServerTest.testGetStatus",
-                "integration.internalservertest.InternalServerTest.testListIgnoredRecordsForOneRepository",
-                "integration.internalservertest.InternalServerTest.testViewIgnoredRecord",
-            ]:
+        if action == "reset":
+            self.do.reset()
+        if action == "raiseExceptionOnIds":
+            self.do.raiseExceptionOnIds(arguments.get('id',[]))
+        if action == "ignoreAll":
             self.do.ignoreAll()
-        yield "Ready to start"
+        yield "DONE"
 
+logLines = []
 class Log(Observable):
-    def __init__(self):
-        Observable.__init__(self)
-        self._log = []
-
     def handleRequest(self, RequestURI, **kwargs):
-        self._log.append(RequestURI)
+        logLines.append(RequestURI)
         return self.all.handleRequest(RequestURI=RequestURI, **kwargs)
 
     def reset(self):
-        del self._log[:]
+        del logLines[:]
 
     def logs(self):
-        return self._log
+        return logLines
 
 class RetrieveLog(Observable):
     def handleRequest(self, **kwargs):
@@ -155,21 +147,20 @@ def main(reactor, portNumber, dir):
     dump = Dump(dumpdir)
     oaiStorage = StorageComponent(join(dir, 'storage'))
     oaiJazz = OaiJazz(join(dir, 'oai'))
-    log = Log()
     server = be(
         (Observable(),
             (ObservableHttpServer(reactor, portNumber),
                 (PathFilter("/dump"),
                     (dump,)
                 ),
-                (PathFilter("/starttest"),
-                    (StartTest(),
+                (PathFilter("/control"),
+                    (Control(),
                         (dump,),
-                        (log,),
+                        (Log(),),
                     )
                 ),
                 (PathFilter('/oai'),
-                    (log,
+                    (Log(),
                         (OaiPmh(repositoryName="Oai Test Server", adminEmail="admin@example.org", batchSize=10),
                             (oaiStorage,),
                             (oaiJazz,),
@@ -181,7 +172,12 @@ def main(reactor, portNumber, dir):
                 ),
                 (PathFilter("/log"),
                     (RetrieveLog(),
-                        (log,)
+                        (Log(),)
+                    )
+                ),
+                (PathFilter("/setactiondone"),
+                    (Log(),
+                        (StringServer('<success>true</success>', ContentTypeXml),)
                     )
                 ),
                 (PathFilter("/ready"),

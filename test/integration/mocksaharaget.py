@@ -7,7 +7,9 @@ def buildResponseDateXml():
 
 def GetRepositories(domainId, **kwargs):
     responseDateXml = buildResponseDateXml()
-    repositoryXml = readFile("integration.test.repository").repository.xml()
+    repositoryXml = ''
+    for f in (f for f in listdir('data') if f.endswith('.repository')):
+        repositoryXml += readFile(f).repository.xml()
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
  %(responseDateXml)s
@@ -23,7 +25,7 @@ def GetRepositories(domainId, **kwargs):
 
 def GetRepository(domainId, repositoryId, **kwargs):
     responseDateXml = buildResponseDateXml()
-    repositoryXml = readFile("integration.test.repository").repository.xml()
+    repositoryXml = readFile('%s.%s.repository' % (domainId, repositoryId)).repository.xml()
     xml="""<?xml version="1.0" encoding="UTF-8"?>
 <saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
  %(responseDateXml)s

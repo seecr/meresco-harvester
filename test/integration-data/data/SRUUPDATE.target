@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <target>
-  <id>DUMP</id>
-  <name>DUMP</name>
+  <id>SRUUPDATE</id>
+  <name>SRUUPDATE</name>
   <username></username>
-  <port>${dumpPortNumber}</port>
+  <port>${helperServerPortNumber}</port>
   <targetType>sruUpdate</targetType>
   <path>/dump</path>
   <baseurl>localhost</baseurl>

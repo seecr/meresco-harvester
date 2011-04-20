@@ -32,10 +32,6 @@
 from meresco.harvester.startharvester import StartHarvester
 from meresco.harvester.saharaget import SaharaGet
 
-from test import mocksaharaget
-
-SaharaGet._read = mocksaharaget.read
-
 StartHarvester().start()
 
 

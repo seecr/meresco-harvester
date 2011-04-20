@@ -127,35 +127,6 @@ class SmoothActionTest(ActionTestCase):
         self.mockdelete_filename = filename
         self.mockdelete_ids = readIds(filename)
 
-    def testSmooth_Finish(self):
-        writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
-        writefile(self.idfilename, 'rep:id:41\nrep:id:2\n')
-
-        self.smoothaction._delete=self.mockdelete
-        result = self.smoothaction._finish()
-
-        self.assertFalse(os.path.isfile(self.old_idfilename))
-        self.assertEquals(DONE, result)
-        self.assertEquals(self.idfilename+'.delete', self.mockdelete_filename)
-        self.assertEquals(Set(['rep:id:1']), self.mockdelete_ids)
-
-    def testSmooth_Delete(self):
-        class MockDelete(object):
-            usedrep, usedStateDir, usedLogDir, filename = None, None, None, None
-            def __init__(self, rep, stateDir, logDir, **kwargs):
-                MockDelete.usedrep = rep
-                MockDelete.usedStateDir = stateDir
-                MockDelete.usedLogDir = logDir
-            def deleteFile(self, filename):
-                MockDelete.filename = filename
-        action.DeleteIds = MockDelete
-        self.smoothaction._delete(self.idfilename+'.delete')
-        self.assertEquals(self.idfilename + '.delete', MockDelete.filename)
-        self.assertEquals(self.repo, MockDelete.usedrep)
-        self.assertEquals(self.stateDir, MockDelete.usedStateDir)
-        self.assertEquals(self.logDir, MockDelete.usedLogDir)
-
-
     def testHarvest(self):
         harvester = CallTrace('harvester')
         self.smoothaction._createHarvester = lambda: harvester

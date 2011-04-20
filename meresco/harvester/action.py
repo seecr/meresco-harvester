@@ -186,7 +186,7 @@ class SmoothAction(Action):
     def _finish(self):
         deletefilename = self.filename + '.delete'
         if not isfile(deletefilename):
-            writeIds(deletefilename, readIds(self.oldfilename) - readIds(self.filename))
+            writeIds(deletefilename, set(readIds(self.oldfilename)) - set(readIds(self.filename)))
         self._delete(deletefilename)
         remove(self.oldfilename)
         remove(deletefilename)

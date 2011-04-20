@@ -37,21 +37,20 @@ from string import strip
 from slowfoot import binderytools
 from slowfoot import wrappers
 import sys, os
-from sets import Set
 from mapping import Upload
 from traceback import format_exception
 
 from meresco.core import Observable
 
 def readIds(filename):
-    ids = Set()
-    f = open(filename)
-    try:
-        for id in filter(None, map(strip,f)):
-            ids.add(id)
-        return ids
-    finally:
-        f.close()
+    ids = []
+    uniqueIds = set()
+    for id in (id.strip() for id in open(filename)):
+        if id  in uniqueIds:
+            continue
+        ids.append(id)
+        uniqueIds.add(id)
+    return ids
 
 def writeIds(filename, ids):
     f = open(filename,'w')
@@ -88,22 +87,22 @@ class DeleteIds(Observable):
         
     def _delete(self):
         ids = self.ids()
-        done = Set()
+        done = []
         try:
             for id in ids:
                 try:
                     anUpload = Upload(repository=self._repository)
                     anUpload.id = id
                     self.do.delete(anUpload)
-                    done.add(id)
+                    done.append(id)
                 except:
                     xtype,xval,xtb = sys.exc_info()
                     errorMessage = '|'.join(map(str.strip,format_exception(xtype,xval,xtb)))
                     self.do.logError(errorMessage, id=id)
                     raise
-            return ids - done
+            return ids[len(done):]
         finally:
-            self._finish(ids - done)
+            self._finish(ids[len(done):])
             
     def _finish(self, remainingIDs):
         writeIds(self._filename, remainingIDs)

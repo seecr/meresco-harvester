@@ -8,8 +8,8 @@
   <baseurl>http://localhost:${helperServerPortNumber}/oai</baseurl>
   <set></set>
   <collection>Integration</collection>
-  <targetId>DUMP</targetId>
+  <targetId>SRUUPDATE</targetId>
   <metadataPrefix>oai_dc</metadataPrefix>
-  <mappingId>99ff846d-f05d-4bb8-be3f-c1b5039b50e5</mappingId>
+  <mappingId>MAPPING</mappingId>
   <maximumIgnore>5</maximumIgnore>
 </repository>

@@ -39,6 +39,9 @@ namespaces = _namespaces(
     dc="http://purl.org/dc/elements/1.1/",
     oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/",
     oai="http://www.openarchives.org/OAI/2.0/",
+    srw='http://www.loc.gov/zing/srw/',
+    diag='http://www.loc.gov/zing/srw/diagnostic/',
+    ucp="info:lc/xmlns/update-v1",
 )
 
 xpath = namespaces.xpath

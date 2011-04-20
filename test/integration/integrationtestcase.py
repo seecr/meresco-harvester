@@ -76,26 +76,33 @@ class IntegrationTestCase(CQ2TestCase):
         CQ2TestCase.setUp(self)
         global state
         self.state = state
-        result = urlopen("http://localhost:%s/starttest?name=%s" % (self.helperServerPortNumber, self.id())).read()
-        if result.startswith('ERROR'):
-            self.fail(result)
+        self.controlHelper(action='reset')
+
+    def controlHelper(self, action, **kwargs):
+        args = {'action':action}
+        args.update(kwargs)
+        urlopen("http://localhost:%s/control?%s" % (self.helperServerPortNumber, urlencode(args,doseq=True)))
 
     def __getattr__(self, name):
         if name.startswith('_'):
             raise AttributeError(name)
         return getattr(self.state, name)
 
-    def startHarvester(self):
+    def startHarvester(self, repository=None, verbose=False):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
         stdouterrlog = open(stdoutfile, 'w')
+        if verbose:
+            stdouterrlog = stdout
+        additionalArgs = ['--repository=%s'%repository] if repository else []
         harvesterProcessInfo = Popen(
-            args=["python", join(self.integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir], 
+            args=["python", join(self.integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=self.integrationTempdir,
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
         print "Harvester PID", harvesterProcessInfo.pid
         waitpid(harvesterProcessInfo.pid, 0)
+        stdouterrlog.flush()
 
 class IntegrationState(object):
     def __init__(self, stateName, fastMode):
@@ -113,8 +120,9 @@ class IntegrationState(object):
         self.harvesterStateDir = join(self.integrationTempdir, "state")
 
         copytree("integration-data", self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "DUMP.target"), dumpPortNumber=self.helperServerPortNumber)
-        fileSubstVars(join(self.integrationTempdir, "data", "integration.test.repository"), helperServerPortNumber=self.helperServerPortNumber)
+        fileSubstVars(join(self.integrationTempdir, "data", "SRUUPDATE.target"), helperServerPortNumber=self.helperServerPortNumber)
+        fileSubstVars(join(self.integrationTempdir, "data", "FILESYSTEM.target"), integrationTempdir=self.integrationTempdir)
+        fileSubstVars(join(self.integrationTempdir, "data", "adomain.integrationtest.repository"), helperServerPortNumber=self.helperServerPortNumber)
         config = readConfig(join(documentationPath, 'harvester.config'))
         
         # test example config has neccessary parameters
@@ -124,8 +132,8 @@ class IntegrationState(object):
         setConfig(config, 'portNumber', self.harvesterInternalServerPortNumber)
         setConfig(config, 'saharaUrl', "http://localhost:%s" % self.helperServerPortNumber)
         setConfig(config, 'dataPath', join(self.integrationTempdir, 'data'))
-        setConfig(config, 'statePath', join(self.integrationTempdir, 'state'))
-        setConfig(config, 'logPath', join(self.integrationTempdir, 'log'))
+        setConfig(config, 'statePath', self.harvesterStateDir)
+        setConfig(config, 'logPath', self.harvesterLogDir)
 
         self._writeConfig(config, 'harvester')
 
@@ -143,7 +151,7 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python", join(self.integrationTempdir, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
+            args=["python", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,
@@ -178,7 +186,7 @@ class IntegrationState(object):
 
     @staticmethod
     def _getLogs(result):
-        for line in result.split('\n'):
+        for line in (l for l in result.split('\n') if l.strip()):
             p = urlparse(line)
             yield dict(path=p.path, arguments=parse_qs(p.query))
 
