@@ -184,17 +184,30 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(logLen, len(self.getLogs()), 'Action is over, expect nothing more.')
 
     def testInvalidIgnoredUptoMaxIgnore(self):
+        maxIgnore = 5
         self.controlHelper(action='ignoreAll')
+        nrOfDeleted = 2
+        r = RepositoryData.read(self.repofilepath)
+        r.maximumIgnore = "%s" % maxIgnore
+        r.save(self.repofilepath)
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(2, len(listdir(self.dumpDir)))
+        self.assertEquals(nrOfDeleted, len(listdir(self.dumpDir)))
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
-        self.assertEquals(5, len(ignoredIds), ignoredIds)
+        self.assertEquals(maxIgnore, len(ignoredIds), ignoredIds)
         ignoreDir = join(self.harvesterLogDir, DOMAIN, "ignored", REPOSITORY)
-        self.assertEquals(5, len(listdir(ignoreDir)))
+        self.assertEquals(maxIgnore, len(listdir(ignoreDir)))
         ignoreId1Error = open(join(ignoreDir, "oai:record:01")).read()
         self.assertTrue('uploadId: "integrationtest:oai:record:01"', ignoreId1Error)
+        self.controlHelper(action='ignoreNothing')
+        self.startHarvester(repository=REPOSITORY)
+        self.assertEquals(nrOfDeleted + BATCHSIZE, len(listdir(self.dumpDir)))
+        ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
+        self.assertEquals(BATCHSIZE - nrOfDeleted, len(ids))
+        ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
+        self.assertEquals(0, len(ignoredIds), ignoredIds)
+        self.assertEquals(0, len(listdir(ignoreDir)))
 
     def testHarvestToFilesystemTarget(self):
         r = RepositoryData.read(self.repofilepath)

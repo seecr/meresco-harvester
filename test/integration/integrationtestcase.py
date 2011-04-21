@@ -100,7 +100,6 @@ class IntegrationTestCase(CQ2TestCase):
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
-        print "Harvester PID", harvesterProcessInfo.pid
         waitpid(harvesterProcessInfo.pid, 0)
         stdouterrlog.flush()
 

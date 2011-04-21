@@ -108,6 +108,9 @@ class Dump(object):
     def ignoreAll(self):
         self._ignoreAll = True
 
+    def ignoreNothing(self):
+        self._ignoreAll = False
+
     def raiseExceptionOnIds(self, ids):
         self._raiseExceptionOnIds = set(ids)
 
@@ -119,6 +122,8 @@ class Control(Observable):
             self.do.reset()
         if action == "raiseExceptionOnIds":
             self.do.raiseExceptionOnIds(arguments.get('id',[]))
+        if action == "ignoreNothing":
+            self.do.ignoreNothing()
         if action == "ignoreAll":
             self.do.ignoreAll()
         yield "DONE"
