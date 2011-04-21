@@ -93,6 +93,7 @@ class DeleteIds(Observable):
                 try:
                     anUpload = Upload(repository=self._repository)
                     anUpload.id = id
+                    self.do.notifyHarvestedRecord(anUpload.id)
                     self.do.delete(anUpload)
                     done.append(id)
                 except:

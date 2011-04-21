@@ -148,6 +148,7 @@ class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
         self.filename = join(self._stateDir, self._repository.id + '.ids')
+        self.ignoreFilename = join(self._stateDir, self._repository.id + '_ignored.ids')
         self.oldfilename = self.filename + ".old"
 
     def do(self):
@@ -172,10 +173,10 @@ class SmoothAction(Action):
 
     def _smoothinit(self):
         if isfile(self.filename):
-            rename(self.filename, self.oldfilename)
+            writeIds(self.oldfilename, set(readIds(self.filename) + readIds(self.ignoreFilename)))
+            writeIds(self.filename, set())
         else:
             open(self.oldfilename, 'w').close()
-        open(self.filename, 'w').close()
         logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
         try:
             logger.markDeleted()

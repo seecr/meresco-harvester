@@ -72,7 +72,7 @@ class HarvesterTest(IntegrationTestCase):
     def testHarvestToSruUpdate(self):
         # initial harvest
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
+        self.assertEquals(BATCHSIZE, self.sizeDumpDir())
         self.assertEquals(2, len([f for f in listdir(self.dumpDir) if "info:srw/action/1/delete" in open(join(self.dumpDir, f)).read()]))
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(8, len(ids))
@@ -87,7 +87,7 @@ class HarvesterTest(IntegrationTestCase):
 
         # resumptionToken
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(15, len(listdir(self.dumpDir)))
+        self.assertEquals(15, self.sizeDumpDir())
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(13, len(ids))
         logs = self.getLogs()
@@ -105,7 +105,7 @@ class HarvesterTest(IntegrationTestCase):
         with open(statsFile, 'w') as f:
             f.write('Started: 2011-04-01 14:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-04-01 14:12:36, ResumptionToken:\n')
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
+        self.assertEquals(BATCHSIZE, self.sizeDumpDir())
         logs = self.getLogs()
         self.assertEquals(1, len(logs))
         self.assertEquals('/oai', logs[-1]['path'])
@@ -114,7 +114,7 @@ class HarvesterTest(IntegrationTestCase):
     def testClear(self):
         self.startHarvester(repository=REPOSITORY)
         logLen = len(self.getLogs())
-        self.assertEquals(BATCHSIZE, len(listdir(self.dumpDir)))
+        self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
@@ -128,7 +128,7 @@ class HarvesterTest(IntegrationTestCase):
         r = RepositoryData.read(self.repofilepath) #really set action done
         r.action=''
         r.save(self.repofilepath)
-        self.assertEquals(18, len(listdir(self.dumpDir)))
+        self.assertEquals(18, self.sizeDumpDir())
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
 
@@ -162,7 +162,7 @@ class HarvesterTest(IntegrationTestCase):
         logs = self.getLogs()
         self.assertEquals('/oai', logs[-1]["path"])
         self.assertEquals({'verb': ['ListRecords'], 'resumptionToken': [token]}, logs[-1]["arguments"])
-        self.assertEquals(15, len(listdir(self.dumpDir)))
+        self.assertEquals(15, self.sizeDumpDir())
 
         self.startHarvester(repository=REPOSITORY)
         logs = self.getLogs()
@@ -171,7 +171,7 @@ class HarvesterTest(IntegrationTestCase):
         r = RepositoryData.read(self.repofilepath) #really set action done
         r.action=''
         r.save(self.repofilepath)
-        self.assertEquals(17, len(listdir(self.dumpDir)))
+        self.assertEquals(17, self.sizeDumpDir())
         deletedIds = set([
             xpath(parse(open(join(self.dumpDir, '00016_delete.updateRequest'))), '//ucp:recordIdentifier/text()')[0],
             xpath(parse(open(join(self.dumpDir, '00017_delete.updateRequest'))), '//ucp:recordIdentifier/text()')[0]
@@ -191,7 +191,7 @@ class HarvesterTest(IntegrationTestCase):
         r.maximumIgnore = "%s" % maxIgnore
         r.save(self.repofilepath)
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(nrOfDeleted, len(listdir(self.dumpDir)))
+        self.assertEquals(nrOfDeleted, self.sizeDumpDir())
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
@@ -202,7 +202,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertTrue('uploadId: "integrationtest:oai:record:01"', ignoreId1Error)
         self.controlHelper(action='ignoreNothing')
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(nrOfDeleted + BATCHSIZE, len(listdir(self.dumpDir)))
+        self.assertEquals(nrOfDeleted + BATCHSIZE, self.sizeDumpDir()) 
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(BATCHSIZE - nrOfDeleted, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
@@ -243,13 +243,13 @@ class HarvesterTest(IntegrationTestCase):
         self.controlHelper(action='raiseExceptionOnIds', id=['%s:oai:record:12' % REPOSITORY]) 
         self.startHarvester(repository=REPOSITORY)
         successFullRecords=['oai:record:11']
-        self.assertEquals(len(successFullRecords), len(listdir(self.dumpDir)))
+        self.assertEquals(len(successFullRecords), self.sizeDumpDir())
         self.emptyDumpDir()
 
         self.controlHelper(action='raiseExceptionOnIds', id=[]) 
         self.startHarvester(repository=REPOSITORY)
         secondBatchSize = 5
-        self.assertEquals(secondBatchSize, len(listdir(self.dumpDir)))
+        self.assertEquals(secondBatchSize, self.sizeDumpDir())
 
     def testClearWithError(self):
         self.startHarvester(repository=REPOSITORY)
@@ -263,16 +263,54 @@ class HarvesterTest(IntegrationTestCase):
         self.startHarvester(repository=REPOSITORY)
         successFullDeletes = [1,2,4]
         deletesTodo = [5,7,8,9,10]
-        self.assertEquals(len(successFullDeletes), len(listdir(self.dumpDir)))
+        self.assertEquals(len(successFullDeletes), self.sizeDumpDir())
 
         self.controlHelper(action='raiseExceptionOnIds', id=[]) 
         self.emptyDumpDir()
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(len(deletesTodo), len(listdir(self.dumpDir)))
+        self.assertEquals(len(deletesTodo), self.sizeDumpDir())
+
+    def testRefreshWithIgnoredRecords(self):
+        log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
+        log.startRepository()
+        for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
+            log.notifyHarvestedRecord(uploadId)
+            log.uploadIdentifier(uploadId)
+        for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123,124]]:
+            log.notifyHarvestedRecord(uploadId)
+            log.deleteIdentifier(uploadId)
+        for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [7,8,125,126,127,128]]:
+            log.notifyHarvestedRecord(uploadId)
+            log.ignoreIdentifier(uploadId, 'ignored message')
+        log.endRepository('token')
+        log.close()
+        totalRecords = 15
+        oldUploads = 2
+        oldDeletes = 3
+        oldIgnoreds = 4
+
+        r = RepositoryData.read(self.repofilepath)
+        r.action='refresh'
+        r.save(self.repofilepath)
+
+        self.startHarvester(repository=REPOSITORY) # Smoot init
+        self.assertEquals(0, self.sizeDumpDir())
+        self.startHarvester(repository=REPOSITORY) # Smooth harvest
+        self.startHarvester(repository=REPOSITORY) # Smooth harvest
+        self.assertEquals(totalRecords, self.sizeDumpDir())
+        self.startHarvester(repository=REPOSITORY) # Smooth finish
+        self.assertEquals(totalRecords + oldUploads + oldIgnoreds, self.sizeDumpDir())
+        ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
+        self.assertEquals(0, len(ignoredIds), ignoredIds)
+        ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
+        self.assertEquals(13, len(ids), ignoredIds)
 
 
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)
+
+    def sizeDumpDir(self):
+        return len(listdir(self.dumpDir))
 
 
 
