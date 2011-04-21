@@ -319,13 +319,16 @@ class HarvesterTest(IntegrationTestCase):
             log.ignoreIdentifier(uploadId, 'ignored message')
         log.endRepository('token')
         log.close()
+        oldUploads = 4
+        oldDeletes = 5
+        oldIgnoreds = 6
 
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
         r.save(self.repofilepath)
         
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(10, self.sizeDumpDir())
+        self.assertEquals(oldUploads+oldIgnoreds, self.sizeDumpDir())
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ignoredIds), ignoredIds)
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
@@ -336,6 +339,4 @@ class HarvesterTest(IntegrationTestCase):
 
     def sizeDumpDir(self):
         return len(listdir(self.dumpDir))
-
-
 
