@@ -140,8 +140,12 @@ class DeleteIdsAction(Action):
         if self._repository.shopClosed():
             return False, 'Not deleting outside timeslots.', False
 
+        self.filename = join(self._stateDir, self._repository.id + '.ids')
+        self.ignoreFilename = join(self._stateDir, self._repository.id + '_ignored.ids')
+
         d = self._createDeleteIds()
-        d.delete()
+        d.deleteFile(self.filename)
+        d.deleteFile(self.ignoreFilename)
         return True, 'Deleted', False
 
 class SmoothAction(Action):
