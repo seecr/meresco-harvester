@@ -74,6 +74,7 @@ class SmoothActionTest(ActionTestCase):
 
     def testSmooth_InitWithNothingHarvestedYetRepository(self):
         self.assertFalse(os.path.isfile(self.idfilename))
+        self.assertFalse(os.path.isfile(self.ignoreidfilename))
         self.assertFalse(os.path.isfile(self.old_idfilename))
         self.assertFalse(os.path.isfile(self.statsfilename))
 
@@ -81,8 +82,10 @@ class SmoothActionTest(ActionTestCase):
 
         self.assertTrue(os.path.isfile(self.old_idfilename))
         self.assertTrue(os.path.isfile(self.idfilename))
+        self.assertTrue(os.path.isfile(self.ignoreidfilename))
         self.assertEquals('', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
+        self.assertEquals('', readfile(self.ignoreidfilename))
         self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
