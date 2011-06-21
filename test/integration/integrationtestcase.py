@@ -53,7 +53,7 @@ from traceback import print_exc
 
 mypath = dirname(abspath(__file__))
 binDir = join(dirname(dirname(mypath)), 'bin')
-documentationPath = join(dirname(dirname(mypath)), 'doc')
+examplesPath = join(dirname(dirname(mypath)), 'examples')
 harvesterDir = dirname(dirname(dirname(abspath(__file__))))
 
 if not isdir(binDir):
@@ -122,7 +122,7 @@ class IntegrationState(object):
         fileSubstVars(join(self.integrationTempdir, "data", "SRUUPDATE.target"), helperServerPortNumber=self.helperServerPortNumber)
         fileSubstVars(join(self.integrationTempdir, "data", "FILESYSTEM.target"), integrationTempdir=self.integrationTempdir)
         fileSubstVars(join(self.integrationTempdir, "data", "adomain.integrationtest.repository"), helperServerPortNumber=self.helperServerPortNumber)
-        config = readConfig(join(documentationPath, 'harvester.config'))
+        config = readConfig(join(examplesPath, 'harvester.config'))
         
         # test example config has neccessary parameters
         def setConfig(config, parameter, value):
