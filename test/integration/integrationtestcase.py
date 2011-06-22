@@ -95,8 +95,8 @@ class IntegrationTestCase(CQ2TestCase):
             stdouterrlog = stdout
         additionalArgs = ['--repository=%s'%repository] if repository else []
         harvesterProcessInfo = Popen(
-            args=["python", join(self.integrationTempdir, "start-integrationtest-harvester.py"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
-            cwd=self.integrationTempdir,
+            args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
+            cwd=binDir,
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
@@ -167,7 +167,7 @@ class IntegrationState(object):
         stdouterrlog = open(stdoutfile, 'w')
         configFile = join(self.integrationTempdir, 'harvester.config') 
         processInfo = Popen(
-            args=[join(binDir, "start-harvester-internal-server"), configFile], 
+            args=[join(binDir, "meresco-harvester-internal-server"), configFile], 
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             cwd=binDir,
             stdout=stdouterrlog,
