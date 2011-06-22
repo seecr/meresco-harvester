@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -32,7 +32,8 @@
 # 
 ## end license ##
 
-from os import spawnvp, waitpid, kill, P_NOWAIT
+from os import waitpid, kill, P_NOWAIT
+from subprocess import Popen
 from sys import executable
 
 from threading import Timer
@@ -61,9 +62,9 @@ class TimedProcess(object):
         self.timer.cancel()
 
     def executeScript(self, args, timeout, signal=9):
-        executable="/usr/bin/python"
         self._signal = signal
-        self._pid = spawnvp(P_NOWAIT, executable, [executable] + args)
+        process = Popen(args)
+        self._pid = process.pid
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
         resultpid, status = waitpid(self._pid, 0)

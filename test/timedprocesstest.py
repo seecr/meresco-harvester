@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -47,7 +47,7 @@ sys.exit(42)""")
             fd.close()
 
         tp = TimedProcess()
-        exitstatus = tp.executeScript([self.tempfile], 10)
+        exitstatus = tp.executeScript(['python2.5', self.tempfile], 10)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
         self.assertEquals(42, exitstatus)
@@ -62,7 +62,7 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript([self.tempfile, 'it','is','difficult'], 10)
+        tp.executeScript(['python2.5', self.tempfile, 'it','is','difficult'], 10)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
         self.assertEquals('3', open(join(self.tempdir, 'output.txt')).read())
@@ -77,7 +77,7 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript([self.tempfile], 1)
+        tp.executeScript(['python2.5', self.tempfile], 1)
         self.assertTrue(tp.wasTimeout())
         self.assertFalse(tp.wasSuccess())
         
