@@ -118,7 +118,7 @@ Furthermore you will need to configure:
     We recommend using daemontools (http://cr.yp.to/daemontools.html) for
     running this service.
     The service is then started using the script 
-    'start-harvester-internal-server' 
+    'meresco-harvester-internal-server' 
 
 2.3.2 User administration
 -------------------------
@@ -142,9 +142,8 @@ Furthermore you will need to configure:
 
 2.4 Harvesting configuration
 -----------------------------
-    Harvesting is done with the startharvester.py script which is in the example
-    directory.
-    The user that will run the startharvester.py script will need to have
+    Harvesting is done with the 'meresco-harvester' script.
+    The user that will run the 'meresco-harvester' script will need to have
     read/write permissions in the stateDir and logDir specified in the
     apache configuration.
     
