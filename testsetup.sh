@@ -36,12 +36,13 @@ rm -rf tmp build
 python setup.py install --root tmp
 cp -r test tmp/test
 cp meresco/__init__.py tmp/usr/lib/python2.5/site-packages/meresco
+export PYTHONPATH=`pwd`/tmp/usr/lib/python2.5/site-packages
 find tmp -name '*.py' -exec sed -e \
     "/DO_NOT_DISTRIBUTE/d;
     s,^examplesPath.*$,examplesPath='$mydir/examples',;
+    s,^harvesterDir.*$,harvesterDir='$PYTHONPATH',;
     s,^binDir.*$,binDir='$mydir/tmp/usr/bin'," -i {} \;
 
-export PYTHONPATH=`pwd`/tmp/usr/lib/python2.5/site-packages
 teststorun=$1
 if [ -z "$teststorun" ]; then
     teststorun="alltests.sh integrationtest.sh"

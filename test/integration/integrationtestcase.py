@@ -56,7 +56,7 @@ from traceback import print_exc
 mypath = dirname(abspath(__file__))
 binDir = join(dirname(dirname(mypath)), 'bin')
 examplesPath = join(dirname(dirname(mypath)), 'examples')
-harvesterDir = dirname(dirname(dirname(abspath(__file__))))
+harvesterDir = dirname(dirname(mypath))
 
 if not isdir(binDir):
     binDir = '/usr/bin'
