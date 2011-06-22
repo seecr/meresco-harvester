@@ -1,2 +1,2 @@
-python-slowfoot (>=7.3.2)
+python-slowfoot (>=7.3.3)
 python-slowfoot (<<7.4)
