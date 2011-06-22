@@ -1,4 +1,4 @@
-"Meresco Harvester" is the OAI-Harvester from the Meresco Suite 2005-2010
+"Meresco Harvester" is the OAI-Harvester from the Meresco Suite 2005-2011
 
 http://www.meresco.org
 
@@ -7,6 +7,12 @@ http://www.meresco.org
 
 1. Installation
 ---------------
+Seecr (Seek You Too B.V.) provides a Meresco Software repository to ease the installation of e.g. Meresco Harvester. For Debian and Redhat based systems see http://repository.seecr.nl for instructions to configure your package manager to use this repository.
+
+Installation using the Meresco Software Repository:
+    - install python-meresco-harvester with your package manager.
+
+For other systems or source based installation look at the 'deps.txt' file for all dependencies. Sources can be downloaded from http://meresco.org/sources
 Installation can be done with python distutils.
     $ python setup.py install
 
@@ -21,7 +27,7 @@ Furthermore you will need to configure:
 2.1 Apache Configuration
 ------------------------
     An example apache configuration is given in the example directory. Please
-    change it to your needs. 
+    change it to your needs. (see 'examples/meresco-harvester.apache.conf)
 
 2.1.1 Apache Worker (Threaded Model)
 ------------------------------------
@@ -87,11 +93,36 @@ Furthermore you will need to configure:
 
     The webcontrolpanel does not work if the encoding is different.
 
+    Please also add the following to the '/etc/apache2/envvars':
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+
 2.3 Webcontrolpanel Configuration
 ---------------------------------
-    The webcontrolpanel has one special user called 'admin', with extra privileges.
-    They are documentend at http://meresco.org
+    The webcontrolpanel consists of two http services working together. The
+    first is configured with the apache configuration mentioned earlier. It 
+    makes use of the second internalserver. This internalserver must be
+    configured separately.
 
+    To access the webcontrolpanel users will need a name and password. 
+    The special user 'admin' can create these. An initial password for this
+    user must also be created.
+
+2.3.1 Internalserver
+--------------------
+    The internal server is needed by the webcontrolpanel to include new 
+    (dynamicHtml) pages. An example configuration file is given in the
+    examples directory, see 'harvester.config'
+    This server is independent of Apache. Take care that the options in
+    the configuration file are equal to the Apache configuration.
+    We recommend using daemontools (http://cr.yp.to/daemontools.html) for
+    running this service.
+    The service is then started using the script 
+    'start-harvester-internal-server' 
+
+2.3.2 User administration
+-------------------------
+    The webcontrolpanel has one special user called 'admin', with extra privileges.
     Amongst these privileges is the right to create users. This is all done
     in the webcontrolpanel. The created users are stored in the file specified
     in the apache configuration (PythonOption usersfile)
@@ -103,10 +134,11 @@ Furthermore you will need to configure:
     admin user, a default usersfile is in the example directory. It contains the
     admin user with the password 'admin'.
 
-2.3.1 Changing the admin password
+2.3.2.1 Changing the admin password
 ---------------------------------
     To create a password for the user admin you can do:
       $ echo "admin:$(echo -n <yourpassword> | md5sum | awk '{print $1}')" > users.txt
+
 
 2.4 Harvesting configuration
 -----------------------------
@@ -117,7 +149,3 @@ Furthermore you will need to configure:
     apache configuration.
     
 
-3. Further Reading
-------------------
-    For more information take a look at http://meresco.org or at the
-    documentation in the doc directory.
