@@ -13,7 +13,6 @@
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 # 
-# 
 # This file is part of "Meresco Harvester"
 # 
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
@@ -47,12 +46,13 @@ setup(
         ]
     },
     scripts=[
-        'bin/start-harvester-internal-server',
+        'bin/meresco-harvester-internal-server',
+        'bin/meresco-harvester',
     ],
     version='%VERSION%',
     url='http://www.meresco.org',
-    author='Seek You Too',
-    author_email='info@cq2.nl',
+    author='Seecr',
+    author_email='info@seecr.nl',
     description='"Meresco Harvester" consists of two subsystems, namely an OAI-harvester and a web-control panel.',
     long_description='"Meresco Harvester" consists of two subsystems, namely an OAI-harvester and a web-control panel.',
     license='GNU Public License',
