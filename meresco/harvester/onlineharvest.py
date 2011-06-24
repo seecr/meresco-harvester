@@ -45,8 +45,8 @@ class OnlineHarvest(object):
         self._output = outputstream
         self._saharaGet = SaharaGet(saharaUrl)
 
-    def performMapping(self, mappingId, urlString):
-        mapping = self._saharaGet.getMapping(mappingId)
+    def performMapping(self, domainId, mappingId, urlString):
+        mapping = self._saharaGet.getMapping(domainId, mappingId)
         mapping.addObserver(StreamEventLogger(self._output))
         self._output.write(mapping.mappingInfo())
         self._output.write('\n')
