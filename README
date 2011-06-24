@@ -92,10 +92,20 @@ Furthermore you will need to configure:
         sys.setdefaultencoding('utf-8')
 
     The webcontrolpanel does not work if the encoding is different.
+    Please set the correct settings for Apache2.
 
+2.2.1 Debian Apache2 Envionrment
+--------------------------------
     Please also add the following to the '/etc/apache2/envvars':
     export LANG=en_US.UTF-8
     export LC_ALL=en_US.UTF-8
+
+2.2.2 RedHat/Centos Apache2 Envionrment
+--------------------------------
+    Please change the HTTPD_LANG environment in /etc/sysconfig/httpd
+
+    HTTPD_LANG=en_US.UTF-8
+
 
 2.3 Webcontrolpanel Configuration
 ---------------------------------
