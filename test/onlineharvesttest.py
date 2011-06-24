@@ -55,14 +55,14 @@ class OnlineHarvestTest(unittest.TestCase):
         mapping.code = DEFAULT_DC_CODE
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         self.saharaGet.returnValues['getMapping'] = mapping
-        self.harvest.performMapping(mapping, data)
+        self.harvest.performMapping('domainId', mapping, data)
         self.assertEquals(3,self.output.getvalue().count('upload.id='))
 
     def testMapping(self):
         mapping = CallTrace('mapping')
         self.saharaGet.returnValues['getMapping'] = mapping
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping(mapping, data)
+        self.harvest.performMapping('domainId', mapping, data)
         self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
         for createUploadMethod in mapping.calledMethods[2:]:
             self.assertTrue(createUploadMethod.kwargs['doAsserts'])
@@ -73,7 +73,7 @@ class OnlineHarvestTest(unittest.TestCase):
         mapping.name = 'My Mapping'
         data = 'file://%s/mocktud/00003.xml' % self._testpath
         self.saharaGet.returnValues['getMapping'] = mapping
-        self.harvest.performMapping(mapping, data)
+        self.harvest.performMapping('domainId', mapping, data)
         self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
 
     def testMappingRaisesDataMapAssertionException(self):
@@ -87,7 +87,7 @@ class OnlineHarvestTest(unittest.TestCase):
         mapping.methods['createUpload'] = createUpload
         self.saharaGet.returnValues['getMapping'] = mapping
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping('mappingId', data)
+        self.harvest.performMapping('domainId', 'mappingId', data)
         self.assertEquals(2,self.output.getvalue().count('upload.id='))
 
     def testMappingRaisesException(self):
@@ -96,7 +96,7 @@ class OnlineHarvestTest(unittest.TestCase):
         mapping.exceptions['createUpload'] = Exception('Mushroom, mushroom')
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         try:
-            self.harvest.performMapping(mapping, data)
+            self.harvest.performMapping('domainId', mapping, data)
             self.fail()
         except Exception, ex:
             self.assertEquals('Mushroom, mushroom', str(ex))
