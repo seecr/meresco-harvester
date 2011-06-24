@@ -4,7 +4,7 @@ inputquery = { 'verb':'ListRecords', 'metadataPrefix':repository.metadataPrefix 
 if repository.set: 
   inputquery['set']=repository.set
 inputurl = repository.baseurl + '?' + urlencode(inputquery)
-mapping = repository.mappingId + '.mapping'
+domainId = args.name.split('.')[0]
 
-redirect('/onlinemapping?' + urlencode({'mapping':mapping, 'inputurl':inputurl}))
+redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId':repository.mappingId, 'inputurl':inputurl}))
 %>

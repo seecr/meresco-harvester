@@ -189,7 +189,7 @@ for id,name in map(idAndNameForMapping, domain.mappingId):
   #
 %>
     <td>
-     <a href="/page/testmapping/<%=id%>.mapping?referrerDomain=<%=domain.id%>">
+     <a href="/page/testmapping/?mappingId=<%=id%>&referrerDomain=<%=domain.id%>">
       <img src="/images/exec.png" border="0"> Test
      </a>
     </td>

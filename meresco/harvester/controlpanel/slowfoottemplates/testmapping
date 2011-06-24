@@ -6,7 +6,8 @@ The mappings can be tested using an <i>online harvester</i>. It will harvest a c
 <p>First by giving it a url which provides a OAI ListRecords answer. Something like: http://repository.example.org/oai?verb=ListRecords&metadataPrefix=oai_dc 
 
 <form action="/onlinemapping" method="get">
-<input type="hidden" name="mapping" value="<%=args.name%>">
+<input type="hidden" name="mappingId" value="<%=args.mappingId%>">
+<input type="hidden" name="domainId" value="<%=args.referrerDomain%>">
 <table>
 <tr><td>Test URL</td><td><input type="text" name="inputurl" value="" size="30"></td></tr>
 <tr><td>&nbsp;</td><td><input type="submit" class="butt" value="TEST"></tr>
@@ -15,7 +16,8 @@ The mappings can be tested using an <i>online harvester</i>. It will harvest a c
 </p>
 <p>Secondly you can use one of the repositories known by Meresco Harvester.
 <form action="/onlinemapping" method="get">
-<input type="hidden" name="mapping" value="<%=args.name%>">
+<input type="hidden" name="mappingId" value="<%=args.mappingId%>">
+<input type="hidden" name="domainId" value="<%=args.referrerDomain%>">
 <table>
 <tr><td>Test Repository</td>
 <td>
