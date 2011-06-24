@@ -8,7 +8,6 @@
 # 
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
 # 
 # 
 # This file is part of "Meresco Harvester"
