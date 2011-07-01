@@ -32,7 +32,6 @@
 # 
 ## end license ##
 
-from harvesterlog import HarvesterLog
 from eventlogger import EventLogger, NilEventLogger, CompositeLogger, StreamEventLogger
 from harvester import Harvester
 from saharaget import SaharaGet

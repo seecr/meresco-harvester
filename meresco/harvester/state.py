@@ -40,10 +40,10 @@ class State(object):
         open(self._filename, 'a').close()
         self._statsfile = open(self._filename, 'r+')
         self._readState()
-        self._prepareForWriting()
+        self._newlineIfMissing()
 
     def close(self):
-        self._write('\n')
+        self._newlineIfMissing()
         self._statsfile.close()
 
     def setToLastCleanState(self):
@@ -86,8 +86,7 @@ class State(object):
                 harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
                 self.total = int(total)
 
-    def _prepareForWriting(self):
-        """Make sure writing always starts on newline."""
+    def _newlineIfMissing(self):
         if self._statsfile.tell() == 0:
             return
         self._statsfile.seek(-1, SEEK_END)

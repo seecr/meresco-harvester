@@ -106,3 +106,18 @@ Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2
         l = s._getLastCleanState()
         self.assertEquals(None, l)
 
+    def testNoRepeatedNewlines(self):
+        s = State(self.tempdir, 'repository')
+        s.close()
+        data = open(join(self.tempdir, 'repository.stats')).read()
+        self.assertEquals('', data)
+        s = State(self.tempdir, 'repository')
+        s._write('line')
+        s.close()
+        data = open(join(self.tempdir, 'repository.stats')).read()
+        self.assertEquals('line\n', data)
+        s = State(self.tempdir, 'repository')
+        s.close()
+        data = open(join(self.tempdir, 'repository.stats')).read()
+        self.assertEquals('line\n', data)
+

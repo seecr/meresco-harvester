@@ -32,7 +32,6 @@
 ## end license ##
 
 import os, sys, shelve, time, traceback,re
-from harvesterlog import HarvesterLog
 import getopt, threading
 from urllib2 import urlopen
 from urllib import urlencode
