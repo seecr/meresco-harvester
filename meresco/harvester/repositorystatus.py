@@ -60,14 +60,6 @@ class RepositoryStatus(object):
 
     def addError(self, date, comments):
         self.errors.append((self.reformatDate(date), comments))
-
-    def main(self, streamIn, streamOut):
-        streamOut.write("""<?xml version="1.0"?>
-<status>
-""")
-        self.innerXml(streamIn, streamOut)
-        streamOut.write("""</status>""")
-        streamOut.flush()
         
     def innerXml(self, streamIn, streamOut):
         split = lambda l:l.strip().split('\t')

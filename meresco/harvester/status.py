@@ -29,6 +29,10 @@
 from os.path import join, isfile, isdir
 from os import listdir
 from lxml.etree import parse
+from xml.sax.saxutils import escape as escapeXml
+from re import compile
+
+NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
 class Status(object):
 
@@ -43,12 +47,8 @@ class Status(object):
             repositoryIds = listdir(ignoredDir)
         yield "<GetStatus>"
         for repoId in repositoryIds:
-            yield '<status repositoryId="%s"><ignored>%s</ignored></status>' % (repoId, self.ignoredCount(domainId, repoId))
+            yield self._getRepositoryStatus(domainId, repoId)
         yield "</GetStatus>"
-
-    def ignoredCount(self, domainId, repositoryId):
-        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
-        return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0
 
     def ignoredRecords(self, domainId, repositoryId):
         ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
@@ -59,3 +59,59 @@ class Status(object):
     def getIgnoredRecord(self, domainId, repositoryId, recordId):
         return parse(open(join(self._logPath, domainId, "ignored", repositoryId, recordId)))
 
+    def _getRepositoryStatus(self, domainId, repoId):
+        stats = self._parseEventsFile(domainId, repoId)
+        yield '<status repositoryId="%s">' % repoId
+        yield '<lastHarvestDate>%s</lastHarvestDate>' % stats.get('lastHarvestDate', '')
+        yield '<harvested>%s</harvested>' % stats.get('harvested', '')
+        yield '<uploaded>%s</uploaded>' % stats.get('uploaded', '')
+        yield '<deleted>%s</deleted>' % stats.get('deleted', '')
+        yield '<total>%s</total>' % stats.get('total', '')
+        yield '<totalerrors>%s</totalerrors>' % stats.get('totalerrors', '')
+        yield '<recenterrors>'
+        for error in stats['recenterrors']:
+            yield '<error date="%s">%s</error>' % (error[0], escapeXml(error[1])) 
+        yield '</recenterrors>'
+        yield '<ignored>%s</ignored>' % self._ignoredCount(domainId, repoId)
+        yield '</status>'
+
+    def _ignoredCount(self, domainId, repositoryId):
+        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
+        return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0
+
+    def _parseEventsFile(self, domainId, repositoryId):
+        parseState = {'errors': []}
+        for line in open(join(self._logPath, domainId, "%s.events" % repositoryId)):
+            stateLine = line.strip().split('\t')
+            if len(stateLine) != 4:
+                continue
+            date, event, id, comments = stateLine
+            date = date[1:-1]
+            if event == 'SUCCES':
+                _succes(parseState, date, comments)
+            elif event == 'ERROR':
+                _error(parseState, date, comments)
+        recenterrors = parseState["errors"][-10:]
+        recenterrors.reverse()
+        return dict(
+                lastHarvestDate=parseState.get("lastHarvestDate"),
+                harvested=parseState.get("harvested"),
+                uploaded=parseState.get("uploaded"),
+                deleted=parseState.get("deleted"),
+                total=parseState.get("total"),
+                totalerrors=len(parseState["errors"]),
+                recenterrors=recenterrors)
+
+def _succes(parseState, date, comments):
+    parseState["lastHarvestDate"] = _reformatDate(date)
+    parseState["errors"] = []
+    match = NUMBERS_RE.match(comments)
+    if match:
+        parseState["harvested"], parseState["uploaded"], parseState["deleted"], parseState["total"] = match.groups()
+
+def _error(parseState, date, comments):
+    parseState["errors"].append((_reformatDate(date), comments))
+
+def _reformatDate(aDate):
+    return aDate[0:len('YYYY-MM-DD')] + 'T' + aDate[len('YYYY-MM-DD '):len('YYYY-MM-DD HH:MM:SS')] + 'Z'
+        

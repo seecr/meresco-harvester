@@ -26,45 +26,47 @@
 #
 ## end license ##
 
+from __future__ import with_statement
 from os import makedirs
 from os.path import join
 
 from cq2utils import CQ2TestCase
 
 from meresco.harvester.status import Status
+from weightless.core import compose
 from lxml.etree import tostring
 
 class StatusTest(CQ2TestCase):
 
     def setUp(self):
         CQ2TestCase.setUp(self)
-        stateDir = join(self.tempdir, "state")
-        logDir = join(self.tempdir, "log")
+        self.stateDir = join(self.tempdir, "state")
+        self.logDir = join(self.tempdir, "log")
         self.domainId = "adomain"
-        makedirs(join(stateDir, self.domainId))
-        repoId1LogDir = join(logDir, self.domainId, "ignored", "repoId1")
-        repoId2LogDir = join(logDir, self.domainId, "ignored", "repoId2")
+        makedirs(join(self.stateDir, self.domainId))
+        repoId1LogDir = join(self.logDir, self.domainId, "ignored", "repoId1")
+        repoId2LogDir = join(self.logDir, self.domainId, "ignored", "repoId2")
         makedirs(repoId1LogDir)
         makedirs(repoId2LogDir)
         open(join(repoId1LogDir, "ignoredId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
         open(join(repoId1LogDir, "ignoredId2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
         open(join(repoId2LogDir, "ignoredId3"), 'w').write("<diagnostic>ERROR3</diagnostic>")
-        open(join(stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
-        open(join(stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
-        open(join(stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
-        self.status = Status(logDir, stateDir)
+        open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
+        open(join(self.stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
+        open(join(self.stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
+        self.status = Status(self.logDir, self.stateDir)
 
     def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="repoId1">
                 <ignored>2</ignored>
             </status>
-        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, "repoId1")))
+        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "repoId1"))))
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="anotherRepoId">
                 <ignored>0</ignored>
             </status>
-        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, "anotherRepoId")))
+        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "anotherRepoId"))))
 
     def testGetStatusForDomainId(self):
         self.assertEqualsWS("""<GetStatus>
@@ -74,7 +76,7 @@ class StatusTest(CQ2TestCase):
             <status repositoryId="repoId2">
                 <ignored>1</ignored>
             </status>
-        </GetStatus>""", ''.join(self.status.getStatus(self.domainId, None)))
+        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, None))))
 
     def testGetAllIgnoredRecords(self):
         def ignoredRecords(repoId):
@@ -90,3 +92,107 @@ class StatusTest(CQ2TestCase):
         self.assertEquals("<diagnostic>ERROR1</diagnostic>", getIgnoredRecord("repoId1", "ignoredId1")) 
         self.assertEquals("<diagnostic>ERROR2</diagnostic>", getIgnoredRecord("repoId1", "ignoredId2")) 
         self.assertEquals("<diagnostic>ERROR3</diagnostic>", getIgnoredRecord("repoId2", "ignoredId3")) 
+
+    def testSucces(self):
+        logLine = '\t'.join(['[2006-03-13 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: None'])
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine)
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals('2006-03-13T12:13:14Z', state["lastHarvestDate"])
+        self.assertEquals('200', state["harvested"])
+        self.assertEquals('199', state["uploaded"])
+        self.assertEquals('1', state["deleted"])
+        self.assertEquals('1542', state["total"])
+        self.assertEquals(0, state["totalerrors"])
+        self.assertEquals([], state["recenterrors"])
+
+    def testOnlyErrors(self):
+        logLine = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'Sorry, but the VM has crashed.'])
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine)
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals(None, state["lastHarvestDate"])
+        self.assertEquals(None, state["harvested"])
+        self.assertEquals(None, state["uploaded"])
+        self.assertEquals(None, state["deleted"])
+        self.assertEquals(None, state["total"])
+        self.assertEquals(1, state["totalerrors"])
+        self.assertEquals([('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
+
+    def testTwoErrors(self):
+        logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'Sorry, but the VM has crashed.'])
+        logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals(None, state["lastHarvestDate"])
+        self.assertEquals(None, state["harvested"])
+        self.assertEquals(None, state["uploaded"])
+        self.assertEquals(None, state["deleted"])
+        self.assertEquals(None, state["total"])
+        self.assertEquals(2, state["totalerrors"])
+        self.assertEquals([('2006-03-11T12:14:14Z', 'java.lang.NullPointerException.'), ('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
+
+    def testErrorAfterSucces(self):
+        logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: abcdef'])
+        logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals("2006-03-11T12:13:14Z", state["lastHarvestDate"])
+        self.assertEquals("200", state["harvested"])
+        self.assertEquals("199", state["uploaded"])
+        self.assertEquals("1", state["deleted"])
+        self.assertEquals("1542", state["total"])
+        self.assertEquals(1, state["totalerrors"])
+        self.assertEquals([('2006-03-11T12:14:14Z', 'java.lang.NullPointerException.')], state["recenterrors"])
+
+    def testErrorBeforeSucces(self):
+        logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
+        logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: abcdef'])
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals("2006-03-11T12:14:14Z", state["lastHarvestDate"])
+        self.assertEquals("200", state["harvested"])
+        self.assertEquals("199", state["uploaded"])
+        self.assertEquals("1", state["deleted"])
+        self.assertEquals("1542", state["total"])
+        self.assertEquals(0, state["totalerrors"])
+        self.assertEquals([], state["recenterrors"])
+
+    def testLotOfErrors(self):
+        with open(join(self.logDir, self.domainId, 'repoId1.events'), 'w') as f:
+            for i in range(20):
+                logLine = '\t'.join(['[2006-03-11 12:%.2d:14]' % i, 'ERROR', 'repoId1', 'Error %d, Crash' % i])
+                f.write(logLine + "\n")
+        state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
+        self.assertEquals(None, state["lastHarvestDate"])
+        self.assertEquals(None, state["harvested"])
+        self.assertEquals(None, state["uploaded"])
+        self.assertEquals(None, state["deleted"])
+        self.assertEquals(None, state["total"])
+        self.assertEquals(20, state["totalerrors"])
+        self.assertEquals(10, len(state["recenterrors"]))
+        self.assertEquals([('2006-03-11T12:19:14Z', 'Error 19, Crash'), ('2006-03-11T12:18:14Z', 'Error 18, Crash'), ('2006-03-11T12:17:14Z', 'Error 17, Crash'), ('2006-03-11T12:16:14Z', 'Error 16, Crash'), ('2006-03-11T12:15:14Z', 'Error 15, Crash'), ('2006-03-11T12:14:14Z', 'Error 14, Crash'), ('2006-03-11T12:13:14Z', 'Error 13, Crash'), ('2006-03-11T12:12:14Z', 'Error 12, Crash'), ('2006-03-11T12:11:14Z', 'Error 11, Crash'), ('2006-03-11T12:10:14Z', 'Error 10, Crash')], state["recenterrors"])
+        
+    def testIntegration(self):
+        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write("""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
+[2005-08-21 20:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 4/3/2/10
+[2005-08-22 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/16
+[2005-08-22 20:00:00.456]\tERROR\t[repositoryId]\tError 2
+[2005-08-23 20:00:00.456]\tERROR\t[repositoryId]\tError 3
+[2005-08-23 20:00:01.456]\tERROR\t[repositoryId]\tError 4
+[2005-08-23 20:00:02.456]\tERROR\t[repositoryId]\tError 5
+[2005-08-24 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/20
+[2005-08-24 20:00:00.456]\tERROR\t[repositoryId]\tError With Scary Characters < & > " '
+""")
+        self.assertEqualsWS("""<GetStatus>
+<status repositoryId="repoId1">
+  <lastHarvestDate>2005-08-24T00:00:00Z</lastHarvestDate>
+  <harvested>8</harvested>
+  <uploaded>4</uploaded>
+  <deleted>3</deleted>
+  <total>20</total>
+  <totalerrors>1</totalerrors>
+  <recenterrors>
+    <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
+  </recenterrors>
+  <ignored>2</ignored>
+</status>
+</GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, 'repoId1'))))
