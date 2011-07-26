@@ -59,7 +59,6 @@ from idstest import IdsTest
 from mappingtest import MappingTest
 from oairequesttest import OaiRequestTest
 from onlineharvesttest import OnlineHarvestTest
-from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest
 from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest

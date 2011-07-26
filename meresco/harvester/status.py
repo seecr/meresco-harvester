@@ -31,6 +31,7 @@ from os import listdir
 from lxml.etree import parse
 from xml.sax.saxutils import escape as escapeXml
 from re import compile
+from itertools import ifilter
 
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
@@ -81,26 +82,26 @@ class Status(object):
 
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}
-        for line in open(join(self._logPath, domainId, "%s.events" % repositoryId)):
-            stateLine = line.strip().split('\t')
-            if len(stateLine) != 4:
-                continue
-            date, event, id, comments = stateLine
-            date = date[1:-1]
-            if event == 'SUCCES':
-                _succes(parseState, date, comments)
-            elif event == 'ERROR':
-                _error(parseState, date, comments)
+        eventsfile = join(self._logPath, domainId, "%s.events" % repositoryId)
+        if isfile(eventsfile):
+            for line in open(eventsfile):
+                stateLine = line.strip().split('\t')
+                if len(stateLine) != 4:
+                    continue
+                date, event, id, comments = stateLine
+                date = date[1:-1]
+                if event == 'SUCCES':
+                    _succes(parseState, date, comments)
+                elif event == 'ERROR':
+                    _error(parseState, date, comments)
         recenterrors = parseState["errors"][-10:]
         recenterrors.reverse()
-        return dict(
-                lastHarvestDate=parseState.get("lastHarvestDate"),
-                harvested=parseState.get("harvested"),
-                uploaded=parseState.get("uploaded"),
-                deleted=parseState.get("deleted"),
-                total=parseState.get("total"),
-                totalerrors=len(parseState["errors"]),
-                recenterrors=recenterrors)
+        stats = {}
+        for k,v in ifilter(lambda (k,v): k != 'errors', parseState.items()):
+            stats[k] = v
+        stats["totalerrors"] = len(parseState["errors"])
+        stats["recenterrors"] = recenterrors
+        return stats
 
 def _succes(parseState, date, comments):
     parseState["lastHarvestDate"] = _reformatDate(date)

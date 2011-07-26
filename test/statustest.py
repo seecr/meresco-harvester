@@ -59,11 +59,25 @@ class StatusTest(CQ2TestCase):
     def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="repoId1">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
                 <ignored>2</ignored>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "repoId1"))))
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="anotherRepoId">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
                 <ignored>0</ignored>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "anotherRepoId"))))
@@ -71,9 +85,23 @@ class StatusTest(CQ2TestCase):
     def testGetStatusForDomainId(self):
         self.assertEqualsWS("""<GetStatus>
             <status repositoryId="repoId1">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
                 <ignored>2</ignored>
             </status>
             <status repositoryId="repoId2">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
                 <ignored>1</ignored>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, None))))
@@ -109,11 +137,11 @@ class StatusTest(CQ2TestCase):
         logLine = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'Sorry, but the VM has crashed.'])
         open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
-        self.assertEquals(None, state["lastHarvestDate"])
-        self.assertEquals(None, state["harvested"])
-        self.assertEquals(None, state["uploaded"])
-        self.assertEquals(None, state["deleted"])
-        self.assertEquals(None, state["total"])
+        self.assertTrue("lastHarvestDate" not in state, state.keys())
+        self.assertTrue("harvested" not in state, state.keys())
+        self.assertTrue("uploaded" not in state, state.keys())
+        self.assertTrue("deleted" not in state, state.keys())
+        self.assertTrue("total" not in state, state.keys())
         self.assertEquals(1, state["totalerrors"])
         self.assertEquals([('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
 
@@ -122,11 +150,6 @@ class StatusTest(CQ2TestCase):
         logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
         open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
-        self.assertEquals(None, state["lastHarvestDate"])
-        self.assertEquals(None, state["harvested"])
-        self.assertEquals(None, state["uploaded"])
-        self.assertEquals(None, state["deleted"])
-        self.assertEquals(None, state["total"])
         self.assertEquals(2, state["totalerrors"])
         self.assertEquals([('2006-03-11T12:14:14Z', 'java.lang.NullPointerException.'), ('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
 
@@ -162,11 +185,6 @@ class StatusTest(CQ2TestCase):
                 logLine = '\t'.join(['[2006-03-11 12:%.2d:14]' % i, 'ERROR', 'repoId1', 'Error %d, Crash' % i])
                 f.write(logLine + "\n")
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
-        self.assertEquals(None, state["lastHarvestDate"])
-        self.assertEquals(None, state["harvested"])
-        self.assertEquals(None, state["uploaded"])
-        self.assertEquals(None, state["deleted"])
-        self.assertEquals(None, state["total"])
         self.assertEquals(20, state["totalerrors"])
         self.assertEquals(10, len(state["recenterrors"]))
         self.assertEquals([('2006-03-11T12:19:14Z', 'Error 19, Crash'), ('2006-03-11T12:18:14Z', 'Error 18, Crash'), ('2006-03-11T12:17:14Z', 'Error 17, Crash'), ('2006-03-11T12:16:14Z', 'Error 16, Crash'), ('2006-03-11T12:15:14Z', 'Error 15, Crash'), ('2006-03-11T12:14:14Z', 'Error 14, Crash'), ('2006-03-11T12:13:14Z', 'Error 13, Crash'), ('2006-03-11T12:12:14Z', 'Error 12, Crash'), ('2006-03-11T12:11:14Z', 'Error 11, Crash'), ('2006-03-11T12:10:14Z', 'Error 10, Crash')], state["recenterrors"])
