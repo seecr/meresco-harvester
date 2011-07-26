@@ -42,12 +42,13 @@ from __version__ import VERSION_STRING
 
 from saharaget import SaharaGet
 from status import Status
+from harvesterdata import HarvesterData
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 staticHtmlPath = join(myPath, 'controlpanel', 'html')
 
-def dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath):
+def dna(reactor, observableHttpServer, saharaUrl, dataPath, logPath, statePath):
     return \
         (Observable(),
             (observableHttpServer,
@@ -66,7 +67,9 @@ def dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath):
                             indexPage="/index.html",
                             ),
                             (SaharaGet(saharaurl=saharaUrl),),
-                            (Status(logPath, statePath),)
+                            (Status(logPath, statePath),
+                                (HarvesterData(dataPath),)    
+                            )
                         )
                     )
                 )
@@ -85,7 +88,7 @@ def startServer(configFile):
     reactor = Reactor()
     observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
-    server = be(dna(reactor, observableHttpServer, config, saharaUrl, logPath, statePath))
+    server = be(dna(reactor, observableHttpServer, saharaUrl, dataPath, logPath, statePath))
     server.once.observer_init()
 
     print "Ready to rumble at", portNumber

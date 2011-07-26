@@ -30,6 +30,7 @@
 
 def main(arguments, **kwargs):
     domainId = arguments.get('domainId', [None])[0]
+    repositoryGroupId = arguments.get('repositoryGroupId', [None])[0]
     repositoryId = arguments.get('repositoryId', [None])[0]
 
     yield """<?xml version="1.0" encoding="UTF-8"?>
@@ -39,7 +40,8 @@ def main(arguments, **kwargs):
     <verb>GetStatus</verb>
     <domainId>%(domainId)s</domainId>
     <repositoryId>%(repositoryId)s</repositoryId>
+    <repositoryGroupId>%(repositoryGroupId)s</repositoryGroupId>
   </request>""" % locals()
-    yield any.getStatus(domainId, repositoryId)
+    yield any.getStatus(domainId=domainId, repositoryGroupId=repositoryGroupId, repositoryId=repositoryId)
     yield """</saharaget>"""
 

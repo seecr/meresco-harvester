@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<repository>
+  <id>repository2</id>
+  <repositoryGroupId>Group2</repositoryGroupId>
+  <use>true</use>
+  <complete></complete>
+  <action></action>
+  <baseurl>http://localhost:${helperServerPortNumber}/oai</baseurl>
+  <set></set>
+  <collection>Integration</collection>
+  <targetId>SRUUPDATE</targetId>
+  <metadataPrefix>oai_dc</metadataPrefix>
+  <mappingId>MAPPING</mappingId>
+  <maximumIgnore>5</maximumIgnore>
+</repository>

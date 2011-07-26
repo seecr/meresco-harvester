@@ -32,23 +32,29 @@ from lxml.etree import parse
 from xml.sax.saxutils import escape as escapeXml
 from re import compile
 from itertools import ifilter
+from meresco.core import Observable
 
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
-class Status(object):
+class Status(Observable):
 
-    def __init__(self, logPath, statePath):
+    def __init__(self, logPath, statePath, name=None):
+        Observable.__init__(self, name)
         self._logPath = logPath
         self._statePath = statePath
 
-    def getStatus(self, domainId, repositoryIds):
+    def getStatus(self, domainId, repositoryGroupId=None, repositoryId=None):
         ignoredDir = join(self._logPath, domainId, "ignored")
-        repositoryIds = [repositoryIds] if repositoryIds else []
-        if not repositoryIds and isdir(ignoredDir):
-            repositoryIds = listdir(ignoredDir)
         yield "<GetStatus>"
-        for repoId in repositoryIds:
-            yield self._getRepositoryStatus(domainId, repoId)
+        if repositoryId:
+            groupId = self.any.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
+            yield self._getRepositoryStatus(domainId, groupId, repositoryId)
+        else:
+            groupIds = [repositoryGroupId] if repositoryGroupId else self.any.getRepositoryGroupIds(domainId=domainId)
+            for groupId in groupIds:
+                repositoryIds = self.any.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
+                for repoId in repositoryIds:
+                    yield self._getRepositoryStatus(domainId, groupId, repoId)
         yield "</GetStatus>"
 
     def ignoredRecords(self, domainId, repositoryId):
@@ -60,9 +66,9 @@ class Status(object):
     def getIgnoredRecord(self, domainId, repositoryId, recordId):
         return parse(open(join(self._logPath, domainId, "ignored", repositoryId, recordId)))
 
-    def _getRepositoryStatus(self, domainId, repoId):
+    def _getRepositoryStatus(self, domainId, groupId, repoId):
         stats = self._parseEventsFile(domainId, repoId)
-        yield '<status repositoryId="%s">' % repoId
+        yield '<status repositoryId="%s" repositoryGroupId="%s">' % (repoId, groupId)
         yield '<lastHarvestDate>%s</lastHarvestDate>' % stats.get('lastHarvestDate', '')
         yield '<harvested>%s</harvested>' % stats.get('harvested', '')
         yield '<uploaded>%s</uploaded>' % stats.get('uploaded', '')

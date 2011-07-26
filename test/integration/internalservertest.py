@@ -60,12 +60,28 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals("Repository integrationtest - Record oai:record:02", result.xpath("//h3/text()")[0])
         self.assertEquals("/page/ignored/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
-    def testGetStatus(self):
+    def testGetStatusForDomainAndRepositoryId(self):
         self.controlHelper(action='ignoreAll')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("GetStatus", xpath(result, "/s:saharaget/s:request/s:verb/text()")[0])
         self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
         self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])
+        self.assertEquals("IntegrationTest", xpath(result, "/s:saharaget/s:GetStatus/s:status/@repositoryGroupId")[0])
         self.assertEquals("5", xpath(result, "/s:saharaget/s:GetStatus/s:status[@repositoryId='integrationtest']/s:ignored/text()")[0])
         
+    def testGetStatusForDomain(self):
+        self.controlHelper(action='ignoreAll')
+        self.startHarvester(repository=REPOSITORY)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain'}, parse='lxml')
+        self.assertEquals(2, len(xpath(result, "/s:saharaget/s:GetStatus/s:status")))
+        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
+
+    def testGetStatusForDomainAndRepositoryGroup(self):
+        self.controlHelper(action='ignoreAll')
+        self.startHarvester(repository=REPOSITORY)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
+        self.assertEquals(1, len(xpath(result, "/s:saharaget/s:GetStatus/s:status")))
+        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
+        self.assertEquals("IntegrationTest", xpath(result, "/s:saharaget/s:request/s:repositoryGroupId/text()")[0])
+

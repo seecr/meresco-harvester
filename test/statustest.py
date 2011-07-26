@@ -30,7 +30,7 @@ from __future__ import with_statement
 from os import makedirs
 from os.path import join
 
-from cq2utils import CQ2TestCase
+from cq2utils import CQ2TestCase, CallTrace
 
 from meresco.harvester.status import Status
 from weightless.core import compose
@@ -55,10 +55,21 @@ class StatusTest(CQ2TestCase):
         open(join(self.stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
         open(join(self.stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
         self.status = Status(self.logDir, self.stateDir)
+        observer = CallTrace("HarvesterData")
+        observer.returnValues["getRepositoryGroupIds"] = ["repoGroupId1", "repoGroupId2"]
+        def getRepositoryIds(domainId, repositoryGroupId):
+            if repositoryGroupId == "repoGroupId1":
+                return ["repoId1", "repoId2"]
+            return ["repoId3", "anotherRepoId"]
+        observer.methods["getRepositoryIds"] = getRepositoryIds
+        def getRepositoryGroupId(domainId, repositoryId):
+            return 'repoGroupId1' if repositoryId in ['repoId1', 'repoId2'] else 'repoGroupId2'
+        observer.methods["getRepositoryGroupId"] = getRepositoryGroupId
+        self.status.addObserver(observer)
 
     def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId1">
+            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -68,9 +79,9 @@ class StatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
             </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "repoId1"))))
+        </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))))
         self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="anotherRepoId">
+            <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -80,11 +91,11 @@ class StatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
             </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, "anotherRepoId"))))
+        </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))))
 
-    def testGetStatusForDomainId(self):
+    def testGetStatusForDomainIdAndRepositoryGroupId(self):
         self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId1">
+            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -94,7 +105,7 @@ class StatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
             </status>
-            <status repositoryId="repoId2">
+            <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -104,7 +115,51 @@ class StatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <ignored>1</ignored>
             </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, None))))
+            </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryGroupId="repoGroupId1"))))
+
+    def testGetStatusForDomainId(self):
+        self.assertEqualsWS("""<GetStatus>
+            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
+                <ignored>2</ignored>
+            </status>
+            <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
+                <ignored>1</ignored>
+            </status>
+            <status repositoryId="repoId3" repositoryGroupId="repoGroupId2">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
+                <ignored>0</ignored>
+            </status>
+            <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
+                <lastHarvestDate></lastHarvestDate>
+                <harvested></harvested>
+                <uploaded></uploaded>
+                <deleted></deleted>
+                <total></total>
+                <totalerrors>0</totalerrors>
+                <recenterrors></recenterrors>
+                <ignored>0</ignored>
+            </status>
+        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId))))
 
     def testGetAllIgnoredRecords(self):
         def ignoredRecords(repoId):
@@ -201,7 +256,7 @@ class StatusTest(CQ2TestCase):
 [2005-08-24 20:00:00.456]\tERROR\t[repositoryId]\tError With Scary Characters < & > " '
 """)
         self.assertEqualsWS("""<GetStatus>
-<status repositoryId="repoId1">
+<status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
   <lastHarvestDate>2005-08-24T00:00:00Z</lastHarvestDate>
   <harvested>8</harvested>
   <uploaded>4</uploaded>
@@ -213,4 +268,4 @@ class StatusTest(CQ2TestCase):
   </recenterrors>
   <ignored>2</ignored>
 </status>
-</GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId, 'repoId1'))))
+</GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))))
