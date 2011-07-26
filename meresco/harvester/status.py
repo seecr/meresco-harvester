@@ -80,6 +80,7 @@ class Status(Observable):
             yield '<error date="%s">%s</error>' % (error[0], escapeXml(error[1])) 
         yield '</recenterrors>'
         yield '<ignored>%s</ignored>' % self._ignoredCount(domainId, repoId)
+        yield '<lastHarvestAttempt>%s</lastHarvestAttempt>' % stats.get('lastHarvestAttempt', '')
         yield '</status>'
 
     def _ignoredCount(self, domainId, repositoryId):
@@ -111,6 +112,7 @@ class Status(Observable):
 
 def _succes(parseState, date, comments):
     parseState["lastHarvestDate"] = _reformatDate(date)
+    parseState["lastHarvestAttempt"] = _reformatDate(date)
     parseState["errors"] = []
     match = NUMBERS_RE.match(comments)
     if match:
@@ -118,6 +120,7 @@ def _succes(parseState, date, comments):
 
 def _error(parseState, date, comments):
     parseState["errors"].append((_reformatDate(date), comments))
+    parseState["lastHarvestAttempt"] = _reformatDate(date)
 
 def _reformatDate(aDate):
     return aDate[0:len('YYYY-MM-DD')] + 'T' + aDate[len('YYYY-MM-DD '):len('YYYY-MM-DD HH:MM:SS')] + 'Z'

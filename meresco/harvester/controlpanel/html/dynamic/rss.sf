@@ -1,0 +1,77 @@
+## begin license ##
+#
+#    "Wetenschappelijke Etalage" is a service layer for scientific metadata.
+#    Copyright (C) 2010-2011 Maastricht University Library
+#        http://www.maastrichtuniversity.nl/web/Library/home.htm
+#    Copyright (C) 2010-2011 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+#    This file is part of "Wetenschappelijke Etalage"
+#
+#    "Wetenschappelijke Etalage" is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    "Wetenschappelijke Etalage" is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with "Wetenschappelijke Etalage"; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
+
+def main(path, arguments, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
+    repositoryGroupId = arguments.get('repositoryGroupId', [None])[0]
+    repositoryId = arguments.get('repositoryId', [None])[0]
+
+    linkToStatusPage = "%s?%s" % (config["harvesterStatusURL"], escapeXml(urlencode(dict(domainId=domainId, repositoryId=repositoryId))))
+    statusLxml = XML(''.join(compose(any.getStatus(domainId=domainId, repositoryGroupId=repositoryGroupId, repositoryId=repositoryId))))
+
+    yield "HTTP/1.0 200 OK\r\n"
+    yield "Content-Type: application/rss+xml\r\n"
+    yield "\r\n"
+    yield '<?xml version="1.0" encoding="UTF-8"?>\r\n'
+    yield """<rss version="2.0"><channel>"""
+    yield '<title>Harvester status voor %s</title>' % repositoryId
+    yield '<description>Recente repository harvest status voor %s in %s</description>' % (repositoryId, domainId)
+    yield '<link>%s</link>' % linkToStatusPage
+    yield '<ttl>360</ttl>'
+
+    state = {
+        'lastHarvestDate': ''.join(statusLxml.xpath("/GetStatus/status/lastHarvestDate/text()")),
+        'total': ''.join(statusLxml.xpath("/GetStatus/status/total/text()")),
+        'harvested': ''.join(statusLxml.xpath("/GetStatus/status/harvested/text()")),
+        'uploaded': ''.join(statusLxml.xpath("/GetStatus/status/uploaded/text()")),
+        'deleted': ''.join(statusLxml.xpath("/GetStatus/status/deleted/text()")),
+        'ignored': ''.join(statusLxml.xpath("/GetStatus/status/ignored/text()")),
+        'totalerrors': ''.join(statusLxml.xpath("/GetStatus/status/totalerrors/text()")),
+    }
+    lastHarvestAttempt = statusLxml.xpath("/GetStatus/status/lastHarvestAttempt/text()")
+    if len(lastHarvestAttempt) == 1:
+        yield RSS_TEMPLATE % {
+            "title": 'Harvester status voor %s' % repositoryId,
+            "description": """Last harvest date: %(lastHarvestDate)s&lt;br/&gt;
+    Total records: %(total)s&lt;br/&gt;
+    Harvested records: %(harvested)s&lt;br/&gt;
+    Uploaded records: %(uploaded)s&lt;br/&gt;
+    Deleted records: %(deleted)s&lt;br/&gt;
+    Validation errors: %(ignored)s&lt;br/&gt;
+    Errors: %(totalerrors)s""" % state,
+            "link": linkToStatusPage,
+            "guid": lastHarvestAttempt[0],
+        }
+
+    yield "</channel>"
+    yield "</rss>"
+
+RSS_TEMPLATE = """<item>
+    <title>%(title)s</title>
+    <description>%(description)s</description>
+    <link>%(link)s</link>
+    <guid>%(guid)s</guid>
+</item>\n"""
+

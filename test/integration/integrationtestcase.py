@@ -135,6 +135,7 @@ class IntegrationState(object):
         setConfig(config, 'dataPath', join(self.integrationTempdir, 'data'))
         setConfig(config, 'statePath', self.harvesterStateDir)
         setConfig(config, 'logPath', self.harvesterLogDir)
+        setConfig(config, 'harvesterStatusURL', "http://localhost:9999/harvesterStatus.page")
 
         self._writeConfig(config, 'harvester')
 

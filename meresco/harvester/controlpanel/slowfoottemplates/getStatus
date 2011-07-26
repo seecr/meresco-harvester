@@ -27,14 +27,4 @@ else:
 queryArgs = urlencode(dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId))
 statusUrl = url('%s/getStatus?%s' % (req.get_options()['internalServer'], queryArgs))
 req.write(statusUrl.read())
-
-#  if not repositoryId and repositoryGroupId:
-#    allGroupIds = [ repositoryGroupId ]
-#  else:
-#    allGroupIds = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
-#  for groupId in allGroupIds:
-#    repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
-##    for repId in repositories:
-#      if not repositoryId or repositoryId == repId:
-#        pass #writeStatus(repId, groupId)
 %>

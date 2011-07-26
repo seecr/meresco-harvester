@@ -85,3 +85,28 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/s:saharaget/s:request/s:repositoryGroupId/text()")[0])
 
+    def testRssForHarvesterStatus(self):
+        self.controlHelper(action="ignoreNothing")
+        self.startHarvester(repository=REPOSITORY)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals("Harvester status voor integrationtest", xpath(result, "/rss/channel/title/text()")[0])
+        self.assertEquals("Recente repository harvest status voor integrationtest in adomain", xpath(result, "/rss/channel/description/text()")[0])
+        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/link/text()")[0])
+        self.assertEquals(str(60 * 6), xpath(result, "/rss/channel/ttl/text()")[0])
+
+        self.assertEquals("Harvester status voor integrationtest", xpath(result, "/rss/channel/item[1]/title/text()")[0])
+        description = xpath(result, "/rss/channel/item[1]/description/text()")[0]
+        self.assertTrue("Last harvest date: " in description, description)
+        self.assertTrue("Total records: 8" in description, description)
+        self.assertTrue("Harvested records: 10" in description, description)
+        self.assertTrue("Uploaded records: 8" in description, description)
+        self.assertTrue("Deleted records: 2" in description, description)
+        self.assertTrue("Validation errors: 0" in description, description)
+        self.assertTrue("Errors: 0" in description, description)
+        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/item[1]/link/text()")[0])
+
+    def testRssForNeverHarvestedRepository(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'repository2'}, parse='lxml')
+        self.assertEquals("Harvester status voor repository2", xpath(result, "/rss/channel/title/text()")[0])
+        self.assertEquals(0, len(xpath(result, "/rss/channel/item")))
+

@@ -33,6 +33,7 @@ from sys import stdout
 
 import time
 from weightless.io import Reactor
+from weightless.core import compose
 from dynamichtml import DynamicHtml
 
 from meresco.components import readConfig
@@ -44,11 +45,14 @@ from saharaget import SaharaGet
 from status import Status
 from harvesterdata import HarvesterData
 
+from xml.sax.saxutils import escape as escapeXml
+from lxml.etree import XML
+
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 staticHtmlPath = join(myPath, 'controlpanel', 'html')
 
-def dna(reactor, observableHttpServer, saharaUrl, dataPath, logPath, statePath):
+def dna(reactor, observableHttpServer, config):
     return \
         (Observable(),
             (observableHttpServer,
@@ -63,12 +67,18 @@ def dna(reactor, observableHttpServer, saharaUrl, dataPath, logPath, statePath):
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
-                            additionalGlobals = {'time': time},
+                            additionalGlobals = {
+                                'time': time,
+                                'config': config,
+                                'escapeXml': escapeXml,
+                                'compose': compose,
+                                'XML': XML,
+                            },
                             indexPage="/index.html",
                             ),
-                            (SaharaGet(saharaurl=saharaUrl),),
-                            (Status(logPath, statePath),
-                                (HarvesterData(dataPath),)    
+                            (SaharaGet(saharaurl=config["saharaUrl"]),),
+                            (Status(config["logPath"], config["statePath"]),
+                                (HarvesterData(config["dataPath"]),)    
                             )
                         )
                     )
@@ -88,7 +98,7 @@ def startServer(configFile):
     reactor = Reactor()
     observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
-    server = be(dna(reactor, observableHttpServer, saharaUrl, dataPath, logPath, statePath))
+    server = be(dna(reactor, observableHttpServer, config))
     server.once.observer_init()
 
     print "Ready to rumble at", portNumber

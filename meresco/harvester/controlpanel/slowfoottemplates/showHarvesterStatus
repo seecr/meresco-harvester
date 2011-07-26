@@ -23,6 +23,7 @@ for status in asxml(statusUrl).saharaget.GetStatus.status:
 <td>Harvested<br/>Uploaded<br/>Deleted</td>
 <td>#Validation<br/>Errors</td>
 <td>#Errors</td>
+<td>RSS</td>
 </tr>
 <%
 for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),str(s.repositoryId))):
@@ -40,8 +41,8 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
 <td class="link">
 <% 
   nrOfValidationErrors = int(ignored[status.repositoryId].ignored) if status.repositoryId in ignored else 0
+  args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
   if nrOfValidationErrors > 0:
-    args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
 %>
     <a href="/page/ignored/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
 <%
@@ -56,6 +57,9 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
 <% 
   #
 %>
+</td>
+<td class="link">
+<a href="/rss?<%= args %>"><img src="/images/rss.png"/></a>
 </td>
 </tr>
 <%

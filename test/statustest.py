@@ -78,6 +78,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))))
         self.assertEqualsWS("""<GetStatus>
@@ -90,6 +91,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))))
 
@@ -104,6 +106,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
@@ -114,6 +117,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>1</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryGroupId="repoGroupId1"))))
 
@@ -128,6 +132,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
@@ -138,6 +143,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>1</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId3" repositoryGroupId="repoGroupId2">
                 <lastHarvestDate></lastHarvestDate>
@@ -148,6 +154,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
                 <lastHarvestDate></lastHarvestDate>
@@ -158,6 +165,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId))))
 
@@ -198,6 +206,7 @@ class StatusTest(CQ2TestCase):
         self.assertTrue("deleted" not in state, state.keys())
         self.assertTrue("total" not in state, state.keys())
         self.assertEquals(1, state["totalerrors"])
+        self.assertEquals("2006-03-11T12:13:14Z", state["lastHarvestAttempt"])
         self.assertEquals([('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
 
     def testTwoErrors(self):
@@ -206,6 +215,7 @@ class StatusTest(CQ2TestCase):
         open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertEquals(2, state["totalerrors"])
+        self.assertEquals("2006-03-11T12:14:14Z", state["lastHarvestAttempt"])
         self.assertEquals([('2006-03-11T12:14:14Z', 'java.lang.NullPointerException.'), ('2006-03-11T12:13:14Z','Sorry, but the VM has crashed.')], state["recenterrors"])
 
     def testErrorAfterSucces(self):
@@ -219,6 +229,7 @@ class StatusTest(CQ2TestCase):
         self.assertEquals("1", state["deleted"])
         self.assertEquals("1542", state["total"])
         self.assertEquals(1, state["totalerrors"])
+        self.assertEquals("2006-03-11T12:14:14Z", state["lastHarvestAttempt"])
         self.assertEquals([('2006-03-11T12:14:14Z', 'java.lang.NullPointerException.')], state["recenterrors"])
 
     def testErrorBeforeSucces(self):
@@ -233,6 +244,7 @@ class StatusTest(CQ2TestCase):
         self.assertEquals("1542", state["total"])
         self.assertEquals(0, state["totalerrors"])
         self.assertEquals([], state["recenterrors"])
+        self.assertEquals("2006-03-11T12:14:14Z", state["lastHarvestAttempt"])
 
     def testLotOfErrors(self):
         with open(join(self.logDir, self.domainId, 'repoId1.events'), 'w') as f:
@@ -267,5 +279,6 @@ class StatusTest(CQ2TestCase):
     <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
   </recenterrors>
   <ignored>2</ignored>
+  <lastHarvestAttempt>2005-08-24T20:00:00Z</lastHarvestAttempt>
 </status>
 </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))))
