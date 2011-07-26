@@ -53,6 +53,7 @@ from disallowfileplugintest import DisallowFilePluginTest
 from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
+from harvesterdatatest import HarvesterDataTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest
