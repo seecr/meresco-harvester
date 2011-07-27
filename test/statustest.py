@@ -34,7 +34,8 @@ from cq2utils import CQ2TestCase, CallTrace
 
 from meresco.harvester.status import Status
 from weightless.core import compose
-from lxml.etree import tostring
+from lxml.etree import tostring, parse
+from StringIO import StringIO
 
 class StatusTest(CQ2TestCase):
 
@@ -78,6 +79,10 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <recentignores>
+                    <ignoredId>ignoredId2</ignoredId>
+                    <ignoredId>ignoredId1</ignoredId>
+                </recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))))
@@ -91,6 +96,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <recentignores></recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))))
@@ -106,6 +112,10 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <recentignores>
+                    <ignoredId>ignoredId2</ignoredId>
+                    <ignoredId>ignoredId1</ignoredId>
+                </recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
@@ -117,6 +127,9 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>1</ignored>
+                <recentignores>
+                    <ignoredId>ignoredId3</ignoredId>
+                </recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryGroupId="repoGroupId1"))))
@@ -132,6 +145,10 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>2</ignored>
+                <recentignores>
+                    <ignoredId>ignoredId2</ignoredId>
+                    <ignoredId>ignoredId1</ignoredId>
+                </recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
@@ -143,6 +160,9 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>1</ignored>
+                <recentignores>
+                    <ignoredId>ignoredId3</ignoredId>
+                </recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId3" repositoryGroupId="repoGroupId2">
@@ -154,6 +174,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <recentignores></recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
@@ -165,6 +186,7 @@ class StatusTest(CQ2TestCase):
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
                 <ignored>0</ignored>
+                <recentignores></recentignores>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId))))
@@ -183,6 +205,14 @@ class StatusTest(CQ2TestCase):
         self.assertEquals("<diagnostic>ERROR1</diagnostic>", getIgnoredRecord("repoId1", "ignoredId1")) 
         self.assertEquals("<diagnostic>ERROR2</diagnostic>", getIgnoredRecord("repoId1", "ignoredId2")) 
         self.assertEquals("<diagnostic>ERROR3</diagnostic>", getIgnoredRecord("repoId2", "ignoredId3")) 
+
+    def testLotOfIgnoresGivesOnly10(self):
+        with open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w') as f:
+            for i in range(20):
+                f.write("ignoredId%d\n" % i)
+        lxmlResult = parse(StringIO(''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))))
+        self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/ignored/text()")[0])
+        self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentignores/ignoredId")))
 
     def testSucces(self):
         logLine = '\t'.join(['[2006-03-13 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: None'])
@@ -279,6 +309,10 @@ class StatusTest(CQ2TestCase):
     <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
   </recenterrors>
   <ignored>2</ignored>
+  <recentignores>
+    <ignoredId>ignoredId2</ignoredId>
+    <ignoredId>ignoredId1</ignoredId>
+  </recentignores>
   <lastHarvestAttempt>2005-08-24T20:00:00Z</lastHarvestAttempt>
 </status>
 </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))))
