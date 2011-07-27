@@ -3,7 +3,8 @@
 </p>
 <%
 domainId = args.domainId
-args = urlencode(dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId))
+originalArgs = dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId)
+args = urlencode(originalArgs)
 theUrl = url('/getStatus?%s' % args)
 
 statuses = asxml(theUrl).saharaget.GetStatus.status
@@ -99,6 +100,40 @@ for status in statuses:
     <td class="alt"><%= error.date %></td>
     <td class="alt"><% escape_html(error.split('|')[-1]) %></td>
   </tr>
+<%
+#
+%>
+</table>
+
+<p>
+<h3>Validatie Errors.</h3>
+</p>
+<table class="event">
+<%
+for status in statuses:
+  repositoryId = status.repositoryId
+  ignorednr = int(str(status.ignored))
+  if ignorednr:
+    #
+%>
+<tr class="eventinfo">
+<td><a name="<%= repositoryId %>" href="#top_<%= repositoryId %>"><%= repositoryId %></a></td>
+</tr>
+<tr>
+<td>Nr. of validation errors: <strong><%= ignorednr %></strong></td>
+</tr>
+<%
+    if hasattr(status.recentignores, 'ignoredId'):
+      for ignoredId in status.recentignores.ignoredId:
+        recordId = ignoredId.split(":", 1)[-1]
+        newArgs = {'recordId': recordId, 'repositoryId': repositoryId, 'domainId': domainId}
+        #
+%>
+        <tr>
+          <td class="link">
+            <a href="/page/ignoredRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a>
+          </td>
+        </tr>
 <%
 #
 %>
