@@ -42,7 +42,7 @@ from meresco.components.http.utils import ContentTypePlainText
 from __version__ import VERSION_STRING
 
 from saharaget import SaharaGet
-from status import Status
+from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
 
 from xml.sax.saxutils import escape as escapeXml
@@ -77,7 +77,7 @@ def dna(reactor, observableHttpServer, config):
                             indexPage="/index.html",
                             ),
                             (SaharaGet(saharaurl=config["saharaUrl"]),),
-                            (Status(config["logPath"], config["statePath"]),
+                            (RepositoryStatus(config["logPath"], config["statePath"]),
                                 (HarvesterData(config["dataPath"]),)    
                             )
                         )

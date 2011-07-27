@@ -65,7 +65,7 @@ from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest
 from sruupdateuploadertest import SruUpdateUploaderTest
 from statetest import StateTest
-from statustest import StatusTest
+from repositorystatustest import RepositoryStatusTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest

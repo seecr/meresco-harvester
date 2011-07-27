@@ -32,12 +32,12 @@ from os.path import join
 
 from cq2utils import CQ2TestCase, CallTrace
 
-from meresco.harvester.status import Status
+from meresco.harvester.repositorystatus import RepositoryStatus
 from weightless.core import compose
 from lxml.etree import tostring, parse
 from StringIO import StringIO
 
-class StatusTest(CQ2TestCase):
+class RepositoryStatusTest(CQ2TestCase):
 
     def setUp(self):
         CQ2TestCase.setUp(self)
@@ -55,7 +55,7 @@ class StatusTest(CQ2TestCase):
         open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
         open(join(self.stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
         open(join(self.stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
-        self.status = Status(self.logDir, self.stateDir)
+        self.status = RepositoryStatus(self.logDir, self.stateDir)
         observer = CallTrace("HarvesterData")
         observer.returnValues["getRepositoryGroupIds"] = ["repoGroupId1", "repoGroupId2"]
         def getRepositoryIds(domainId, repositoryGroupId):

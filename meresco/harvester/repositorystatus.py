@@ -36,7 +36,7 @@ from meresco.core import Observable
 
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
-class Status(Observable):
+class RepositoryStatus(Observable):
 
     def __init__(self, logPath, statePath, name=None):
         Observable.__init__(self, name)
