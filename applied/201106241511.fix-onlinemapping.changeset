@@ -1,0 +1,279 @@
+Changeset created on Fri Jun 24 15:11:13 CEST 2011 by Seek You Too
+
+Description: Fixes "test" mapping in the WCP
+
+    Fixed a bugs in the "test mapping" link in the Web Control Panel.
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/tags/version_7.1.1
+
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/controlpanel/merescoharvesterhandler.py version_7.1.2/meresco/harvester/controlpanel/merescoharvesterhandler.py
+--- version_7.1.1/meresco/harvester/controlpanel/merescoharvesterhandler.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/controlpanel/merescoharvesterhandler.py	2011-06-24 15:10:20.000000000 +0200
+@@ -11,9 +11,9 @@
+ # Copyright (C) 2007-2009, 2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+ # 
+-# 
+ # This file is part of "Meresco Harvester"
+ # 
+ # "Meresco Harvester" is free software; you can redistribute it and/or modify
+@@ -84,6 +84,7 @@
+             req.uri = '/internalServerError?' + urlencode({'originalUri': req.uri, 'error': e.code, 'message': str(e)})
+ 
+     req.get_options()['templatesPath'] = templatesPath
++    req.get_options().setdefault('localhostUrl', 'http://localhost')
+     req = Request(req, handlepsp, util, _psp_login, retrieveSession)
+     
+     req.addPlugin('PREOPEN', dfp)
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/domain.edit version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/domain.edit
+--- version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/domain.edit	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/domain.edit	2011-06-24 15:10:20.000000000 +0200
+@@ -189,7 +189,7 @@
+   #
+ %>
+     <td>
+-     <a href="/page/testmapping/<%=id%>.mapping?referrerDomain=<%=domain.id%>">
++     <a href="/page/testmapping/?mappingId=<%=id%>&referrerDomain=<%=domain.id%>">
+       <img src="/images/exec.png" border="0"> Test
+      </a>
+     </td>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/onlinemapping version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/onlinemapping
+--- version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/onlinemapping	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/onlinemapping	2011-06-24 15:10:20.000000000 +0200
+@@ -10,8 +10,8 @@
+ 
+ Gebruikte mapping:
+ <%
+-harvest = OnlineHarvest(req, saharaUrl=get_options()['localhostUrl'])
++harvest = OnlineHarvest(req, saharaUrl=req.get_options()['localhostUrl'])
+ 
+ xmlurl = str(f.inputurl)
+-harvest.performMapping(mappingId=args.mapping, urlString=xmlurl)
++harvest.performMapping(domainId=args.domainId, mappingId=args.mappingId, urlString=xmlurl)
+ %>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/testmapping version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/testmapping
+--- version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/testmapping	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/testmapping	2011-06-24 15:10:20.000000000 +0200
+@@ -6,7 +6,8 @@
+ <p>First by giving it a url which provides a OAI ListRecords answer. Something like: http://repository.example.org/oai?verb=ListRecords&metadataPrefix=oai_dc 
+ 
+ <form action="/onlinemapping" method="get">
+-<input type="hidden" name="mapping" value="<%=args.name%>">
++<input type="hidden" name="mappingId" value="<%=args.mappingId%>">
++<input type="hidden" name="domainId" value="<%=args.referrerDomain%>">
+ <table>
+ <tr><td>Test URL</td><td><input type="text" name="inputurl" value="" size="30"></td></tr>
+ <tr><td>&nbsp;</td><td><input type="submit" class="butt" value="TEST"></tr>
+@@ -15,7 +16,8 @@
+ </p>
+ <p>Secondly you can use one of the repositories known by Meresco Harvester.
+ <form action="/onlinemapping" method="get">
+-<input type="hidden" name="mapping" value="<%=args.name%>">
++<input type="hidden" name="mappingId" value="<%=args.mappingId%>">
++<input type="hidden" name="domainId" value="<%=args.referrerDomain%>">
+ <table>
+ <tr><td>Test Repository</td>
+ <td>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/testrepository version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/testrepository
+--- version_7.1.1/meresco/harvester/controlpanel/slowfoottemplates/testrepository	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/controlpanel/slowfoottemplates/testrepository	2011-06-24 15:10:20.000000000 +0200
+@@ -4,7 +4,7 @@
+ if repository.set: 
+   inputquery['set']=repository.set
+ inputurl = repository.baseurl + '?' + urlencode(inputquery)
+-mapping = repository.mappingId + '.mapping'
++domainId = args.name.split('.')[0]
+ 
+-redirect('/onlinemapping?' + urlencode({'mapping':mapping, 'inputurl':inputurl}))
+-%>
+\ No newline at end of file
++redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId':repository.mappingId, 'inputurl':inputurl}))
++%>
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/deleteids.py version_7.1.2/meresco/harvester/deleteids.py
+--- version_7.1.1/meresco/harvester/deleteids.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/deleteids.py	2011-06-24 15:10:20.000000000 +0200
+@@ -12,7 +12,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/filesystemuploader.py version_7.1.2/meresco/harvester/filesystemuploader.py
+--- version_7.1.1/meresco/harvester/filesystemuploader.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/filesystemuploader.py	2011-06-24 15:10:20.000000000 +0200
+@@ -13,7 +13,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/__init__.py version_7.1.2/meresco/harvester/__init__.py
+--- version_7.1.1/meresco/harvester/__init__.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/__init__.py	2011-06-24 15:10:20.000000000 +0200
+@@ -12,7 +12,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/mapping.py version_7.1.2/meresco/harvester/mapping.py
+--- version_7.1.1/meresco/harvester/mapping.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/mapping.py	2011-06-24 15:10:20.000000000 +0200
+@@ -12,7 +12,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/namespaces.py version_7.1.2/meresco/harvester/namespaces.py
+--- version_7.1.1/meresco/harvester/namespaces.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/namespaces.py	2011-06-24 15:10:20.000000000 +0200
+@@ -8,7 +8,6 @@
+ # 
+ # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/meresco/harvester/onlineharvest.py version_7.1.2/meresco/harvester/onlineharvest.py
+--- version_7.1.1/meresco/harvester/onlineharvest.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/meresco/harvester/onlineharvest.py	2011-06-24 15:10:20.000000000 +0200
+@@ -11,9 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+-# 
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -45,8 +44,8 @@
+         self._output = outputstream
+         self._saharaGet = SaharaGet(saharaUrl)
+ 
+-    def performMapping(self, mappingId, urlString):
+-        mapping = self._saharaGet.getMapping(mappingId)
++    def performMapping(self, domainId, mappingId, urlString):
++        mapping = self._saharaGet.getMapping(domainId, mappingId)
+         mapping.addObserver(StreamEventLogger(self._output))
+         self._output.write(mapping.mappingInfo())
+         self._output.write('\n')
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/README version_7.1.2/README
+--- version_7.1.1/README	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/README	2011-06-24 15:10:20.000000000 +0200
+@@ -92,11 +92,21 @@
+         sys.setdefaultencoding('utf-8')
+ 
+     The webcontrolpanel does not work if the encoding is different.
++    Please set the correct settings for Apache2.
+ 
++2.2.1 Debian Apache2 Envionrment
++--------------------------------
+     Please also add the following to the '/etc/apache2/envvars':
+     export LANG=en_US.UTF-8
+     export LC_ALL=en_US.UTF-8
+ 
++2.2.2 RedHat/Centos Apache2 Envionrment
++--------------------------------
++    Please change the HTTPD_LANG environment in /etc/sysconfig/httpd
++
++    HTTPD_LANG=en_US.UTF-8
++
++
+ 2.3 Webcontrolpanel Configuration
+ ---------------------------------
+     The webcontrolpanel consists of two http services working together. The
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/test/filesystemuploadtest.py version_7.1.2/test/filesystemuploadtest.py
+--- version_7.1.1/test/filesystemuploadtest.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/test/filesystemuploadtest.py	2011-06-24 15:10:20.000000000 +0200
+@@ -13,7 +13,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/test/mappingtest.py version_7.1.2/test/mappingtest.py
+--- version_7.1.1/test/mappingtest.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/test/mappingtest.py	2011-06-24 15:10:20.000000000 +0200
+@@ -12,7 +12,6 @@
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+ # 
+ # 
+ # This file is part of "Meresco Harvester"
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_7.1.1/test/onlineharvesttest.py version_7.1.2/test/onlineharvesttest.py
+--- version_7.1.1/test/onlineharvesttest.py	2011-06-22 22:51:23.000000000 +0200
++++ version_7.1.2/test/onlineharvesttest.py	2011-06-24 15:10:20.000000000 +0200
+@@ -11,9 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+ # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Stichting Kennisnet Ict http://www.kennisnet.nl
+-# 
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -55,14 +54,14 @@
+         mapping.code = DEFAULT_DC_CODE
+         data = 'file://%s/mocktud/00002.xml' % self._testpath
+         self.saharaGet.returnValues['getMapping'] = mapping
+-        self.harvest.performMapping(mapping, data)
++        self.harvest.performMapping('domainId', mapping, data)
+         self.assertEquals(3,self.output.getvalue().count('upload.id='))
+ 
+     def testMapping(self):
+         mapping = CallTrace('mapping')
+         self.saharaGet.returnValues['getMapping'] = mapping
+         data = 'file://%s/mocktud/00002.xml' % self._testpath
+-        self.harvest.performMapping(mapping, data)
++        self.harvest.performMapping('domainId', mapping, data)
+         self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
+         for createUploadMethod in mapping.calledMethods[2:]:
+             self.assertTrue(createUploadMethod.kwargs['doAsserts'])
+@@ -73,7 +72,7 @@
+         mapping.name = 'My Mapping'
+         data = 'file://%s/mocktud/00003.xml' % self._testpath
+         self.saharaGet.returnValues['getMapping'] = mapping
+-        self.harvest.performMapping(mapping, data)
++        self.harvest.performMapping('domainId', mapping, data)
+         self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
+ 
+     def testMappingRaisesDataMapAssertionException(self):
+@@ -87,7 +86,7 @@
+         mapping.methods['createUpload'] = createUpload
+         self.saharaGet.returnValues['getMapping'] = mapping
+         data = 'file://%s/mocktud/00002.xml' % self._testpath
+-        self.harvest.performMapping('mappingId', data)
++        self.harvest.performMapping('domainId', 'mappingId', data)
+         self.assertEquals(2,self.output.getvalue().count('upload.id='))
+ 
+     def testMappingRaisesException(self):
+@@ -96,7 +95,7 @@
+         mapping.exceptions['createUpload'] = Exception('Mushroom, mushroom')
+         data = 'file://%s/mocktud/00002.xml' % self._testpath
+         try:
+-            self.harvest.performMapping(mapping, data)
++            self.harvest.performMapping('domainId', mapping, data)
+             self.fail()
+         except Exception, ex:
+             self.assertEquals('Mushroom, mushroom', str(ex))
