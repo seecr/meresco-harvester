@@ -6,6 +6,7 @@ domainId = args.domainId
 originalArgs = dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId)
 args = urlencode(originalArgs)
 theUrl = url('/getStatus?%s' % args)
+loggedIn = bool(session.get('username', ''))
 
 statuses = asxml(theUrl).saharaget.GetStatus.status
 
@@ -34,8 +35,8 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
   style = errorsnr and 'style="font-weight:bold"' or ''
 %>
 <tr>
-<td <%=style%> class="link"><a href="/page/repositoryGroup.edit/<%=domainId%>.<%=status.repositoryGroupId%>.repositoryGroup"><% escape_html(status.repositoryGroupId) %></a></td>
-<td <%=style%> class="link"><a href="/page/repository.edit/<%=domainId%>.<%=status.repositoryId%>.repository?<%=urlencode(dict(referrerGroup=status.repositoryGroupId))%>""><% escape_html(status.repositoryId) %></a></td>
+<td <%=style%> class="link"><%='<a href="/page/repositoryGroup.edit/%s.%s.repositoryGroup">' % (domainId, status.repositoryGroupId) if loggedIn else ''%><% escape_html(status.repositoryGroupId) %><%='</a>' if loggedIn else ''%></td>
+<td <%=style%> class="link"><%='<a href="/page/repository.edit/%s.%s.repository?%s">' % (domainId, status.repositoryId, urlencode(dict(referrerGroup=status.repositoryGroupId))) if loggedIn else ''%><% escape_html(status.repositoryId) %><%='</a>' if loggedIn else ''%></td>
 <td <%=style%>><% escape_html(status.lastHarvestDate) %></td>
 <td><% escape_html(status.total) %></td>
 <td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
