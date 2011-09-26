@@ -55,14 +55,9 @@ if __name__ == '__main__':
     runner = TestRunner()
     runner.addGroup('default', [
             'integration.harvestertest.HarvesterTest',
-        ],
-        groupSetUp = lambda: globalSetUp(fastMode, 'default'),
-        groupTearDown = lambda: globalTearDown())
-
-    runner.addGroup('internal-server', [
             'integration.internalservertest.InternalServerTest',
         ],
-        groupSetUp = lambda: globalSetUp(fastMode, 'internal-server'),
+        groupSetUp = lambda: globalSetUp(fastMode, 'default'),
         groupTearDown = lambda: globalTearDown())
 
     testnames = argv[1:]

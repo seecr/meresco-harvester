@@ -34,9 +34,7 @@ from os import system
 from utils import getRequest
 from lxml.etree import tostring
 from integrationtestcase import IntegrationTestCase
-
-def xpath(node, xpath):
-    return node.xpath(xpath, namespaces={'s': 'http://sahara.cq2.org/xsd/saharaget.xsd'})
+from meresco.harvester.namespaces import xpath
 
 REPOSITORY = 'integrationtest'
 class InternalServerTest(IntegrationTestCase):
@@ -66,26 +64,26 @@ class InternalServerTest(IntegrationTestCase):
         self.controlHelper(action='ignoreAll')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals("GetStatus", xpath(result, "/s:saharaget/s:request/s:verb/text()")[0])
-        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
-        self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])
-        self.assertEquals("IntegrationTest", xpath(result, "/s:saharaget/s:GetStatus/s:status/@repositoryGroupId")[0])
-        self.assertEquals("5", xpath(result, "/s:saharaget/s:GetStatus/s:status[@repositoryId='integrationtest']/s:ignored/text()")[0])
+        self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
+        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
+        self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
+        self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:GetStatus/status:status/@repositoryGroupId")[0])
+        self.assertEquals("5", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:ignored/text()")[0])
         
     def testGetStatusForDomain(self):
         self.controlHelper(action='ignoreAll')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain'}, parse='lxml')
-        self.assertEquals(2, len(xpath(result, "/s:saharaget/s:GetStatus/s:status")))
-        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
+        self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
+        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
 
     def testGetStatusForDomainAndRepositoryGroup(self):
         self.controlHelper(action='ignoreAll')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
-        self.assertEquals(1, len(xpath(result, "/s:saharaget/s:GetStatus/s:status")))
-        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
-        self.assertEquals("IntegrationTest", xpath(result, "/s:saharaget/s:request/s:repositoryGroupId/text()")[0])
+        self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
+        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
+        self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
 
     def testRssForHarvesterStatus(self):
         self.controlHelper(action="ignoreNothing")
