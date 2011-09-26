@@ -35,7 +35,7 @@ from urllib import urlopen
 from time import time, sleep
 from subprocess import Popen
 from shutil import copytree
-from lxml.etree import parse
+from lxml.etree import parse, tostring
 
 from cq2utils import CQ2TestCase
 from utils import getRequest
@@ -64,6 +64,7 @@ class HarvesterTest(IntegrationTestCase):
         repo.use = 'true'
         repo.baseurl = 'http://localhost:%s/oai' % self.helperServerPortNumber
         repo.targetId = 'SRUUPDATE'
+        repo.repositoryGroupId = 'harvesterTestGroup'
         repo.mappingId = 'MAPPING'
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
@@ -116,6 +117,9 @@ class HarvesterTest(IntegrationTestCase):
         logLen = len(self.getLogs())
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
+
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
         r.save(self.repofilepath)
@@ -131,6 +135,9 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(18, self.sizeDumpDir())
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
+
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
 
     def testRefresh(self):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
