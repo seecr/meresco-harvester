@@ -50,6 +50,7 @@ from meresco.harvester.namespaces import xpath
 BATCHSIZE=10
 DOMAIN='adomain'
 REPOSITORY='harvestertest'
+REPOSITORYGROUP='harvesterTestGroup'
 
 class HarvesterTest(IntegrationTestCase):
     def setUp(self):
@@ -64,7 +65,7 @@ class HarvesterTest(IntegrationTestCase):
         repo.use = 'true'
         repo.baseurl = 'http://localhost:%s/oai' % self.helperServerPortNumber
         repo.targetId = 'SRUUPDATE'
-        repo.repositoryGroupId = 'harvesterTestGroup'
+        repo.repositoryGroupId = REPOSITORYGROUP
         repo.mappingId = 'MAPPING'
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
@@ -223,7 +224,7 @@ class HarvesterTest(IntegrationTestCase):
 
         self.startHarvester(repository=REPOSITORY)
 
-        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORY))))
+        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
         self.assertEquals(['%s:oai:record:%02d' % (REPOSITORY, i) for i in [3,6]],
                 [id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
 
@@ -238,7 +239,7 @@ class HarvesterTest(IntegrationTestCase):
         r.save(self.repofilepath)
 
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORY))))
+        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
         self.assertEquals(set(['%s:oai:record:%02d' % (REPOSITORY, i) for i in range(1,11)]),
                 set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))]))
 
