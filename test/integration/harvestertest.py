@@ -42,7 +42,7 @@ from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
-from meresco.harvester.state import getResumptionToken
+from meresco.harvester.state import getResumptionToken, State
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.controlpanel import RepositoryData
 from meresco.harvester.namespaces import xpath
@@ -120,7 +120,8 @@ class HarvesterTest(IntegrationTestCase):
 
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
-
+        self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
+        
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
         r.save(self.repofilepath)
@@ -139,6 +140,7 @@ class HarvesterTest(IntegrationTestCase):
 
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
+        self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
 
     def testRefresh(self):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
