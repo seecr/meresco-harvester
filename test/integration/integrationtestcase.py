@@ -139,8 +139,7 @@ class IntegrationState(object):
         self._writeConfig(config, 'harvester')
 
         self.startHelperServer()
-        if self.stateName == 'internal-server':
-            self.startHarvesterInternalServer()
+        self.startHarvesterInternalServer()
 
     def _writeConfig(self, config, name):
         configFile = join(self.integrationTempdir, '%s.config' % name)

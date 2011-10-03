@@ -45,6 +45,7 @@ namespaces = _namespaces(
     srw='http://www.loc.gov/zing/srw/',
     diag='http://www.loc.gov/zing/srw/diagnostic/',
     ucp="info:lc/xmlns/update-v1",
+    status="http://sahara.cq2.org/xsd/saharaget.xsd",
 )
 
 xpath = namespaces.xpath

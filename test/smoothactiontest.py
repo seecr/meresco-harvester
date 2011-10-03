@@ -50,6 +50,8 @@ class SmoothActionTest(ActionTestCase):
     def setUp(self):
         ActionTestCase.setUp(self)
         self.repo = Repository('domainId', 'rep')
+        self.uploader = CallTrace('Uploader')
+        self.repo.createUploader = lambda logger: self.uploader
         self.stateDir = self.tempdir
         self.logDir = self.tempdir
         self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir, NilEventLogger())

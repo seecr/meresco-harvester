@@ -146,6 +146,7 @@ class DeleteIdsAction(Action):
         d = self._createDeleteIds()
         d.deleteFile(self.filename)
         d.deleteFile(self.ignoreFilename)
+        d.markDeleted()
         return True, 'Deleted', False
 
 class SmoothAction(Action):
@@ -181,11 +182,8 @@ class SmoothAction(Action):
             writeIds(self.filename, set())
         else:
             open(self.oldfilename, 'w').close()
-        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
-        try:
-            logger.markDeleted()
-        finally:
-            logger.close()
+        d = self._createDeleteIds()
+        d.markDeleted()
         return     'initialized.'
 
     def _finish(self):

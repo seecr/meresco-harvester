@@ -69,7 +69,6 @@ class DeleteIds(Observable):
         self._stateDir = stateDir
         self._repository = repository
         self._filename = idfilename(self._stateDir, self._repository.id)
-        self._markLogger = True
                     
     def ids(self):
         return readIds(self._filename)
@@ -83,7 +82,6 @@ class DeleteIds(Observable):
     
     def deleteFile(self, filename):
         self._filename = filename
-        self._markLogger = False
         self.delete()
         
     def _delete(self):
@@ -108,8 +106,6 @@ class DeleteIds(Observable):
             
     def _finish(self, remainingIDs):
         writeIds(self._filename, remainingIDs)
-        if self._markLogger and not remainingIDs:
-            try:
-                self.do.markDeleted()
-            finally:
-                self.do.close()
+
+    def markDeleted(self):
+        self.do.markDeleted()

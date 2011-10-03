@@ -35,14 +35,14 @@ from urllib import urlopen
 from time import time, sleep
 from subprocess import Popen
 from shutil import copytree
-from lxml.etree import parse
+from lxml.etree import parse, tostring
 
 from cq2utils import CQ2TestCase
 from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase
 
-from meresco.harvester.state import getResumptionToken
+from meresco.harvester.state import getResumptionToken, State
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.controlpanel import RepositoryData
 from meresco.harvester.namespaces import xpath
@@ -50,6 +50,7 @@ from meresco.harvester.namespaces import xpath
 BATCHSIZE=10
 DOMAIN='adomain'
 REPOSITORY='harvestertest'
+REPOSITORYGROUP='harvesterTestGroup'
 
 class HarvesterTest(IntegrationTestCase):
     def setUp(self):
@@ -64,6 +65,7 @@ class HarvesterTest(IntegrationTestCase):
         repo.use = 'true'
         repo.baseurl = 'http://localhost:%s/oai' % self.helperServerPortNumber
         repo.targetId = 'SRUUPDATE'
+        repo.repositoryGroupId = REPOSITORYGROUP
         repo.mappingId = 'MAPPING'
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
@@ -116,6 +118,8 @@ class HarvesterTest(IntegrationTestCase):
         logLen = len(self.getLogs())
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
+        self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
+
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
         r.save(self.repofilepath)
@@ -131,6 +135,8 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(18, self.sizeDumpDir())
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
+
+        self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
 
     def testRefresh(self):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
@@ -216,7 +222,7 @@ class HarvesterTest(IntegrationTestCase):
 
         self.startHarvester(repository=REPOSITORY)
 
-        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORY))))
+        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
         self.assertEquals(['%s:oai:record:%02d' % (REPOSITORY, i) for i in [3,6]],
                 [id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
 
@@ -231,7 +237,7 @@ class HarvesterTest(IntegrationTestCase):
         r.save(self.repofilepath)
 
         self.startHarvester(repository=REPOSITORY)
-        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORY))))
+        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
         self.assertEquals(set(['%s:oai:record:%02d' % (REPOSITORY, i) for i in range(1,11)]),
                 set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))]))
 
