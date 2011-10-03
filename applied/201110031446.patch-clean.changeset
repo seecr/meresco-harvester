@@ -1,0 +1,223 @@
+Changeset created on Mon Oct 03 14:46:55 CET 2011 by Seecr (Seek You Too B.V.)
+
+Description: Fix clean repository state
+
+    Fixes an issue with the harvester status page. After clearing a 
+    repository the harvester status page still showed a total number
+    of records.
+
+    This is based on the 201109261425.fix-clean-repository-status.changeset
+    It was patched to match this version of Meresco Harvester
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/7.1.3-Seecr/version_0
+
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/meresco/harvester/action.py version_1/meresco/harvester/action.py
+--- version_0/meresco/harvester/action.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/meresco/harvester/action.py	2011-10-03 16:33:30.000000000 +0200
+@@ -146,6 +146,7 @@
+         d = self._createDeleteIds()
+         d.deleteFile(self.filename)
+         d.deleteFile(self.ignoreFilename)
++        d.markDeleted()
+         return True, 'Deleted', False
+ 
+ class SmoothAction(Action):
+@@ -181,11 +182,8 @@
+             writeIds(self.filename, set())
+         else:
+             open(self.oldfilename, 'w').close()
+-        logger = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
+-        try:
+-            logger.markDeleted()
+-        finally:
+-            logger.close()
++        d = self._createDeleteIds()
++        d.markDeleted()
+         return     'initialized.'
+ 
+     def _finish(self):
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/meresco/harvester/deleteids.py version_1/meresco/harvester/deleteids.py
+--- version_0/meresco/harvester/deleteids.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/meresco/harvester/deleteids.py	2011-10-03 16:33:30.000000000 +0200
+@@ -69,7 +69,6 @@
+         self._stateDir = stateDir
+         self._repository = repository
+         self._filename = idfilename(self._stateDir, self._repository.id)
+-        self._markLogger = True
+                     
+     def ids(self):
+         return readIds(self._filename)
+@@ -83,7 +82,6 @@
+     
+     def deleteFile(self, filename):
+         self._filename = filename
+-        self._markLogger = False
+         self.delete()
+         
+     def _delete(self):
+@@ -108,8 +106,6 @@
+             
+     def _finish(self, remainingIDs):
+         writeIds(self._filename, remainingIDs)
+-        if self._markLogger and not remainingIDs:
+-            try:
+-                self.do.markDeleted()
+-            finally:
+-                self.do.close()
++
++    def markDeleted(self):
++        self.do.markDeleted()
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/meresco/harvester/namespaces.py version_1/meresco/harvester/namespaces.py
+--- version_0/meresco/harvester/namespaces.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/meresco/harvester/namespaces.py	2011-10-03 16:33:30.000000000 +0200
+@@ -45,6 +45,7 @@
+     srw='http://www.loc.gov/zing/srw/',
+     diag='http://www.loc.gov/zing/srw/diagnostic/',
+     ucp="info:lc/xmlns/update-v1",
++    status="http://sahara.cq2.org/xsd/saharaget.xsd",
+ )
+ 
+ xpath = namespaces.xpath
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/integration/harvestertest.py version_1/test/integration/harvestertest.py
+--- version_0/test/integration/harvestertest.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/test/integration/harvestertest.py	2011-10-03 16:36:52.000000000 +0200
+@@ -35,14 +35,14 @@
+ from time import time, sleep
+ from subprocess import Popen
+ from shutil import copytree
+-from lxml.etree import parse
++from lxml.etree import parse, tostring
+ 
+ from cq2utils import CQ2TestCase
+ from utils import getRequest
+ 
+ from integrationtestcase import IntegrationTestCase
+ 
+-from meresco.harvester.state import getResumptionToken
++from meresco.harvester.state import getResumptionToken, State
+ from meresco.harvester.harvesterlog import HarvesterLog
+ from meresco.harvester.controlpanel import RepositoryData
+ from meresco.harvester.namespaces import xpath
+@@ -50,6 +50,7 @@
+ BATCHSIZE=10
+ DOMAIN='adomain'
+ REPOSITORY='harvestertest'
++REPOSITORYGROUP='harvesterTestGroup'
+ 
+ class HarvesterTest(IntegrationTestCase):
+     def setUp(self):
+@@ -64,6 +65,7 @@
+         repo.use = 'true'
+         repo.baseurl = 'http://localhost:%s/oai' % self.helperServerPortNumber
+         repo.targetId = 'SRUUPDATE'
++        repo.repositoryGroupId = REPOSITORYGROUP
+         repo.mappingId = 'MAPPING'
+         repo.metadataPrefix = 'oai_dc'
+         repo.maximumIgnore = '5'
+@@ -116,6 +118,8 @@
+         logLen = len(self.getLogs())
+         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
+ 
++        self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
++
+         r = RepositoryData.read(self.repofilepath)
+         r.action='clear'
+         r.save(self.repofilepath)
+@@ -132,6 +136,8 @@
+         for filename in sorted(listdir(self.dumpDir))[-8:]:
+             self.assertTrue('_delete.updateRequest' in filename, filename)
+ 
++        self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
++
+     def testRefresh(self):
+         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
+         log.startRepository()
+@@ -216,7 +222,7 @@
+ 
+         self.startHarvester(repository=REPOSITORY)
+ 
+-        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORY))))
++        self.assertEquals(8, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
+         self.assertEquals(['%s:oai:record:%02d' % (REPOSITORY, i) for i in [3,6]],
+                 [id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
+ 
+@@ -231,7 +237,7 @@
+         r.save(self.repofilepath)
+ 
+         self.startHarvester(repository=REPOSITORY)
+-        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORY))))
++        self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
+         self.assertEquals(set(['%s:oai:record:%02d' % (REPOSITORY, i) for i in range(1,11)]),
+                 set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))]))
+ 
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/integration/integrationtestcase.py version_1/test/integration/integrationtestcase.py
+--- version_0/test/integration/integrationtestcase.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/test/integration/integrationtestcase.py	2011-10-03 16:33:30.000000000 +0200
+@@ -139,8 +139,7 @@
+         self._writeConfig(config, 'harvester')
+ 
+         self.startHelperServer()
+-        if self.stateName == 'internal-server':
+-            self.startHarvesterInternalServer()
++        self.startHarvesterInternalServer()
+ 
+     def _writeConfig(self, config, name):
+         configFile = join(self.integrationTempdir, '%s.config' % name)
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/integration/internalservertest.py version_1/test/integration/internalservertest.py
+--- version_0/test/integration/internalservertest.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/test/integration/internalservertest.py	2011-10-03 16:37:52.000000000 +0200
+@@ -32,9 +32,7 @@
+ from utils import getRequest
+ from lxml.etree import tostring
+ from integrationtestcase import IntegrationTestCase
+-
+-def xpath(node, xpath):
+-    return node.xpath(xpath, namespaces={'s': 'http://sahara.cq2.org/xsd/saharaget.xsd'})
++from meresco.harvester.namespaces import xpath
+ 
+ REPOSITORY = 'integrationtest'
+ class InternalServerTest(IntegrationTestCase):
+@@ -64,8 +62,8 @@
+         self.controlHelper(action='ignoreAll')
+         self.startHarvester(repository=REPOSITORY)
+         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+-        self.assertEquals("GetStatus", xpath(result, "/s:saharaget/s:request/s:verb/text()")[0])
+-        self.assertEquals("adomain", xpath(result, "/s:saharaget/s:request/s:domainId/text()")[0])
+-        self.assertEquals("integrationtest", xpath(result, "/s:saharaget/s:request/s:repositoryId/text()")[0])
+-        self.assertEquals("5", xpath(result, "/s:saharaget/s:GetStatus/s:status[@repositoryId='integrationtest']/s:ignored/text()")[0])
++        self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
++        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
++        self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
++        self.assertEquals("5", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:ignored/text()")[0])
+         
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/_integrationtest.py version_1/test/_integrationtest.py
+--- version_0/test/_integrationtest.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/test/_integrationtest.py	2011-10-03 16:33:30.000000000 +0200
+@@ -55,14 +55,9 @@
+     runner = TestRunner()
+     runner.addGroup('default', [
+             'integration.harvestertest.HarvesterTest',
+-        ],
+-        groupSetUp = lambda: globalSetUp(fastMode, 'default'),
+-        groupTearDown = lambda: globalTearDown())
+-
+-    runner.addGroup('internal-server', [
+             'integration.internalservertest.InternalServerTest',
+         ],
+-        groupSetUp = lambda: globalSetUp(fastMode, 'internal-server'),
++        groupSetUp = lambda: globalSetUp(fastMode, 'default'),
+         groupTearDown = lambda: globalTearDown())
+ 
+     testnames = argv[1:]
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/smoothactiontest.py version_1/test/smoothactiontest.py
+--- version_0/test/smoothactiontest.py	2011-10-03 16:29:39.000000000 +0200
++++ version_1/test/smoothactiontest.py	2011-10-03 16:33:30.000000000 +0200
+@@ -50,6 +50,8 @@
+     def setUp(self):
+         ActionTestCase.setUp(self)
+         self.repo = Repository('domainId', 'rep')
++        self.uploader = CallTrace('Uploader')
++        self.repo.createUploader = lambda logger: self.uploader
+         self.stateDir = self.tempdir
+         self.logDir = self.tempdir
+         self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir, NilEventLogger())
