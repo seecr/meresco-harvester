@@ -152,8 +152,8 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
-            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
+            args=["python2.5", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
+            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,
             stderr=stdouterrlog)
@@ -170,7 +170,7 @@ class IntegrationState(object):
         configFile = join(self.integrationTempdir, 'harvester.config') 
         processInfo = Popen(
             args=[join(binDir, "meresco-harvester-internal-server"), configFile], 
-            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
+            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
