@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 ## begin license ##
 # 
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and

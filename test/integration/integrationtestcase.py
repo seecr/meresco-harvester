@@ -99,7 +99,7 @@ class IntegrationTestCase(CQ2TestCase):
         harvesterProcessInfo = Popen(
             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=binDir,
-            env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
+            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
         waitpid(harvesterProcessInfo.pid, 0)
@@ -152,7 +152,7 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python2.5", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
+            args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
             env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,

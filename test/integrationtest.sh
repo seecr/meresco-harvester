@@ -28,4 +28,4 @@
 ## end license ##
 export LANG=en_US.UTF-8
 export PYTHONPATH=.:$PYTHONPATH
-python2.5 _integrationtest.py "$@"
+python2.6 _integrationtest.py "$@"

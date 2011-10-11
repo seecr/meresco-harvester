@@ -49,7 +49,7 @@ class MappingTest(unittest.TestCase):
             datamap.validate()
             self.fail()
         except Exception, e:
-            self.assertTrue('EOL while scanning single-quoted string' in str(e), str(e))
+            self.assertTrue('EOL while scanning string literal (<string>, line 1)' in str(e), str(e))
 
     def testInValidWithImportMapping(self):
         datamap = Mapping('mappingId')
