@@ -67,11 +67,10 @@ class Harvester(Observable):
         return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
     def fetchRecords(self, from_, token):
-        records = self.listRecords(from_, token, self._repository.set)
+        records, resumptionToken = self.listRecords(from_, token, self._repository.set)
         for record in records:
             self.uploadRecord(record)
-        newtoken = getattr(records.parentNode, 'resumptionToken', None)
-        return newtoken
+        return resumptionToken
 
     def uploadRecord(self, record):
         upload = self.any.createUpload(self._repository, record)
