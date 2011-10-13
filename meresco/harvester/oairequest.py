@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -58,22 +58,23 @@ class OaiRequest(object):
     def __init__(self, url):
         self._url = url
 
-    def listRecords(self, **args):
-        if args.has_key('from_'):
-            args['from']=args['from_']
-            del args['from_']
-        args['verb']='ListRecords'
+    def listRecords(self, **kwargs):
+        if kwargs.has_key('from_'):
+            kwargs['from'] = kwargs['from_']
+            del kwargs['from_']
+        kwargs['verb'] = 'ListRecords'
         try:
-            response = self.request(args)
+            response = self.request(kwargs)
         except OAIError, e:
             if e.errorCode() != 'noRecordsMatch':
                 raise e
             response = e.response
-        return wrapp(response.OAI_PMH).ListRecords.record
+        listRecords = wrapp(response.OAI_PMH).ListRecords
+        return listRecords.record, getattr(listRecords, 'resumptionToken', None)
 
-    def getRecord(self, **args):
-        args['verb'] = 'GetRecord'
-        response = self.request(args)
+    def getRecord(self, **kwargs):
+        kwargs['verb'] = 'GetRecord'
+        response = self.request(kwargs)
         return wrapp(response).OAI_PMH.GetRecord.record
     
     def identify(self):
@@ -124,10 +125,10 @@ class LoggingOaiRequest(OaiRequest):
             writefile.close()
         return binderytools.bind_file(filename)
     
-def loggingListRecords(url, tempdir, **args):
+def loggingListRecords(url, tempdir, **kwargs):
     """loggingListRecords(url, tempdir, **listRecordsArgs"""
     loair = LoggingOaiRequest(url, tempdir)
-    listRecords = loair.listRecords(**args)
+    listRecords = loair.listRecords(**kwargs)
     resumptionToken = str(listRecords.parentNode.resumptionToken)
     print resumptionToken
     while resumptionToken:

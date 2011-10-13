@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -60,11 +60,9 @@ class OaiRequestTest(unittest.TestCase):
             self.assertEquals( u'badResumptionToken',e.errorCode())
             
     def testListRecords(self):
-        records = self.request.listRecords(metadataPrefix='oai_dc')
-        i = 0
-        for r in records:    
-            i+=1
-        self.assertEquals(3,i)
+        records, resumptionToken = self.request.listRecords(metadataPrefix='oai_dc')
+        self.assertEquals("TestToken", resumptionToken)
+        self.assertEquals(3,len(records))
         self.assertEquals('oai:tudelft.nl:007087',str(records[0].header.identifier))
         if records[0].header.deleted:
             self.fail()
@@ -93,11 +91,9 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals('oai:rep:12345',record.header.identifier)
         
     def testListRecordsWithAnEmptyList(self):
-        records = self.request.listRecords(resumptionToken='EmptyListToken')
-        i = 0
-        for record in records: i+=1
-        self.assertEquals(0,i)
-        
+        records, resumptionToken = self.request.listRecords(resumptionToken='EmptyListToken')
+        self.assertEquals(0,len(records))
+        self.assertEquals("", resumptionToken)
         
     def xtest_LIVE_Retrieve(self):
         request = OaiRequest('http://library.wur.nl/oai')
