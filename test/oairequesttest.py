@@ -60,11 +60,9 @@ class OaiRequestTest(unittest.TestCase):
             self.assertEquals( u'badResumptionToken',e.errorCode())
             
     def testListRecords(self):
-        records = self.request.listRecords(metadataPrefix='oai_dc')
-        i = 0
-        for r in records:    
-            i+=1
-        self.assertEquals(3,i)
+        records, resumptionToken = self.request.listRecords(metadataPrefix='oai_dc')
+        self.assertEquals("TestToken", resumptionToken)
+        self.assertEquals(3,len(records))
         self.assertEquals('oai:tudelft.nl:007087',str(records[0].header.identifier))
         if records[0].header.deleted:
             self.fail()
@@ -93,11 +91,9 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals('oai:rep:12345',record.header.identifier)
         
     def testListRecordsWithAnEmptyList(self):
-        records = self.request.listRecords(resumptionToken='EmptyListToken')
-        i = 0
-        for record in records: i+=1
-        self.assertEquals(0,i)
-        
+        records, resumptionToken = self.request.listRecords(resumptionToken='EmptyListToken')
+        self.assertEquals(0,len(records))
+        self.assertEquals("", resumptionToken)
         
     def xtest_LIVE_Retrieve(self):
         request = OaiRequest('http://library.wur.nl/oai')
