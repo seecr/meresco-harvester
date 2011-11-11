@@ -84,10 +84,11 @@ class Harvester(Observable):
                 self.do.send(upload)
                 self.do.uploadIdentifier(upload.id)
             except InvalidDataException, e:
+                self.do.logInvalidDataMessage(upload.id, e.originalMessage)
                 maxIgnore = self._repository.maxIgnore()
                 if self.any.totalIgnoredIds() >= maxIgnore:
                     raise TooMuchInvalidDataException(upload.id, maxIgnore)
-                self.do.ignoreIdentifier(upload.id, e.originalMessage)
+                self.do.ignoreIdentifier(upload.id)
 
     def _harvestLoop(self):
         try:

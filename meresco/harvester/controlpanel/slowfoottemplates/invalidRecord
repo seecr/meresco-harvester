@@ -1,0 +1,3 @@
+<%
+include(req.get_options()['internalServer'] + '/invalidRecord?' + urlencode(args))
+%>

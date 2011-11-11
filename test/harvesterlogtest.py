@@ -34,7 +34,8 @@
 
 import unittest, os
 from time import strftime, gmtime
-from os.path import isfile
+from os import makedirs
+from os.path import isfile, isdir, join
 from shutil import rmtree
 from tempfile import mkdtemp
 
@@ -54,13 +55,13 @@ class HarvesterLogTest(unittest.TestCase):
         rmtree(self.logDir)
 
     def testSameDate(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
         date=logger._state.getTime()[:10]
         self.assertTrue(logger.isCurrentDay(date))
         self.assertFalse(logger.isCurrentDay('2005-01-02'))
 
     def testHasWork(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='someuni')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
         self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
         self.assert_(logger.hasWork())
         logger.from_=strftime('%Y-%m-%d', gmtime())
@@ -73,12 +74,12 @@ class HarvesterLogTest(unittest.TestCase):
         self.assert_(logger.hasWork())
 
     def testHasWorkBeforeAndAfterDoingWork(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork())
         logger.startRepository()
         logger.endRepository(None)
         logger.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork())
 
     def testLoggingAlwaysStartsNewline(self):
@@ -86,36 +87,37 @@ class HarvesterLogTest(unittest.TestCase):
         f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Don"crack"')
         f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         logger.startRepository()
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         self.assertEqual(2,len(lines))
 
     def testLogLine(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         logger.startRepository()
         logger.notifyHarvestedRecord("name:uploadId1")
         logger.uploadIdentifier("name:uploadId1")
         logger.notifyHarvestedRecord("name:uploadId1")
         logger.deleteIdentifier("name:uploadId1")
         logger.notifyHarvestedRecord("name:uploadId2")
-        logger.ignoreIdentifier("name:uploadId2", "Test Exception")
+        logger.logInvalidDataMessage("name:uploadId2", "Test Exception")
+        logger.ignoreIdentifier("name:uploadId2")
         logger.endRepository(None)
         logger.close()
-        lines = open(self.stateDir+'/name.stats').readlines()
-        eventline = open(self.logDir+'/name.events').readlines()[1].strip()
-        ignoredUploadId2 = open(self.logDir+'/ignored/name/uploadId2').read()
+        lines = open(self.stateDir + '/name.stats').readlines()
+        eventline = open(self.logDir + '/name.events').readlines()[1].strip()
+        invalidUploadId2 = open(self.logDir + '/invalid/name/uploadId2').read()
         #Total is now counted based upon the id's
         self.assertTrue('3/1/1/0, Done:' in lines[0], lines[0])
         date, event, id, comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
-        self.assertEquals('Test Exception', ignoredUploadId2) 
+        self.assertEquals('Test Exception', invalidUploadId2) 
 
     def testLogLineError(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         try:
             logger.notifyHarvestedRecord("name:uploadId1")
@@ -140,7 +142,7 @@ class HarvesterLogTest(unittest.TestCase):
         f = open(self.stateDir+'/name.ids','w')
         f.writelines(['id:1\n','id:2\n','id:1\n'])
         f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name= 'name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         logger.startRepository()
         self.assertEquals(2,logger.totalIds())
         logger.uploadIdentifier('id:3')
@@ -153,51 +155,67 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.ignoreIdentifier('repoid:oai:bla/bla', "Error")
+        logger.ignoreIdentifier('repoid:oai:bla/bla')
         self.assertEquals(1, logger.totalIgnoredIds())
-        self.assertEquals("Error", open(self.logDir+'/ignored/repoid/oai:bla%2Fbla').read())
+        unexpectedFile = self.logDir + '/ignored/repoid/oai:bla%2Fbla'
+        self.assertFalse(isfile(unexpectedFile))
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
         self.assertEquals(0, logger.totalIgnoredIds())
         logger.uploadIdentifier('repoid:oai:bla/bla')
         self.assertEquals(1, logger.totalIds())
 
+    def testLogInvalidDataMessage(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+        logger.startRepository()
+        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
+        logger.logInvalidDataMessage('repoid:oai:bla/bla', "Error")
+        self.assertEquals(0, logger.totalIgnoredIds())
+        expectedFile = self.logDir + '/invalid/repoid/oai:bla%2Fbla'
+        self.assertEquals("Error", open(expectedFile).read())
+        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
+        self.assertEquals(0, logger.totalIgnoredIds())
+        self.assertFalse(isfile(expectedFile))
+
     def testListIgnoredIDs(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('id:1')
-        logger.ignoreIdentifier('id:1', "Error")
+        logger.ignoreIdentifier('id:1')
         logger.notifyHarvestedRecord('id:2')
-        logger.ignoreIdentifier('id:2', "Error")
+        logger.ignoreIdentifier('id:2')
         self.assertEquals(['id:1', 'id:2'], logger.ignoredIds())
         
-    def testClearIgnored(self):
+    def testClearIgnoredAndInvalidDataMessages(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.ignoreIdentifier('repoid:oai:bla/bla', "Error")
-        self.assertTrue(isfile(self.logDir + '/ignored/repoid/oai:bla%2Fbla'))
+        logger.logInvalidDataMessage('repoid:oai:bla/bla', "Error")
+        self.assertTrue(isfile(self.logDir + '/invalid/repoid/oai:bla%2Fbla'))
+        logger.ignoreIdentifier('repoid:oai:bla/bla')
         logger.notifyHarvestedRecord('repoid:recordid')
-        logger.ignoreIdentifier('repoid:recordid', "Error")
-        self.assertTrue(isfile(self.logDir + '/ignored/repoid/recordid'))
+        logger.logInvalidDataMessage('repoid:recordid', "Error")
+        logger.ignoreIdentifier('repoid:recordid')
+        self.assertTrue(isfile(self.logDir + '/invalid/repoid/recordid'))
         logger.notifyHarvestedRecord('repo2:1')
-        logger.ignoreIdentifier('repo2:1', "Error")
-        self.assertTrue(isfile(self.logDir + '/ignored/repo2/1'))
+        logger.logInvalidDataMessage('repo2:1', "Error")
+        logger.ignoreIdentifier('repo2:1')
+        self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
         self.assertEquals(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.ignoredIds())
-        logger.clearIgnored('repoid')
+        logger.clearIgnoredAndInvalidDataMessages('repoid')
         self.assertEquals(['repo2:1'], logger.ignoredIds())
-        self.assertFalse(isfile(self.logDir + '/ignored/repoid/oai:bla%2Fbla'))
-        self.assertFalse(isfile(self.logDir + '/ignored/repoid/recordid'))
-        self.assertTrue(isfile(self.logDir + '/ignored/repo2/1'))
+        self.assertFalse(isfile(self.logDir + '/invalid/repoid/oai:bla%2Fbla'))
+        self.assertFalse(isfile(self.logDir + '/invalid/repoid/recordid'))
+        self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
 
     def testLogDeleted(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='emptyrepoi')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='emptyrepoi')
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
         self.assertEquals(None, logger.token)
         f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         self.assertEquals('2005-01-02',logger.from_)
         self.assertEquals(1650, logger.total)
         self.assertEquals('resumption', logger.token)
@@ -205,7 +223,7 @@ class HarvesterLogTest(unittest.TestCase):
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption\n')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s\n')
         f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
@@ -214,14 +232,23 @@ class HarvesterLogTest(unittest.TestCase):
         f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         self.assertEquals('resumption', logger.token)
         logger.markDeleted()
         logger.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir,name='name')
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
+
+    def testMaybeMigrateIgnoredDir(self):
+        aDirInIgnored = join(self.logDir, 'ignored', 'subdir')
+        makedirs(aDirInIgnored)
+        open(join(aDirInIgnored, 'aFile'), "w").write("contents")
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+        self.assertFalse(isdir(aDirInIgnored))
+        self.assertEquals("contents", open(join(self.logDir, 'invalid/subdir/aFile')).read())
+
 
 
 class MockMailer(object):

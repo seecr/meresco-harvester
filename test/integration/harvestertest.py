@@ -204,10 +204,10 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(0, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
         self.assertEquals(maxIgnore, len(ignoredIds), ignoredIds)
-        ignoreDir = join(self.harvesterLogDir, DOMAIN, "ignored", REPOSITORY)
-        self.assertEquals(maxIgnore, len(listdir(ignoreDir)))
-        ignoreId1Error = open(join(ignoreDir, "oai:record:01")).read()
-        self.assertTrue('uploadId: "integrationtest:oai:record:01"', ignoreId1Error)
+        invalidDataMessagesDir = join(self.harvesterLogDir, DOMAIN, "invalid", REPOSITORY)
+        self.assertEquals(maxIgnore + 1, len(listdir(invalidDataMessagesDir)))
+        invalidDataMessage01 = open(join(invalidDataMessagesDir, "oai:record:01")).read()
+        self.assertTrue('uploadId: "integrationtest:oai:record:01"', invalidDataMessage01)
         self.controlHelper(action='ignoreNothing')
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(nrOfDeleted + BATCHSIZE, self.sizeDumpDir()) 
@@ -215,7 +215,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(BATCHSIZE - nrOfDeleted, len(ids))
         ignoredIds = open(join(self.harvesterStateDir, DOMAIN, "%s_ignored.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ignoredIds), ignoredIds)
-        self.assertEquals(0, len(listdir(ignoreDir)))
+        self.assertEquals(0, len(listdir(invalidDataMessagesDir)))
 
     def testHarvestToFilesystemTarget(self):
         r = RepositoryData.read(self.repofilepath)
@@ -289,7 +289,8 @@ class HarvesterTest(IntegrationTestCase):
             log.deleteIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [7,8,125,126,127,128]]:
             log.notifyHarvestedRecord(uploadId)
-            log.ignoreIdentifier(uploadId, 'ignored message')
+            log.logInvalidDataMessage(uploadId, 'ignored message')
+            log.ignoreIdentifier(uploadId)
         log.endRepository('token')
         log.close()
         totalRecords = 15
@@ -324,7 +325,8 @@ class HarvesterTest(IntegrationTestCase):
             log.deleteIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [7,8,125,126,127,128]]:
             log.notifyHarvestedRecord(uploadId)
-            log.ignoreIdentifier(uploadId, 'ignored message')
+            log.logInvalidDataMessage(uploadId, 'ignored message')
+            log.ignoreIdentifier(uploadId)
         log.endRepository('token')
         log.close()
         oldUploads = 4

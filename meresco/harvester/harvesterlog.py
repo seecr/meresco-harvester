@@ -45,12 +45,10 @@ from state import State
 from escaping import escapeFilename
 
 
+INVALID_DATA_MESSAGES_DIR = "invalid"
+
 def idfilename(stateDir, repositorykey):
     return join(stateDir, repositorykey+'.ids')
-
-def ignoreFilepath(logDir, uploadid):
-    repositoryId, recordId = uploadid.split(":", 1)
-    return join(logDir, "ignored", repositoryId, escapeFilename(recordId))
 
 def ensureDirectory(directoryPath):
     isdir(directoryPath) or makedirs(directoryPath)
@@ -59,6 +57,8 @@ class HarvesterLog(object):
     def __init__(self, stateDir, logDir, name):
         self._name=name
         self._logDir = logDir
+        ensureDirectory(self._logDir)
+        self._maybeMigrateIgnoredDir()
         ensureDirectory(stateDir)
         self._ids = Ids(stateDir, name)
         self._ignoredIds = Ids(stateDir, name + "_ignored")
@@ -119,7 +119,7 @@ class HarvesterLog(object):
         self._state.close()
 
     def notifyHarvestedRecord(self, uploadid):
-        self._removeFromIgnored(uploadid)
+        self._removeFromInvalidData(uploadid)
         self._harvestedCount += 1
 
     def uploadIdentifier(self, uploadid):
@@ -130,19 +130,21 @@ class HarvesterLog(object):
         self._ids.remove(uploadid)
         self._deletedCount += 1
 
-    def ignoreIdentifier(self, uploadid, message):
-        ignoreFile = ignoreFilepath(self._logDir, uploadid)
-        ensureDirectory(dirname(ignoreFile))
-        open(ignoreFile, 'w').write(message)
+    def ignoreIdentifier(self, uploadid):
         self._ignoredIds.add(uploadid)
         self._eventlogger.logWarning('IGNORED', uploadid)
+    
+    def logInvalidDataMessage(self, uploadid, message):
+        filePath = self._invalidDataMessageFilePath(uploadid)
+        ensureDirectory(dirname(filePath))
+        open(filePath, 'w').write(message)
 
-    def clearIgnored(self, repositoryId):
+    def clearIgnoredAndInvalidDataMessages(self, repositoryId):
         repositoryIgnoredIds = [id for id in self._ignoredIds 
                                 if id.startswith("%s:" % repositoryId)]
         for id in repositoryIgnoredIds:
             self._ignoredIds.remove(id)
-        rmtree(join(self._logDir, "ignored", repositoryId))
+        rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
     def hasWork(self):
         return not self.isCurrentDay(self.from_) or self.token
@@ -153,9 +155,22 @@ class HarvesterLog(object):
     def ignoredIds(self):
         return [id for id in self._ignoredIds]
 
-    def _removeFromIgnored(self, uploadid):
+    def _removeFromInvalidData(self, uploadid):
         self._ignoredIds.remove(uploadid)
-        ignoreFile = ignoreFilepath(self._logDir, uploadid)
+        ignoreFile = self._invalidDataMessageFilePath(uploadid)
         if isfile(ignoreFile):
             remove(ignoreFile)
+
+    def _invalidDataMessageFilePath(self, uploadid):
+        repositoryId, recordId = uploadid.split(":", 1)
+        return join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId, escapeFilename(recordId))
+
+    def _maybeMigrateIgnoredDir(self):
+        # Migration from Meresco Harvester 7.2.x to Meresco Harvester 7.2.5
+        # 'ignored' was a misnomer, renamed to 'invalidDataMessages' because we also
+        # want to log the last InvalidDataException message that was not ignored.
+        ignoredPath = join(self._logDir, "ignored")
+        if isdir(ignoredPath):
+            from os import rename
+            rename(ignoredPath, join(self._logDir, INVALID_DATA_MESSAGES_DIR))
 

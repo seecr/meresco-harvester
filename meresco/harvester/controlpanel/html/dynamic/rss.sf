@@ -52,7 +52,7 @@ def main(path, arguments, **kwargs):
         'harvested': ''.join(statusLxml.xpath("/GetStatus/status/harvested/text()")),
         'uploaded': ''.join(statusLxml.xpath("/GetStatus/status/uploaded/text()")),
         'deleted': ''.join(statusLxml.xpath("/GetStatus/status/deleted/text()")),
-        'ignored': ''.join(statusLxml.xpath("/GetStatus/status/ignored/text()")),
+        'invalid': ''.join(statusLxml.xpath("/GetStatus/status/invalid/text()")),
         'totalerrors': ''.join(statusLxml.xpath("/GetStatus/status/totalerrors/text()")),
     }
     lastHarvestAttempt = statusLxml.xpath("/GetStatus/status/lastHarvestAttempt/text()")
@@ -64,7 +64,7 @@ def main(path, arguments, **kwargs):
     Harvested records: %(harvested)s&lt;br/&gt;
     Uploaded records: %(uploaded)s&lt;br/&gt;
     Deleted records: %(deleted)s&lt;br/&gt;
-    Validation errors: %(ignored)s&lt;br/&gt;
+    Validation errors: %(invalid)s&lt;br/&gt;
     Errors: %(totalerrors)s""" % state,
             "link": linkToStatusPage,
             "guid": lastHarvestAttempt[0],

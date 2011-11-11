@@ -31,19 +31,17 @@
 def main(arguments, **kwargs):
     domainId = arguments.get('domainId', [None])[0]
     repositoryId = arguments.get('repositoryId', [None])[0]
-
-    orginalArgs = dict(domainId=domainId, repositoryId=repositoryId)
+    recordId = arguments.get('recordId', [None])[0]
 
     yield """<div>
-    <h3>Repository %s</h3>""" % repositoryId
+    <h3>Repository %s - Record %s</h3>""" % (repositoryId, recordId)
 
-    yield '<table class="event">'
-    yield '<tr><td class="eventheader">Ignored records</td></tr>'
-    for id in any.ignoredRecords(domainId, repositoryId):
-        recordId = id.split(":", 1)[-1]
-        args = {'recordId': recordId}
-        args.update(orginalArgs)
-        yield '<tr><td class="link"><a href="/page/ignoredRecord/?%s">%s</a></td></tr>' % (escapeHtml(urlencode(args)), recordId)
-    yield """</table>
-    <p><a href="/page/showHarvesterStatus/show?%s">Back to harvester status of this repository</a></p>
-    </div>""" % (escapeHtml(urlencode(orginalArgs)))
+    invalidRecord = any.getInvalidRecord(domainId, repositoryId, recordId)
+
+    yield "<pre>%s</pre>" % escapeHtml(xpath(invalidRecord, '//diag:diagnostic/diag:details/text()')[0])
+    yield '<p><a href="/page/invalid/?%s">Back to invalid records</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))
+    yield "</div>"""
+
+
+def xpath(node, path):
+    return node.xpath(path, namespaces={'diag':'http://www.loc.gov/zing/srw/diagnostic/'})

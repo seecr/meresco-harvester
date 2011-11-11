@@ -356,7 +356,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository)
         harvester.addObserver(observer)
         self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
-        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
+        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "logInvalidDataMessage", "totalIgnoredIds"], [m.name for m in observer.calledMethods])
 
     def testHarvesterIgnoringInvalidDataErrors(self):
         record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
@@ -370,7 +370,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository)
         harvester.addObserver(observer)
         harvester.uploadRecord(record)
-        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "totalIgnoredIds", 'ignoreIdentifier'], [m.name for m in observer.calledMethods])
+        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", 'logInvalidDataMessage', "totalIgnoredIds", 'ignoreIdentifier'], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):
