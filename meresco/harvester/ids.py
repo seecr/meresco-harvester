@@ -38,11 +38,11 @@ if sys.version_info[:2] == (2,3):
     from sets import Set as set
 
 from os import makedirs
-from os.path import isdir
+from os.path import isdir, join
 
 def idfilename(stateDir, name):
     isdir(stateDir) or makedirs(stateDir)
-    return os.path.join(stateDir, name + '.ids')
+    return join(stateDir, name + '.ids')
 
 class Ids(object):
     def __init__(self, stateDir, name):

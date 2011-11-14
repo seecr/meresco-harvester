@@ -46,6 +46,7 @@ from sets import Set
 from meresco.harvester.eventlogger import NilEventLogger
 from cq2utils import CallTrace
 
+
 class SmoothActionTest(ActionTestCase):
     def setUp(self):
         ActionTestCase.setUp(self)
@@ -56,13 +57,13 @@ class SmoothActionTest(ActionTestCase):
         self.logDir = self.tempdir
         self.smoothaction = SmoothAction(self.repo, self.stateDir, self.logDir, NilEventLogger())
         self.idfilename = join(self.stateDir, 'rep.ids')
-        self.ignoreidfilename = join(self.stateDir, 'rep_ignored.ids')
+        self.invalidIdsFilename = join(self.stateDir, 'rep_invalid.ids')
         self.old_idfilename = join(self.stateDir, 'rep.ids.old')
         self.statsfilename = join(self.stateDir,'rep.stats')
 
     def testSmooth_Init(self):
         writefile(self.idfilename, 'rep:id:1\nrep:id:2\n')
-        writefile(self.ignoreidfilename, 'rep:id:3\n')
+        writefile(self.invalidIdsFilename, 'rep:id:3\n')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n')
 
         self.assertFalse(os.path.isfile(self.old_idfilename))
@@ -79,7 +80,7 @@ class SmoothActionTest(ActionTestCase):
 
     def testSmooth_InitWithNothingHarvestedYetRepository(self):
         self.assertFalse(os.path.isfile(self.idfilename))
-        self.assertFalse(os.path.isfile(self.ignoreidfilename))
+        self.assertFalse(os.path.isfile(self.invalidIdsFilename))
         self.assertFalse(os.path.isfile(self.old_idfilename))
         self.assertFalse(os.path.isfile(self.statsfilename))
 
@@ -87,10 +88,10 @@ class SmoothActionTest(ActionTestCase):
 
         self.assertTrue(os.path.isfile(self.old_idfilename))
         self.assertTrue(os.path.isfile(self.idfilename))
-        self.assertTrue(os.path.isfile(self.ignoreidfilename))
+        self.assertTrue(os.path.isfile(self.invalidIdsFilename))
         self.assertEquals('', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
-        self.assertEquals('', readfile(self.ignoreidfilename))
+        self.assertEquals('', readfile(self.invalidIdsFilename))
         self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assertFalse(done)

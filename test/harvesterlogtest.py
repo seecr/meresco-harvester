@@ -9,6 +9,7 @@
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
@@ -101,8 +102,8 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord("name:uploadId1")
         logger.deleteIdentifier("name:uploadId1")
         logger.notifyHarvestedRecord("name:uploadId2")
-        logger.logInvalidDataMessage("name:uploadId2", "Test Exception")
-        logger.ignoreIdentifier("name:uploadId2")
+        logger.logInvalidData("name:uploadId2", "Test Exception")
+        logger.logIgnoredIdentifierWarning("name:uploadId2")
         logger.endRepository(None)
         logger.close()
         lines = open(self.stateDir + '/name.stats').readlines()
@@ -151,58 +152,57 @@ class HarvesterLogTest(unittest.TestCase):
         logger.uploadIdentifier('id:2')
         self.assertEquals(3,logger.totalIds())
 
-    def testLogIgnoredID(self):
+    def testLogIgnoredIdentifierWarning(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.ignoreIdentifier('repoid:oai:bla/bla')
-        self.assertEquals(1, logger.totalIgnoredIds())
-        unexpectedFile = self.logDir + '/ignored/repoid/oai:bla%2Fbla'
-        self.assertFalse(isfile(unexpectedFile))
+        logger.logInvalidData('repoid:oai:bla/bla', 'bla/bla')
+        self.assertEquals('', open(self.logDir + '/name.events').read())
+        logger.logIgnoredIdentifierWarning('repoid:oai:bla/bla')
+        self.assertTrue(open(self.logDir + '/name.events').read().endswith("\tWARNING\t[repoid:oai:bla/bla]\tIGNORED\n"))
+        self.assertEquals(1, logger.totalInvalidIds())
+
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        self.assertEquals(0, logger.totalIgnoredIds())
+        self.assertEquals(0, logger.totalInvalidIds())
         logger.uploadIdentifier('repoid:oai:bla/bla')
         self.assertEquals(1, logger.totalIds())
 
-    def testLogInvalidDataMessage(self):
+    def testLogInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.logInvalidDataMessage('repoid:oai:bla/bla', "Error")
-        self.assertEquals(0, logger.totalIgnoredIds())
+        logger.logInvalidData('repoid:oai:bla/bla', "Error")
+        self.assertEquals(1, logger.totalInvalidIds())
         expectedFile = self.logDir + '/invalid/repoid/oai:bla%2Fbla'
         self.assertEquals("Error", open(expectedFile).read())
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        self.assertEquals(0, logger.totalIgnoredIds())
+        self.assertEquals(0, logger.totalInvalidIds())
         self.assertFalse(isfile(expectedFile))
 
-    def testListIgnoredIDs(self):
+    def testInvalidIDs(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('id:1')
-        logger.ignoreIdentifier('id:1')
+        logger.logInvalidData('id:1', 'exception message')
         logger.notifyHarvestedRecord('id:2')
-        logger.ignoreIdentifier('id:2')
-        self.assertEquals(['id:1', 'id:2'], logger.ignoredIds())
+        logger.logInvalidData('id:2', 'exception message')
+        self.assertEquals(['id:1', 'id:2'], logger.invalidIds())
         
-    def testClearIgnoredAndInvalidDataMessages(self):
+    def testClearInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.logInvalidDataMessage('repoid:oai:bla/bla', "Error")
+        logger.logInvalidData('repoid:oai:bla/bla', "Error")
         self.assertTrue(isfile(self.logDir + '/invalid/repoid/oai:bla%2Fbla'))
-        logger.ignoreIdentifier('repoid:oai:bla/bla')
         logger.notifyHarvestedRecord('repoid:recordid')
-        logger.logInvalidDataMessage('repoid:recordid', "Error")
-        logger.ignoreIdentifier('repoid:recordid')
+        logger.logInvalidData('repoid:recordid', "Error")
         self.assertTrue(isfile(self.logDir + '/invalid/repoid/recordid'))
         logger.notifyHarvestedRecord('repo2:1')
-        logger.logInvalidDataMessage('repo2:1', "Error")
-        logger.ignoreIdentifier('repo2:1')
+        logger.logInvalidData('repo2:1', "Error")
         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
-        self.assertEquals(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.ignoredIds())
-        logger.clearIgnoredAndInvalidDataMessages('repoid')
-        self.assertEquals(['repo2:1'], logger.ignoredIds())
+        self.assertEquals(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.invalidIds())
+        logger.clearInvalidData('repoid')
+        self.assertEquals(['repo2:1'], logger.invalidIds())
         self.assertFalse(isfile(self.logDir + '/invalid/repoid/oai:bla%2Fbla'))
         self.assertFalse(isfile(self.logDir + '/invalid/repoid/recordid'))
         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
@@ -240,15 +240,6 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
-
-    def testMaybeMigrateIgnoredDir(self):
-        aDirInIgnored = join(self.logDir, 'ignored', 'subdir')
-        makedirs(aDirInIgnored)
-        open(join(aDirInIgnored, 'aFile'), "w").write("contents")
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertFalse(isdir(aDirInIgnored))
-        self.assertEquals("contents", open(join(self.logDir, 'invalid/subdir/aFile')).read())
-
 
 
 class MockMailer(object):

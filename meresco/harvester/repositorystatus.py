@@ -42,7 +42,6 @@ from harvesterlog import INVALID_DATA_MESSAGES_DIR
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
 class RepositoryStatus(Observable):
-
     def __init__(self, logPath, statePath, name=None):
         Observable.__init__(self, name)
         self._logPath = logPath
@@ -62,10 +61,10 @@ class RepositoryStatus(Observable):
         yield "</GetStatus>"
 
     def invalidRecords(self, domainId, repositoryId):
-        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
-        if not isfile(ignoredFile):
+        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        if not isfile(invalidFile):
             return []
-        return reversed([line.strip() for line in open(ignoredFile) if line.strip()])
+        return reversed([line.strip() for line in open(invalidFile) if line.strip()])
 
     def getInvalidRecord(self, domainId, repositoryId, recordId):
         invalidDir = join(self._logPath, domainId, INVALID_DATA_MESSAGES_DIR)
@@ -84,7 +83,7 @@ class RepositoryStatus(Observable):
         for error in stats['recenterrors']:
             yield '<error date="%s">%s</error>\n' % (error[0], escapeXml(error[1])) 
         yield '</recenterrors>\n'
-        yield '<ignored>%s</ignored>\n' % self._ignoredCount(domainId, repoId)
+        yield '<invalid>%s</invalid>\n' % self._invalidCount(domainId, repoId)
         yield '<recentinvalids>\n'
         for invalidRecord in islice(self.invalidRecords(domainId, repoId), 10):
             yield '<invalidId>%s</invalidId>\n' % invalidRecord
@@ -92,9 +91,9 @@ class RepositoryStatus(Observable):
         yield '<lastHarvestAttempt>%s</lastHarvestAttempt>\n' % stats.get('lastHarvestAttempt', '')
         yield '</status>\n'
 
-    def _ignoredCount(self, domainId, repositoryId):
-        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
-        return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0
+    def _invalidCount(self, domainId, repositoryId):
+        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        return len(open(invalidFile).readlines()) if isfile(invalidFile) else 0
 
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}

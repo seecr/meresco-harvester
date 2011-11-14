@@ -51,6 +51,7 @@ class Action(object):
         self._stateDir = stateDir
         self._logDir = logDir
         self._generalHarvestLog = generalHarvestLog
+        self.invalidIdsFilename = join(self._stateDir, self._repository.id + '_invalid.ids')
 
     @staticmethod
     def create(repository, stateDir, logDir, generalHarvestLog):
@@ -141,11 +142,10 @@ class DeleteIdsAction(Action):
             return False, 'Not deleting outside timeslots.', False
 
         self.filename = join(self._stateDir, self._repository.id + '.ids')
-        self.ignoreFilename = join(self._stateDir, self._repository.id + '_ignored.ids')
 
         d = self._createDeleteIds()
         d.deleteFile(self.filename)
-        d.deleteFile(self.ignoreFilename)
+        d.deleteFile(self.invalidIdsFilename)
         d.markDeleted()
         return True, 'Deleted', False
 
@@ -153,7 +153,6 @@ class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         Action.__init__(self, repository, stateDir, logDir, generalHarvestLog)
         self.filename = join(self._stateDir, self._repository.id + '.ids')
-        self.ignoreFilename = join(self._stateDir, self._repository.id + '_ignored.ids')
         self.oldfilename = self.filename + ".old"
 
     def do(self):
@@ -178,7 +177,7 @@ class SmoothAction(Action):
 
     def _smoothinit(self):
         if isfile(self.filename):
-            writeIds(self.oldfilename, set(readIds(self.filename) + readIds(self.ignoreFilename)))
+            writeIds(self.oldfilename, set(readIds(self.filename) + readIds(self.invalidIdsFilename)))
             writeIds(self.filename, set())
         else:
             open(self.oldfilename, 'w').close()

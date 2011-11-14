@@ -39,24 +39,24 @@ from weightless.core import compose
 from lxml.etree import tostring, parse
 from StringIO import StringIO
 
-class RepositoryStatusTest(CQ2TestCase):
 
+class RepositoryStatusTest(CQ2TestCase):
     def setUp(self):
         CQ2TestCase.setUp(self)
         self.stateDir = join(self.tempdir, "state")
         self.logDir = join(self.tempdir, "log")
         self.domainId = "adomain"
         makedirs(join(self.stateDir, self.domainId))
-        repoId1LogDir = join(self.logDir, self.domainId, "ignored", "repoId1")
-        repoId2LogDir = join(self.logDir, self.domainId, "ignored", "repoId2")
+        repoId1LogDir = join(self.logDir, self.domainId, "invalid", "repoId1")
+        repoId2LogDir = join(self.logDir, self.domainId, "invalid", "repoId2")
         makedirs(repoId1LogDir)
         makedirs(repoId2LogDir)
-        open(join(repoId1LogDir, "ignoredId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
-        open(join(repoId1LogDir, "ignoredId2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
-        open(join(repoId2LogDir, "ignoredId3"), 'w').write("<diagnostic>ERROR3</diagnostic>")
-        open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w').write("ignoredId1\nignoredId2")
-        open(join(self.stateDir, self.domainId, "repoId2_ignored.ids"), 'w').write("ignoredId3")
-        open(join(self.stateDir, self.domainId, "repoId3_ignored.ids"), 'w').write("")
+        open(join(repoId1LogDir, "invalidId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
+        open(join(repoId1LogDir, "invalidId2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
+        open(join(repoId2LogDir, "invalidId3"), 'w').write("<diagnostic>ERROR3</diagnostic>")
+        open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w').write("invalidId1\ninvalidId2")
+        open(join(self.stateDir, self.domainId, "repoId2_invalid.ids"), 'w').write("invalidId3")
+        open(join(self.stateDir, self.domainId, "repoId3_invalid.ids"), 'w').write("")
         self.status = RepositoryStatus(self.logDir, self.stateDir)
         observer = CallTrace("HarvesterData")
         observer.returnValues["getRepositoryGroupIds"] = ["repoGroupId1", "repoGroupId2"]
@@ -80,11 +80,11 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>2</ignored>
-                <recentignores>
-                    <ignoredId>ignoredId2</ignoredId>
-                    <ignoredId>ignoredId1</ignoredId>
-                </recentignores>
+                <invalid>2</invalid>
+                <recentinvalids>
+                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId1</invalidId>
+                </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))))
@@ -97,8 +97,8 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>0</ignored>
-                <recentignores></recentignores>
+                <invalid>0</invalid>
+                <recentinvalids></recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))))
@@ -113,11 +113,11 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>2</ignored>
-                <recentignores>
-                    <ignoredId>ignoredId2</ignoredId>
-                    <ignoredId>ignoredId1</ignoredId>
-                </recentignores>
+                <invalid>2</invalid>
+                <recentinvalids>
+                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId1</invalidId>
+                </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
@@ -128,10 +128,10 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>1</ignored>
-                <recentignores>
-                    <ignoredId>ignoredId3</ignoredId>
-                </recentignores>
+                <invalid>1</invalid>
+                <recentinvalids>
+                    <invalidId>invalidId3</invalidId>
+                </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryGroupId="repoGroupId1"))))
@@ -146,11 +146,11 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>2</ignored>
-                <recentignores>
-                    <ignoredId>ignoredId2</ignoredId>
-                    <ignoredId>ignoredId1</ignoredId>
-                </recentignores>
+                <invalid>2</invalid>
+                <recentinvalids>
+                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId1</invalidId>
+                </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
@@ -161,10 +161,10 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>1</ignored>
-                <recentignores>
-                    <ignoredId>ignoredId3</ignoredId>
-                </recentignores>
+                <invalid>1</invalid>
+                <recentinvalids>
+                    <invalidId>invalidId3</invalidId>
+                </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="repoId3" repositoryGroupId="repoGroupId2">
@@ -175,8 +175,8 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>0</ignored>
-                <recentignores></recentignores>
+                <invalid>0</invalid>
+                <recentinvalids></recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
             <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
@@ -187,34 +187,34 @@ class RepositoryStatusTest(CQ2TestCase):
                 <total></total>
                 <totalerrors>0</totalerrors>
                 <recenterrors></recenterrors>
-                <ignored>0</ignored>
-                <recentignores></recentignores>
+                <invalid>0</invalid>
+                <recentinvalids></recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
         </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId))))
 
-    def testGetAllIgnoredRecords(self):
-        def ignoredRecords(repoId):
-            return list(self.status.ignoredRecords(self.domainId, repoId))
-        self.assertEquals(["ignoredId2", "ignoredId1"], ignoredRecords("repoId1"))
-        self.assertEquals(["ignoredId3"], ignoredRecords("repoId2"))
-        self.assertEquals([], ignoredRecords("repoId3"))
-        self.assertEquals([], ignoredRecords("repoId4"))
+    def testGetAllInvalidRecords(self):
+        def invalidRecords(repoId):
+            return list(self.status.invalidRecords(self.domainId, repoId))
+        self.assertEquals(["invalidId2", "invalidId1"], invalidRecords("repoId1"))
+        self.assertEquals(["invalidId3"], invalidRecords("repoId2"))
+        self.assertEquals([], invalidRecords("repoId3"))
+        self.assertEquals([], invalidRecords("repoId4"))
 
-    def testGetIgnoredRecord(self):
-        def getIgnoredRecord(repoId, recordId):
-            return tostring(self.status.getIgnoredRecord(self.domainId, repoId, recordId)) 
-        self.assertEquals("<diagnostic>ERROR1</diagnostic>", getIgnoredRecord("repoId1", "ignoredId1")) 
-        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getIgnoredRecord("repoId1", "ignoredId2")) 
-        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getIgnoredRecord("repoId2", "ignoredId3")) 
+    def testGetInvalidRecord(self):
+        def getInvalidRecord(repoId, recordId):
+            return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId)) 
+        self.assertEquals("<diagnostic>ERROR1</diagnostic>", getInvalidRecord("repoId1", "invalidId1")) 
+        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId2")) 
+        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId2", "invalidId3")) 
 
-    def testLotOfIgnoresGivesOnly10(self):
-        with open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w') as f:
+    def testRecentInvalidsOnlyGives10InCaseOfManyMoreInvalids(self):
+        with open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w') as f:
             for i in range(20):
-                f.write("ignoredId%d\n" % i)
+                f.write("invalidId%d\n" % i)
         lxmlResult = parse(StringIO(''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))))
-        self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/ignored/text()")[0])
-        self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentignores/ignoredId")))
+        self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/invalid/text()")[0])
+        self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentinvalids/invalidId")))
 
     def testSucces(self):
         logLine = '\t'.join(['[2006-03-13 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: None'])
@@ -310,11 +310,11 @@ class RepositoryStatusTest(CQ2TestCase):
   <recenterrors>
     <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
   </recenterrors>
-  <ignored>2</ignored>
-  <recentignores>
-    <ignoredId>ignoredId2</ignoredId>
-    <ignoredId>ignoredId1</ignoredId>
-  </recentignores>
+  <invalid>2</invalid>
+  <recentinvalids>
+    <invalidId>invalidId2</invalidId>
+    <invalidId>invalidId1</invalidId>
+  </recentinvalids>
   <lastHarvestAttempt>2005-08-24T20:00:00Z</lastHarvestAttempt>
 </status>
 </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))))
