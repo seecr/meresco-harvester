@@ -32,15 +32,20 @@
 # 
 ## end license ##
 
-from slowfoot import binderytools
-from urllib import urlencode, urlopen
 import os
+from urllib import urlencode, urlopen
+from urlparse import urlparse, urlunparse
+from cgi import parse_qsl 
+
+from slowfoot import binderytools
 from slowfoot.wrappers import wrapp
+
 
 class OaiRequestException(Exception):
     def __init__(self, url, message):
         Exception.__init__(self, 'occurred with repository at "%s", message: "%s"' % (url, message))
         self.url = url
+
 
 class OAIError(OaiRequestException):
     def __init__(self, url, message, response):
@@ -53,10 +58,15 @@ class OAIError(OaiRequestException):
         return str(self._error())
     def errorCode(self):
         return getattr(self._error(), 'code', '')
-    
+
+
+QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
+
 class OaiRequest(object):
     def __init__(self, url):
         self._url = url
+        self._urlElements = urlparse(url)
+        self._argslist = parse_qsl(self._urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT])
 
     def listRecords(self, **kwargs):
         if kwargs.has_key('from_'):
@@ -83,19 +93,28 @@ class OaiRequest(object):
     
     def request(self, args):
         try:
-            argslist = filter(lambda (k,v):v,args.items())
+            argslist = [(k,v) for k,v in args.items() if v]
             result = self._request(argslist)
-            result.OAI_PMH #Make sure the xml is a OAI_PMH request
+            result.OAI_PMH  # Make sure the xml is a OAI_PMH request
         except Exception, e:
-            raise OaiRequestException(self._url + '?' + urlencode(argslist), message=repr(e))
+            raise OaiRequestException(self._buildRequestUrl(argslist), message=repr(e))
         if hasattr(result.OAI_PMH, 'error'):
-            raise OAIError(self._url + '?' + urlencode(argslist), str(result.OAI_PMH.error), result)
+            raise OAIError(self._buildRequestUrl(argslist), str(result.OAI_PMH.error), result)
         return result
     
     def _request(self, argslist):
-        requesturl = self._url + '?' + urlencode(argslist)
-        return binderytools.bind_uri(requesturl)
+        return binderytools.bind_uri(self._buildRequestUrl(argslist))
     
+    def _buildRequestUrl(self, argslist):
+        """Builds the url from the repository's base url + query parameters.
+            Special case (not actually allowed by OAI-PMH specification): if query parameters 
+            occur in the baseurl, they are kept. Origin: Rijksmuseum OAI-PMH repository insists 
+            on 'apikey' query parameter to go with ListRecords."""
+        urlElements = list(self._urlElements)
+        urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT] = urlencode(self._argslist + argslist)
+        return urlunparse(urlElements)
+
+
 class LoggingOaiRequest(OaiRequest):
     def __init__(self, url, tempdir):
         OaiRequest.__init__(self, url)
@@ -113,7 +132,7 @@ class LoggingOaiRequest(OaiRequest):
             f.close()
         
     def _request(self, argslist):
-        requesturl = binderytools.Uri.MakeUrllibSafe(self._url + '?' + urlencode(argslist))
+        requesturl = binderytools.Uri.MakeUrllibSafe(self._buildRequestUrl(argslist))
         filename = os.path.join(self.tempdir, 'oairequest.' + self.getNumber() + '.xml')
         opened = urlopen(requesturl)
         writefile = file(filename, 'w')
@@ -124,9 +143,10 @@ class LoggingOaiRequest(OaiRequest):
             opened.close()
             writefile.close()
         return binderytools.bind_file(filename)
-    
+
+
 def loggingListRecords(url, tempdir, **kwargs):
-    """loggingListRecords(url, tempdir, **listRecordsArgs"""
+    """loggingListRecords(url, tempdir, **listRecordsArgs)"""
     loair = LoggingOaiRequest(url, tempdir)
     listRecords = loair.listRecords(**kwargs)
     resumptionToken = str(listRecords.parentNode.resumptionToken)
@@ -135,5 +155,4 @@ def loggingListRecords(url, tempdir, **kwargs):
         listRecords = loair.listRecords(resumptionToken=resumptionToken)
         resumptionToken = str(listRecords.parentNode.resumptionToken)
         print resumptionToken
-    
-        
+
