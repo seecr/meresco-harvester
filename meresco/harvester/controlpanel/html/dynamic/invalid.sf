@@ -43,7 +43,7 @@ def main(arguments, **kwargs):
         recordId = id.split(":", 1)[-1]
         args = {'recordId': recordId}
         args.update(orginalArgs)
-        yield '<tr><td class="link"><a href="/page/invalidRecord/?%s">%s</a></td></tr>' % (escapeHtml(urlencode(args)), recordId)
+        yield '<tr><td class="link"><a href="/page/invalidRecord/?%s">%s</a></td></tr>' % (escapeHtml(urlencode(args)), escapeHtml(recordId))
     yield """</table>
     <p><a href="/page/showHarvesterStatus/show?%s">Back to harvester status of this repository</a></p>
     </div>""" % (escapeHtml(urlencode(orginalArgs)))

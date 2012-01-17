@@ -33,6 +33,7 @@ from os import makedirs
 from os.path import join
 
 from cq2utils import CQ2TestCase, CallTrace
+from escaping import escapeFilename
 
 from meresco.harvester.repositorystatus import RepositoryStatus
 from weightless.core import compose
@@ -48,25 +49,25 @@ class RepositoryStatusTest(CQ2TestCase):
         self.domainId = "adomain"
         makedirs(join(self.stateDir, self.domainId))
         repoId1LogDir = join(self.logDir, self.domainId, "invalid", "repoId1")
-        repoId2LogDir = join(self.logDir, self.domainId, "invalid", "repoId2")
+        repoId2LogDir = join(self.logDir, self.domainId, "invalid", escapeFilename("repoId/2"))
         makedirs(repoId1LogDir)
         makedirs(repoId2LogDir)
         open(join(repoId1LogDir, "invalidId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
-        open(join(repoId1LogDir, "invalidId2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
-        open(join(repoId2LogDir, "invalidId3"), 'w').write("<diagnostic>ERROR3</diagnostic>")
-        open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w').write("invalidId1\ninvalidId2")
-        open(join(self.stateDir, self.domainId, "repoId2_invalid.ids"), 'w').write("invalidId3")
+        open(join(repoId1LogDir, "invalidId&2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
+        open(join(repoId2LogDir, escapeFilename("invalidId/3")), 'w').write("<diagnostic>ERROR3</diagnostic>")
+        open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w').write("invalidId1\ninvalidId&2")
+        open(join(self.stateDir, self.domainId, escapeFilename("repoId/2_invalid.ids")), 'w').write("invalidId/3")
         open(join(self.stateDir, self.domainId, "repoId3_invalid.ids"), 'w').write("")
         self.status = RepositoryStatus(self.logDir, self.stateDir)
         observer = CallTrace("HarvesterData")
         observer.returnValues["getRepositoryGroupIds"] = ["repoGroupId1", "repoGroupId2"]
         def getRepositoryIds(domainId, repositoryGroupId):
             if repositoryGroupId == "repoGroupId1":
-                return ["repoId1", "repoId2"]
+                return ["repoId1", "repoId/2"]
             return ["repoId3", "anotherRepoId"]
         observer.methods["getRepositoryIds"] = getRepositoryIds
         def getRepositoryGroupId(domainId, repositoryId):
-            return 'repoGroupId1' if repositoryId in ['repoId1', 'repoId2'] else 'repoGroupId2'
+            return 'repoGroupId1' if repositoryId in ['repoId1', 'repoId/2'] else 'repoGroupId2'
         observer.methods["getRepositoryGroupId"] = getRepositoryGroupId
         self.status.addObserver(observer)
 
@@ -82,7 +83,7 @@ class RepositoryStatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <invalid>2</invalid>
                 <recentinvalids>
-                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId&amp;2</invalidId>
                     <invalidId>invalidId1</invalidId>
                 </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
@@ -115,12 +116,12 @@ class RepositoryStatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <invalid>2</invalid>
                 <recentinvalids>
-                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId&amp;2</invalidId>
                     <invalidId>invalidId1</invalidId>
                 </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
-            <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
+            <status repositoryId="repoId/2" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -130,7 +131,7 @@ class RepositoryStatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <invalid>1</invalid>
                 <recentinvalids>
-                    <invalidId>invalidId3</invalidId>
+                    <invalidId>invalidId/3</invalidId>
                 </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
@@ -148,12 +149,12 @@ class RepositoryStatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <invalid>2</invalid>
                 <recentinvalids>
-                    <invalidId>invalidId2</invalidId>
+                    <invalidId>invalidId&amp;2</invalidId>
                     <invalidId>invalidId1</invalidId>
                 </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
-            <status repositoryId="repoId2" repositoryGroupId="repoGroupId1">
+            <status repositoryId="repoId/2" repositoryGroupId="repoGroupId1">
                 <lastHarvestDate></lastHarvestDate>
                 <harvested></harvested>
                 <uploaded></uploaded>
@@ -163,7 +164,7 @@ class RepositoryStatusTest(CQ2TestCase):
                 <recenterrors></recenterrors>
                 <invalid>1</invalid>
                 <recentinvalids>
-                    <invalidId>invalidId3</invalidId>
+                    <invalidId>invalidId/3</invalidId>
                 </recentinvalids>
                 <lastHarvestAttempt></lastHarvestAttempt>
             </status>
@@ -196,8 +197,8 @@ class RepositoryStatusTest(CQ2TestCase):
     def testGetAllInvalidRecords(self):
         def invalidRecords(repoId):
             return list(self.status.invalidRecords(self.domainId, repoId))
-        self.assertEquals(["invalidId2", "invalidId1"], invalidRecords("repoId1"))
-        self.assertEquals(["invalidId3"], invalidRecords("repoId2"))
+        self.assertEquals(["invalidId&2", "invalidId1"], invalidRecords("repoId1"))
+        self.assertEquals(["invalidId/3"], invalidRecords("repoId/2"))
         self.assertEquals([], invalidRecords("repoId3"))
         self.assertEquals([], invalidRecords("repoId4"))
 
@@ -205,8 +206,8 @@ class RepositoryStatusTest(CQ2TestCase):
         def getInvalidRecord(repoId, recordId):
             return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId)) 
         self.assertEquals("<diagnostic>ERROR1</diagnostic>", getInvalidRecord("repoId1", "invalidId1")) 
-        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId2")) 
-        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId2", "invalidId3")) 
+        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId&2")) 
+        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId/2", "invalidId/3")) 
 
     def testRecentInvalidsOnlyGives10InCaseOfManyMoreInvalids(self):
         with open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w') as f:
@@ -312,7 +313,7 @@ class RepositoryStatusTest(CQ2TestCase):
   </recenterrors>
   <invalid>2</invalid>
   <recentinvalids>
-    <invalidId>invalidId2</invalidId>
+    <invalidId>invalidId&amp;2</invalidId>
     <invalidId>invalidId1</invalidId>
   </recentinvalids>
   <lastHarvestAttempt>2005-08-24T20:00:00Z</lastHarvestAttempt>

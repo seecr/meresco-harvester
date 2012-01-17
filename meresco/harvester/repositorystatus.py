@@ -35,6 +35,7 @@ from xml.sax.saxutils import escape as escapeXml
 from re import compile
 from itertools import ifilter, islice
 from meresco.core import Observable
+from escaping import escapeFilename
 
 from harvesterlog import INVALID_DATA_MESSAGES_DIR
 
@@ -61,14 +62,14 @@ class RepositoryStatus(Observable):
         yield "</GetStatus>"
 
     def invalidRecords(self, domainId, repositoryId):
-        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
         if not isfile(invalidFile):
             return []
         return reversed([line.strip() for line in open(invalidFile) if line.strip()])
 
     def getInvalidRecord(self, domainId, repositoryId, recordId):
         invalidDir = join(self._logPath, domainId, INVALID_DATA_MESSAGES_DIR)
-        return parse(open(join(invalidDir, repositoryId, recordId)))
+        return parse(open(join(invalidDir, escapeFilename(repositoryId), escapeFilename(recordId))))
 
     def _getRepositoryStatus(self, domainId, groupId, repoId):
         stats = self._parseEventsFile(domainId, repoId)
@@ -86,13 +87,13 @@ class RepositoryStatus(Observable):
         yield '<invalid>%s</invalid>\n' % self._invalidCount(domainId, repoId)
         yield '<recentinvalids>\n'
         for invalidRecord in islice(self.invalidRecords(domainId, repoId), 10):
-            yield '<invalidId>%s</invalidId>\n' % invalidRecord
+            yield '<invalidId>%s</invalidId>\n' % escapeXml(invalidRecord)
         yield '</recentinvalids>\n'
         yield '<lastHarvestAttempt>%s</lastHarvestAttempt>\n' % stats.get('lastHarvestAttempt', '')
         yield '</status>\n'
 
     def _invalidCount(self, domainId, repositoryId):
-        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
         return len(open(invalidFile).readlines()) if isfile(invalidFile) else 0
 
     def _parseEventsFile(self, domainId, repositoryId):

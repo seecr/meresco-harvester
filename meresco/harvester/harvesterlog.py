@@ -162,6 +162,6 @@ class HarvesterLog(object):
 
     def _invalidDataMessageFilePath(self, uploadid):
         repositoryId, recordId = uploadid.split(":", 1)
-        return join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId, escapeFilename(recordId))
+        return join(self._logDir, INVALID_DATA_MESSAGES_DIR, escapeFilename(repositoryId), escapeFilename(recordId))
 
     

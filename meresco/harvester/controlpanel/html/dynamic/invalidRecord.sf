@@ -34,7 +34,7 @@ def main(arguments, **kwargs):
     recordId = arguments.get('recordId', [None])[0]
 
     yield """<div>
-    <h3>Repository %s - Record %s</h3>""" % (repositoryId, recordId)
+    <h3>Repository %s - Record %s</h3>""" % (escapeHtml(repositoryId), escapeHtml(recordId))
 
     invalidRecord = any.getInvalidRecord(domainId, repositoryId, recordId)
 
