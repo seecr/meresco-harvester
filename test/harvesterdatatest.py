@@ -27,11 +27,11 @@
 ## end license ##
 
 from os.path import join
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 
 from meresco.harvester.harvesterdata import HarvesterData
 
-class HarvesterDataTest(CQ2TestCase):
+class HarvesterDataTest(SeecrTestCase):
 
     def testGetRepositoryGroupIds(self):
         open(join(self.tempdir, 'adomain.domain'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>

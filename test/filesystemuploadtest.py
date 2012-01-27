@@ -36,7 +36,7 @@
 import unittest
 from meresco.harvester.filesystemuploader import FileSystemUploader
 from meresco.harvester.virtualuploader import UploaderException
-from cq2utils import CallTrace, CQ2TestCase
+from seecr.test import CallTrace, SeecrTestCase
 from slowfoot.wrappers import wrapp
 import os, shutil
 from slowfoot import binderytools
@@ -46,7 +46,7 @@ from meresco.harvester.mapping import Upload, parse_xml
 
 from os.path import isfile, join
 
-class FileSystemUploaderTest(CQ2TestCase):
+class FileSystemUploaderTest(SeecrTestCase):
 
     def setUp(self):
         self.tempdir = mkdtemp()

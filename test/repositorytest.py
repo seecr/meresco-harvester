@@ -41,7 +41,7 @@ from meresco.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string
 from meresco.harvester.timeslot import Timeslot, Wildcard
-from cq2utils import CallTrace
+from seecr.test import CallTrace
 import tempfile, os, shutil
 import unittest
 

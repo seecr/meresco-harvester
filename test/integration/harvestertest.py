@@ -36,7 +36,7 @@ from subprocess import Popen
 from shutil import copytree
 from lxml.etree import parse, tostring
 
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from utils import getRequest
 
 from integrationtestcase import IntegrationTestCase

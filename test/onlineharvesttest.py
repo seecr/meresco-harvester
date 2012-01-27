@@ -38,7 +38,7 @@ from StringIO import StringIO
 from meresco.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
 from slowfoot.wrappers import wrapp
 import os
-from cq2utils import CallTrace
+from seecr.test import CallTrace
 
 class OnlineHarvestTest(unittest.TestCase):
     def setUp(self):

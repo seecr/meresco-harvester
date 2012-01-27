@@ -33,14 +33,14 @@
 ## end license ##
 
 from sys import exc_info
-from cq2utils import CallTrace, CQ2TestCase
+from seecr.test import CallTrace, SeecrTestCase
 from meresco.harvester.harvesterlog import HarvesterLog
 from os.path import join
 
 
-class ActionTestCase(CQ2TestCase):
+class ActionTestCase(SeecrTestCase):
     def setUp(self):
-        CQ2TestCase.setUp(self)
+        SeecrTestCase.setUp(self)
         self.repository = CallTrace("Repository")
         self.repository.id = 'repository'
         self.repository.baseurl = 'base:url'

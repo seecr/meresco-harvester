@@ -32,17 +32,17 @@ from __future__ import with_statement
 from os import makedirs
 from os.path import join
 
-from cq2utils import CQ2TestCase, CallTrace
+from seecr.test import SeecrTestCase, CallTrace
 
 from meresco.harvester.repositorystatus import RepositoryStatus
 from weightless.core import compose
 from lxml.etree import tostring, parse
 from StringIO import StringIO
 
-class RepositoryStatusTest(CQ2TestCase):
+class RepositoryStatusTest(SeecrTestCase):
 
     def setUp(self):
-        CQ2TestCase.setUp(self)
+        SeecrTestCase.setUp(self)
         self.stateDir = join(self.tempdir, "state")
         self.logDir = join(self.tempdir, "log")
         self.domainId = "adomain"

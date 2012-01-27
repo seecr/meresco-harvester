@@ -32,14 +32,14 @@
 # 
 ## end license ##
 
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from meresco.harvester.ids import Ids
 
-class IdsTest(CQ2TestCase):
+class IdsTest(SeecrTestCase):
     def tearDown(self):
         ids = getattr(self, 'ids', None)
         if ids: ids.close()
-        CQ2TestCase.tearDown(self)
+        SeecrTestCase.tearDown(self)
         
     def testAddOne(self):
         self.ids = Ids(self.tempdir + '/doesnotexistyet/', 'idstest')

@@ -33,7 +33,7 @@
 ## end license ##
 
 from actiontestcase import ActionTestCase
-from cq2utils import CallTrace
+from seecr.test import CallTrace
 from meresco.harvester.action import HarvestAction
 from meresco.harvester.eventlogger import NilEventLogger
 from meresco.harvester.oairequest import OaiRequest

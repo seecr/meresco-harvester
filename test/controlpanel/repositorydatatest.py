@@ -28,11 +28,11 @@
 ## end license ##
 
 from __future__ import with_statement
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from os.path import join
 from meresco.harvester.controlpanel import RepositoryData
 
-class RepositoryDataTest(CQ2TestCase):
+class RepositoryDataTest(SeecrTestCase):
     def testSave(self):
         r = RepositoryData('identifier')
         r.repositoryGroupId='repositoryGroupId'

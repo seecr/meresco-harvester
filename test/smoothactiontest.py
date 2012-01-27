@@ -44,7 +44,7 @@ from meresco.harvester.deleteids import readIds
 from meresco.harvester import action
 from sets import Set
 from meresco.harvester.eventlogger import NilEventLogger
-from cq2utils import CallTrace
+from seecr.test import CallTrace
 
 class SmoothActionTest(ActionTestCase):
     def setUp(self):

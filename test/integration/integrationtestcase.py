@@ -37,7 +37,7 @@ from sys import stdout
 
 from utils import postRequest, getRequest
 
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from random import randint
 from time import sleep, time 
 
@@ -73,9 +73,9 @@ class PortNumberGenerator(object):
         cls.startNumber += 1
         return cls.startNumber
 
-class IntegrationTestCase(CQ2TestCase):
+class IntegrationTestCase(SeecrTestCase):
     def setUp(self):
-        CQ2TestCase.setUp(self)
+        SeecrTestCase.setUp(self)
         global state
         self.state = state
         self.controlHelper(action='reset')

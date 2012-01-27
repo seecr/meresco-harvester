@@ -32,7 +32,7 @@
 #
 ## end license ##
 
-from cq2utils import CQ2TestCase, CallTrace
+from seecr.test import SeecrTestCase, CallTrace
 from amara.binderytools import bind_string
 from lxml.etree import parse
 from StringIO import StringIO
@@ -40,9 +40,9 @@ from StringIO import StringIO
 from meresco.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
 from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
 
-class SruUpdateUploaderTest(CQ2TestCase):
+class SruUpdateUploaderTest(SeecrTestCase):
     def setUp(self):
-        CQ2TestCase.setUp(self)
+        SeecrTestCase.setUp(self)
         self.target = CallTrace('SruUpdateTarget', verbose=True)
         self.uploader = SruUpdateUploader(self.target, CallTrace('eventlogger'))
         self.sentData = []

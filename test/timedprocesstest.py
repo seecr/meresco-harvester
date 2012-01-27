@@ -32,11 +32,11 @@
 # 
 ## end license ##
 
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from meresco.harvester.timedprocess import TimedProcess
 from os.path import join
 
-class TimedProcessTest(CQ2TestCase):
+class TimedProcessTest(SeecrTestCase):
 
     def testSuccess(self):
         fd = open(self.tempfile,'w')

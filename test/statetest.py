@@ -33,10 +33,10 @@
 ## end license ##
 
 from meresco.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from os.path import join
 
-class StateTest(CQ2TestCase):
+class StateTest(SeecrTestCase):
     def testReadStartDateFromLogLine(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEquals('2005-01-02', getStartDate(logline))

@@ -42,7 +42,7 @@ from tempfile import mkdtemp
 from StringIO import StringIO
 from lxml.etree import parse
 
-from cq2utils import CallTrace
+from seecr.test import CallTrace
 from slowfoot.wrappers import wrapp, binderytools
 
 from meresco.harvester.harvester import Harvester
