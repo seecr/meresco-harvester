@@ -212,7 +212,8 @@ class RepositoryStatusTest(CQ2TestCase):
         with open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w') as f:
             for i in range(20):
                 f.write("ignoredId%d\n" % i)
-        lxmlResult = parse(StringIO(''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))))
+        statusXml = ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))
+        lxmlResult = parse(StringIO(statusXml))
         self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/ignored/text()")[0])
         self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentignores/ignoredId")))
 

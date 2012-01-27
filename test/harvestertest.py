@@ -81,7 +81,6 @@ class _MockRepository(object):
 class HarvesterTest(unittest.TestCase):
     def setUp(self):
         self.sendCalled=0
-        self.sendReturn=None
         self.sendException = None
         self.upload = None
         self.sendParts=[]
@@ -134,8 +133,8 @@ class HarvesterTest(unittest.TestCase):
         finally:
             idsfile.close()
 
-    def createHarvesterWithMockUploader(self, name, set=None, mockRequest = None):
-        self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
+    def createHarvesterWithMockUploader(self, name, set=None, mockRequest=None):
+        self.logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
         repository = self.MockRepository(name, set)
         uploader = repository.createUploader(self.logger.eventLogger())
         self.mapper = repository.mapping()
@@ -148,7 +147,6 @@ class HarvesterTest(unittest.TestCase):
 
     def testSimpleStat(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        self.sendReturn = '12341234-@tompoes-1234123.134112'
         harvester.harvest()
         self.assert_(os.path.isfile(self.stateDir+'/tud.stats'))
         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
@@ -170,7 +168,6 @@ class HarvesterTest(unittest.TestCase):
 
     def testResumptionTokenLog(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        self.sendReturn = 'true'
         harvester.harvest()
         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
         self.assertEquals(' ResumptionToken: TestToken', stats[3])
@@ -222,7 +219,6 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.createUploader(logger.eventLogger))
         h.addObserver(repository.mapping())
         self.listRecordsFrom = None
-        self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
         h.harvest()
         self.assertEquals('1999-12-01', self.listRecordsFrom)
         lines = open(self.stateDir + '/tud.stats').readlines()
@@ -380,7 +376,6 @@ class HarvesterTest(unittest.TestCase):
         self.upload = upload
         if self.sendException:
             raise self.sendException
-        return self.sendReturn
 
     def delete(self, anUpload):
         self.delete_id = anUpload.id

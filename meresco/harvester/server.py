@@ -29,26 +29,28 @@
 # 
 ## end license ##
 
-from meresco.core import Observable, be
 from os.path import join, abspath, dirname
 from sys import stdout
-
 import time
+from xml.sax.saxutils import escape as escapeXml
+from lxml.etree import XML
+
 from weightless.io import Reactor
-from weightless.core import compose
+from weightless.core import compose, be
+
+from meresco.core import Observable
+
 from dynamichtml import DynamicHtml
 
 from meresco.components import readConfig
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer
 from meresco.components.http.utils import ContentTypePlainText
-from __version__ import VERSION_STRING
 
+from __version__ import VERSION_STRING
 from saharaget import SaharaGet
 from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
 
-from xml.sax.saxutils import escape as escapeXml
-from lxml.etree import XML
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
@@ -101,8 +103,9 @@ def startServer(configFile):
     observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
     server = be(dna(reactor, observableHttpServer, config))
-    server.once.observer_init()
+    list(compose(server.once.observer_init()))
 
     print "Ready to rumble at", portNumber
     stdout.flush()
     reactor.loop()
+

@@ -29,6 +29,9 @@
 # 
 ## end license ##
 
+from os import getuid
+assert getuid() != 0, "Do not run tests as 'root'"
+
 from os import system                               #DO_NOT_DISTRIBUTE
 from glob import glob                               #DO_NOT_DISTRIBUTE
 from sys import path as systemPath                  #DO_NOT_DISTRIBUTE

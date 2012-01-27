@@ -29,25 +29,36 @@
 ## end license ##
 from __future__ import with_statement
 
-from mocksaharaget import MockSaharaGet
-
 from glob import glob
-from sys import path, argv, exit
+from sys import path
+from os.path import abspath, dirname, join
+
+mydir = dirname(abspath(__file__))
+
+baseDir = dirname(dirname(mydir))                   #DO_NOT_DISTRIBUTE
+from os import system                               #DO_NOT_DISTRIBUTE
+for p in glob(join(baseDir, 'deps.d') + '/*'):      #DO_NOT_DISTRIBUTE
+    path.insert(0, p)                               #DO_NOT_DISTRIBUTE
+path.insert(0, baseDir)                             #DO_NOT_DISTRIBUTE
+
+from sys import stdout, argv, exit
+from os.path import isdir, basename
+from os import makedirs, remove
+from re import compile
+from traceback import format_exc
 
 from weightless.io import Reactor
-from sys import stdout
-from os.path import abspath, dirname, join, isdir, basename
-from os import makedirs, remove
+from weightless.core import compose, be
+
 from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
 from meresco.components import StorageComponent
 from meresco.oai import OaiPmh, OaiJazz
-from meresco.core import Observable, be
-from re import compile
-from traceback import format_exc
+from meresco.core import Observable
 
-mydir = dirname(abspath(__file__))
+from mocksaharaget import MockSaharaGet
+
 notWordCharRE = compile('\W+')
 
 class InvalidDataException(Exception):
@@ -132,7 +143,7 @@ logLines = []
 class Log(Observable):
     def handleRequest(self, RequestURI, **kwargs):
         logLines.append(RequestURI)
-        return self.all.handleRequest(RequestURI=RequestURI, **kwargs)
+        yield self.all.handleRequest(RequestURI=RequestURI, **kwargs)
 
     def reset(self):
         del logLines[:]
@@ -143,7 +154,7 @@ class Log(Observable):
 class RetrieveLog(Observable):
     def handleRequest(self, **kwargs):
         yield okPlainText
-        yield '\n'.join(self.any.logs())
+        yield '\n'.join(self.call.logs())
 
 
 def main(reactor, portNumber, dir):
@@ -191,13 +202,13 @@ def main(reactor, portNumber, dir):
             )
         )
     )
-    server.once.observer_init()
+    list(compose(server.once.observer_init()))
     for i in range(1,16):
         identifier = 'oai:record:%02d' % i
-        oaiStorage.add(identifier=identifier, partname='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % identifier)
+        list(compose(oaiStorage.add(identifier=identifier, partname='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % identifier)))
         oaiJazz.addOaiRecord(identifier=identifier, metadataFormats=[('oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd', 'http://www.openarchives.org/OAI/2.0/oai_dc/')])
         if i in [3,6]:
-            oaiJazz.delete(identifier=identifier)
+            list(compose(oaiJazz.delete(identifier=identifier)))
 
 if __name__== '__main__':
     args = argv[1:]

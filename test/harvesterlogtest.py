@@ -33,6 +33,7 @@
 ## end license ##
 
 import unittest, os
+from sys import exc_info
 from time import strftime, gmtime
 from os.path import isfile
 from shutil import rmtree
@@ -123,7 +124,8 @@ class HarvesterLogTest(unittest.TestCase):
             logger.notifyHarvestedRecord("name:uploadId2")
             raise Exception('FATAL')
         except:
-            logger.endWithException()
+            exType, exValue, exTb = exc_info()
+            logger.endWithException(exType, exValue, exTb)
         logger.close()
         lines = open(self.stateDir+'/name.stats').readlines()
         eventline = open(self.logDir+'/name.events').readlines()[0].strip()

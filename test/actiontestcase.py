@@ -32,9 +32,11 @@
 # 
 ## end license ##
 
+from sys import exc_info
 from cq2utils import CallTrace, CQ2TestCase
 from meresco.harvester.harvesterlog import HarvesterLog
 from os.path import join
+
 
 class ActionTestCase(CQ2TestCase):
     def setUp(self):
@@ -72,7 +74,8 @@ class ActionTestCase(CQ2TestCase):
             try:
                 raise Exception(exception)
             except:
-                h.endWithException()
+                exType, exValue, exTb = exc_info()
+                h.endWithException(exType, exValue, exTb)
         else:
             h.endRepository(token)
         h.close()

@@ -51,21 +51,21 @@ class Harvester(Observable):
         self._MAXTIME= 30*60 # 30 minutes
 
     def getRecord(self, id):
-        return self.any.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
+        return self.call.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
 
     def uploaderInfo(self):
-        return self.any.info()
+        return self.call.info()
 
     def listRecords(self, from_, token, set):
         if token:
-            return self.any.listRecords(resumptionToken=token)
+            return self.call.listRecords(resumptionToken=token)
         elif from_:
             if set:
-                return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
-            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+                return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
         elif set:
-            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
-        return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
+            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+        return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix)
 
     def fetchRecords(self, from_, token):
         records, resumptionToken = self.listRecords(from_, token, self._repository.set)
@@ -74,7 +74,7 @@ class Harvester(Observable):
         return resumptionToken
 
     def uploadRecord(self, record):
-        upload = self.any.createUpload(self._repository, record)
+        upload = self.call.createUpload(self._repository, record)
         self.do.notifyHarvestedRecord(upload.id)
         if record.header.status == "deleted":
             self.do.delete(upload)
@@ -85,26 +85,27 @@ class Harvester(Observable):
                 self.do.uploadIdentifier(upload.id)
             except InvalidDataException, e:
                 maxIgnore = self._repository.maxIgnore()
-                if self.any.totalIgnoredIds() >= maxIgnore:
+                if self.call.totalIgnoredIds() >= maxIgnore:
                     raise TooMuchInvalidDataException(upload.id, maxIgnore)
                 self.do.ignoreIdentifier(upload.id, e.originalMessage)
 
     def _harvestLoop(self):
         try:
             self.do.startRepository()
-            state = self.any.state()
+            state = self.call.state()
             newtoken = self.fetchRecords(state.startdate, state.token)
             self.do.endRepository(newtoken)
             return newtoken
         except:
-            self.do.endWithException()
+            exType, exValue, exTb = sys.exc_info()
+            self.do.endWithException(exType, exValue, exTb)
             raise
 
     def _harvest(self):
         try:
             self.do.logLine('STARTHARVEST', '',id=self._repository.id)
-            self.do.logInfo(self.any.uploaderInfo(), id=self._repository.id)
-            self.do.logInfo(self.any.mappingInfo(), id=self._repository.id)
+            self.do.logInfo(self.call.uploaderInfo(), id=self._repository.id)
+            self.do.logInfo(self.call.mappingInfo(), id=self._repository.id)
             self.do.start()
             try:
                 return self._harvestLoop()
@@ -115,7 +116,7 @@ class Harvester(Observable):
 
     def harvest(self):
         try:
-            if self.any.hasWork():
+            if self.call.hasWork():
                 resumptionToken = self._harvest()
                 hasResumptionToken = bool(resumptionToken and str(resumptionToken) != 'None')
                 return HARVESTED, hasResumptionToken

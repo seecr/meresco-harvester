@@ -39,7 +39,7 @@ def main(arguments, **kwargs):
 
     yield '<table class="event">'
     yield '<tr><td class="eventheader">Ignored records</td></tr>'
-    for id in any.ignoredRecords(domainId, repositoryId):
+    for id in call.ignoredRecords(domainId, repositoryId):
         recordId = id.split(":", 1)[-1]
         args = {'recordId': recordId}
         args.update(orginalArgs)

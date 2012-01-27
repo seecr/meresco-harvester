@@ -101,13 +101,12 @@ class HarvesterLog(object):
         self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
 
-    def endWithException(self):
-        error = str(sys.exc_type) + ': ' + str(sys.exc_value)
-        xtype,xval,xtb = sys.exc_info()
-        error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
-        self._eventlogger.logError(error2, id=self._name)
+    def endWithException(self, exType, exValue, exTb):
+        error = str(exType) + ': ' + str(exValue)
         self._state._write(self.countsSummary())
         self._state._write( ', Error: ' + error)
+        error2 = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
+        self._eventlogger.logError(error2, id=self._name)
 
     def countsSummary(self):
         return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())

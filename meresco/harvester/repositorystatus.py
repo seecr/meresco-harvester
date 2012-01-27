@@ -49,12 +49,12 @@ class RepositoryStatus(Observable):
         ignoredDir = join(self._logPath, domainId, "ignored")
         yield "<GetStatus>"
         if repositoryId:
-            groupId = self.any.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
+            groupId = self.call.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
             yield self._getRepositoryStatus(domainId, groupId, repositoryId)
         else:
-            groupIds = [repositoryGroupId] if repositoryGroupId else self.any.getRepositoryGroupIds(domainId=domainId)
+            groupIds = [repositoryGroupId] if repositoryGroupId else self.call.getRepositoryGroupIds(domainId=domainId)
             for groupId in groupIds:
-                repositoryIds = self.any.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
+                repositoryIds = self.call.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
                 for repoId in repositoryIds:
                     yield self._getRepositoryStatus(domainId, groupId, repoId)
         yield "</GetStatus>"

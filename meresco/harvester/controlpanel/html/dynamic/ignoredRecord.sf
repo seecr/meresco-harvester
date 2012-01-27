@@ -36,7 +36,7 @@ def main(arguments, **kwargs):
     yield """<div>
     <h3>Repository %s - Record %s</h3>""" % (repositoryId, recordId)
 
-    ignoredRecord = any.getIgnoredRecord(domainId, repositoryId, recordId)
+    ignoredRecord = call.getIgnoredRecord(domainId, repositoryId, recordId)
 
     yield "<pre>%s</pre>" % escapeHtml(xpath(ignoredRecord, '//diag:diagnostic/diag:details/text()')[0])
     yield '<p><a href="/page/ignored/?%s">Back to ignored records</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))

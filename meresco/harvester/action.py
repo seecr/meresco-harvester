@@ -31,14 +31,17 @@
 #
 ## end license ##
 
-from harvesterlog import HarvesterLog
-from harvester import Harvester, HARVESTED, NOTHING_TO_DO
-from eventlogger import CompositeLogger, EventLogger
-from state import State
-from deleteids import DeleteIds, readIds, writeIds
 from os.path import isfile, join
 from os import remove, rename
-from meresco.core import be
+
+from weightless.core import be
+
+from deleteids import DeleteIds, readIds, writeIds
+from eventlogger import CompositeLogger, EventLogger
+from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from harvesterlog import HarvesterLog
+from state import State
+
 
 DONE = 'Done.'
 
@@ -184,7 +187,7 @@ class SmoothAction(Action):
             open(self.oldfilename, 'w').close()
         d = self._createDeleteIds()
         d.markDeleted()
-        return     'initialized.'
+        return 'initialized.'
 
     def _finish(self):
         deletefilename = self.filename + '.delete'
