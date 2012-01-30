@@ -96,6 +96,7 @@ class State(object):
     
     def _write(self, *args):
         self._statsfile.write(*args)
+        self._statsfile.flush()
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):

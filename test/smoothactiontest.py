@@ -73,7 +73,7 @@ class SmoothActionTest(ActionTestCase):
         self.assertTrue(os.path.isfile(self.idfilename))
         self.assertEquals('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
+        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename), readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
 
