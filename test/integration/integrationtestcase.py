@@ -56,7 +56,6 @@ from traceback import print_exc
 mypath = dirname(abspath(__file__))
 binDir = join(dirname(dirname(mypath)), 'bin')
 examplesPath = join(dirname(dirname(mypath)), 'examples')
-harvesterDir = dirname(dirname(mypath))
 
 if not isdir(binDir):
     binDir = '/usr/bin'
@@ -99,7 +98,6 @@ class IntegrationTestCase(SeecrTestCase):
         harvesterProcessInfo = Popen(
             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=binDir,
-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
         waitpid(harvesterProcessInfo.pid, 0)
@@ -153,7 +151,6 @@ class IntegrationState(object):
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
             args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             cwd=self.integrationTempdir, 
             stdout=stdouterrlog,
             stderr=stdouterrlog)
@@ -170,7 +167,6 @@ class IntegrationState(object):
         configFile = join(self.integrationTempdir, 'harvester.config') 
         processInfo = Popen(
             args=[join(binDir, "meresco-harvester-internal-server"), configFile], 
-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)

@@ -31,17 +31,23 @@
 set -e
 mydir=$(cd $(dirname $0); pwd)
 
+fullPythonVersion=python2.6
+
+VERSION="x.y.z"
+
 rm -rf tmp build
 
-python setup.py install --root tmp
+${fullPythonVersion} setup.py install --root tmp
+
 cp -r test tmp/test
-cp meresco/__init__.py tmp/usr/lib/python2.5/site-packages/meresco
-export PYTHONPATH=`pwd`/tmp/usr/lib/python2.5/site-packages
-find tmp -type f -exec sed -e \
+find tmp -type f -exec sed -r -e \
     "/DO_NOT_DISTRIBUTE/d;
+    s,^binDir.*$,binDir='$mydir/tmp/usr/local/bin',;
     s,^examplesPath.*$,examplesPath='$mydir/examples',;
-    s,^harvesterDir.*$,harvesterDir='$PYTHONPATH',;
-    s,^binDir.*$,binDir='$mydir/tmp/usr/bin'," -i {} \;
+    s/\\\$Version:[^\\\$]*\\\$/\\\$Version: ${VERSION}\\\$/" -i {} \;
+
+cp meresco/__init__.py tmp/usr/local/lib/${fullPythonVersion}/dist-packages/meresco
+export PYTHONPATH=`pwd`/tmp/usr/local/lib/${fullPythonVersion}/dist-packages:${PYTHONPATH}
 
 teststorun=$1
 if [ -z "$teststorun" ]; then
@@ -58,12 +64,15 @@ echo "Press [ENTER] to continue"
 read
 
 for testtorun in $teststorun; do
+    set +o errexit
     (
     cd tmp/test
     ./$testtorun "$@"
     )
+    set -o errexit
     echo "Finished $testtorun, press [ENTER] to continue"
     read
 done
 
 rm -rf tmp build
+
