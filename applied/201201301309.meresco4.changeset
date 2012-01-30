@@ -1,0 +1,814 @@
+Changeset created on Mon Jan 30 13:09:08 UTC 2012 by Seecr (Seek You Too B.V.)
+
+Description: Harvester compatability for Meresco 4
+
+    Harvester backend is now compatible with Meresco 4.
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/8.0-beta-Seecr/version_2
+
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/action.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/action.py
+--- version_2/meresco/harvester/action.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/action.py	2012-01-30 14:07:22.000000000 +0100
+@@ -31,14 +31,17 @@
+ #
+ ## end license ##
+ 
+-from harvesterlog import HarvesterLog
+-from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+-from eventlogger import CompositeLogger, EventLogger
+-from state import State
+-from deleteids import DeleteIds, readIds, writeIds
+ from os.path import isfile, join
+ from os import remove, rename
+-from meresco.core import be
++
++from weightless.core import be
++
++from deleteids import DeleteIds, readIds, writeIds
++from eventlogger import CompositeLogger, EventLogger
++from harvester import Harvester, HARVESTED, NOTHING_TO_DO
++from harvesterlog import HarvesterLog
++from state import State
++
+ 
+ DONE = 'Done.'
+ 
+@@ -184,7 +187,7 @@
+             open(self.oldfilename, 'w').close()
+         d = self._createDeleteIds()
+         d.markDeleted()
+-        return     'initialized.'
++        return 'initialized.'
+ 
+     def _finish(self):
+         deletefilename = self.filename + '.delete'
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/controlpanel/html/dynamic/ignoredRecord.sf /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/controlpanel/html/dynamic/ignoredRecord.sf
+--- version_2/meresco/harvester/controlpanel/html/dynamic/ignoredRecord.sf	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/controlpanel/html/dynamic/ignoredRecord.sf	2012-01-30 14:07:22.000000000 +0100
+@@ -36,7 +36,7 @@
+     yield """<div>
+     <h3>Repository %s - Record %s</h3>""" % (repositoryId, recordId)
+ 
+-    ignoredRecord = any.getIgnoredRecord(domainId, repositoryId, recordId)
++    ignoredRecord = call.getIgnoredRecord(domainId, repositoryId, recordId)
+ 
+     yield "<pre>%s</pre>" % escapeHtml(xpath(ignoredRecord, '//diag:diagnostic/diag:details/text()')[0])
+     yield '<p><a href="/page/ignored/?%s">Back to ignored records</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/controlpanel/html/dynamic/ignored.sf /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/controlpanel/html/dynamic/ignored.sf
+--- version_2/meresco/harvester/controlpanel/html/dynamic/ignored.sf	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/controlpanel/html/dynamic/ignored.sf	2012-01-30 14:07:22.000000000 +0100
+@@ -39,7 +39,7 @@
+ 
+     yield '<table class="event">'
+     yield '<tr><td class="eventheader">Ignored records</td></tr>'
+-    for id in any.ignoredRecords(domainId, repositoryId):
++    for id in call.ignoredRecords(domainId, repositoryId):
+         recordId = id.split(":", 1)[-1]
+         args = {'recordId': recordId}
+         args.update(orginalArgs)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/harvesterlog.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/harvesterlog.py
+--- version_2/meresco/harvester/harvesterlog.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/harvesterlog.py	2012-01-30 14:07:22.000000000 +0100
+@@ -101,13 +101,12 @@
+         self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
+         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
+ 
+-    def endWithException(self):
+-        error = str(sys.exc_type) + ': ' + str(sys.exc_value)
+-        xtype,xval,xtb = sys.exc_info()
+-        error2 = '|'.join(map(str.strip,traceback.format_exception(xtype,xval,xtb)))
+-        self._eventlogger.logError(error2, id=self._name)
++    def endWithException(self, exType, exValue, exTb):
++        error = str(exType) + ': ' + str(exValue)
+         self._state._write(self.countsSummary())
+         self._state._write( ', Error: ' + error)
++        error2 = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
++        self._eventlogger.logError(error2, id=self._name)
+ 
+     def countsSummary(self):
+         return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/harvester.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/harvester.py
+--- version_2/meresco/harvester/harvester.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/harvester.py	2012-01-30 14:07:22.000000000 +0100
+@@ -51,21 +51,21 @@
+         self._MAXTIME= 30*60 # 30 minutes
+ 
+     def getRecord(self, id):
+-        return self.any.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
++        return self.call.getRecord(metadataPrefix=self._repository.metadataPrefix, identifier=id)
+ 
+     def uploaderInfo(self):
+-        return self.any.info()
++        return self.call.info()
+ 
+     def listRecords(self, from_, token, set):
+         if token:
+-            return self.any.listRecords(resumptionToken=token)
++            return self.call.listRecords(resumptionToken=token)
+         elif from_:
+             if set:
+-                return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+-            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
++                return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
++            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+         elif set:
+-            return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+-        return self.any.listRecords(metadataPrefix=self._repository.metadataPrefix)
++            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
++        return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix)
+ 
+     def fetchRecords(self, from_, token):
+         records, resumptionToken = self.listRecords(from_, token, self._repository.set)
+@@ -74,7 +74,7 @@
+         return resumptionToken
+ 
+     def uploadRecord(self, record):
+-        upload = self.any.createUpload(self._repository, record)
++        upload = self.call.createUpload(self._repository, record)
+         self.do.notifyHarvestedRecord(upload.id)
+         if record.header.status == "deleted":
+             self.do.delete(upload)
+@@ -85,26 +85,27 @@
+                 self.do.uploadIdentifier(upload.id)
+             except InvalidDataException, e:
+                 maxIgnore = self._repository.maxIgnore()
+-                if self.any.totalIgnoredIds() >= maxIgnore:
++                if self.call.totalIgnoredIds() >= maxIgnore:
+                     raise TooMuchInvalidDataException(upload.id, maxIgnore)
+                 self.do.ignoreIdentifier(upload.id, e.originalMessage)
+ 
+     def _harvestLoop(self):
+         try:
+             self.do.startRepository()
+-            state = self.any.state()
++            state = self.call.state()
+             newtoken = self.fetchRecords(state.startdate, state.token)
+             self.do.endRepository(newtoken)
+             return newtoken
+         except:
+-            self.do.endWithException()
++            exType, exValue, exTb = sys.exc_info()
++            self.do.endWithException(exType, exValue, exTb)
+             raise
+ 
+     def _harvest(self):
+         try:
+             self.do.logLine('STARTHARVEST', '',id=self._repository.id)
+-            self.do.logInfo(self.any.uploaderInfo(), id=self._repository.id)
+-            self.do.logInfo(self.any.mappingInfo(), id=self._repository.id)
++            self.do.logInfo(self.call.uploaderInfo(), id=self._repository.id)
++            self.do.logInfo(self.call.mappingInfo(), id=self._repository.id)
+             self.do.start()
+             try:
+                 return self._harvestLoop()
+@@ -115,7 +116,7 @@
+ 
+     def harvest(self):
+         try:
+-            if self.any.hasWork():
++            if self.call.hasWork():
+                 resumptionToken = self._harvest()
+                 hasResumptionToken = bool(resumptionToken and str(resumptionToken) != 'None')
+                 return HARVESTED, hasResumptionToken
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/repositorystatus.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/repositorystatus.py
+--- version_2/meresco/harvester/repositorystatus.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/repositorystatus.py	2012-01-30 14:07:22.000000000 +0100
+@@ -49,12 +49,12 @@
+         ignoredDir = join(self._logPath, domainId, "ignored")
+         yield "<GetStatus>"
+         if repositoryId:
+-            groupId = self.any.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
++            groupId = self.call.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
+             yield self._getRepositoryStatus(domainId, groupId, repositoryId)
+         else:
+-            groupIds = [repositoryGroupId] if repositoryGroupId else self.any.getRepositoryGroupIds(domainId=domainId)
++            groupIds = [repositoryGroupId] if repositoryGroupId else self.call.getRepositoryGroupIds(domainId=domainId)
+             for groupId in groupIds:
+-                repositoryIds = self.any.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
++                repositoryIds = self.call.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
+                 for repoId in repositoryIds:
+                     yield self._getRepositoryStatus(domainId, groupId, repoId)
+         yield "</GetStatus>"
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/server.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/server.py
+--- version_2/meresco/harvester/server.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/server.py	2012-01-30 14:07:22.000000000 +0100
+@@ -29,26 +29,28 @@
+ # 
+ ## end license ##
+ 
+-from meresco.core import Observable, be
+ from os.path import join, abspath, dirname
+ from sys import stdout
+-
+ import time
++from xml.sax.saxutils import escape as escapeXml
++from lxml.etree import XML
++
+ from weightless.io import Reactor
+-from weightless.core import compose
++from weightless.core import compose, be
++
++from meresco.core import Observable
++
+ from dynamichtml import DynamicHtml
+ 
+ from meresco.components import readConfig
+ from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer
+ from meresco.components.http.utils import ContentTypePlainText
+-from __version__ import VERSION_STRING
+ 
++from __version__ import VERSION_STRING
+ from saharaget import SaharaGet
+ from repositorystatus import RepositoryStatus
+ from harvesterdata import HarvesterData
+ 
+-from xml.sax.saxutils import escape as escapeXml
+-from lxml.etree import XML
+ 
+ myPath = dirname(abspath(__file__))
+ dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
+@@ -101,8 +103,9 @@
+     observableHttpServer = ObservableHttpServer(reactor, portNumber)
+ 
+     server = be(dna(reactor, observableHttpServer, config))
+-    server.once.observer_init()
++    list(compose(server.once.observer_init()))
+ 
+     print "Ready to rumble at", portNumber
+     stdout.flush()
+     reactor.loop()
++
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/meresco/harvester/state.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/meresco/harvester/state.py
+--- version_2/meresco/harvester/state.py	2012-01-27 12:12:55.000000000 +0100
++++ version_3/meresco/harvester/state.py	2012-01-30 14:07:22.000000000 +0100
+@@ -96,6 +96,7 @@
+     
+     def _write(self, *args):
+         self._statsfile.write(*args)
++        self._statsfile.flush()
+ 
+     @staticmethod
+     def _filterNonErrorLogLine(iterator):
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/actiontestcase.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/actiontestcase.py
+--- version_2/test/actiontestcase.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/actiontestcase.py	2012-01-30 14:07:22.000000000 +0100
+@@ -32,13 +32,15 @@
+ # 
+ ## end license ##
+ 
+-from cq2utils import CallTrace, CQ2TestCase
++from sys import exc_info
++from seecr.test import CallTrace, SeecrTestCase
+ from meresco.harvester.harvesterlog import HarvesterLog
+ from os.path import join
+ 
+-class ActionTestCase(CQ2TestCase):
++
++class ActionTestCase(SeecrTestCase):
+     def setUp(self):
+-        CQ2TestCase.setUp(self)
++        SeecrTestCase.setUp(self)
+         self.repository = CallTrace("Repository")
+         self.repository.id = 'repository'
+         self.repository.baseurl = 'base:url'
+@@ -72,7 +74,8 @@
+             try:
+                 raise Exception(exception)
+             except:
+-                h.endWithException()
++                exType, exValue, exTb = exc_info()
++                h.endWithException(exType, exValue, exTb)
+         else:
+             h.endRepository(token)
+         h.close()
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/controlpanel/repositorydatatest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/controlpanel/repositorydatatest.py
+--- version_2/test/controlpanel/repositorydatatest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/controlpanel/repositorydatatest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -28,11 +28,11 @@
+ ## end license ##
+ 
+ from __future__ import with_statement
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from os.path import join
+ from meresco.harvester.controlpanel import RepositoryData
+ 
+-class RepositoryDataTest(CQ2TestCase):
++class RepositoryDataTest(SeecrTestCase):
+     def testSave(self):
+         r = RepositoryData('identifier')
+         r.repositoryGroupId='repositoryGroupId'
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/filesystemuploadtest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/filesystemuploadtest.py
+--- version_2/test/filesystemuploadtest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/filesystemuploadtest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -36,7 +36,7 @@
+ import unittest
+ from meresco.harvester.filesystemuploader import FileSystemUploader
+ from meresco.harvester.virtualuploader import UploaderException
+-from cq2utils import CallTrace, CQ2TestCase
++from seecr.test import CallTrace, SeecrTestCase
+ from slowfoot.wrappers import wrapp
+ import os, shutil
+ from slowfoot import binderytools
+@@ -46,7 +46,7 @@
+ 
+ from os.path import isfile, join
+ 
+-class FileSystemUploaderTest(CQ2TestCase):
++class FileSystemUploaderTest(SeecrTestCase):
+ 
+     def setUp(self):
+         self.tempdir = mkdtemp()
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/harvestactiontest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/harvestactiontest.py
+--- version_2/test/harvestactiontest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/harvestactiontest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -33,7 +33,7 @@
+ ## end license ##
+ 
+ from actiontestcase import ActionTestCase
+-from cq2utils import CallTrace
++from seecr.test import CallTrace
+ from meresco.harvester.action import HarvestAction
+ from meresco.harvester.eventlogger import NilEventLogger
+ from meresco.harvester.oairequest import OaiRequest
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/harvesterdatatest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/harvesterdatatest.py
+--- version_2/test/harvesterdatatest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/harvesterdatatest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -27,11 +27,11 @@
+ ## end license ##
+ 
+ from os.path import join
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ 
+ from meresco.harvester.harvesterdata import HarvesterData
+ 
+-class HarvesterDataTest(CQ2TestCase):
++class HarvesterDataTest(SeecrTestCase):
+ 
+     def testGetRepositoryGroupIds(self):
+         open(join(self.tempdir, 'adomain.domain'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/harvesterlogtest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/harvesterlogtest.py
+--- version_2/test/harvesterlogtest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/harvesterlogtest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -33,6 +33,7 @@
+ ## end license ##
+ 
+ import unittest, os
++from sys import exc_info
+ from time import strftime, gmtime
+ from os.path import isfile
+ from shutil import rmtree
+@@ -123,7 +124,8 @@
+             logger.notifyHarvestedRecord("name:uploadId2")
+             raise Exception('FATAL')
+         except:
+-            logger.endWithException()
++            exType, exValue, exTb = exc_info()
++            logger.endWithException(exType, exValue, exTb)
+         logger.close()
+         lines = open(self.stateDir+'/name.stats').readlines()
+         eventline = open(self.logDir+'/name.events').readlines()[0].strip()
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/harvestertest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/harvestertest.py
+--- version_2/test/harvestertest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/harvestertest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -42,7 +42,7 @@
+ from StringIO import StringIO
+ from lxml.etree import parse
+ 
+-from cq2utils import CallTrace
++from seecr.test import CallTrace
+ from slowfoot.wrappers import wrapp, binderytools
+ 
+ from meresco.harvester.harvester import Harvester
+@@ -81,7 +81,6 @@
+ class HarvesterTest(unittest.TestCase):
+     def setUp(self):
+         self.sendCalled=0
+-        self.sendReturn=None
+         self.sendException = None
+         self.upload = None
+         self.sendParts=[]
+@@ -134,8 +133,8 @@
+         finally:
+             idsfile.close()
+ 
+-    def createHarvesterWithMockUploader(self, name, set=None, mockRequest = None):
+-        self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
++    def createHarvesterWithMockUploader(self, name, set=None, mockRequest=None):
++        self.logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name=name)
+         repository = self.MockRepository(name, set)
+         uploader = repository.createUploader(self.logger.eventLogger())
+         self.mapper = repository.mapping()
+@@ -148,7 +147,6 @@
+ 
+     def testSimpleStat(self):
+         harvester = self.createHarvesterWithMockUploader('tud')
+-        self.sendReturn = '12341234-@tompoes-1234123.134112'
+         harvester.harvest()
+         self.assert_(os.path.isfile(self.stateDir+'/tud.stats'))
+         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
+@@ -170,7 +168,6 @@
+ 
+     def testResumptionTokenLog(self):
+         harvester = self.createHarvesterWithMockUploader('tud')
+-        self.sendReturn = 'true'
+         harvester.harvest()
+         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
+         self.assertEquals(' ResumptionToken: TestToken', stats[3])
+@@ -222,7 +219,6 @@
+         h.addObserver(repository.createUploader(logger.eventLogger))
+         h.addObserver(repository.mapping())
+         self.listRecordsFrom = None
+-        self.sendReturn = '127.0.0.1-123@localhost-12312-12312424123'
+         h.harvest()
+         self.assertEquals('1999-12-01', self.listRecordsFrom)
+         lines = open(self.stateDir + '/tud.stats').readlines()
+@@ -380,7 +376,6 @@
+         self.upload = upload
+         if self.sendException:
+             raise self.sendException
+-        return self.sendReturn
+ 
+     def delete(self, anUpload):
+         self.delete_id = anUpload.id
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/idstest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/idstest.py
+--- version_2/test/idstest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/idstest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -32,14 +32,14 @@
+ # 
+ ## end license ##
+ 
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from meresco.harvester.ids import Ids
+ 
+-class IdsTest(CQ2TestCase):
++class IdsTest(SeecrTestCase):
+     def tearDown(self):
+         ids = getattr(self, 'ids', None)
+         if ids: ids.close()
+-        CQ2TestCase.tearDown(self)
++        SeecrTestCase.tearDown(self)
+         
+     def testAddOne(self):
+         self.ids = Ids(self.tempdir + '/doesnotexistyet/', 'idstest')
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/integration/harvestertest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/integration/harvestertest.py
+--- version_2/test/integration/harvestertest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/integration/harvestertest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -36,7 +36,7 @@
+ from shutil import copytree
+ from lxml.etree import parse, tostring
+ 
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from utils import getRequest
+ 
+ from integrationtestcase import IntegrationTestCase
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/integration/helperserver.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/integration/helperserver.py
+--- version_2/test/integration/helperserver.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/integration/helperserver.py	2012-01-30 14:07:22.000000000 +0100
+@@ -29,25 +29,36 @@
+ ## end license ##
+ from __future__ import with_statement
+ 
+-from mocksaharaget import MockSaharaGet
+-
+ from glob import glob
+-from sys import path, argv, exit
++from sys import path
++from os.path import abspath, dirname, join
+ 
+-from weightless.io import Reactor
+-from sys import stdout
+-from os.path import abspath, dirname, join, isdir, basename
++mydir = dirname(abspath(__file__))
++
++baseDir = dirname(dirname(mydir))                   #DO_NOT_DISTRIBUTE
++from os import system                               #DO_NOT_DISTRIBUTE
++for p in glob(join(baseDir, 'deps.d') + '/*'):      #DO_NOT_DISTRIBUTE
++    path.insert(0, p)                               #DO_NOT_DISTRIBUTE
++path.insert(0, baseDir)                             #DO_NOT_DISTRIBUTE
++
++from sys import stdout, argv, exit
++from os.path import isdir, basename
+ from os import makedirs, remove
++from re import compile
++from traceback import format_exc
++
++from weightless.io import Reactor
++from weightless.core import compose, be
++
+ from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
+ from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
+ from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
+ from meresco.components import StorageComponent
+ from meresco.oai import OaiPmh, OaiJazz
+-from meresco.core import Observable, be
+-from re import compile
+-from traceback import format_exc
++from meresco.core import Observable
++
++from mocksaharaget import MockSaharaGet
+ 
+-mydir = dirname(abspath(__file__))
+ notWordCharRE = compile('\W+')
+ 
+ class InvalidDataException(Exception):
+@@ -132,7 +143,7 @@
+ class Log(Observable):
+     def handleRequest(self, RequestURI, **kwargs):
+         logLines.append(RequestURI)
+-        return self.all.handleRequest(RequestURI=RequestURI, **kwargs)
++        yield self.all.handleRequest(RequestURI=RequestURI, **kwargs)
+ 
+     def reset(self):
+         del logLines[:]
+@@ -143,7 +154,7 @@
+ class RetrieveLog(Observable):
+     def handleRequest(self, **kwargs):
+         yield okPlainText
+-        yield '\n'.join(self.any.logs())
++        yield '\n'.join(self.call.logs())
+ 
+ 
+ def main(reactor, portNumber, dir):
+@@ -191,13 +202,13 @@
+             )
+         )
+     )
+-    server.once.observer_init()
++    list(compose(server.once.observer_init()))
+     for i in range(1,16):
+         identifier = 'oai:record:%02d' % i
+-        oaiStorage.add(identifier=identifier, partname='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % identifier)
++        list(compose(oaiStorage.add(identifier=identifier, partname='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % identifier)))
+         oaiJazz.addOaiRecord(identifier=identifier, metadataFormats=[('oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd', 'http://www.openarchives.org/OAI/2.0/oai_dc/')])
+         if i in [3,6]:
+-            oaiJazz.delete(identifier=identifier)
++            list(compose(oaiJazz.delete(identifier=identifier)))
+ 
+ if __name__== '__main__':
+     args = argv[1:]
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/integration/integrationtestcase.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/integration/integrationtestcase.py
+--- version_2/test/integration/integrationtestcase.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/integration/integrationtestcase.py	2012-01-30 14:07:22.000000000 +0100
+@@ -37,7 +37,7 @@
+ 
+ from utils import postRequest, getRequest
+ 
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from random import randint
+ from time import sleep, time 
+ 
+@@ -56,7 +56,6 @@
+ mypath = dirname(abspath(__file__))
+ binDir = join(dirname(dirname(mypath)), 'bin')
+ examplesPath = join(dirname(dirname(mypath)), 'examples')
+-harvesterDir = dirname(dirname(mypath))
+ 
+ if not isdir(binDir):
+     binDir = '/usr/bin'
+@@ -73,9 +72,9 @@
+         cls.startNumber += 1
+         return cls.startNumber
+ 
+-class IntegrationTestCase(CQ2TestCase):
++class IntegrationTestCase(SeecrTestCase):
+     def setUp(self):
+-        CQ2TestCase.setUp(self)
++        SeecrTestCase.setUp(self)
+         global state
+         self.state = state
+         self.controlHelper(action='reset')
+@@ -99,7 +98,6 @@
+         harvesterProcessInfo = Popen(
+             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
+             cwd=binDir,
+-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
+             stdout=stdouterrlog,
+             stderr=stdouterrlog)
+         waitpid(harvesterProcessInfo.pid, 0)
+@@ -153,7 +151,6 @@
+         stdouterrlog = open(stdoutfile, 'w')
+         processInfo = Popen(
+             args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
+-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
+             cwd=self.integrationTempdir, 
+             stdout=stdouterrlog,
+             stderr=stdouterrlog)
+@@ -170,7 +167,6 @@
+         configFile = join(self.integrationTempdir, 'harvester.config') 
+         processInfo = Popen(
+             args=[join(binDir, "meresco-harvester-internal-server"), configFile], 
+-            env={'PYTHONPATH': ':'.join([self.integrationTempdir, harvesterDir]), 'LANG': 'en_US.UTF-8'},
+             cwd=binDir,
+             stdout=stdouterrlog,
+             stderr=stdouterrlog)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/_integrationtest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/_integrationtest.py
+--- version_2/test/_integrationtest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/_integrationtest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -29,6 +29,9 @@
+ # 
+ ## end license ##
+ 
++from os import getuid
++assert getuid() != 0, "Do not run tests as 'root'"
++
+ from os import system                               #DO_NOT_DISTRIBUTE
+ from glob import glob                               #DO_NOT_DISTRIBUTE
+ from sys import path as systemPath                  #DO_NOT_DISTRIBUTE
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/onlineharvesttest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/onlineharvesttest.py
+--- version_2/test/onlineharvesttest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/onlineharvesttest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -38,7 +38,7 @@
+ from meresco.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
+ from slowfoot.wrappers import wrapp
+ import os
+-from cq2utils import CallTrace
++from seecr.test import CallTrace
+ 
+ class OnlineHarvestTest(unittest.TestCase):
+     def setUp(self):
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/repositorystatustest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/repositorystatustest.py
+--- version_2/test/repositorystatustest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/repositorystatustest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -32,17 +32,17 @@
+ from os import makedirs
+ from os.path import join
+ 
+-from cq2utils import CQ2TestCase, CallTrace
++from seecr.test import SeecrTestCase, CallTrace
+ 
+ from meresco.harvester.repositorystatus import RepositoryStatus
+ from weightless.core import compose
+ from lxml.etree import tostring, parse
+ from StringIO import StringIO
+ 
+-class RepositoryStatusTest(CQ2TestCase):
++class RepositoryStatusTest(SeecrTestCase):
+ 
+     def setUp(self):
+-        CQ2TestCase.setUp(self)
++        SeecrTestCase.setUp(self)
+         self.stateDir = join(self.tempdir, "state")
+         self.logDir = join(self.tempdir, "log")
+         self.domainId = "adomain"
+@@ -212,7 +212,8 @@
+         with open(join(self.stateDir, self.domainId, "repoId1_ignored.ids"), 'w') as f:
+             for i in range(20):
+                 f.write("ignoredId%d\n" % i)
+-        lxmlResult = parse(StringIO(''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))))
++        statusXml = ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))
++        lxmlResult = parse(StringIO(statusXml))
+         self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/ignored/text()")[0])
+         self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentignores/ignoredId")))
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/repositorytest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/repositorytest.py
+--- version_2/test/repositorytest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/repositorytest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -41,7 +41,7 @@
+ from slowfoot.wrappers import wrapp
+ from slowfoot.binderytools import bind_string
+ from meresco.harvester.timeslot import Timeslot, Wildcard
+-from cq2utils import CallTrace
++from seecr.test import CallTrace
+ import tempfile, os, shutil
+ import unittest
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/smoothactiontest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/smoothactiontest.py
+--- version_2/test/smoothactiontest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/smoothactiontest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -44,7 +44,7 @@
+ from meresco.harvester import action
+ from sets import Set
+ from meresco.harvester.eventlogger import NilEventLogger
+-from cq2utils import CallTrace
++from seecr.test import CallTrace
+ 
+ class SmoothActionTest(ActionTestCase):
+     def setUp(self):
+@@ -73,7 +73,7 @@
+         self.assertTrue(os.path.isfile(self.idfilename))
+         self.assertEquals('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
+         self.assertEquals('', readfile(self.idfilename))
+-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
++        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename), readfile(self.statsfilename))
+         self.assertEquals('Smooth reharvest: initialized.', message)
+         self.assertFalse(done)
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/sruupdateuploadertest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/sruupdateuploadertest.py
+--- version_2/test/sruupdateuploadertest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/sruupdateuploadertest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -32,7 +32,7 @@
+ #
+ ## end license ##
+ 
+-from cq2utils import CQ2TestCase, CallTrace
++from seecr.test import SeecrTestCase, CallTrace
+ from amara.binderytools import bind_string
+ from lxml.etree import parse
+ from StringIO import StringIO
+@@ -40,9 +40,9 @@
+ from meresco.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
+ from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
+ 
+-class SruUpdateUploaderTest(CQ2TestCase):
++class SruUpdateUploaderTest(SeecrTestCase):
+     def setUp(self):
+-        CQ2TestCase.setUp(self)
++        SeecrTestCase.setUp(self)
+         self.target = CallTrace('SruUpdateTarget', verbose=True)
+         self.uploader = SruUpdateUploader(self.target, CallTrace('eventlogger'))
+         self.sentData = []
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/statetest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/statetest.py
+--- version_2/test/statetest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/statetest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -33,10 +33,10 @@
+ ## end license ##
+ 
+ from meresco.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from os.path import join
+ 
+-class StateTest(CQ2TestCase):
++class StateTest(SeecrTestCase):
+     def testReadStartDateFromLogLine(self):
+         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
+         self.assertEquals('2005-01-02', getStartDate(logline))
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test/timedprocesstest.py /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test/timedprocesstest.py
+--- version_2/test/timedprocesstest.py	2012-01-27 12:12:54.000000000 +0100
++++ version_3/test/timedprocesstest.py	2012-01-30 14:07:22.000000000 +0100
+@@ -32,11 +32,11 @@
+ # 
+ ## end license ##
+ 
+-from cq2utils import CQ2TestCase
++from seecr.test import SeecrTestCase
+ from meresco.harvester.timedprocess import TimedProcess
+ from os.path import join
+ 
+-class TimedProcessTest(CQ2TestCase):
++class TimedProcessTest(SeecrTestCase):
+ 
+     def testSuccess(self):
+         fd = open(self.tempfile,'w')
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/test-deps.txt /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/test-deps.txt
+--- version_2/test-deps.txt	1970-01-01 01:00:00.000000000 +0100
++++ version_3/test-deps.txt	2012-01-30 14:07:22.000000000 +0100
+@@ -0,0 +1,4 @@
++cq2utils (>= 5.4.18)
++cq2utils (<< 5.5)
++seecr-test (>= 1.1)
++seecr-test (<< 1.2)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_2/testsetup.sh /home/weightless/development/meresco-harvester/workingsets/8.0-beta-Seecr/version_3/testsetup.sh
+--- version_2/testsetup.sh	2012-01-27 12:12:55.000000000 +0100
++++ version_3/testsetup.sh	2012-01-30 14:07:22.000000000 +0100
+@@ -31,17 +31,23 @@
+ set -e
+ mydir=$(cd $(dirname $0); pwd)
+ 
++fullPythonVersion=python2.6
++
++VERSION="x.y.z"
++
+ rm -rf tmp build
+ 
+-python setup.py install --root tmp
++${fullPythonVersion} setup.py install --root tmp
++
+ cp -r test tmp/test
+-cp meresco/__init__.py tmp/usr/lib/python2.5/site-packages/meresco
+-export PYTHONPATH=`pwd`/tmp/usr/lib/python2.5/site-packages
+-find tmp -type f -exec sed -e \
++find tmp -type f -exec sed -r -e \
+     "/DO_NOT_DISTRIBUTE/d;
++    s,^binDir.*$,binDir='$mydir/tmp/usr/local/bin',;
+     s,^examplesPath.*$,examplesPath='$mydir/examples',;
+-    s,^harvesterDir.*$,harvesterDir='$PYTHONPATH',;
+-    s,^binDir.*$,binDir='$mydir/tmp/usr/bin'," -i {} \;
++    s/\\\$Version:[^\\\$]*\\\$/\\\$Version: ${VERSION}\\\$/" -i {} \;
++
++cp meresco/__init__.py tmp/usr/local/lib/${fullPythonVersion}/dist-packages/meresco
++export PYTHONPATH=`pwd`/tmp/usr/local/lib/${fullPythonVersion}/dist-packages:${PYTHONPATH}
+ 
+ teststorun=$1
+ if [ -z "$teststorun" ]; then
+@@ -58,12 +64,15 @@
+ read
+ 
+ for testtorun in $teststorun; do
++    set +o errexit
+     (
+     cd tmp/test
+     ./$testtorun "$@"
+     )
++    set -o errexit
+     echo "Finished $testtorun, press [ENTER] to continue"
+     read
+ done
+ 
+ rm -rf tmp build
++
