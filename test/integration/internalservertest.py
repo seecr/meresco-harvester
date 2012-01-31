@@ -44,40 +44,40 @@ class InternalServerTest(IntegrationTestCase):
         system("rm -rf %s" % self.harvesterLogDir)
         system("rm -rf %s" % self.harvesterStateDir)
 
-    def testListIgnoredRecordsForOneRepository(self):
-        self.controlHelper(action='ignoreAll')
+    def testListInvalidRecordsForOneRepository(self):
+        self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignored', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(['oai:record:07', 'oai:record:05', 'oai:record:04', 'oai:record:02', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
-        self.assertEquals("/page/ignoredRecord/?recordId=oai%3Arecord%3A07&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalid', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals(['oai:record:08', 'oai:record:07', 'oai:record:05', 'oai:record:04', 'oai:record:02', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
+        self.assertEquals("/page/invalidRecord/?recordId=oai%3Arecord%3A08&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
         self.assertEquals("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
-    def testViewIgnoredRecord(self):
-        self.controlHelper(action='ignoreAll')
+    def testViewInvalidRecord(self):
+        self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/ignoredRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02'}, parse='lxml')
         self.assertEquals("Repository integrationtest - Record oai:record:02", result.xpath("//h3/text()")[0])
-        self.assertEquals("/page/ignored/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
+        self.assertEquals("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testGetStatusForDomainAndRepositoryId(self):
-        self.controlHelper(action='ignoreAll')
+        self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:GetStatus/status:status/@repositoryGroupId")[0])
-        self.assertEquals("5", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:ignored/text()")[0])
+        self.assertEquals("6", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:invalid/text()")[0])
         
     def testGetStatusForDomain(self):
-        self.controlHelper(action='ignoreAll')
+        self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain'}, parse='lxml')
         self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
 
     def testGetStatusForDomainAndRepositoryGroup(self):
-        self.controlHelper(action='ignoreAll')
+        self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
         self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
@@ -85,7 +85,7 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
 
     def testRssForHarvesterStatus(self):
-        self.controlHelper(action="ignoreNothing")
+        self.controlHelper(action="noneInvalid")
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("Harvester status voor integrationtest", xpath(result, "/rss/channel/title/text()")[0])

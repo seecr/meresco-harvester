@@ -68,14 +68,14 @@ class Dump(object):
     def __init__(self, dumpdir):
         self._dumpdir = dumpdir
         self._number = self._findLastNumber()
-        self._ignoreAll = False
+        self._allInvalid = False
         self._raiseExceptionOnIds = set()
 
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
         try:
             updateRequest = bind_string(Body).updateRequest
-            if self._ignoreAll and str(updateRequest.action) == "info:srw/action/1/replace":
+            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
                 raise InvalidDataException('Data not valid.')
             recordId = str(updateRequest.recordIdentifier)
             if recordId in self._raiseExceptionOnIds:
@@ -110,17 +110,17 @@ class Dump(object):
         return max([int(basename(f)[:5]) for f in glob(join(self._dumpdir, '*.updateRequest'))]+[0])
 
     def reset(self):
-        self._ignoreAll = False
+        self._allInvalid = False
         for f in glob(join(self._dumpdir, '*.updateRequest')):
             remove(f)
         self._number = 0
         self._raiseExceptionOnIds = set()
 
-    def ignoreAll(self):
-        self._ignoreAll = True
+    def allInvalid(self):
+        self._allInvalid = True
 
-    def ignoreNothing(self):
-        self._ignoreAll = False
+    def noneInvalid(self):
+        self._allInvalid = False
 
     def raiseExceptionOnIds(self, ids):
         self._raiseExceptionOnIds = set(ids)
@@ -133,10 +133,10 @@ class Control(Observable):
             self.do.reset()
         if action == "raiseExceptionOnIds":
             self.do.raiseExceptionOnIds(arguments.get('id',[]))
-        if action == "ignoreNothing":
-            self.do.ignoreNothing()
-        if action == "ignoreAll":
-            self.do.ignoreAll()
+        if action == "noneInvalid":
+            self.do.noneInvalid()
+        if action == "allInvalid":
+            self.do.allInvalid()
         yield "DONE"
 
 logLines = []

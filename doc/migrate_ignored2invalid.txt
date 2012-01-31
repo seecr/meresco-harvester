@@ -1,0 +1,22 @@
+Migration from Meresco Harvester 7.2.x to Meresco Harvester 7.3
+'ignored' was a misnomer, renamed to 'invalid' because we also
+want to log the last InvalidDataException message that was not ignored.
+
+
+Sketch of possible migration script:
+
+
+from os import rename
+from os.path import isdir, isfile, join
+
+ignoredPath = join(logDir, "ignored")
+if isdir(ignoredPath):
+    rename(ignoredPath, join(logDir, 'invalid'))
+for domainName in domainNames:
+    ignoredIdsFilePath = join(stateDir, domainName + "_ignored.ids")
+    if isfile(ignoredIdsFilePath):
+        rename(
+            ignoredIdsFilePath,
+            join(stateDir, domainName + "_invalid.ids")
+        )
+

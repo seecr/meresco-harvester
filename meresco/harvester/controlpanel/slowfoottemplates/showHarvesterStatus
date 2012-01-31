@@ -11,9 +11,9 @@ loggedIn = bool(session.get('username', ''))
 statuses = asxml(theUrl).saharaget.GetStatus.status
 
 statusUrl = url('%s/getStatus?%s' % (req.get_options()['internalServer'], args))
-ignored = {}
+invalid = {}
 for status in asxml(statusUrl).saharaget.GetStatus.status:
-    ignored[status.repositoryId] = status
+    invalid[status.repositoryId] = status
 #
 %>
 <table class="event">
@@ -42,11 +42,11 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
 <td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
 <td class="link">
 <% 
-  nrOfValidationErrors = int(ignored[status.repositoryId].ignored) if status.repositoryId in ignored else 0
+  nrOfValidationErrors = int(invalid[status.repositoryId].invalid) if status.repositoryId in invalid else 0
   args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
   if nrOfValidationErrors > 0:
 %>
-    <a href="/page/ignored/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
+    <a href="/page/invalid/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
 <%
   #
 %>
@@ -113,26 +113,26 @@ for status in statuses:
 <%
 for status in statuses:
   repositoryId = status.repositoryId
-  ignorednr = int(str(status.ignored))
-  if ignorednr:
+  invalidnr = int(str(status.invalid))
+  if invalidnr:
     #
 %>
 <tr class="eventinfo">
 <td><a name="<%= repositoryId %>" href="#top_<%= repositoryId %>"><%= repositoryId %></a></td>
 </tr>
 <tr>
-<td>Nr. of validation errors: <strong><%= ignorednr %></strong></td>
+<td>Nr. of validation errors: <strong><%= invalidnr %></strong></td>
 </tr>
 <%
-    if hasattr(status.recentignores, 'ignoredId'):
-      for ignoredId in status.recentignores.ignoredId:
-        recordId = ignoredId.split(":", 1)[-1]
+    if hasattr(status.recentinvalids, 'invalidId'):
+      for invalidId in status.recentinvalids.invalidId:
+        recordId = invalidId.split(":", 1)[-1]
         newArgs = {'recordId': recordId, 'repositoryId': repositoryId, 'domainId': domainId}
         #
 %>
         <tr>
           <td class="link">
-            <a href="/page/ignoredRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a>
+            <a href="/page/invalidRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a>
           </td>
         </tr>
 <%

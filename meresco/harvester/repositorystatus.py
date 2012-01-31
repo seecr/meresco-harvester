@@ -36,17 +36,18 @@ from re import compile
 from itertools import ifilter, islice
 from meresco.core import Observable
 
+from harvesterlog import INVALID_DATA_MESSAGES_DIR
+
+
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
 class RepositoryStatus(Observable):
-
     def __init__(self, logPath, statePath, name=None):
         Observable.__init__(self, name)
         self._logPath = logPath
         self._statePath = statePath
 
     def getStatus(self, domainId, repositoryGroupId=None, repositoryId=None):
-        ignoredDir = join(self._logPath, domainId, "ignored")
         yield "<GetStatus>"
         if repositoryId:
             groupId = self.call.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
@@ -59,14 +60,15 @@ class RepositoryStatus(Observable):
                     yield self._getRepositoryStatus(domainId, groupId, repoId)
         yield "</GetStatus>"
 
-    def ignoredRecords(self, domainId, repositoryId):
-        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
-        if not isfile(ignoredFile):
+    def invalidRecords(self, domainId, repositoryId):
+        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        if not isfile(invalidFile):
             return []
-        return reversed([line.strip() for line in open(ignoredFile) if line.strip()])
+        return reversed([line.strip() for line in open(invalidFile) if line.strip()])
 
-    def getIgnoredRecord(self, domainId, repositoryId, recordId):
-        return parse(open(join(self._logPath, domainId, "ignored", repositoryId, recordId)))
+    def getInvalidRecord(self, domainId, repositoryId, recordId):
+        invalidDir = join(self._logPath, domainId, INVALID_DATA_MESSAGES_DIR)
+        return parse(open(join(invalidDir, repositoryId, recordId)))
 
     def _getRepositoryStatus(self, domainId, groupId, repoId):
         stats = self._parseEventsFile(domainId, repoId)
@@ -81,17 +83,17 @@ class RepositoryStatus(Observable):
         for error in stats['recenterrors']:
             yield '<error date="%s">%s</error>\n' % (error[0], escapeXml(error[1])) 
         yield '</recenterrors>\n'
-        yield '<ignored>%s</ignored>\n' % self._ignoredCount(domainId, repoId)
-        yield '<recentignores>\n'
-        for ignoredRecord in islice(self.ignoredRecords(domainId, repoId), 10):
-            yield '<ignoredId>%s</ignoredId>\n' % ignoredRecord
-        yield '</recentignores>\n'
+        yield '<invalid>%s</invalid>\n' % self._invalidCount(domainId, repoId)
+        yield '<recentinvalids>\n'
+        for invalidRecord in islice(self.invalidRecords(domainId, repoId), 10):
+            yield '<invalidId>%s</invalidId>\n' % invalidRecord
+        yield '</recentinvalids>\n'
         yield '<lastHarvestAttempt>%s</lastHarvestAttempt>\n' % stats.get('lastHarvestAttempt', '')
         yield '</status>\n'
 
-    def _ignoredCount(self, domainId, repositoryId):
-        ignoredFile = join(self._statePath, domainId, "%s_ignored.ids" % repositoryId)
-        return len(open(ignoredFile).readlines()) if isfile(ignoredFile) else 0
+    def _invalidCount(self, domainId, repositoryId):
+        invalidFile = join(self._statePath, domainId, "%s_invalid.ids" % repositoryId)
+        return len(open(invalidFile).readlines()) if isfile(invalidFile) else 0
 
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}
