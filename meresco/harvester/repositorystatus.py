@@ -67,9 +67,9 @@ class RepositoryStatus(Observable):
         if not isfile(invalidFile):
             return []
         return reversed(
-            (x[:-1] if x[-1] == '\n' else x for x in 
+            [x[:-1] if x[-1] == '\n' else x for x in 
                 (unescapeFilename(line) for line in open(invalidFile) if line.strip())
-            )
+            ]
         )
 
     def getInvalidRecord(self, domainId, repositoryId, recordId):
