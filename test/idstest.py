@@ -76,6 +76,28 @@ class IdsTest(CQ2TestCase):
         self.assertEquals(3, len(self.ids))
         self.ids.close()
         self.assertEquals(3, len(open(self.tempdir + '/three.ids').readlines()))
+
+    def testAddStrangeIds(self):
+        self.ids = Ids(self.tempdir, 'idstest')
+        self.ids.add('id:1')
+        self.ids.add('\n   id:1')
+        self.ids.add('   id:2')
+        self.assertEquals(3, len(open(self.tempdir + '/idstest.ids').readlines()))
+        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+
+        self.ids = Ids(self.tempdir, 'idstest')
+        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+
+    def testRemoveStrangeId(self):
+        self.ids = Ids(self.tempdir, 'idstest')
+        self.ids.add('id:1')
+        self.ids.add('\n   id:1')
+        self.ids.add('   id:2')
+        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+        self.ids.remove('id:1')
+        self.ids.remove('\n   id:1')
+        self.ids.remove('   id:2')
+        self.assertEquals([], list(self.ids))
         
         
     def writeTestIds(self, name, ids):

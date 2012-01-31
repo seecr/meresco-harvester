@@ -288,7 +288,7 @@ class HarvesterTest(IntegrationTestCase):
         log.startRepository()
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
             if uploadId == '%s:oai:record:02' % (REPOSITORY):
-                uploadId = '%s:oai:record:02/&gkn' % (REPOSITORY)
+                uploadId = '%s:\n oai:record:02/&gkn' % (REPOSITORY)
             log.notifyHarvestedRecord(uploadId)
             log.uploadIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123,124]]:

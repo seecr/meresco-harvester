@@ -35,9 +35,10 @@ from xml.sax.saxutils import escape as escapeXml
 from re import compile
 from itertools import ifilter, islice
 from meresco.core import Observable
-from escaping import escapeFilename
+from escaping import escapeFilename, unescapeFilename
 
 from harvesterlog import INVALID_DATA_MESSAGES_DIR
+from meresco.harvester.deleteids import readIds
 
 
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
@@ -65,7 +66,11 @@ class RepositoryStatus(Observable):
         invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
         if not isfile(invalidFile):
             return []
-        return reversed([line.strip() for line in open(invalidFile) if line.strip()])
+        return reversed(
+            (x[:-1] if x[-1] == '\n' else x for x in 
+                (unescapeFilename(line) for line in open(invalidFile) if line.strip())
+            )
+        )
 
     def getInvalidRecord(self, domainId, repositoryId, recordId):
         invalidDir = join(self._logPath, domainId, INVALID_DATA_MESSAGES_DIR)
