@@ -144,7 +144,7 @@ class HarvesterTest(IntegrationTestCase):
     def testRefresh(self):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
         log.startRepository()
-        for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
+        for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,7,120,121]]:
             log.notifyHarvestedRecord(uploadId)
             log.uploadIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123]]:
@@ -241,9 +241,14 @@ class HarvesterTest(IntegrationTestCase):
 
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
-        self.assertEquals(set(['%s:oai:record:%02d' % (REPOSITORY, i) for i in range(1,11)]),
-                set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))]))
-
+        self.assertEquals(set([
+                'harvestertest:oai:record:10', 'harvestertest:oai:record:09', 'harvestertest:oai:record:08', 
+                'harvestertest:oai:record:07', 'harvestertest:oai:record:06', 'harvestertest:oai:record:05', 
+                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:oai:record:02/&gkn', 
+                'harvestertest:oai:record:01'
+            ]), 
+            set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
+        )
 
     def testHarvestWithError(self):
         self.startHarvester(repository=REPOSITORY)
@@ -283,6 +288,8 @@ class HarvesterTest(IntegrationTestCase):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
         log.startRepository()
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
+            if uploadId == '%s:oai:record:02' % (REPOSITORY):
+                uploadId = '%s:oai:record:02/&gkn' % (REPOSITORY)
             log.notifyHarvestedRecord(uploadId)
             log.uploadIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123,124]]:

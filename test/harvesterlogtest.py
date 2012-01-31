@@ -172,12 +172,12 @@ class HarvesterLogTest(unittest.TestCase):
     def testLogInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
-        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        logger.logInvalidData('repoid:oai:bla/bla', "Error")
+        logger.notifyHarvestedRecord('repo/id:oai:bla/bla')
+        logger.logInvalidData('repo/id:oai:bla/bla', "Error")
         self.assertEquals(1, logger.totalInvalidIds())
-        expectedFile = self.logDir + '/invalid/repoid/oai:bla%2Fbla'
+        expectedFile = self.logDir + '/invalid/repo%2Fid/oai:bla%2Fbla'
         self.assertEquals("Error", open(expectedFile).read())
-        logger.notifyHarvestedRecord('repoid:oai:bla/bla')
+        logger.notifyHarvestedRecord('repo/id:oai:bla/bla')
         self.assertEquals(0, logger.totalInvalidIds())
         self.assertFalse(isfile(expectedFile))
 
