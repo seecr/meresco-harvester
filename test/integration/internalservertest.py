@@ -56,8 +56,8 @@ class InternalServerTest(IntegrationTestCase):
     def testViewInvalidRecord(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02/&gkn'}, parse='lxml')
-        self.assertEquals("Repository integrationtest - Record oai:record:02/&gkn", result.xpath("//h3/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': '\n oai:record:02/&gkn'}, parse='lxml')
+        self.assertEquals("Repository integrationtest - Record \n oai:record:02/&gkn", result.xpath("//h3/text()")[0])
         self.assertEquals("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testGetStatusForDomainAndRepositoryId(self):

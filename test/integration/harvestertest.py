@@ -243,7 +243,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(set([
                 'harvestertest:oai:record:10', 'harvestertest:oai:record:09', 'harvestertest:oai:record:08', 
                 'harvestertest:oai:record:07', 'harvestertest:oai:record:06', 'harvestertest:oai:record:05', 
-                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:oai:record:02/&gkn', 
+                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:%0A oai:record:02%2F&gkn', 
                 'harvestertest:oai:record:01'
             ]), 
             set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
