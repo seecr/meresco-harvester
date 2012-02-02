@@ -41,6 +41,7 @@ from xml.sax.saxutils import escape as xmlEscape
 from StringIO import StringIO
 from lxml.etree import parse, tostring
 from time import gmtime, strftime, time
+from escaping import escapeFilename
 
 OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
 <OAI-PMH 
@@ -119,7 +120,7 @@ class FileSystemUploader(VirtualUploader):
             f = open(os.path.join(self._target.path,
                 'deleted_records'),'a')
             try:
-                f.write('%s\n' % anUpload.id)
+                f.write('%s\n' % escapeFilename(anUpload.id))
             finally:
                 f.close()
         else:

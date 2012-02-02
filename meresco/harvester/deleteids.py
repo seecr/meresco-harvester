@@ -40,14 +40,17 @@ from slowfoot import wrappers
 import sys, os
 from mapping import Upload
 from traceback import format_exception
+from escaping import escapeFilename,unescapeFilename
 
 from meresco.core import Observable
 
 def readIds(filename):
     ids = []
     uniqueIds = set()
-    for id in (id.strip() for id in open(filename)):
-        if id  in uniqueIds:
+    for id in (unescapeFilename(id) for id in open(filename)):
+        if id[-1] == '\n':
+            id = id[:-1]
+        if id in uniqueIds:
             continue
         ids.append(id)
         uniqueIds.add(id)
@@ -57,7 +60,7 @@ def writeIds(filename, ids):
     f = open(filename,'w')
     try:
         for id in ids:
-            f.write(id)
+            f.write(escapeFilename(id))
             f.write('\n')
     finally:
         f.close()

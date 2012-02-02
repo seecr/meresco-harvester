@@ -39,6 +39,7 @@ if sys.version_info[:2] == (2,3):
 
 from os import makedirs
 from os.path import isdir, join
+from escaping import escapeFilename, unescapeFilename
 
 def idfilename(stateDir, name):
     isdir(stateDir) or makedirs(stateDir)
@@ -49,7 +50,9 @@ class Ids(object):
         self._filename = idfilename(stateDir, name)
         self._ids = []
         uniqueIds = set()
-        for id in (id.strip() for id in open(self._filename, 'a+')):
+        for id in (id for id in open(self._filename, 'a+')):
+            if id[-1] == '\n':
+                id = id[:-1]
             if id  in uniqueIds:
                 continue
             self._ids.append(id)
@@ -61,7 +64,7 @@ class Ids(object):
 
     def __iter__(self):
         for id in self._ids:
-            yield id
+            yield unescapeFilename(id)
 
     def clear(self):
         self._ids = []
@@ -80,6 +83,7 @@ class Ids(object):
         os.rename(self._filename + '.new', self._filename)
 
     def add(self, uploadid):
+        uploadid = escapeFilename(uploadid)
         if uploadid in self._ids:
             return
         self._ids.append(uploadid)
@@ -87,6 +91,7 @@ class Ids(object):
         self._idsfile.flush()
 
     def remove(self, uploadid):
+        uploadid = escapeFilename(uploadid)
         if uploadid in self._ids:
             self._ids.remove(uploadid)
             self.close()

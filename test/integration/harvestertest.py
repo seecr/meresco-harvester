@@ -244,7 +244,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(set([
                 'harvestertest:oai:record:10', 'harvestertest:oai:record:09', 'harvestertest:oai:record:08', 
                 'harvestertest:oai:record:07', 'harvestertest:oai:record:06', 'harvestertest:oai:record:05', 
-                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:oai:record:02/&gkn', 
+                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:%0A oai:record:02%2F&gkn', 
                 'harvestertest:oai:record:01'
             ]), 
             set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
@@ -289,7 +289,7 @@ class HarvesterTest(IntegrationTestCase):
         log.startRepository()
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
             if uploadId == '%s:oai:record:02' % (REPOSITORY):
-                uploadId = '%s:oai:record:02/&gkn' % (REPOSITORY)
+                uploadId = '%s:\n oai:record:02/&gkn' % (REPOSITORY)
             log.notifyHarvestedRecord(uploadId)
             log.uploadIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123,124]]:

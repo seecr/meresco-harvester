@@ -49,6 +49,7 @@ import unittest
 
 from amaraforharvestertest import AmaraForHarvesterTest
 from cacherecordtest import CacheRecordTest
+from deleteidstest import DeleteIdsTest
 from disallowfileplugintest import DisallowFilePluginTest
 from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
