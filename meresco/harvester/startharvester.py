@@ -47,7 +47,7 @@ from os import read
 from signal import SIGINT
 
 AGAIN_EXITCODE = 42
-CONCURRENCY = 1
+CONCURRENCY = 2
 
 class StartHarvester(object):
     def __init__(self):
@@ -147,23 +147,35 @@ class StartHarvester(object):
                 args = self._childProcesses.pop(0)
                 t, process = self._createProcess(args)
                 processes[process.stdout.fileno()] = t, process, args
+                processes[process.stderr.fileno()] = t, process, args
 
             while processes:
                 readers, _, _ = select(processes.keys(), [], [])
                 for reader in readers:
+                    if reader not in processes:
+                        continue
+
                     t, process, args = processes[reader]
-                    stdout.write(read(reader, 4096))
-                    stdout.flush()
+                    pipeContent = read(reader, 4096)
+                    if reader == process.stdout.fileno():
+                        stdout.write(pipeContent)
+                        stdout.flush()
+                    else:
+                        stderr.write(pipeContent)
+                        stderr.flush()
+
                     if process.poll() is not None:
                         exitstatus = t.stopScript(process)
-                        del processes[reader]
+                        del processes[process.stdout.fileno()]
+                        del processes[process.stderr.fileno()]
                         if exitstatus == AGAIN_EXITCODE:
                             self._childProcesses.insert(0, args)
                         if len(self._childProcesses) > 0:
                             t, process = self._createProcess(self._childProcesses.pop(0))
                             processes[process.stdout.fileno()] = t, process, args
+                            processes[process.stderr.fileno()] = t, process, args
         except KeyboardInterrupt, e:
-            for t, process, args in processes.values():
+            for t in set([t for t,process,args in processes.values()]):
                 t.terminate()
             raise
 
