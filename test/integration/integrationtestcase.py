@@ -90,12 +90,13 @@ class IntegrationTestCase(CQ2TestCase):
             raise AttributeError(name)
         return getattr(self.state, name)
 
-    def startHarvester(self, repository=None, verbose=False):
+    def startHarvester(self, repository=None, concurrency=None, verbose=False):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
         stdouterrlog = open(stdoutfile, 'w')
         if verbose:
             stdouterrlog = stdout
-        additionalArgs = ['--repository=%s'%repository] if repository else []
+        additionalArgs = ['--repository=%s' % repository] if repository is not None else []
+        additionalArgs += ['--concurrency=%s' % concurrency] if concurrency is not None else []
         harvesterProcessInfo = Popen(
             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=binDir,
@@ -104,12 +105,14 @@ class IntegrationTestCase(CQ2TestCase):
             stderr=stdouterrlog)
         waitpid(harvesterProcessInfo.pid, 0)
         stdouterrlog.flush()
+        stdouterrlog.close()
+        return open(stdoutfile).read()
 
 class IntegrationState(object):
     def __init__(self, stateName, fastMode):
         self.stateName = stateName
         self._pids = []
-        self.integrationTempdir = '/tmp/mh-integrationtest-%s' % stateName 
+        self.integrationTempdir = '/tmp/integrationtest-meresco-harvester-%s' % stateName 
         system('rm -rf ' + self.integrationTempdir)
 
         self.helperServerPortNumber = PortNumberGenerator.next()

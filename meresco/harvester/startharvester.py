@@ -47,7 +47,6 @@ from os import read
 from signal import SIGINT
 
 AGAIN_EXITCODE = 42
-CONCURRENCY = 2
 
 class StartHarvester(object):
     def __init__(self):
@@ -58,7 +57,9 @@ class StartHarvester(object):
         self.__dict__.update(args.__dict__)
 
         if not self.domainId:
-            self.parser.logError("Specify domain")
+            self.parser.error("Specify domain")
+        if self._concurrency < 1:
+            self.parser.error("Concurrency must be at least 1.")
 
         if self._logDir == None:
             self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()
@@ -99,6 +100,12 @@ class StartHarvester(object):
             help="Override the stateDir in the apache configuration.", 
             metavar="DIRECTORY", 
             default=None)
+        self.parser.add_option("--concurrency", 
+            dest="_concurrency",
+            type="int",
+            default=1,
+            help="Number of repositories to be concurrently harvested. Defaults to 1 (no concurrency).", 
+            metavar="NUMBER")
         self.parser.add_option("--force-target", "", 
             dest="forceTarget",
             help="Overrides the repository's target", 
@@ -143,7 +150,7 @@ class StartHarvester(object):
     def _startChildProcesses(self):
         processes = {}
         try:
-            for i in range(min(CONCURRENCY, len(self._childProcesses))):
+            for i in range(min(self._concurrency, len(self._childProcesses))):
                 args = self._childProcesses.pop(0)
                 t, process = self._createProcess(args)
                 processes[process.stdout.fileno()] = t, process, args

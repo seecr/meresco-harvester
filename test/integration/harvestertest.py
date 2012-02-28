@@ -354,8 +354,37 @@ class HarvesterTest(IntegrationTestCase):
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ids), ids)
 
-    def XXXtestConcurrentHarvestToSruUpdate(self):
-        self.startHarvester()
+    def testConcurrentHarvestToSruUpdate(self):
+        self.startHarvester(concurrency=3)
+
+        requestsLogged = sorted(listdir(self.dumpDir))
+
+        repositoryIds = []
+        for f in requestsLogged:
+            lxml = parse(open(join(self.dumpDir, f)))
+            repositoryIds.append(xpath(lxml, '//ucp:recordIdentifier/text()')[0].split(':', 1)[0])
+
+        repositoryIdsSet = set(repositoryIds)
+        self.assertEquals(set(['repository2', 'integrationtest', 'harvestertest']), repositoryIdsSet)
+
+        lastSeenRepoId = None
+        try:
+            for repo in repositoryIds:
+                if repo != lastSeenRepoId:
+                    repositoryIdsSet.remove(repo)
+                    lastSeenRepoId = repo
+                    continue
+        except KeyError:
+            pass
+        else:
+            self.fail('Records should have been inserted out-of-order.')
+
+    def testConcurrencyAtLeastOne(self):
+        stdouterrlog = self.startHarvester(concurrency=0)
+        self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
+
+        stdouterrlog = self.startHarvester(concurrency=-1)
+        self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
 
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)
