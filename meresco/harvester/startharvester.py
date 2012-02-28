@@ -40,10 +40,14 @@ import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
+from select import select
 from sys import stderr, stdout, exit, argv
 from optparse import OptionParser
+from os import read
+from signal import SIGINT
 
 AGAIN_EXITCODE = 42
+CONCURRENCY = 1
 
 class StartHarvester(object):
     def __init__(self):
@@ -119,6 +123,7 @@ class StartHarvester(object):
         return options
 
     def start(self):
+        self._childProcesses = []
         if not self.repository:
             self._restartWithLoop()
         elif not self.runOnce:
@@ -128,26 +133,48 @@ class StartHarvester(object):
 
     def _restartWithLoop(self):
         for key in self.saharaget.getRepositoryIds(self.domainId):
-            self._startChildProcess(['--repository='+key, '--runOnce'])
+            self._childProcesses.append(self._createArgs(['--repository='+key, '--runOnce']))
+        self._startChildProcesses()
 
     def _startRepositoryWithChild(self):
-        self._startChildProcess(['--runOnce'])
+        self._childProcesses.append(self._createArgs(['--runOnce']))
+        self._startChildProcesses()
 
-    def _startChildProcess(self, extraArgs):
-        args = argv[:1] + extraArgs + argv[1:]
-        exitstatus = AGAIN_EXITCODE
-        while exitstatus == AGAIN_EXITCODE:
-            t = TimedProcess()
-            try:
-                SIG_INT = 2
-                exitstatus = t.executeScript(args, self.processTimeout, SIG_INT)
-            except KeyboardInterrupt, e:
+    def _startChildProcesses(self):
+        processes = {}
+        try:
+            for i in range(min(CONCURRENCY, len(self._childProcesses))):
+                args = self._childProcesses.pop(0)
+                t, process = self._createProcess(args)
+                processes[process.stdout.fileno()] = t, process, args
+
+            while processes:
+                readers, _, _ = select(processes.keys(), [], [])
+                for reader in readers:
+                    t, process, args = processes[reader]
+                    stdout.write(read(reader, 4096))
+                    stdout.flush()
+                    if process.poll() is not None:
+                        exitstatus = t.stopScript(process)
+                        del processes[reader]
+                        if exitstatus == AGAIN_EXITCODE:
+                            self._childProcesses.insert(0, args)
+                        if len(self._childProcesses) > 0:
+                            t, process = self._createProcess(self._childProcesses.pop(0))
+                            processes[process.stdout.fileno()] = t, process, args
+        except KeyboardInterrupt, e:
+            for t, process, args in processes.values():
                 t.terminate()
-                raise
+            raise
 
+    def _createProcess(self, args):
+        t = TimedProcess()
+        return t, t.executeScript(args, self.processTimeout, SIGINT)
+
+    def _createArgs(self, extraArgs):
+        return argv[:1] + extraArgs + argv[1:]
 
     def _startRepository(self):
-
         if self.forceTarget:
             self.repository.targetId = self.forceTarget
         if self.forceMapping:

@@ -31,6 +31,7 @@
 from time import gmtime, strftime
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string, bind_file
+from os import listdir
 
 def buildResponseDateXml():
     return """<responseDate>%s</responseDate>""" % strftime('%Y-%m-%dT%H:%M:%SZ', gmtime())

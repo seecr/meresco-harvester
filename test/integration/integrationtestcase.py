@@ -31,7 +31,7 @@
 
 from __future__ import with_statement
 
-from os.path import isdir, join, abspath, dirname, basename
+from os.path import isdir, join, abspath, dirname, basename, isfile
 from os import system, listdir, makedirs
 from sys import stdout
 
@@ -121,9 +121,10 @@ class IntegrationState(object):
         self.harvesterStateDir = join(self.integrationTempdir, "state")
 
         copytree("integration-data", self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "SRUUPDATE.target"), helperServerPortNumber=self.helperServerPortNumber)
-        fileSubstVars(join(self.integrationTempdir, "data", "FILESYSTEM.target"), integrationTempdir=self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "adomain.integrationtest.repository"), helperServerPortNumber=self.helperServerPortNumber)
+        for f in listdir(join(self.integrationTempdir, "data")):
+            filepath = join(self.integrationTempdir, "data", f)
+            if isfile(filepath):
+                fileSubstVars(filepath, helperServerPortNumber=self.helperServerPortNumber, integrationTempdir=self.integrationTempdir)
         config = readConfig(join(examplesPath, 'harvester.config'))
         
         # test example config has neccessary parameters

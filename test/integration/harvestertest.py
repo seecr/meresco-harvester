@@ -29,7 +29,7 @@
 ## end license ##
 from __future__ import with_statement
 
-from os import system, waitpid, listdir
+from os import system, waitpid, listdir, remove
 from os.path import join, dirname, abspath
 from urllib import urlopen
 from time import time, sleep
@@ -70,6 +70,9 @@ class HarvesterTest(IntegrationTestCase):
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
         repo.save(self.repofilepath)
+
+    def tearDown(self):
+        remove(self.repofilepath)
 
     def testHarvestToSruUpdate(self):
         # initial harvest
@@ -350,6 +353,9 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(0, len(invalidIds), invalidIds)
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ids), ids)
+
+    def XXXtestConcurrentHarvestToSruUpdate(self):
+        self.startHarvester()
 
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)
