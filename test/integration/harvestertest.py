@@ -386,6 +386,15 @@ class HarvesterTest(IntegrationTestCase):
         stdouterrlog = self.startHarvester(concurrency=-1)
         self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
 
+    def testCompleteInOnAttempt(self):
+        r = RepositoryData.read(self.repofilepath)
+        r.complete = 'true'
+        r.save(self.repofilepath)
+        stdouterrlog = self.startHarvester(repository=REPOSITORY)
+        self.assertEquals(15, self.sizeDumpDir())
+        self.assertTrue("Repository will be completed in one attempt" in stdouterrlog, stdouterrlog)
+
+
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)
 
