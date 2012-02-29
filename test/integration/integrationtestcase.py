@@ -90,20 +90,29 @@ class IntegrationTestCase(CQ2TestCase):
             raise AttributeError(name)
         return getattr(self.state, name)
 
-    def startHarvester(self, repository=None, concurrency=None, verbose=False):
+    def startHarvester(self, repository=None, concurrency=None, runOnce=True, verbose=False, waitForNothingToDo=False):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
-        stdouterrlog = open(stdoutfile, 'w')
+        open(stdoutfile, 'w').write("")
+        stdouterrlog = open(stdoutfile, 'r+')
         if verbose:
             stdouterrlog = stdout
         additionalArgs = ['--repository=%s' % repository] if repository is not None else []
         additionalArgs += ['--concurrency=%s' % concurrency] if concurrency is not None else []
+        additionalArgs += ['--runOnce'] if runOnce else []
         harvesterProcessInfo = Popen(
             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=binDir,
             env={'PYTHONPATH': harvesterDir, 'LANG': 'en_US.UTF-8'},
             stdout=stdouterrlog,
             stderr=stdouterrlog)
-        waitpid(harvesterProcessInfo.pid, 0)
+        if not waitForNothingToDo:
+            waitpid(harvesterProcessInfo.pid, 0)
+        while waitForNothingToDo:
+            stdouterrlog.seek(0)
+            if 'Nothing to do!' in stdouterrlog.read():
+                kill(harvesterProcessInfo.pid, 2)
+                break
+            sleep(1)
         stdouterrlog.flush()
         stdouterrlog.close()
         return open(stdoutfile).read()

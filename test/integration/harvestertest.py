@@ -29,7 +29,7 @@
 ## end license ##
 from __future__ import with_statement
 
-from os import system, waitpid, listdir, remove
+from os import system, waitpid, listdir, remove, kill
 from os.path import join, dirname, abspath
 from urllib import urlopen
 from time import time, sleep
@@ -390,9 +390,14 @@ class HarvesterTest(IntegrationTestCase):
         r = RepositoryData.read(self.repofilepath)
         r.complete = 'true'
         r.save(self.repofilepath)
-        stdouterrlog = self.startHarvester(repository=REPOSITORY)
+        stdouterrlog = self.startHarvester(repository=REPOSITORY, runOnce=False, waitForNothingToDo=True)
         self.assertEquals(15, self.sizeDumpDir())
         self.assertTrue("Repository will be completed in one attempt" in stdouterrlog, stdouterrlog)
+
+    def testHarvestingContinues4Ever(self):
+        stdouterrlog = self.startHarvester(repository=REPOSITORY, runOnce=False, waitForNothingToDo=True)
+        self.assertEquals(15, self.sizeDumpDir())
+
 
 
     def emptyDumpDir(self):

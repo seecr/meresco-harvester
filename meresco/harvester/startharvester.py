@@ -40,7 +40,7 @@ import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
-from select import select
+from select import select, error
 from sys import stderr, stdout, exit, argv
 from optparse import OptionParser
 from os import read
@@ -140,7 +140,9 @@ class StartHarvester(object):
 
     def _restartWithLoop(self):
         for key in self.saharaget.getRepositoryIds(self.domainId):
-            self._childProcesses.append(self._createArgs(['--repository='+key, '--runOnce']))
+            extraArgs = ['--repository='+key]
+            extraArgs += ['--runOnce'] if self.runOnce else [] 
+            self._childProcesses.append(self._createArgs(extraArgs))
         self._startChildProcesses()
 
     def _startRepositoryWithChild(self):
@@ -157,7 +159,15 @@ class StartHarvester(object):
                 processes[process.stderr.fileno()] = t, process, args
 
             while processes:
-                readers, _, _ = select(processes.keys(), [], [])
+                try:
+                    readers, _, _ = select(processes.keys(), [], [])
+                except error, (errno, description):
+                    if errno == EBADF:
+                        self._findAndRemoveBadFd()
+                    elif errno == EINTR:
+                        pass
+                    else:
+                        raise
                 for reader in readers:
                     if reader not in processes:
                         continue
@@ -177,6 +187,8 @@ class StartHarvester(object):
                         del processes[process.stderr.fileno()]
                         if exitstatus == AGAIN_EXITCODE:
                             self._childProcesses.insert(0, args)
+                        elif not self.runOnce:
+                            self._childProcesses.append(args)
                         if len(self._childProcesses) > 0:
                             t, process = self._createProcess(self._childProcesses.pop(0))
                             processes[process.stdout.fileno()] = t, process, args
