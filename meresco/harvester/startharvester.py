@@ -45,6 +45,7 @@ from sys import stderr, stdout, exit, argv
 from optparse import OptionParser
 from os import read
 from signal import SIGINT
+from errno import EBADF, EINTR, EAGAIN
 
 AGAIN_EXITCODE = 42
 
@@ -162,9 +163,7 @@ class StartHarvester(object):
                 try:
                     readers, _, _ = select(processes.keys(), [], [])
                 except error, (errno, description):
-                    if errno == EBADF:
-                        self._findAndRemoveBadFd()
-                    elif errno == EINTR:
+                    if errno == EINTR:
                         pass
                     else:
                         raise
@@ -173,7 +172,12 @@ class StartHarvester(object):
                         continue
 
                     t, process, args = processes[reader]
-                    pipeContent = read(reader, 4096)
+                    try:
+                        pipeContent = read(reader, 4096)
+                    except OSError, e:
+                        if e.errno == EAGAIN:
+                            continue
+                        raise
                     if reader == process.stdout.fileno():
                         stdout.write(pipeContent)
                         stdout.flush()
@@ -187,13 +191,17 @@ class StartHarvester(object):
                         del processes[process.stderr.fileno()]
                         if exitstatus == AGAIN_EXITCODE:
                             self._childProcesses.insert(0, args)
-                        elif not self.runOnce:
-                            self._childProcesses.append(args)
+                        else:
+                            if exitstatus != 0:
+                                stderr.write("Process (with args: %s) exited with exitstatus %s.\n" % (args, exitstatus))
+                                stderr.flush()
+                            if not self.runOnce:
+                                self._childProcesses.append(args)
                         if len(self._childProcesses) > 0:
                             t, process = self._createProcess(self._childProcesses.pop(0))
                             processes[process.stdout.fileno()] = t, process, args
                             processes[process.stderr.fileno()] = t, process, args
-        except KeyboardInterrupt, e:
+        except:
             for t in set([t for t,process,args in processes.values()]):
                 t.terminate()
             raise

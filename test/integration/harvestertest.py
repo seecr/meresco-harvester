@@ -398,8 +398,6 @@ class HarvesterTest(IntegrationTestCase):
         stdouterrlog = self.startHarvester(repository=REPOSITORY, runOnce=False, waitForNothingToDo=True)
         self.assertEquals(15, self.sizeDumpDir())
 
-
-
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)
 
