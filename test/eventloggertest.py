@@ -143,3 +143,22 @@ class EventLoggerTest(unittest.TestCase):
         comp.logError('error', 'id')
         self.assertEquals('ERROR\t[id]\terror\n', stream1.getvalue()[DATELENGTH:])
         self.assertEquals('ERROR\t[id]\terror\n', stream2.getvalue()[DATELENGTH:])
+
+    def testClearLogfile(self):
+        self.logger.logLine('SUCCES','Some logline 1')
+        self.logger.close()
+        self.logger = EventLogger(EVENTLOGFILE, maxLogLines=4)
+        self.logger.logLine('SUCCES','Some logline 2')
+        self.logger.logLine('SUCCES','Some logline 3')
+        self.logger.logLine('SUCCES','Some logline 4')
+        logfile = open(EVENTLOGFILE,'r+')
+        self.assertEquals('SUCCES\t[]\tSome logline 3', logfile.readline().strip()[DATELENGTH:])
+
+        self.logger.logLine('SUCCES','Some logline 5')
+        logfile = open(EVENTLOGFILE,'r+')
+        self.assertEquals('SUCCES\t[]\tSome logline 3', logfile.readline().strip()[DATELENGTH:])
+
+        self.logger.logLine('SUCCES','Some logline 6')
+        logfile = open(EVENTLOGFILE,'r+')
+        self.assertEquals('SUCCES\t[]\tSome logline 5', logfile.readline().strip()[DATELENGTH:])
+
