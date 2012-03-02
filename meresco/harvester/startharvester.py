@@ -223,7 +223,6 @@ class StartHarvester(object):
             self.repository.mappingId = self.forceMapping
 
         self._generalHarvestLog = CompositeLogger([
-            (['*'], EventLogger(join(self._logDir, self.domainId, 'harvester.log'))),
             (['*'], StreamEventLogger(stdout)),
             (['ERROR', 'WARN'], StreamEventLogger(stderr)),
         ])
