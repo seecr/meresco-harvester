@@ -126,28 +126,31 @@ class StartHarvester(object):
             action="store_true",
             default=False,
             help="Prevent harvester from looping (if combined with --repository)")
+        self.parser.add_option("--child", "",
+            action="store_true",
+            dest="child",
+            default=False,
+            help="Option set by harvester. Never do this by yourself.")
 
         (options, args) = self.parser.parse_args()
         return options
 
     def start(self):
         self._childProcesses = []
-        if not self.repository:
-            self._restartWithLoop()
-        elif not self.runOnce:
-            self._startRepositoryWithChild()
-        else:
+        if self.child:
             self._startRepository()
+        elif self.repository:
+            self._startOne()
+        else:
+            self._startAll()
 
-    def _restartWithLoop(self):
+    def _startAll(self):
         for key in self.saharaget.getRepositoryIds(self.domainId):
-            extraArgs = ['--repository='+key]
-            extraArgs += ['--runOnce'] if self.runOnce else [] 
-            self._childProcesses.append(self._createArgs(extraArgs))
+            self._childProcesses.append(self._createArgs(['--repository='+key]))
         self._startChildProcesses()
 
-    def _startRepositoryWithChild(self):
-        self._childProcesses.append(self._createArgs(['--runOnce']))
+    def _startOne(self):
+        self._childProcesses.append(self._createArgs(extraArgs=[]))
         self._startChildProcesses()
 
     def _startChildProcesses(self):
@@ -158,7 +161,6 @@ class StartHarvester(object):
                 t, process = self._createProcess(args)
                 processes[process.stdout.fileno()] = t, process, args
                 processes[process.stderr.fileno()] = t, process, args
-
             while processes:
                 try:
                     readers, _, _ = select(processes.keys(), [], [])
@@ -198,9 +200,10 @@ class StartHarvester(object):
                             if not self.runOnce:
                                 self._childProcesses.append(args)
                         if len(self._childProcesses) > 0:
-                            t, process = self._createProcess(self._childProcesses.pop(0))
-                            processes[process.stdout.fileno()] = t, process, args
-                            processes[process.stderr.fileno()] = t, process, args
+                            newArgs = self._childProcesses.pop(0)
+                            t, process = self._createProcess(newArgs)
+                            processes[process.stdout.fileno()] = t, process, newArgs
+                            processes[process.stderr.fileno()] = t, process, newArgs
         except:
             for t in set([t for t,process,args in processes.values()]):
                 t.terminate()
@@ -211,7 +214,7 @@ class StartHarvester(object):
         return t, t.executeScript(args, self.processTimeout, SIGINT)
 
     def _createArgs(self, extraArgs):
-        return argv[:1] + extraArgs + argv[1:]
+        return argv[:1] + ["--child"] + extraArgs + argv[1:]
 
     def _startRepository(self):
         if self.forceTarget:

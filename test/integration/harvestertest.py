@@ -379,6 +379,21 @@ class HarvesterTest(IntegrationTestCase):
         else:
             self.fail('Records should have been inserted out-of-order.')
 
+    def testConcurrentHarvestToSruUpdateBUG(self):
+        r = RepositoryData.read(self.repofilepath)
+        r.complete = 'true'
+        r.save(self.repofilepath)
+        self.startHarvester(concurrency=1)
+
+        requestsLogged = sorted(listdir(self.dumpDir))
+        repositoryIds = []
+        for f in requestsLogged:
+            lxml = parse(open(join(self.dumpDir, f)))
+            repositoryIds.append(xpath(lxml, '//ucp:recordIdentifier/text()')[0].split(':', 1)[0])
+        self.assertEquals(15, repositoryIds.count(REPOSITORY))
+        self.assertEquals(10, repositoryIds.count('repository2'))
+        self.assertEquals(10, repositoryIds.count('integrationtest'))
+
     def testConcurrencyAtLeastOne(self):
         stdouterrlog = self.startHarvester(concurrency=0)
         self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
