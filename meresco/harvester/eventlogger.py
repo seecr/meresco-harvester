@@ -36,13 +36,16 @@ from re import compile
 from datetime import datetime
 from cStringIO import StringIO
 from os.path import dirname, isdir
-from os import makedirs
+from os import makedirs, rename
 
 LOGLINE_RE=compile(r'^\[([^\]]*)\]\t([\w ]+)\t\[([^\]]*)\]\t(.*)$')
 
 class BasicEventLogger(object):
-    def __init__(self, logfile):
-        self._logfile = self._openlogfile(logfile)
+    def __init__(self, logfile, maxLogLines=20000):
+        self._numberOfLogLines = 0
+        self._maxLogLines = maxLogLines
+        self._logfilePath = logfile
+        self._logfile = self._openlogfile(self._logfilePath)
 
     def close(self):
         if self._logfile:
@@ -58,6 +61,7 @@ class BasicEventLogger(object):
         self._space()
         self._comments(comments)
         self._flush()
+        self._clearExcessLogLines()
 
     def _time(self):
         now = datetime.utcnow()
@@ -89,12 +93,32 @@ class BasicEventLogger(object):
         return self
 
 class EventLogger(BasicEventLogger):
-    def __init__(self,logfile):
-        BasicEventLogger.__init__(self, logfile)
+    def __init__(self, logfile, maxLogLines=20000):
+        BasicEventLogger.__init__(self, logfile, maxLogLines=maxLogLines)
 
     def _openlogfile(self, logfile):
+        self._numberOfLogLines = 0
         isdir(dirname(logfile)) or makedirs(dirname(logfile))
-        return open(logfile, 'a+')
+        f = open(logfile, 'a+')
+        for line in f:
+            self._numberOfLogLines += 1
+        return f
+
+    def _clearExcessLogLines(self):
+        if self._numberOfLogLines >= self._maxLogLines:
+            self._logfile.seek(0)
+            tmpFile = open(self._logfilePath + ".tmp", 'w')
+            for i, line in enumerate(self._logfile):
+                if i >= self._maxLogLines / 2:
+                    tmpFile.write(line)
+            tmpFile.close()
+            self.close()
+            rename(self._logfilePath + ".tmp", self._logfilePath)
+            self._logfile = self._openlogfile(self._logfilePath)
+
+    def logLine(self, *args, **kwargs):
+        self._numberOfLogLines += 1
+        BasicEventLogger.logLine(self, *args, **kwargs)
 
     def logSuccess(self,comments='', id=''):
         self.logLine('SUCCES', comments=comments, id=id)
@@ -120,6 +144,9 @@ class StreamEventLogger(EventLogger):
     def _openlogfile(self, logfile):
         return self._stream
 
+    def _clearExcessLogLines(self):
+        pass
+
 class CompositeLogger(EventLogger):
     def __init__(self, loggers):
         EventLogger.__init__(self, None)
@@ -127,6 +154,9 @@ class CompositeLogger(EventLogger):
         
     def _openlogfile(self, logfile):
         return None
+
+    def _clearExcessLogLines(self):
+        pass
 
     def logLine(self, event, comments, id=''):
         for events, logger in self._loggers:
@@ -138,6 +168,9 @@ class NilEventLogger(EventLogger):
             EventLogger.__init__(self, None)
 
         def _openlogfile(self, logfile):
+            pass
+
+        def _clearExcessLogLines(self):
             pass
 
         def logLine(self, event, comments, id=''):

@@ -40,8 +40,12 @@ import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
+from select import select, error
 from sys import stderr, stdout, exit, argv
 from optparse import OptionParser
+from os import read
+from signal import SIGINT
+from errno import EBADF, EINTR, EAGAIN
 
 AGAIN_EXITCODE = 42
 
@@ -54,7 +58,9 @@ class StartHarvester(object):
         self.__dict__.update(args.__dict__)
 
         if not self.domainId:
-            self.parser.logError("Specify domain")
+            self.parser.error("Specify domain")
+        if self._concurrency < 1:
+            self.parser.error("Concurrency must be at least 1.")
 
         if self._logDir == None:
             self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()
@@ -95,6 +101,12 @@ class StartHarvester(object):
             help="Override the stateDir in the apache configuration.", 
             metavar="DIRECTORY", 
             default=None)
+        self.parser.add_option("--concurrency", 
+            dest="_concurrency",
+            type="int",
+            default=1,
+            help="Number of repositories to be concurrently harvested. Defaults to 1 (no concurrency).", 
+            metavar="NUMBER")
         self.parser.add_option("--force-target", "", 
             dest="forceTarget",
             help="Overrides the repository's target", 
@@ -114,47 +126,103 @@ class StartHarvester(object):
             action="store_true",
             default=False,
             help="Prevent harvester from looping (if combined with --repository)")
+        self.parser.add_option("--child", "",
+            action="store_true",
+            dest="child",
+            default=False,
+            help="Option set by harvester. Never do this by yourself.")
 
         (options, args) = self.parser.parse_args()
         return options
 
     def start(self):
-        if not self.repository:
-            self._restartWithLoop()
-        elif not self.runOnce:
-            self._startRepositoryWithChild()
-        else:
+        self._childProcesses = []
+        if self.child:
             self._startRepository()
+        elif self.repository:
+            self._startOne()
+        else:
+            self._startAll()
 
-    def _restartWithLoop(self):
+    def _startAll(self):
         for key in self.saharaget.getRepositoryIds(self.domainId):
-            self._startChildProcess(['--repository='+key, '--runOnce'])
+            self._childProcesses.append(self._createArgs(['--repository='+key]))
+        self._startChildProcesses()
 
-    def _startRepositoryWithChild(self):
-        self._startChildProcess(['--runOnce'])
+    def _startOne(self):
+        self._childProcesses.append(self._createArgs(extraArgs=[]))
+        self._startChildProcesses()
 
-    def _startChildProcess(self, extraArgs):
-        args = argv[:1] + extraArgs + argv[1:]
-        exitstatus = AGAIN_EXITCODE
-        while exitstatus == AGAIN_EXITCODE:
-            t = TimedProcess()
-            try:
-                SIG_INT = 2
-                exitstatus = t.executeScript(args, self.processTimeout, SIG_INT)
-            except KeyboardInterrupt, e:
+    def _startChildProcesses(self):
+        processes = {}
+        try:
+            for i in range(min(self._concurrency, len(self._childProcesses))):
+                args = self._childProcesses.pop(0)
+                t, process = self._createProcess(args)
+                processes[process.stdout.fileno()] = t, process, args
+                processes[process.stderr.fileno()] = t, process, args
+            while processes:
+                try:
+                    readers, _, _ = select(processes.keys(), [], [])
+                except error, (errno, description):
+                    if errno == EINTR:
+                        pass
+                    else:
+                        raise
+                for reader in readers:
+                    if reader not in processes:
+                        continue
+
+                    t, process, args = processes[reader]
+                    try:
+                        pipeContent = read(reader, 4096)
+                    except OSError, e:
+                        if e.errno == EAGAIN:
+                            continue
+                        raise
+                    if reader == process.stdout.fileno():
+                        stdout.write(pipeContent)
+                        stdout.flush()
+                    else:
+                        stderr.write(pipeContent)
+                        stderr.flush()
+
+                    if process.poll() is not None:
+                        exitstatus = t.stopScript(process)
+                        del processes[process.stdout.fileno()]
+                        del processes[process.stderr.fileno()]
+                        if exitstatus == AGAIN_EXITCODE:
+                            self._childProcesses.insert(0, args)
+                        else:
+                            if exitstatus != 0:
+                                stderr.write("Process (with args: %s) exited with exitstatus %s.\n" % (args, exitstatus))
+                                stderr.flush()
+                            if not self.runOnce:
+                                self._childProcesses.append(args)
+                        if len(self._childProcesses) > 0:
+                            newArgs = self._childProcesses.pop(0)
+                            t, process = self._createProcess(newArgs)
+                            processes[process.stdout.fileno()] = t, process, newArgs
+                            processes[process.stderr.fileno()] = t, process, newArgs
+        except:
+            for t in set([t for t,process,args in processes.values()]):
                 t.terminate()
-                raise
+            raise
 
+    def _createProcess(self, args):
+        t = TimedProcess()
+        return t, t.executeScript(args, self.processTimeout, SIGINT)
+
+    def _createArgs(self, extraArgs):
+        return argv[:1] + ["--child"] + extraArgs + argv[1:]
 
     def _startRepository(self):
-
         if self.forceTarget:
             self.repository.targetId = self.forceTarget
         if self.forceMapping:
             self.repository.mappingId = self.forceMapping
 
         self._generalHarvestLog = CompositeLogger([
-            (['*'], EventLogger(join(self._logDir, self.domainId, 'harvester.log'))),
             (['*'], StreamEventLogger(stdout)),
             (['ERROR', 'WARN'], StreamEventLogger(stderr)),
         ])
