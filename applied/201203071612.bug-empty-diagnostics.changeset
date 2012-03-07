@@ -1,0 +1,68 @@
+Changeset created on Wed Mar 07 16:12:28 UTC 2012 by Seecr (Seek You Too B.V.)
+
+Description: Bugfix empty diagnostics in invalidRecord
+
+    Invalid record with no message in diagnostics.details now shows
+    'no error message' in invalidRecord page.
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/7.4-Edurep/version_0
+
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/controlpanel/html/dynamic/invalidRecord.sf /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4-Edurep/version_1/meresco/harvester/controlpanel/html/dynamic/invalidRecord.sf
+--- version_0/meresco/harvester/controlpanel/html/dynamic/invalidRecord.sf	2012-03-07 16:16:38.000000000 +0100
++++ version_1/meresco/harvester/controlpanel/html/dynamic/invalidRecord.sf	2012-03-07 17:12:20.000000000 +0100
+@@ -38,7 +38,8 @@
+ 
+     invalidRecord = any.getInvalidRecord(domainId, repositoryId, recordId)
+ 
+-    yield "<pre>%s</pre>" % escapeHtml(xpath(invalidRecord, '//diag:diagnostic/diag:details/text()')[0])
++    diagnosticsDetails = xpath(invalidRecord, '//diag:diagnostic/diag:details/text()')
++    yield "<pre>%s</pre>" % escapeHtml(diagnosticsDetails[0] if diagnosticsDetails else "No error message.")
+     yield '<p><a href="/page/invalid/?%s">Back to invalid records</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))
+     yield "</div>"""
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/integration/helperserver.py /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4-Edurep/version_1/test/integration/helperserver.py
+--- version_0/test/integration/helperserver.py	2012-03-07 16:16:38.000000000 +0100
++++ version_1/test/integration/helperserver.py	2012-03-07 17:12:20.000000000 +0100
+@@ -65,11 +65,13 @@
+         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
+         try:
+             updateRequest = bind_string(Body).updateRequest
+-            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
+-                raise InvalidDataException('Data not valid.')
+             recordId = str(updateRequest.recordIdentifier)
++            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
++                if 'oai:record:02' in recordId:
++                    raise InvalidDataException()
++                raise InvalidDataException('Invalid data')
+             if recordId in self._raiseExceptionOnIds:
+-                raise Exception('ERROR')
++                raise Exception("ERROR")
+             self._number +=1
+             filename = '%05d_%s.updateRequest' %(self._number, str(updateRequest.action).rsplit('/')[-1])
+             with open(join(self._dumpdir, filename), 'w') as f:
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/integration/internalservertest.py /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4-Edurep/version_1/test/integration/internalservertest.py
+--- version_0/test/integration/internalservertest.py	2012-03-07 16:16:38.000000000 +0100
++++ version_1/test/integration/internalservertest.py	2012-03-07 17:12:20.000000000 +0100
+@@ -53,12 +53,21 @@
+         self.assertEquals("/page/invalidRecord/?recordId=oai%3Arecord%3A08&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
+         self.assertEquals("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
+ 
+-    def testViewInvalidRecord(self):
++    def testViewInvalidRecordWithoutDetails(self):
+         self.controlHelper(action='allInvalid')
+         self.startHarvester(repository=REPOSITORY)
+         header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': '\n oai:record:02/&gkn'}, parse='lxml')
+         self.assertEquals("Repository integrationtest - Record \n oai:record:02/&gkn", result.xpath("//h3/text()")[0])
+         self.assertEquals("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
++        self.assertEquals(["No error message."], result.xpath("/div/pre/text()"))
++
++    def testViewInvalidRecord(self):
++        self.controlHelper(action='allInvalid')
++        self.startHarvester(repository=REPOSITORY)
++        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:01'}, parse='lxml')
++        self.assertEquals("Repository integrationtest - Record oai:record:01", result.xpath("//h3/text()")[0])
++        self.assertEquals("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
++        self.assertEquals(["Invalid data"], result.xpath("/div/pre/text()"))
+ 
+     def testGetStatusForDomainAndRepositoryId(self):
+         self.controlHelper(action='allInvalid')
