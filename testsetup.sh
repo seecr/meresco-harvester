@@ -8,7 +8,7 @@
 # 
 # Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -39,15 +39,25 @@ rm -rf tmp build
 
 ${fullPythonVersion} setup.py install --root tmp
 
+if [ -f /etc/debian_version ]; then
+    LOCAL_DIR=`pwd`/tmp/usr/local
+    SITE_PACKAGES_DIR=${LOCAL_DIR}/lib/${fullPythonVersion}/dist-packages
+    BIN_DIR=${LOCAL_DIR}/bin
+else
+    LOCAL_DIR=`pwd`/tmp/usr
+    SITE_PACKAGES_DIR=${LOCAL_DIR}/lib/${fullPythonVersion}/site-packages
+    BIN_DIR=${LOCAL_DIR}/bin
+fi
+
 cp -r test tmp/test
 find tmp -type f -exec sed -r -e \
     "/DO_NOT_DISTRIBUTE/d;
-    s,^binDir.*$,binDir='$mydir/tmp/usr/local/bin',;
+    s,^binDir.*$,binDir='$BIN_DIR',;
     s,^examplesPath.*$,examplesPath='$mydir/examples',;
     s/\\\$Version:[^\\\$]*\\\$/\\\$Version: ${VERSION}\\\$/" -i {} \;
 
-cp meresco/__init__.py tmp/usr/local/lib/${fullPythonVersion}/dist-packages/meresco
-export PYTHONPATH=`pwd`/tmp/usr/local/lib/${fullPythonVersion}/dist-packages:${PYTHONPATH}
+cp meresco/__init__.py ${SITE_PACKAGES_DIR}/meresco
+export PYTHONPATH=${SITE_PACKAGES_DIR}:${PYTHONPATH}
 
 teststorun=$1
 if [ -z "$teststorun" ]; then
