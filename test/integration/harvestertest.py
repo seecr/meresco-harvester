@@ -33,6 +33,7 @@ from os import system, waitpid, listdir, remove, kill
 from os.path import join, dirname, abspath
 from urllib import urlopen
 from time import time, sleep
+from threading import Thread
 from subprocess import Popen
 from shutil import copytree
 from lxml.etree import parse, tostring
@@ -40,7 +41,7 @@ from lxml.etree import parse, tostring
 from cq2utils import CQ2TestCase
 from utils import getRequest
 
-from integrationtestcase import IntegrationTestCase
+from integrationtestcase import IntegrationTestCase, sleepWheel
 
 from meresco.harvester.state import getResumptionToken
 from meresco.harvester.harvesterlog import HarvesterLog
@@ -49,7 +50,7 @@ from meresco.harvester.namespaces import xpath
 
 BATCHSIZE=10
 DOMAIN='adomain'
-REPOSITORY='harvestertest'
+REPOSITORY='harvestertestrepository'
 REPOSITORYGROUP='harvesterTestGroup'
 
 class HarvesterTest(IntegrationTestCase):
@@ -60,16 +61,24 @@ class HarvesterTest(IntegrationTestCase):
         self.filesystemDir = join(self.integrationTempdir, 'filesystem')
         system("rm -rf %s" % self.filesystemDir)
         system("mkdir -p %s" % join(self.harvesterStateDir, DOMAIN))
-        self.repofilepath = join(self.integrationTempdir, 'data', "%s.%s.repository" % (DOMAIN, REPOSITORY))
-        repo = RepositoryData(REPOSITORY)
+        self.repofilepath = self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
+
+    def saveRepository(self, domain, repositoryId, repositoryGroupId):
+        repofilepath = join(self.integrationTempdir, 'data', "%s.%s.repository" % (domain, repositoryId))
+        repo = RepositoryData(repositoryId)
         repo.use = 'true'
         repo.baseurl = 'http://localhost:%s/oai' % self.helperServerPortNumber
         repo.targetId = 'SRUUPDATE'
-        repo.repositoryGroupId = REPOSITORYGROUP
+        repo.repositoryGroupId = repositoryGroupId
         repo.mappingId = 'MAPPING'
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
-        repo.save(self.repofilepath)
+        repo.save(repofilepath)
+        return repofilepath
+
+    def removeRepository(self, domain, repositoryId, repositoryGroupId):
+        repofilepath = join(self.integrationTempdir, 'data', "%s.%s.repository" % (domain, repositoryId))
+        remove(repofilepath)
 
     def tearDown(self):
         remove(self.repofilepath)
@@ -244,10 +253,10 @@ class HarvesterTest(IntegrationTestCase):
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(0, len(listdir(join(self.filesystemDir, REPOSITORYGROUP, REPOSITORY))))
         self.assertEquals(set([
-                'harvestertest:oai:record:10', 'harvestertest:oai:record:09', 'harvestertest:oai:record:08', 
-                'harvestertest:oai:record:07', 'harvestertest:oai:record:06', 'harvestertest:oai:record:05', 
-                'harvestertest:oai:record:04', 'harvestertest:oai:record:03', 'harvestertest:%0A oai:record:02%2F&gkn', 
-                'harvestertest:oai:record:01'
+                'harvestertestrepository:oai:record:10', 'harvestertestrepository:oai:record:09', 'harvestertestrepository:oai:record:08', 
+                'harvestertestrepository:oai:record:07', 'harvestertestrepository:oai:record:06', 'harvestertestrepository:oai:record:05', 
+                'harvestertestrepository:oai:record:04', 'harvestertestrepository:oai:record:03', 'harvestertestrepository:%0A oai:record:02%2F&gkn', 
+                'harvestertestrepository:oai:record:01'
             ]), 
             set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
         )
@@ -365,7 +374,7 @@ class HarvesterTest(IntegrationTestCase):
             repositoryIds.append(xpath(lxml, '//ucp:recordIdentifier/text()')[0].split(':', 1)[0])
 
         repositoryIdsSet = set(repositoryIds)
-        self.assertEquals(set(['repository2', 'integrationtest', 'harvestertest']), repositoryIdsSet)
+        self.assertEquals(set(['repository2', 'integrationtest', 'harvestertestrepository']), repositoryIdsSet)
 
         lastSeenRepoId = None
         try:
@@ -393,6 +402,43 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(15, repositoryIds.count(REPOSITORY))
         self.assertEquals(10, repositoryIds.count('repository2'))
         self.assertEquals(10, repositoryIds.count('integrationtest'))
+
+    def testStartHarvestingAddedRepository(self):
+        t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=False))
+        t.start()
+
+        while not listdir(self.dumpDir):
+            sleep(0.1)
+
+        self.saveRepository(DOMAIN, 'xyz', 'xyz')
+        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
+        sleepWheel(9)
+        log = open(stdoutfile).read()
+        try:
+            self.assertTrue('xyz' in log, log)
+        finally:
+            self.removeRepository(DOMAIN, 'xyz', 'xyz')
+            kill(self.harvesterPID, 2)
+            t.join()
+
+    def testDontHarvestDeletedRepository(self):
+        self.saveRepository(DOMAIN, 'xyz', 'xyz')
+        t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=False))
+        t.start()
+
+        while not listdir(self.dumpDir):
+            sleep(0.1)
+
+        self.removeRepository(DOMAIN, 'xyz', 'xyz')
+        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
+        sleepWheel(8)
+        log = open(stdoutfile).read()
+        try:
+            self.assertFalse('Traceback' in log, log)
+            self.assertFalse('[xyz]' in log, log)
+        finally:
+            kill(self.harvesterPID, 2)
+            t.join()
 
     def testConcurrencyAtLeastOne(self):
         stdouterrlog = self.startHarvester(concurrency=0)
