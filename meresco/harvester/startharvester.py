@@ -136,32 +136,25 @@ class StartHarvester(object):
         return options
 
     def start(self):
-        self._childProcesses = []
         if self.child:
             self._startRepository()
-        elif self.repository:
-            self._startOne()
         else:
-            self._startAll()
-
-    def _startAll(self):
-        for key in self.saharaget.getRepositoryIds(self.domainId):
-            self._childProcesses.append(self._createArgs(['--repository='+key]))
-        self._startChildProcesses()
-
-    def _startOne(self):
-        self._childProcesses.append(self._createArgs(extraArgs=[]))
-        self._startChildProcesses()
+            self._startChildProcesses()
 
     def _startChildProcesses(self):
+        running = set()
+        if self.repository:
+            waiting = [self.repositoryId]
+        else:
+            waiting = self.saharaget.getRepositoryIds(self.domainId)
         processes = {}
         try:
-            for i in range(min(self._concurrency, len(self._childProcesses))):
-                args = self._childProcesses.pop(0)
-                t, process = self._createProcess(args)
-                processes[process.stdout.fileno()] = t, process, args
-                processes[process.stderr.fileno()] = t, process, args
-            while processes:
+            while running or waiting:
+                while waiting and (len(running) < self._concurrency):
+                    repositoryId = waiting.pop(0)
+                    self._createProcess(processes, repositoryId)
+                    running.add(repositoryId)
+
                 try:
                     readers, _, _ = select(processes.keys(), [], [])
                 except error, (errno, description):
@@ -173,7 +166,7 @@ class StartHarvester(object):
                     if reader not in processes:
                         continue
 
-                    t, process, args = processes[reader]
+                    t, process, repositoryId = processes[reader]
                     try:
                         pipeContent = read(reader, 4096)
                     except OSError, e:
@@ -189,32 +182,46 @@ class StartHarvester(object):
 
                     if process.poll() is not None:
                         exitstatus = t.stopScript(process)
+                        running.remove(repositoryId)
                         del processes[process.stdout.fileno()]
                         del processes[process.stderr.fileno()]
                         if exitstatus == AGAIN_EXITCODE:
-                            self._childProcesses.insert(0, args)
+                            waiting.insert(0, repositoryId)
                         else:
                             if exitstatus != 0:
-                                stderr.write("Process (with args: %s) exited with exitstatus %s.\n" % (args, exitstatus))
+                                stderr.write("Process (for repository %s) exited with exitstatus %s.\n" % (repositoryId, exitstatus))
                                 stderr.flush()
                             if not self.runOnce:
-                                self._childProcesses.append(args)
-                        if len(self._childProcesses) > 0:
-                            newArgs = self._childProcesses.pop(0)
-                            t, process = self._createProcess(newArgs)
-                            processes[process.stdout.fileno()] = t, process, newArgs
-                            processes[process.stderr.fileno()] = t, process, newArgs
+                                waiting.append(repositoryId)
+                        self._updateWaiting(waiting, running)
         except:
-            for t in set([t for t,process,args in processes.values()]):
+            for t in set([t for t,process,repositoryId in processes.values()]):
                 t.terminate()
             raise
 
-    def _createProcess(self, args):
+    def _createProcess(self, processes, repositoryId):
         t = TimedProcess()
-        return t, t.executeScript(args, self.processTimeout, SIGINT)
+        process = t.executeScript(self._createArgs(repositoryId), self.processTimeout, SIGINT)
+        processes[process.stdout.fileno()] = t, process, repositoryId
+        processes[process.stderr.fileno()] = t, process, repositoryId
 
-    def _createArgs(self, extraArgs):
-        return argv[:1] + ["--child"] + extraArgs + argv[1:]
+    def _createArgs(self, repositoryId):
+        args = argv + ["--child"]
+        extraArg = '--repository=%s' % repositoryId
+        if not extraArg in argv:
+            args += [extraArg]
+        return args
+    
+    def _updateWaiting(self, waiting, running):
+        repositoryIds = self.saharaget.getRepositoryIds(self.domainId)
+        for repoId in waiting[:]:
+            if not repoId in repositoryIds:
+                waiting.remove(repoId)
+        if self.runOnce or self.repository:
+            return
+        for repoId in repositoryIds:
+            if not repoId in waiting and not repoId in running:
+                waiting.append(repoId)
 
     def _startRepository(self):
         if self.forceTarget:

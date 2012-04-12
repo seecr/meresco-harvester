@@ -103,8 +103,10 @@ class IntegrationTestCase(SeecrTestCase):
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
+        sleep(0.1)
+        self.harvesterPID = harvesterProcessInfo.pid
         if not waitForNothingToDo:
-            waitpid(harvesterProcessInfo.pid, 0)
+            sleepWheel(60, lambda: not harvesterProcessInfo.poll() is None)
         while waitForNothingToDo:
             stdouterrlog.seek(0)
             if 'Nothing to do!' in stdouterrlog.read():
@@ -235,3 +237,16 @@ def fileSubstVars(filepath, **kwargs):
     for k, v in kwargs.items():
         contents = contents.replace("${%s}" % k, str(v))
     open(filepath, "w").write(contents)
+
+def sleepWheel(seconds, callback=None, interval=0.2):
+    parts = ['\\', '|', '/', '-']
+    for i in range(int(seconds/0.2)):
+        stdout.write(parts[i%len(parts)])
+        stdout.flush()
+        sleep(interval)
+        stdout.write("\b")
+        stdout.flush()
+        if not callback is None:
+            if callback():
+                break
+
