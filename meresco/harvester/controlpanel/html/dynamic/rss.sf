@@ -8,7 +8,8 @@
 # 
 # Copyright (C) 2010-2011 Maastricht University Library http://www.maastrichtuniversity.nl/web/Library/home.htm
 # Copyright (C) 2010-2011 Seek You Too B.V. (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -34,7 +35,7 @@ def main(path, arguments, **kwargs):
     repositoryId = arguments.get('repositoryId', [None])[0]
 
     linkToStatusPage = "%s?%s" % (config["harvesterStatusURL"], escapeXml(urlencode(dict(domainId=domainId, repositoryId=repositoryId))))
-    statusLxml = XML(''.join(compose(any.getStatus(domainId=domainId, repositoryGroupId=repositoryGroupId, repositoryId=repositoryId))))
+    statusLxml = XML(''.join(compose(observable.any.getStatus(domainId=domainId, repositoryGroupId=repositoryGroupId, repositoryId=repositoryId))))
 
     yield "HTTP/1.0 200 OK\r\n"
     yield "Content-Type: application/rss+xml\r\n"
