@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -28,12 +29,13 @@
 
 from os.path import join
 from seecr.test import SeecrTestCase
+from weightless.core import compose
 
 from meresco.harvester.harvesterdata import HarvesterData
 
 class HarvesterDataTest(SeecrTestCase):
-
-    def testGetRepositoryGroupIds(self):
+    def setUp(self):
+        SeecrTestCase.setUp(self)
         open(join(self.tempdir, 'adomain.domain'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
 <domain>
     <id>adomain</id>
@@ -41,10 +43,6 @@ class HarvesterDataTest(SeecrTestCase):
     <repositoryGroupId>Group1</repositoryGroupId>
     <repositoryGroupId>Group2</repositoryGroupId>
 </domain>""")
-        hd = HarvesterData(self.tempdir)
-        self.assertEquals(["Group1", "Group2"], hd.getRepositoryGroupIds(domainId="adomain"))
- 
-    def testGetRepositoryIds(self):
         open(join(self.tempdir, 'adomain.Group1.repositoryGroup'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
 <repositoryGroup>
   <id>Group1</id>
@@ -53,14 +51,74 @@ class HarvesterDataTest(SeecrTestCase):
   <repositoryId>repository1</repositoryId>
   <repositoryId>repository2</repositoryId>
 </repositoryGroup>""")
-        hd = HarvesterData(self.tempdir)
-        self.assertEquals(["repository1", "repository2"], hd.getRepositoryIds(domainId="adomain", repositoryGroupId="Group1"))
-
-    def testGetRepositoryGroupId(self):
+        open(join(self.tempdir, 'adomain.Group2.repositoryGroup'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
+<repositoryGroup>
+  <id>Group2</id>
+  <name xml:lang="nl">Groep2</name>
+  <name xml:lang="en">Group2</name>
+  <repositoryId>repository2_1</repositoryId>
+  <repositoryId>repository2_2</repositoryId>
+</repositoryGroup>""")
         open(join(self.tempdir, 'adomain.repository1.repository'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
 <repository>
   <id>repository1</id>
   <repositoryGroupId>Group1</repositoryGroupId>
 </repository>""")
-        hd = HarvesterData(self.tempdir)
-        self.assertEquals("Group1", hd.getRepositoryGroupId(domainId="adomain", repositoryId="repository1"))
+        open(join(self.tempdir, 'adomain.repository2.repository'), 'w').write("""<repository>
+  <id>repository2</id>
+  <repositoryGroupId>Group1</repositoryGroupId>
+</repository>""")
+        open(join(self.tempdir, 'adomain.repository2_1.repository'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
+<repository>
+  <id>repository2_1</id>
+  <repositoryGroupId>Group2</repositoryGroupId>
+</repository>""")
+        open(join(self.tempdir, 'adomain.repository2_2.repository'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
+<repository>
+  <id>repository2_2</id>
+  <repositoryGroupId>Group2</repositoryGroupId>
+</repository>""")
+        self.hd = HarvesterData(self.tempdir)
+
+    def testGetRepositoryGroupIds(self):
+        self.assertEquals(["Group1", "Group2"], self.hd.getRepositoryGroupIds(domainId="adomain"))
+ 
+    def testGetRepositoryIds(self):
+        self.assertEquals(["repository1", "repository2"], self.hd.getRepositoryIds(domainId="adomain", repositoryGroupId="Group1"))
+        self.assertEquals(["repository1", "repository2", "repository2_1", "repository2_2"], self.hd.getRepositoryIds(domainId="adomain"))
+
+    def testGetRepositoryGroupId(self):
+        self.assertEquals("Group1", self.hd.getRepositoryGroupId(domainId="adomain", repositoryId="repository1"))
+
+    def testGetRepositoryAsXml(self):
+        expected = """<repository>
+  <id>repository1</id>
+  <repositoryGroupId>Group1</repositoryGroupId>
+</repository>"""
+        self.assertEquals(expected, self.hd.getRepositoryAsXml(domainId='adomain', repositoryId='repository1'))
+
+    def testGetRepositoryAsXmlWithoutXMLHeader(self):
+        expected = """<repository>
+  <id>repository2</id>
+  <repositoryGroupId>Group1</repositoryGroupId>
+</repository>"""
+        self.assertEquals(expected, self.hd.getRepositoryAsXml(domainId='adomain', repositoryId='repository2'))
+
+    def testGetRepositories(self):
+        result = ''.join(compose(self.hd.getRepositories(domainId='adomain')))
+        self.assertEqualsWS("""<GetRepositories>
+<repository>
+    <id>repository1</id>
+    <repositoryGroupId>Group1</repositoryGroupId>
+</repository><repository>
+    <id>repository2</id>
+        <repositoryGroupId>Group1</repositoryGroupId>
+</repository><repository>
+    <id>repository2_1</id>
+    <repositoryGroupId>Group2</repositoryGroupId>
+</repository><repository>
+    <id>repository2_2</id>
+    <repositoryGroupId>Group2</repositoryGroupId>
+</repository>
+        </GetRepositories>""", result)
+

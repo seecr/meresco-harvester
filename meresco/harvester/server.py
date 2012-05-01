@@ -7,9 +7,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -57,6 +57,7 @@ dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 staticHtmlPath = join(myPath, 'controlpanel', 'html')
 
 def dna(reactor, observableHttpServer, config):
+    harvesterData = HarvesterData(config["dataPath"])
     return \
         (Observable(),
             (observableHttpServer,
@@ -80,10 +81,10 @@ def dna(reactor, observableHttpServer, config):
                             },
                             indexPage="/index.html",
                             ),
-                            (SaharaGet(saharaurl=config["saharaUrl"]),),
                             (RepositoryStatus(config["logPath"], config["statePath"]),
-                                (HarvesterData(config["dataPath"]),)    
-                            )
+                                (harvesterData,)
+                            ),
+                            (harvesterData,)
                         )
                     )
                 )

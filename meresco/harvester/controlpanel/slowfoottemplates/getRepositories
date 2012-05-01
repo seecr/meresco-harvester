@@ -10,35 +10,8 @@ if repositoryGroupId and not exists:
   include('/saharageterror?errorCode=idDoesNotExist')
 else:
   #
-%><?xml version="1.0" encoding="UTF-8"?>
-<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
-<%
-  include('/saharagetTime')
-%> 
- <request>
-  <verb>GetRepositories</verb>
-  <domainId><% escape_xml(domainId) %></domainId><%
-  if repositoryGroupId:
-    allGroups = [ repositoryGroupId ]
-%>
-    <repositoryGroupId><% escape_xml(repositoryGroupId) %></repositoryGroupId><%
-  else:
-    allGroups = groups
-  #
-%>
- </request>
- <GetRepositories>
-<%
-  for groupId in allGroups:
-    repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
-    for repositoryId in repositories:
-      repositoryXml = asxml(url('/' + domainId + '.' + repositoryId + '.repository')).repository
-%>
-  <%=repositoryXml.xml()%>
-<%
-  #
-%>
- </GetRepositories>
-</saharaget><%
+  queryArgs = urlencode(dict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId))
+  repositoriesUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
+  req.write(repositoriesUrl.read())
 #
 %>
