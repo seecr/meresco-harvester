@@ -71,7 +71,7 @@ class InternalServerTest(IntegrationTestCase):
     def testGetStatusForDomainAndRepositoryId(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
@@ -81,14 +81,14 @@ class InternalServerTest(IntegrationTestCase):
     def testGetStatusForDomain(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain'}, parse='lxml')
         self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
 
     def testGetStatusForDomainAndRepositoryGroup(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
         self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
