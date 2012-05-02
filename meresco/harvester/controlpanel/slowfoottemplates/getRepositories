@@ -1,17 +1,8 @@
 <%
-from slowfoot import binderytools
-
 type('text/xml; charset=utf-8')
 domainId = args.domainId
 repositoryGroupId = args.repositoryGroupId
-groups = asxml(url('/'+domainId+'.domain')).domain.repositoryGroupId
-exists = filter(lambda g:g == repositoryGroupId, groups)
-if repositoryGroupId and not exists:
-  include('/saharageterror?errorCode=idDoesNotExist')
-else:
-  #
-  queryArgs = urlencode(dict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId))
-  repositoriesUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
-  req.write(repositoriesUrl.read())
-#
+queryArgs = urlencode(dict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId))
+repositoriesUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
+req.write(repositoriesUrl.read())
 %>
