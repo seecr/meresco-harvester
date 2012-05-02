@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -29,6 +30,10 @@
 from lxml.etree import parse
 from os.path import join
 
+from re import compile as compileRe
+
+XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')
+
 class HarvesterData(object):
 
     def __init__(self, dataPath):
@@ -38,12 +43,27 @@ class HarvesterData(object):
         lxml = parse(open(join(self._dataPath, '%s.domain' % domainId)))
         return lxml.xpath("/domain/repositoryGroupId/text()")
 
-    def getRepositoryIds(self, domainId, repositoryGroupId):
-        lxml = parse(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))
-        return lxml.xpath("/repositoryGroup/repositoryId/text()")
+    def getRepositoryIds(self, domainId, repositoryGroupId=None):
+        result = []
+        allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
+        for repositoryGroupId in allIds:
+            lxml = parse(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))
+            result.extend(lxml.xpath("/repositoryGroup/repositoryId/text()"))
+        return result
 
     def getRepositoryGroupId(self, domainId, repositoryId):
         lxml = parse(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))
         return lxml.xpath("/repository/repositoryGroupId/text()")[0]
+
+    def getRepositoryAsXml(self, domainId, repositoryId):
+        m = XMLHEADER.match(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))).read())
+        return m.groupdict()['body']
+
+    def getRepositories(self, domainId, repositoryGroupId=None):
+        repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
+        yield '<GetRepositories>'
+        for repositoryId in repositoryIds:
+            yield self.getRepositoryAsXml(domainId=domainId, repositoryId=repositoryId)
+        yield '</GetRepositories>'
 
     

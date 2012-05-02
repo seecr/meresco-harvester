@@ -133,7 +133,7 @@ class HarvesterTest(IntegrationTestCase):
         logLen = len(self.getLogs())
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
 
         r = RepositoryData.read(self.repofilepath)
@@ -152,7 +152,7 @@ class HarvesterTest(IntegrationTestCase):
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
 
     def testRefresh(self):

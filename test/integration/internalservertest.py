@@ -8,9 +8,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -72,7 +72,7 @@ class InternalServerTest(IntegrationTestCase):
     def testGetStatusForDomainAndRepositoryId(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
@@ -82,17 +82,27 @@ class InternalServerTest(IntegrationTestCase):
     def testGetStatusForDomain(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain'}, parse='lxml')
         self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
 
     def testGetStatusForDomainAndRepositoryGroup(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
         self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
+
+    def testGetRepositoriesForDomain(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain'}, parse='lxml')
+        self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
+        self.assertEquals(['integrationtest', 'repository2'], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
+
+    def testGetRepositoriesForDomainAndRepositoryGroup(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
+        self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
+        self.assertEquals(["integrationtest"], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
 
     def testRssForHarvesterStatus(self):
         self.controlHelper(action="noneInvalid")
