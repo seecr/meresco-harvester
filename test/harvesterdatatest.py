@@ -78,6 +78,11 @@ class HarvesterDataTest(SeecrTestCase):
   <id>repository2_2</id>
   <repositoryGroupId>Group2</repositoryGroupId>
 </repository>""")
+        open(join(self.tempdir, 'adomain.remi.repository'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
+<repository>
+  <id>remi</id>
+  <repositoryGroupId>NoGroup</repositoryGroupId>
+</repository>""")
         self.hd = HarvesterData(self.tempdir)
 
     def testGetRepositoryGroupIds(self):
@@ -122,3 +127,21 @@ class HarvesterDataTest(SeecrTestCase):
 </repository>
         </GetRepositories>""", result)
 
+    def testGetRepositoriesWithError(self):
+        result = ''.join(compose(self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')))
+        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
+        result = ''.join(compose(self.hd.getRepositories(domainId='baddomain')))
+        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
+
+    def testGetRepository(self):
+        result = ''.join(compose(self.hd.getRepository(domainId='adomain', repositoryId='repository1')))
+        self.assertEqualsWS("""<GetRepository>
+<repository>
+    <id>repository1</id>
+    <repositoryGroupId>Group1</repositoryGroupId>
+</repository>
+</GetRepository>""", result)
+
+    def testGetRepositoryWithErrors(self):
+        result = ''.join(compose(self.hd.getRepository(domainId='adomain', repositoryId='repository12')))
+        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
