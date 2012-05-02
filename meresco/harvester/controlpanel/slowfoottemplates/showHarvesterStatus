@@ -10,7 +10,7 @@ loggedIn = bool(session.get('username', ''))
 
 statuses = asxml(theUrl).saharaget.GetStatus.status
 
-statusUrl = url('%s/getStatus?%s' % (req.get_options()['internalServer'], args))
+statusUrl = url('%s/get?verb=GetStatus&%s' % (req.get_options()['internalServer'], args))
 invalid = {}
 for status in asxml(statusUrl).saharaget.GetStatus.status:
     invalid[status.repositoryId] = status
