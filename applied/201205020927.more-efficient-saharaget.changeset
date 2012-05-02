@@ -181,4 +181,3 @@ diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude
      def testRssForHarvesterStatus(self):
          self.controlHelper(action="noneInvalid")
          self.startHarvester(repository=REPOSITORY)
-Only in version_0/test/integration: .internalservertest.py.swp
