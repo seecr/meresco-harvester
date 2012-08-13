@@ -34,11 +34,13 @@ from os import SEEK_END
 from time import strftime, gmtime
 import re
 
+
 class State(object):
     def __init__(self, stateDir, name):
         self._filename = join(stateDir, '%s.stats' % name)
-        open(self._filename, 'a').close()
-        self._statsfile = open(self._filename, 'r+')
+        self.startdate = None
+        self.token = None
+        self.total = 0
         self._readState()
         self._newlineIfMissing()
 
@@ -49,40 +51,32 @@ class State(object):
     def setToLastCleanState(self):
         cleanState = self._getLastCleanState()
         if cleanState != None:
-            self._write(self._getLastCleanState())
+            self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/%s, Done: Reset to last clean state.\n" % (self.getTime(), self.total))
+            self._write(cleanState)
         else:
             self.markDeleted()
 
     def markDeleted(self):
         self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self.getTime())
 
-    def _getLastCleanState(self):
-        result = None
-        self._statsfile.seek(0)
-        for line in self._filterNonErrorLogLine(self._statsfile):
-            token = getResumptionToken(line)
-            if token == None:
-                result = line
-        self._statsfile.seek(0, SEEK_END)
-        return result
-
-    def _getLastDoneState(self):
-        result = None
-        self._statsfile.seek(0)
-        for line in self._filterNonErrorLogLine(self._statsfile):
-            result = line
-        self._statsfile.seek(0, SEEK_END)
-        return result
+    def getTime(self):
+        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
 
     def _readState(self):
-        self.startdate = None
-        self.token = None
-        self.total = 0
-        if isfile(self._filename):
-            logline = self._getLastDoneState()
-            if logline and not self._isDeleted(logline):
+        open(self._filename, 'a').close()
+        self._statsfile = open(self._filename, 'r+')
+        logline = None
+        for logline in self._filterNonErrorLogLine(self._statsfile):
+            if not self.token:
+                # necessary because of: http://www.openarchives.org/OAI/2.0/guidelines-harvester.htm#Datestamps
+                # (last alinea of that paragraph)
                 self.startdate = getStartDate(logline)
-                self.token = getResumptionToken(logline)
+            self.token = getResumptionToken(logline)
+        if logline:
+            if self._isDeleted(logline):
+                self.startdate = None
+                self.token = None
+            else:
                 harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
                 self.total = int(total)
 
@@ -101,18 +95,26 @@ class State(object):
     @staticmethod
     def _filterNonErrorLogLine(iterator):
         return (line for line in iterator if 'Done:' in line)
-    
+
     @staticmethod
     def _isDeleted(logline):
         return "Done: Deleted all id's" in logline
-
-    def getTime(self):
-        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
 
     @staticmethod
     def _gmtime():
         return gmtime()
                 
+    def _getLastCleanState(self):
+        result = None
+        self._statsfile.seek(0)
+        for line in self._filterNonErrorLogLine(self._statsfile):
+            token = getResumptionToken(line)
+            if token == None:
+                result = line
+        self._statsfile.seek(0, SEEK_END)
+        return result
+
+
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
     return matches.group(1)

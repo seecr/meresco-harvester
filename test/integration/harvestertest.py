@@ -119,13 +119,14 @@ class HarvesterTest(IntegrationTestCase):
     def testIncrementalHarvesting(self):
         statsFile = join(self.harvesterStateDir, DOMAIN, '%s.stats' % REPOSITORY)
         with open(statsFile, 'w') as f:
+            f.write('Started: 2011-03-31 13:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-03-31 13:12:36, ResumptionToken: xyz\n')
             f.write('Started: 2011-04-01 14:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-04-01 14:12:36, ResumptionToken:\n')
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
         logs = self.getLogs()
         self.assertEquals(1, len(logs))
         self.assertEquals('/oai', logs[-1]['path'])
-        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-04-01']}, logs[-1]['arguments'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-03-31']}, logs[-1]['arguments'])
 
     def testClear(self):
         self.startHarvester(repository=REPOSITORY)
