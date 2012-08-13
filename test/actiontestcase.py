@@ -33,9 +33,11 @@
 ## end license ##
 
 from sys import exc_info
+from os.path import join
+from time import strftime
+
 from seecr.test import CallTrace, SeecrTestCase
 from meresco.harvester.harvesterlog import HarvesterLog
-from os.path import join
 
 
 class ActionTestCase(SeecrTestCase):
@@ -80,6 +82,6 @@ Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: 
                 exType, exValue, exTb = exc_info()
                 h.endWithException(exType, exValue, exTb)
         else:
-            h.endRepository(token)
+            h.endRepository(token, strftime("%Y-%m-%dT%H:%M:%SZ", h._state._gmtime()))
         h.close()
 

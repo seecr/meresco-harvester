@@ -57,21 +57,22 @@ class Harvester(Observable):
         return self.call.info()
 
     def listRecords(self, from_, token, set):
+        kwargs = {}
         if token:
-            return self.call.listRecords(resumptionToken=token)
-        elif from_:
+            kwargs['resumptionToken'] = token
+        else:
+            kwargs['metadataPrefix'] = self._repository.metadataPrefix
+            if from_:
+                kwargs['from_'] = from_
             if set:
-                return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
-            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
-        elif set:
-            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
-        return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix)
+                kwargs['set'] = set
+        return self.call.listRecords(**kwargs)
 
     def fetchRecords(self, from_, token):
-        records, resumptionToken = self.listRecords(from_, token, self._repository.set)
+        records, resumptionToken, responseDate = self.listRecords(from_, token, self._repository.set)
         for record in records:
             self.uploadRecord(record)
-        return resumptionToken
+        return resumptionToken, responseDate   
 
     def uploadRecord(self, record):
         upload = self.call.createUpload(self._repository, record)
@@ -94,8 +95,8 @@ class Harvester(Observable):
         try:
             self.do.startRepository()
             state = self.call.state()
-            newtoken = self.fetchRecords(state.startdate, state.token)
-            self.do.endRepository(newtoken)
+            newtoken, responseDate = self.fetchRecords(state.startdate, state.token)
+            self.do.endRepository(newtoken, responseDate)
             return newtoken
         except:
             exType, exValue, exTb = sys.exc_info()

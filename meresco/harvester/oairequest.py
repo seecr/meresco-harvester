@@ -80,7 +80,7 @@ class OaiRequest(object):
                 raise e
             response = e.response
         listRecords = wrapp(response.OAI_PMH).ListRecords
-        return listRecords.record, getattr(listRecords, 'resumptionToken', None)
+        return listRecords.record, getattr(listRecords, 'resumptionToken', None), str(response.OAI_PMH.responseDate).strip()
 
     def getRecord(self, **kwargs):
         kwargs['verb'] = 'GetRecord'

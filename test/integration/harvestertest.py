@@ -166,7 +166,7 @@ class HarvesterTest(IntegrationTestCase):
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123]]:
             log.notifyHarvestedRecord(uploadId)
             log.deleteIdentifier(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
 
         r = RepositoryData.read(self.repofilepath)
@@ -315,7 +315,7 @@ class HarvesterTest(IntegrationTestCase):
             log.notifyHarvestedRecord(uploadId)
             log.logInvalidData(uploadId, 'ignored message')
             log.logIgnoredIdentifierWarning(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
         totalRecords = 15
         oldUploads = 2
@@ -351,7 +351,7 @@ class HarvesterTest(IntegrationTestCase):
             log.notifyHarvestedRecord(uploadId)
             log.logInvalidData(uploadId, 'ignored message')
             log.logIgnoredIdentifierWarning(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
         oldUploads = 4
         oldDeletes = 5

@@ -74,7 +74,7 @@ class HarvesterLog(object):
         
     def startRepository(self):
         self._resetCounts()
-        self._state._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state.getTime())
+        self._state.markStarted()
 
     def _resetCounts(self):
         self._harvestedCount = 0
@@ -96,17 +96,14 @@ class HarvesterLog(object):
         self._state.markDeleted()
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
     
-    def endRepository(self, token):
-        self._state._write(self.countsSummary())
-        self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
+    def endRepository(self, token, responseDate):
+        self._state.markHarvested(self.countsSummary(), token, responseDate)
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
 
     def endWithException(self, exType, exValue, exTb):
-        error = str(exType) + ': ' + str(exValue)
-        self._state._write(self.countsSummary())
-        self._state._write( ', Error: ' + error)
-        error2 = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
-        self._eventlogger.logError(error2, id=self._name)
+        self._state.markException(exType, exValue, self.countsSummary())
+        error = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
+        self._eventlogger.logError(error, id=self._name)
 
     def countsSummary(self):
         return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())

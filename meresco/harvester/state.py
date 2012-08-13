@@ -33,11 +33,13 @@ from os.path import join, isfile
 from os import SEEK_END
 from time import strftime, gmtime
 import re
+from simplejson import load as jsonLoad, dump as jsonDump
 
 
 class State(object):
     def __init__(self, stateDir, name):
         self._filename = join(stateDir, '%s.stats' % name)
+        self._resumptionFilename = join(stateDir, '%s.next' % name)
         self.startdate = None
         self.token = None
         self.total = 0
@@ -48,19 +50,30 @@ class State(object):
         self._newlineIfMissing()
         self._statsfile.close()
 
-    def setToLastCleanState(self):
-        cleanState = self._getLastCleanState()
-        if cleanState != None:
-            self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/%s, Done: Reset to last clean state.\n" % (self.getTime(), self.total))
-            self._write(cleanState)
-        else:
-            self.markDeleted()
+    def markStarted(self):
+        self._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self.getTime())
+
+    def markHarvested(self, countsSummary, token, responseDate):
+        self._write(countsSummary)
+        self._write(', Done: %s, ResumptionToken: %s' % (self.getTime(), token))
+        self._writeResumptionValues(token, responseDate)
 
     def markDeleted(self):
-        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self.getTime())
+        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids." % self.getTime())
+        self._writeResumptionValues(None, None)
+
+    def markException(self, exType, exValue, countsSummary):
+        error = str(exType) + ': ' + str(exValue)
+        self._write(countsSummary)
+        self._write( ', Error: ' + error)
 
     def getTime(self):
         return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
+
+    def setToLastCleanState(self):
+        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/%s, Done: Reset to last clean state. ResumptionToken: \n" % (self.getTime(), self.total))
+        self.token = None
+        self._writeResumptionValues(None, self.startdate)
 
     def _readState(self):
         open(self._filename, 'a').close()
@@ -80,6 +93,11 @@ class State(object):
                 harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
                 self.total = int(total)
 
+        if isfile(self._resumptionFilename):
+            values = jsonLoad(open(self._resumptionFilename))
+            self.token = values.get('resumptionToken', None) or None
+            self.startdate = values.get('from', '').split('T')[0] or None
+
     def _newlineIfMissing(self):
         if self._statsfile.tell() == 0:
             return
@@ -91,6 +109,13 @@ class State(object):
     def _write(self, *args):
         self._statsfile.write(*args)
         self._statsfile.flush()
+
+    def _writeResumptionValues(self, token, responseDate):
+        newToken = str(token or '')
+        newFrom = ''
+        if responseDate:
+            newFrom = self.startdate if self.token else responseDate
+        jsonDump({'resumptionToken': newToken, 'from': newFrom}, open(self._resumptionFilename, 'w'))
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):
@@ -104,16 +129,6 @@ class State(object):
     def _gmtime():
         return gmtime()
                 
-    def _getLastCleanState(self):
-        result = None
-        self._statsfile.seek(0)
-        for line in self._filterNonErrorLogLine(self._statsfile):
-            token = getResumptionToken(line)
-            if token == None:
-                result = line
-        self._statsfile.seek(0, SEEK_END)
-        return result
-
 
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)

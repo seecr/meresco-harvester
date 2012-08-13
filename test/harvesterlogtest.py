@@ -79,7 +79,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork())
         logger.startRepository()
-        logger.endRepository(None)
+        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", logger._state._gmtime()))
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork())
@@ -105,7 +105,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord("name:uploadId2")
         logger.logInvalidData("name:uploadId2", "Test Exception")
         logger.logIgnoredIdentifierWarning("name:uploadId2")
-        logger.endRepository(None)
+        logger.endRepository(None, '2012-01-01T09:00:00Z')
         logger.close()
         lines = open(self.stateDir + '/name.stats').readlines()
         eventline = open(self.logDir + '/name.events').readlines()[1].strip()
@@ -242,9 +242,4 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals(None, logger.token)
         self.assertEquals(None,logger.from_)
         self.assertEquals(0, logger.total)
-
-
-class MockMailer(object):
-    def send(self, message):
-        self.message=message
 

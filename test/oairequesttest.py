@@ -60,8 +60,9 @@ class OaiRequestTest(unittest.TestCase):
             self.assertEquals(u'badResumptionToken', e.errorCode())
             
     def testListRecords(self):
-        records, resumptionToken = self.request.listRecords(metadataPrefix='oai_dc')
+        records, resumptionToken, responseDate = self.request.listRecords(metadataPrefix='oai_dc')
         self.assertEquals("TestToken", resumptionToken)
+        self.assertEquals("2004-12-29T13:19:27Z", responseDate)
         self.assertEquals(3, len(records))
         self.assertEquals('oai:tudelft.nl:007087', str(records[0].header.identifier))
         if records[0].header.deleted:
@@ -91,9 +92,10 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals('oai:rep:12345',record.header.identifier)
         
     def testListRecordsWithAnEmptyList(self):
-        records, resumptionToken = self.request.listRecords(resumptionToken='EmptyListToken')
+        records, resumptionToken, responseDate = self.request.listRecords(resumptionToken='EmptyListToken')
         self.assertEquals(0, len(records))
         self.assertEquals("", resumptionToken)
+        self.assertEquals("2005-01-12T14:34:49Z", responseDate)
 
     def testBuildRequestUrl(self):
         oaiRequest = OaiRequest("http://x.y.z/oai")
