@@ -64,16 +64,17 @@ class HarvesterLogTest(unittest.TestCase):
 
     def testHasWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
-        self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
-        self.assert_(logger.hasWork())
-        logger.from_=strftime('%Y-%m-%d', gmtime())
-        self.assert_(not logger.hasWork())
-        logger.token='SomeToken'
-        self.assert_(logger.hasWork())
-        logger.from_='2005-01-02'
-        self.assert_(logger.hasWork())
-        logger.token=None
-        self.assert_(logger.hasWork())
+        self.assertEquals(None, logger._state.from_)
+        self.assertEquals(None, logger._state.token)
+        self.assertTrue(logger.hasWork())
+        logger._state.from_=strftime('%Y-%m-%d', gmtime())
+        self.assertTrue(not logger.hasWork())
+        logger._state.token='SomeToken'
+        self.assertTrue(logger.hasWork())
+        logger._state.from_='2005-01-02'
+        self.assertTrue(logger.hasWork())
+        logger._state.token=None
+        self.assertTrue(logger.hasWork())
 
     def testHasWorkBeforeAndAfterDoingWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
@@ -137,9 +138,9 @@ class HarvesterLogTest(unittest.TestCase):
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
         self.assertEquals('ERROR', event.strip())
         self.assertEquals('name', id)
-        self.assert_(comments.startswith('Traceback (most recent call last):|File "'))
-        self.assert_('harvesterlogtest.py", line ' in comments)
-        self.assert_(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
+        self.assertTrue(comments.startswith('Traceback (most recent call last):|File "'))
+        self.assertTrue('harvesterlogtest.py", line ' in comments)
+        self.assertTrue(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
 
     def testLogWithoutDoubleIDs(self):
         f = open(self.stateDir+'/name.ids','w')
@@ -209,37 +210,16 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertFalse(isfile(self.logDir + '/invalid/repoid/recordid'))
         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
 
-    def testLogDeleted(self):
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='emptyrepoi')
-        self.assertEquals(None,logger.from_)
-        self.assertEquals(0, logger.total)
-        self.assertEquals(None, logger.token)
-        f = open(self.stateDir+'/name.stats','w')
-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
-        f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals('2005-01-02',logger.from_)
-        self.assertEquals(1650, logger.total)
-        self.assertEquals('resumption', logger.token)
-        f = open(self.stateDir+'/name.stats','w')
-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption\n')
-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s\n')
-        f.close()
-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals(None, logger.token)
-        self.assertEquals(None,logger.from_)
-        self.assertEquals(0, logger.total)
-
     def testMarkDeleted(self):
         f = open(self.stateDir+'/name.stats','w')
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals('resumption', logger.token)
+        self.assertEquals('resumption', logger._state.token)
         logger.markDeleted()
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals(None, logger.token)
-        self.assertEquals(None,logger.from_)
-        self.assertEquals(0, logger.total)
+        self.assertEquals(None, logger._state.token)
+        self.assertEquals(None, logger._state.from_)
+        self.assertEquals(0, logger.totalIds())
 

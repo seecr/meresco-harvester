@@ -47,7 +47,6 @@ from slowfoot.wrappers import wrapp, binderytools
 
 from meresco.harvester.harvester import Harvester
 from meresco.harvester.harvesterlog import HarvesterLog
-from meresco.harvester.state import getHarvestedUploadedRecords
 from meresco.harvester.oairequest import OaiRequest
 from meresco.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
 from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
@@ -416,3 +415,9 @@ class HarvesterTest(unittest.TestCase):
                 return self.mockRepository.listRecords(metadataPrefix = metadataPrefix, set = set)
             return self.mockRepository.listRecords(metadataPrefix = metadataPrefix)
         return self.mockRepository.listRecords(resumptionToken = resumptionToken)
+
+
+def getHarvestedUploadedRecords(logline):
+    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
+    return matches.groups('0')
+

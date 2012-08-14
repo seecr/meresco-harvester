@@ -57,7 +57,7 @@ class ActionTestCase(SeecrTestCase):
         self.assertEquals("""Started: 2010-03-01 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-01 12:15:00, ResumptionToken: resumptionToken
 Started: 2010-03-02 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-02 12:15:00, ResumptionToken: 
 Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: <type 'exceptions.Exception'>: Exception
-""", open(h._state._filename).read())
+""", open(h._state._statsfilename).read())
 
     def newHarvesterLog(self):
         return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)

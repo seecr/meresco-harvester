@@ -156,7 +156,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToPreviousCleanState(self):
         self.writeLogLine(2010, 3, 2, token='')
@@ -169,7 +169,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -179,7 +179,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
     
     def newSmoothAction(self):
         action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

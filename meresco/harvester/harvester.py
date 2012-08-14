@@ -95,7 +95,7 @@ class Harvester(Observable):
         try:
             self.do.startRepository()
             state = self.call.state()
-            newtoken, responseDate = self.fetchRecords(state.startdate, state.token)
+            newtoken, responseDate = self.fetchRecords(state.from_, state.token)
             self.do.endRepository(newtoken, responseDate)
             return newtoken
         except:

@@ -64,9 +64,6 @@ class HarvesterLog(object):
         self._invalidIds = Ids(stateDir, name + "_invalid")
         self._state = State(stateDir, name)
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
-        self.from_ = self._state.startdate
-        self.token = self._state.token
-        self.total = self._state.total
         self._resetCounts()
 
     def isCurrentDay(self, yyyy_mm_dd):
@@ -94,7 +91,7 @@ class HarvesterLog(object):
     def markDeleted(self):
         self._ids.clear()
         self._state.markDeleted()
-        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
+        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.', id=self._name)
     
     def endRepository(self, token, responseDate):
         self._state.markHarvested(self.countsSummary(), token, responseDate)
@@ -142,7 +139,7 @@ class HarvesterLog(object):
         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
     def hasWork(self):
-        return not self.isCurrentDay(self.from_) or self.token
+        return not self.isCurrentDay(self._state.from_) or self._state.token
     
     def state(self):
         return self._state

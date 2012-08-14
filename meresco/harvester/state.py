@@ -38,17 +38,17 @@ from simplejson import load as jsonLoad, dump as jsonDump
 
 class State(object):
     def __init__(self, stateDir, name):
-        self._filename = join(stateDir, '%s.stats' % name)
+        self._statsfilename = join(stateDir, '%s.stats' % name)
+        self._forceFinalNewlineOnStatsFile()
         self._resumptionFilename = join(stateDir, '%s.next' % name)
-        self.startdate = None
+        self.from_ = None
         self.token = None
-        self.total = 0
         self._readState()
-        self._newlineIfMissing()
+        self._statsfile = open(self._statsfilename, 'a')
 
     def close(self):
-        self._newlineIfMissing()
         self._statsfile.close()
+        self._forceFinalNewlineOnStatsFile()
 
     def markStarted(self):
         self._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self.getTime())
@@ -71,40 +71,41 @@ class State(object):
         return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
 
     def setToLastCleanState(self):
-        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/%s, Done: Reset to last clean state. ResumptionToken: \n" % (self.getTime(), self.total))
+        self._write("Started: %s, Done: Reset to last clean state. ResumptionToken: \n" % self.getTime())
         self.token = None
-        self._writeResumptionValues(None, self.startdate)
+        self._writeResumptionValues(None, self.from_)
 
     def _readState(self):
-        open(self._filename, 'a').close()
-        self._statsfile = open(self._filename, 'r+')
-        logline = None
-        for logline in self._filterNonErrorLogLine(self._statsfile):
-            if not self.token:
-                # necessary because of: http://www.openarchives.org/OAI/2.0/guidelines-harvester.htm#Datestamps
-                # (last alinea of that paragraph)
-                self.startdate = getStartDate(logline)
-            self.token = getResumptionToken(logline)
-        if logline:
-            if self._isDeleted(logline):
-                self.startdate = None
-                self.token = None
-            else:
-                harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
-                self.total = int(total)
-
         if isfile(self._resumptionFilename):
             values = jsonLoad(open(self._resumptionFilename))
             self.token = values.get('resumptionToken', None) or None
-            self.startdate = values.get('from', '').split('T')[0] or None
+            self.from_ = values.get('from', '').split('T')[0] or None
+            return 
 
-    def _newlineIfMissing(self):
-        if self._statsfile.tell() == 0:
-            return
-        self._statsfile.seek(-1, SEEK_END)
-        lastchar = self._statsfile.read()
-        if lastchar != '\n':
-            self._write('\n')
+        # The mechanism below will only be carried out once in case the resumption file does not yet exist.
+        if isfile(self._statsfilename):
+            self._statsfile = open(self._statsfilename)
+            logline = None
+            for logline in self._filterNonErrorLogLine(self._statsfile):
+                if not self.token:
+                    self.from_ = getStartDate(logline)
+                self.token = getResumptionToken(logline)
+            if logline and self._isDeleted(logline):
+                self.from_ = None
+                self.token = None
+            self._statsfile.close()
+
+    def _forceFinalNewlineOnStatsFile(self):
+        if isfile(self._statsfilename):
+            statsfile = open(self._statsfilename, 'r+')
+            statsfile.seek(0, SEEK_END)
+            if statsfile.tell() == 0:
+                return
+            statsfile.seek(-1, SEEK_END)
+            lastchar = statsfile.read()
+            if lastchar != '\n':
+                statsfile.write('\n')
+            statsfile.close()
     
     def _write(self, *args):
         self._statsfile.write(*args)
@@ -114,7 +115,7 @@ class State(object):
         newToken = str(token or '')
         newFrom = ''
         if responseDate:
-            newFrom = self.startdate if self.token else responseDate
+            newFrom = self.from_ if self.token else responseDate
         jsonDump({'resumptionToken': newToken, 'from': newFrom}, open(self._resumptionFilename, 'w'))
 
     @staticmethod
@@ -123,7 +124,8 @@ class State(object):
 
     @staticmethod
     def _isDeleted(logline):
-        return "Done: Deleted all id's" in logline
+        return "Done: Deleted all ids" in logline or \
+               "Done: Deleted all id's" in logline
 
     @staticmethod
     def _gmtime():
@@ -140,7 +142,3 @@ def getResumptionToken(logline):
         return matches.group(1)
     return None
 
-def getHarvestedUploadedRecords(logline):
-    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
-    return matches.groups('0')
-   
