@@ -34,6 +34,7 @@
 
 from os.path import join
 from sys import exc_info
+from simplejson import load as jsonLoad
 
 from meresco.harvester.state import State, getResumptionToken, getStartDate
 from seecr.test import SeecrTestCase
@@ -147,6 +148,7 @@ Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: D
 
         self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
         self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
                 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
@@ -158,6 +160,7 @@ Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: D
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:17:00, ResumptionToken: newToken
 """, open(join(self.tempdir, 'repo.stats')).read())
         self.assertEquals('{"from": "2012-08-13", "resumptionToken": "newToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 
     def testMarkDeleted(self):
         state = State(self.tempdir, 'repo')
@@ -168,6 +171,8 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
 
         self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
         self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
                 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
@@ -178,6 +183,7 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
 """, open(join(self.tempdir, 'repo.stats')).read())
         self.assertEquals('{"from": "", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 
     def testSetToLastCleanState(self):
         state = State(self.tempdir, 'repo')
@@ -205,14 +211,96 @@ Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken:
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
         state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+
+        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
         try:
             raise ValueError("whatever")
         except:
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
+        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
 """, open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 
+    def testMarkHarvesterAfterExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("whatever")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkDeletedAfterExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("whatever")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markDeleted()
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Done", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the same exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the same exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 19, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the other exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 

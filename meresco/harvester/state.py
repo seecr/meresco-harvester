@@ -41,6 +41,7 @@ class State(object):
         self._statsfilename = join(stateDir, '%s.stats' % name)
         self._forceFinalNewlineOnStatsFile()
         self._resumptionFilename = join(stateDir, '%s.next' % name)
+        self._runningFilename = join(stateDir, '%s.running' % name)
         self.from_ = None
         self.token = None
         self._readState()
@@ -57,15 +58,23 @@ class State(object):
         self._write(countsSummary)
         self._write(', Done: %s, ResumptionToken: %s' % (self.getTime(), token))
         self._writeResumptionValues(token, responseDate)
+        self._markRunningState("Done")
 
     def markDeleted(self):
         self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids." % self.getTime())
         self._writeResumptionValues(None, None)
+        self._markRunningState("Done")
 
     def markException(self, exType, exValue, countsSummary):
         error = str(exType) + ': ' + str(exValue)
         self._write(countsSummary)
         self._write( ', Error: ' + error)
+        self._markRunningState("Error", str(exValue))
+
+    def _markRunningState(self, status, message=""):
+        runningDict = jsonLoad(open(self._runningFilename)) if isfile(self._runningFilename) else {}
+        if status != runningDict.get('status', None) or message != runningDict.get('message', None):
+            jsonDump({'changedate': self.getTime(),'status': status, 'message': message}, open(self._runningFilename, 'w'))
 
     def getTime(self):
         return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
