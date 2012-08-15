@@ -58,12 +58,12 @@ class State(object):
         self._write(countsSummary)
         self._write(', Done: %s, ResumptionToken: %s' % (self.getTime(), token))
         self._writeResumptionValues(token, responseDate)
-        self._markRunningState("Done")
+        self._markRunningState("Ok")
 
     def markDeleted(self):
         self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids." % self.getTime())
         self._writeResumptionValues(None, None)
-        self._markRunningState("Done")
+        self._markRunningState("Ok")
 
     def markException(self, exType, exValue, countsSummary):
         error = str(exType) + ': ' + str(exValue)

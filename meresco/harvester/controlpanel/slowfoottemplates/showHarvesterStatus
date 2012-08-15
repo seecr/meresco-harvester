@@ -1,6 +1,3 @@
-<p>
-<h3>Harvester Status.</h3>
-</p>
 <%
 domainId = args.domainId
 originalArgs = dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId)
@@ -14,6 +11,18 @@ statusUrl = url('%s/get?verb=GetStatus&%s' % (req.get_options()['internalServer'
 invalid = {}
 for status in asxml(statusUrl).saharaget.GetStatus.status:
     invalid[status.repositoryId] = status
+#
+%>
+<p class="head">Harvester Status</p>
+<p>Domain: <%=domainId%> <a href="/running.rss?<%= urlencode(dict(domainId=domainId)) %>"><img src="/images/rss.png"/></a></p>
+<%
+if originalArgs['repositoryGroupId']:
+    %><p>RepositoryGroup: <%=originalArgs['repositoryGroupId']%></p><%
+#
+%>
+<%
+if originalArgs['repositoryId']:
+    %><p>Repository: <%=originalArgs['repositoryId']%></p><%
 #
 %>
 <table class="event">
@@ -70,9 +79,7 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
 </table>
 <br/>
 
-<p>
-<h3>Harvester Errors.</h3>
-</p>
+<p class="head">Harvester Errors</p>
 <table class="event">
 <%
 for status in statuses:
@@ -106,9 +113,7 @@ for status in statuses:
 %>
 </table>
 
-<p>
-<h3>Validatie Errors.</h3>
-</p>
+<p class="head">Validatie Errors</p>
 <table class="event">
 <%
 for status in statuses:
