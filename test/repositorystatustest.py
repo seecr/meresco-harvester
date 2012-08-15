@@ -6,9 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -34,6 +34,7 @@ from os.path import join
 
 from lxml.etree import tostring, parse
 from StringIO import StringIO
+from simplejson import dump as jsonDump
 
 from seecr.test import SeecrTestCase, CallTrace
 
@@ -71,6 +72,28 @@ class RepositoryStatusTest(SeecrTestCase):
             return 'repoGroupId1' if repositoryId in ['repoId1', 'repoId/2'] else 'repoGroupId2'
         observer.methods["getRepositoryGroupId"] = getRepositoryGroupId
         self.status.addObserver(observer)
+
+    def testGetRunningStatesForDomain(self):
+        jsonDump(
+                {'changedate': "2012-08-14 12:00:00",'status': "Ok", 'message': ""},
+                open(join(self.stateDir, self.domainId, "repoId1.running"), 'w')
+        )
+        jsonDump(
+                {'changedate': "2012-08-13 12:00:00",'status': "Error", 'message': "an error message"},
+                open(join(self.stateDir, self.domainId, "repoId3.running"), 'w')
+        )
+        jsonDump(
+                {'changedate': "2012-08-16 12:00:00",'status': "Ok", 'message': ""},
+                open(join(self.stateDir, self.domainId, "anotherRepoId.running"), 'w')
+        )
+
+        expected = [
+            {'repositoryId': 'anotherRepoId', 'changedate': "2012-08-16 12:00:00",'status': "Ok", 'message': ""},
+            {'repositoryId': 'repoId1', 'changedate': "2012-08-14 12:00:00",'status': "Ok", 'message': ""},
+            {'repositoryId': 'repoId3', 'changedate': "2012-08-13 12:00:00",'status': "Error", 'message': "an error message"},
+        ]
+        self.assertEquals(expected, self.status.getRunningStatesForDomain(self.domainId))
+        
 
     def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
