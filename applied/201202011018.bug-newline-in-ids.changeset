@@ -10,7 +10,6 @@ Description: Fixed bug with newline chars in oai:identifier
 
 Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/7.3.2-Edurep/version_0
 
-Only in version_0/meresco/harvester: .action.py.swp
 diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/meresco/harvester/deleteids.py /vol/extra_disk/development/meresco-harvester/workingsets/7.3.2-Edurep/version_1/meresco/harvester/deleteids.py
 --- version_0/meresco/harvester/deleteids.py	2012-01-31 16:49:31.000000000 +0100
 +++ version_1/meresco/harvester/deleteids.py	2012-02-01 11:18:47.000000000 +0100
