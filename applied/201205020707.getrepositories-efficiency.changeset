@@ -248,7 +248,6 @@ diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude
 +        yield '</GetRepositories>'
 +
      
-Binary files version_0/meresco/harvester/.namespaces.py.swp and /home/edurep/development/meresco-harvester/workingsets/8.1.2-Edurep/version_1/meresco/harvester/.namespaces.py.swp differ
 diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/server.py /home/edurep/development/meresco-harvester/workingsets/8.1.2-Edurep/version_1/meresco/harvester/server.py
 --- version_0/meresco/harvester/server.py	2012-05-01 11:28:23.000000000 +0200
 +++ version_1/meresco/harvester/server.py	2012-05-02 09:06:55.000000000 +0200
@@ -543,4 +542,3 @@ diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude
      def testRssForHarvesterStatus(self):
          self.controlHelper(action="noneInvalid")
          self.startHarvester(repository=REPOSITORY)
-Binary files version_0/test/integration/.internalservertest.py.swp and /home/edurep/development/meresco-harvester/workingsets/8.1.2-Edurep/version_1/test/integration/.internalservertest.py.swp differ
