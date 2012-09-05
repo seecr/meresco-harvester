@@ -473,4 +473,3 @@ diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude
 +        state.close()
 +        self.assertEquals({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
  
-Only in version_1/test: .statetest.py.swp
