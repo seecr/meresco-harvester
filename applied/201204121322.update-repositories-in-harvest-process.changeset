@@ -126,7 +126,6 @@ diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude=
  
      def _startRepository(self):
          if self.forceTarget:
-Binary files version_0/meresco/harvester/.startharvester.py.swp and /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4.1-Edurep/version_1/meresco/harvester/.startharvester.py.swp differ
 diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/integration/harvestertest.py /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4.1-Edurep/version_1/test/integration/harvestertest.py
 --- version_0/test/integration/harvestertest.py	2012-04-12 09:09:17.000000000 +0200
 +++ version_1/test/integration/harvestertest.py	2012-04-12 15:21:43.000000000 +0200
@@ -253,7 +252,6 @@ diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude=
      def testConcurrencyAtLeastOne(self):
          stdouterrlog = self.startHarvester(concurrency=0)
          self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
-Binary files version_0/test/integration/.harvestertest.py.swp and /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4.1-Edurep/version_1/test/integration/.harvestertest.py.swp differ
 diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/integration/integrationtestcase.py /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4.1-Edurep/version_1/test/integration/integrationtestcase.py
 --- version_0/test/integration/integrationtestcase.py	2012-04-12 09:09:17.000000000 +0200
 +++ version_1/test/integration/integrationtestcase.py	2012-04-12 15:21:43.000000000 +0200
@@ -286,4 +284,3 @@ diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude=
 +            if callback():
 +                break
 +
-Binary files version_0/test/integration/.integrationtestcase.py.swp and /home/hendrik/development/meresco/meresco-harvester/workingsets/7.4.1-Edurep/version_1/test/integration/.integrationtestcase.py.swp differ
