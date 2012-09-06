@@ -1,0 +1,183 @@
+Changeset created on Wed May 02 09:27:59 UTC 2012 by Seecr (Seek You Too B.V.)
+
+Description: Further improvements SaharaGet
+
+    SaharaGet 'GetRepository' verb has improved by moving it to the internal server.
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/8.1.3-Edurep/version_0
+
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/controlpanel/slowfoottemplates/getRepositories /home/edurep/development/meresco-harvester/workingsets/8.1.3-Edurep/version_1/meresco/harvester/controlpanel/slowfoottemplates/getRepositories
+--- version_0/meresco/harvester/controlpanel/slowfoottemplates/getRepositories	2012-05-02 09:45:13.000000000 +0200
++++ version_1/meresco/harvester/controlpanel/slowfoottemplates/getRepositories	2012-05-02 11:27:12.000000000 +0200
+@@ -1,17 +1,8 @@
+ <%
+-from slowfoot import binderytools
+-
+ type('text/xml; charset=utf-8')
+ domainId = args.domainId
+ repositoryGroupId = args.repositoryGroupId
+-groups = asxml(url('/'+domainId+'.domain')).domain.repositoryGroupId
+-exists = filter(lambda g:g == repositoryGroupId, groups)
+-if repositoryGroupId and not exists:
+-  include('/saharageterror?errorCode=idDoesNotExist')
+-else:
+-  #
+-  queryArgs = urlencode(dict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId))
+-  repositoriesUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
+-  req.write(repositoriesUrl.read())
+-#
++queryArgs = urlencode(dict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId))
++repositoriesUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
++req.write(repositoriesUrl.read())
+ %>
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/controlpanel/slowfoottemplates/getRepository /home/edurep/development/meresco-harvester/workingsets/8.1.3-Edurep/version_1/meresco/harvester/controlpanel/slowfoottemplates/getRepository
+--- version_0/meresco/harvester/controlpanel/slowfoottemplates/getRepository	2012-05-02 09:45:13.000000000 +0200
++++ version_1/meresco/harvester/controlpanel/slowfoottemplates/getRepository	2012-05-02 11:27:12.000000000 +0200
+@@ -1,40 +1,8 @@
+ <%
++type('text/xml; charset=utf-8')
+ domainId = args.domainId
+ repositoryId = args.repositoryId
+-exists = False
+-groups = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
+-for groupId in groups:
+-  #
+-  if exists:
+-    break
+-  repositories = asxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')).repositoryGroup.repositoryId
+-  for repo in repositories:
+-    if repo == repositoryId:
+-      exists = True
+-      break
+-
+-if not exists:
+-  include('/saharageterror?errorCode=idDoesNotExist')
+-else:
+-  #
+-  type('text/xml; charset=utf-8')
+-%><?xml version="1.0" encoding="UTF-8"?>
+-<saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
+-<%
+-  include('/saharagetTime')
+-%> 
+- <request>
+-  <verb>GetRepository</verb>
+-  <domainId><% escape_xml(domainId) %></domainId>
+-  <repositoryId><% escape_xml(repositoryId) %></repositoryId>
+- </request>
+- <GetRepository>
+-<%
+-  repositoryXml = asxml(url('/' + domainId + '.' + repositoryId + '.repository')).repository
+-%>
+-  <%=repositoryXml.xml()%>
+- </GetRepository>
+-</saharaget>
+-<%
+-#
++queryArgs = urlencode(dict(verb='GetRepository', domainId=domainId, repositoryId=repositoryId))
++repositoryUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
++req.write(repositoryUrl.read())
+ %>
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/harvesterdata.py /home/edurep/development/meresco-harvester/workingsets/8.1.3-Edurep/version_1/meresco/harvester/harvesterdata.py
+--- version_0/meresco/harvester/harvesterdata.py	2012-05-02 09:45:13.000000000 +0200
++++ version_1/meresco/harvester/harvesterdata.py	2012-05-02 11:27:11.000000000 +0200
+@@ -31,9 +31,17 @@
+ from os.path import join
+ 
+ from re import compile as compileRe
++from xml.sax.saxutils import quoteattr, escape as escapeXml
+ 
+ XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')
+ 
++messages = {
++  'badDomain': 'The domain does not exist.',
++  'badVerb': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.',
++	'badArgument': 'The request includes illegal arguments, is missing required arguments, includes a repeated argument, or values for arguments have an illegal syntax.',
++	'idDoesNotExist': 'The value of an argument (id or key) is unknown or illegal.'
++}
++
+ class HarvesterData(object):
+ 
+     def __init__(self, dataPath):
+@@ -60,10 +68,29 @@
+         return m.groupdict()['body']
+ 
+     def getRepositories(self, domainId, repositoryGroupId=None):
+-        repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
++        try:
++            repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
++        except IOError:
++            yield self._error("idDoesNotExist")
++            return
+         yield '<GetRepositories>'
+         for repositoryId in repositoryIds:
+             yield self.getRepositoryAsXml(domainId=domainId, repositoryId=repositoryId)
+         yield '</GetRepositories>'
+ 
++    def getRepository(self, domainId, repositoryId):
++        try:
++            repositoryXml = self.getRepositoryAsXml(domainId=domainId, repositoryId=repositoryId)
++        except IOError:
++            yield self._error("idDoesNotExist")
++            return
++        yield '<GetRepository>'
++        yield repositoryXml
++        yield '</GetRepository>'
++
++    def _error(self, code):
++        yield '<error code=%s>%s</error>' % (quoteattr(code), escapeXml(messages[code]))
++
++
++
+     
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/harvesterdatatest.py /home/edurep/development/meresco-harvester/workingsets/8.1.3-Edurep/version_1/test/harvesterdatatest.py
+--- version_0/test/harvesterdatatest.py	2012-05-02 09:45:13.000000000 +0200
++++ version_1/test/harvesterdatatest.py	2012-05-02 11:27:11.000000000 +0200
+@@ -78,6 +78,11 @@
+   <id>repository2_2</id>
+   <repositoryGroupId>Group2</repositoryGroupId>
+ </repository>""")
++        open(join(self.tempdir, 'adomain.remi.repository'), 'w').write("""<?xml version="1.0" encoding="UTF-8"?>
++<repository>
++  <id>remi</id>
++  <repositoryGroupId>NoGroup</repositoryGroupId>
++</repository>""")
+         self.hd = HarvesterData(self.tempdir)
+ 
+     def testGetRepositoryGroupIds(self):
+@@ -122,3 +127,21 @@
+ </repository>
+         </GetRepositories>""", result)
+ 
++    def testGetRepositoriesWithError(self):
++        result = ''.join(compose(self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')))
++        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
++        result = ''.join(compose(self.hd.getRepositories(domainId='baddomain')))
++        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
++
++    def testGetRepository(self):
++        result = ''.join(compose(self.hd.getRepository(domainId='adomain', repositoryId='repository1')))
++        self.assertEqualsWS("""<GetRepository>
++<repository>
++    <id>repository1</id>
++    <repositoryGroupId>Group1</repositoryGroupId>
++</repository>
++</GetRepository>""", result)
++
++    def testGetRepositoryWithErrors(self):
++        result = ''.join(compose(self.hd.getRepository(domainId='adomain', repositoryId='repository12')))
++        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/integration/internalservertest.py /home/edurep/development/meresco-harvester/workingsets/8.1.3-Edurep/version_1/test/integration/internalservertest.py
+--- version_0/test/integration/internalservertest.py	2012-05-02 09:45:13.000000000 +0200
++++ version_1/test/integration/internalservertest.py	2012-05-02 11:27:11.000000000 +0200
+@@ -103,6 +103,10 @@
+         self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
+         self.assertEquals(["integrationtest"], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
+ 
++    def testGetRepository(self):
++        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepository', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
++        self.assertEquals(['IntegrationTest'], xpath(result, "/status:saharaget/status:GetRepository/status:repository/status:repositoryGroupId/text()"))
++
+     def testRssForHarvesterStatus(self):
+         self.controlHelper(action="noneInvalid")
+         self.startHarvester(repository=REPOSITORY)

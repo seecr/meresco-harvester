@@ -31,8 +31,16 @@ from lxml.etree import parse
 from os.path import join
 
 from re import compile as compileRe
+from xml.sax.saxutils import quoteattr, escape as escapeXml
 
 XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')
+
+messages = {
+  'badDomain': 'The domain does not exist.',
+  'badVerb': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.',
+	'badArgument': 'The request includes illegal arguments, is missing required arguments, includes a repeated argument, or values for arguments have an illegal syntax.',
+	'idDoesNotExist': 'The value of an argument (id or key) is unknown or illegal.'
+}
 
 class HarvesterData(object):
 
@@ -60,10 +68,29 @@ class HarvesterData(object):
         return m.groupdict()['body']
 
     def getRepositories(self, domainId, repositoryGroupId=None):
-        repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
+        try:
+            repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
+        except IOError:
+            yield self._error("idDoesNotExist")
+            return
         yield '<GetRepositories>'
         for repositoryId in repositoryIds:
             yield self.getRepositoryAsXml(domainId=domainId, repositoryId=repositoryId)
         yield '</GetRepositories>'
+
+    def getRepository(self, domainId, repositoryId):
+        try:
+            repositoryXml = self.getRepositoryAsXml(domainId=domainId, repositoryId=repositoryId)
+        except IOError:
+            yield self._error("idDoesNotExist")
+            return
+        yield '<GetRepository>'
+        yield repositoryXml
+        yield '</GetRepository>'
+
+    def _error(self, code):
+        yield '<error code=%s>%s</error>' % (quoteattr(code), escapeXml(messages[code]))
+
+
 
     
