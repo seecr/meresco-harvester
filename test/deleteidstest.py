@@ -1,8 +1,8 @@
-from cq2utils import CQ2TestCase
+from seecr.test import SeecrTestCase
 from meresco.harvester.deleteids import readIds, writeIds
 from os.path import join
 
-class DeleteIdsTest(CQ2TestCase):
+class DeleteIdsTest(SeecrTestCase):
 
     def testReadIds(self):
         filename = join(self.tempdir, "test.ids")

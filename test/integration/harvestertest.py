@@ -28,7 +28,7 @@
 ## end license ##
 from __future__ import with_statement
 
-from os import system, waitpid, listdir
+from os import system, waitpid, listdir, remove, kill
 from os.path import join, dirname, abspath
 from urllib import urlopen
 from time import time, sleep
@@ -69,6 +69,9 @@ class HarvesterTest(IntegrationTestCase):
         repo.metadataPrefix = 'oai_dc'
         repo.maximumIgnore = '5'
         repo.save(self.repofilepath)
+
+    def tearDown(self):
+        remove(self.repofilepath)
 
     def testHarvestToSruUpdate(self):
         # initial harvest
@@ -351,6 +354,65 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(0, len(invalidIds), invalidIds)
         ids = open(join(self.harvesterStateDir, DOMAIN, "%s.ids" % REPOSITORY)).readlines()
         self.assertEquals(0, len(ids), ids)
+
+    def testConcurrentHarvestToSruUpdate(self):
+        self.startHarvester(concurrency=3)
+
+        requestsLogged = sorted(listdir(self.dumpDir))
+
+        repositoryIds = []
+        for f in requestsLogged:
+            lxml = parse(open(join(self.dumpDir, f)))
+            repositoryIds.append(xpath(lxml, '//ucp:recordIdentifier/text()')[0].split(':', 1)[0])
+
+        repositoryIdsSet = set(repositoryIds)
+        self.assertEquals(set(['repository2', 'integrationtest', 'harvestertest']), repositoryIdsSet)
+
+        lastSeenRepoId = None
+        try:
+            for repo in repositoryIds:
+                if repo != lastSeenRepoId:
+                    repositoryIdsSet.remove(repo)
+                    lastSeenRepoId = repo
+                    continue
+        except KeyError:
+            pass
+        else:
+            self.fail('Records should have been inserted out-of-order.')
+
+    def testConcurrentHarvestToSruUpdateBUG(self):
+        r = RepositoryData.read(self.repofilepath)
+        r.complete = 'true'
+        r.save(self.repofilepath)
+        self.startHarvester(concurrency=1)
+
+        requestsLogged = sorted(listdir(self.dumpDir))
+        repositoryIds = []
+        for f in requestsLogged:
+            lxml = parse(open(join(self.dumpDir, f)))
+            repositoryIds.append(xpath(lxml, '//ucp:recordIdentifier/text()')[0].split(':', 1)[0])
+        self.assertEquals(15, repositoryIds.count(REPOSITORY))
+        self.assertEquals(10, repositoryIds.count('repository2'))
+        self.assertEquals(10, repositoryIds.count('integrationtest'))
+
+    def testConcurrencyAtLeastOne(self):
+        stdouterrlog = self.startHarvester(concurrency=0)
+        self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
+
+        stdouterrlog = self.startHarvester(concurrency=-1)
+        self.assertTrue("Concurrency must be at least 1" in stdouterrlog, stdouterrlog)
+
+    def testCompleteInOnAttempt(self):
+        r = RepositoryData.read(self.repofilepath)
+        r.complete = 'true'
+        r.save(self.repofilepath)
+        stdouterrlog = self.startHarvester(repository=REPOSITORY, runOnce=False, waitForNothingToDo=True)
+        self.assertEquals(15, self.sizeDumpDir())
+        self.assertTrue("Repository will be completed in one attempt" in stdouterrlog, stdouterrlog)
+
+    def testHarvestingContinues4Ever(self):
+        stdouterrlog = self.startHarvester(repository=REPOSITORY, runOnce=False, waitForNothingToDo=True)
+        self.assertEquals(15, self.sizeDumpDir())
 
     def emptyDumpDir(self):
         system('rm %s/*' % self.dumpDir)

@@ -35,6 +35,8 @@
 from seecr.test import SeecrTestCase
 from meresco.harvester.timedprocess import TimedProcess
 from os.path import join
+from os import waitpid
+from time import sleep
 
 class TimedProcessTest(SeecrTestCase):
 
@@ -42,15 +44,18 @@ class TimedProcessTest(SeecrTestCase):
         fd = open(self.tempfile,'w')
         try:
             fd.write("""import sys
-sys.exit(42)""")
+sys.exit(123)""")
         finally:
             fd.close()
 
         tp = TimedProcess()
-        exitstatus = tp.executeScript(['python2.6', self.tempfile], 10)
+        process = tp.executeScript(['python2.6', self.tempfile], 10)
+        while process.poll() is None:
+            sleep(0.1)
+        exitstatus = tp.stopScript(process)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
-        self.assertEquals(42, exitstatus)
+        self.assertEquals(123, exitstatus)
     
     def testSuccessParameters(self):
         fd = open(self.tempfile,'w')
@@ -62,10 +67,14 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript(['python2.6', self.tempfile, 'it','is','difficult'], 10)
+        process = tp.executeScript(['python2.6', self.tempfile, 'it','is','difficult'], 10)
+        while process.poll() is None:
+            sleep(0.1)
+        exitstatus = tp.stopScript(process)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
         self.assertEquals('3', open(join(self.tempdir, 'output.txt')).read())
+        self.assertEquals(0, exitstatus)
 
     def testTimeout(self):
         fd = open(self.tempfile,'w')
@@ -77,7 +86,11 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
             fd.close()
 
         tp = TimedProcess()
-        tp.executeScript(['python2.6', self.tempfile], 1)
+        process = tp.executeScript(['python2.6', self.tempfile], 1)
+        while process.poll() is None:
+            sleep(0.1)
+        exitstatus = tp.stopScript(process)
         self.assertTrue(tp.wasTimeout())
         self.assertFalse(tp.wasSuccess())
+        self.assertEquals(-9, exitstatus)
         

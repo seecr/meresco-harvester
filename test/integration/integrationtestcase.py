@@ -31,7 +31,7 @@
 
 from __future__ import with_statement
 
-from os.path import isdir, join, abspath, dirname, basename
+from os.path import isdir, join, abspath, dirname, basename, isfile
 from os import system, listdir, makedirs
 from sys import stdout
 
@@ -89,25 +89,37 @@ class IntegrationTestCase(SeecrTestCase):
             raise AttributeError(name)
         return getattr(self.state, name)
 
-    def startHarvester(self, repository=None, verbose=False):
+    def startHarvester(self, repository=None, concurrency=None, runOnce=True, verbose=False, waitForNothingToDo=False):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
-        stdouterrlog = open(stdoutfile, 'w')
+        open(stdoutfile, 'w').write("")
+        stdouterrlog = open(stdoutfile, 'r+')
         if verbose:
             stdouterrlog = stdout
-        additionalArgs = ['--repository=%s'%repository] if repository else []
+        additionalArgs = ['--repository=%s' % repository] if repository is not None else []
+        additionalArgs += ['--concurrency=%s' % concurrency] if concurrency is not None else []
+        additionalArgs += ['--runOnce'] if runOnce else []
         harvesterProcessInfo = Popen(
             args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
-        waitpid(harvesterProcessInfo.pid, 0)
+        if not waitForNothingToDo:
+            waitpid(harvesterProcessInfo.pid, 0)
+        while waitForNothingToDo:
+            stdouterrlog.seek(0)
+            if 'Nothing to do!' in stdouterrlog.read():
+                kill(harvesterProcessInfo.pid, 2)
+                break
+            sleep(1)
         stdouterrlog.flush()
+        stdouterrlog.close()
+        return open(stdoutfile).read()
 
 class IntegrationState(object):
     def __init__(self, stateName, fastMode):
         self.stateName = stateName
         self._pids = []
-        self.integrationTempdir = '/tmp/mh-integrationtest-%s' % stateName 
+        self.integrationTempdir = '/tmp/integrationtest-meresco-harvester-%s' % stateName 
         system('rm -rf ' + self.integrationTempdir)
 
         self.helperServerPortNumber = PortNumberGenerator.next()
@@ -119,9 +131,10 @@ class IntegrationState(object):
         self.harvesterStateDir = join(self.integrationTempdir, "state")
 
         copytree("integration-data", self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "SRUUPDATE.target"), helperServerPortNumber=self.helperServerPortNumber)
-        fileSubstVars(join(self.integrationTempdir, "data", "FILESYSTEM.target"), integrationTempdir=self.integrationTempdir)
-        fileSubstVars(join(self.integrationTempdir, "data", "adomain.integrationtest.repository"), helperServerPortNumber=self.helperServerPortNumber)
+        for f in listdir(join(self.integrationTempdir, "data")):
+            filepath = join(self.integrationTempdir, "data", f)
+            if isfile(filepath):
+                fileSubstVars(filepath, helperServerPortNumber=self.helperServerPortNumber, integrationTempdir=self.integrationTempdir)
         config = readConfig(join(examplesPath, 'harvester.config'))
         
         # test example config has neccessary parameters

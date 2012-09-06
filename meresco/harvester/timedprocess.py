@@ -32,9 +32,10 @@
 # 
 ## end license ##
 
-from os import waitpid, kill, P_NOWAIT
-from subprocess import Popen
+from os import waitpid, kill, P_NOWAIT, O_NONBLOCK
+from subprocess import Popen, PIPE
 from sys import executable
+from fcntl import fcntl, F_SETFL
 
 from threading import Timer
 
@@ -63,17 +64,17 @@ class TimedProcess(object):
 
     def executeScript(self, args, timeout, signal=9):
         self._signal = signal
-        process = Popen(args)
+        process = Popen(args, stdout=PIPE, stderr=PIPE, bufsize=0)
+        fcntl(process.stdout.fileno(), F_SETFL, O_NONBLOCK)
         self._pid = process.pid
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
-        resultpid, status = waitpid(self._pid, 0)
-        exitstatus = status >> 8
+        return process
 
+    def stopScript(self, process):
         if not self._wasTimeout:
             self.timer.cancel()
             self._wasSuccess = True
             self._wasTimeout = False
-
-        return exitstatus 
+        return process.returncode
 
