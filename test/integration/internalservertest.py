@@ -103,6 +103,10 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
         self.assertEquals(["integrationtest"], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
 
+    def testGetRepository(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepository', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
+        self.assertEquals(['IntegrationTest'], xpath(result, "/status:saharaget/status:GetRepository/status:repository/status:repositoryGroupId/text()"))
+
     def testRssForHarvesterStatus(self):
         self.controlHelper(action="noneInvalid")
         self.startHarvester(repository=REPOSITORY)
