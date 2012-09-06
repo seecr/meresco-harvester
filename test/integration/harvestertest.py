@@ -119,13 +119,14 @@ class HarvesterTest(IntegrationTestCase):
     def testIncrementalHarvesting(self):
         statsFile = join(self.harvesterStateDir, DOMAIN, '%s.stats' % REPOSITORY)
         with open(statsFile, 'w') as f:
+            f.write('Started: 2011-03-31 13:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-03-31 13:12:36, ResumptionToken: xyz\n')
             f.write('Started: 2011-04-01 14:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-04-01 14:12:36, ResumptionToken:\n')
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
         logs = self.getLogs()
         self.assertEquals(1, len(logs))
         self.assertEquals('/oai', logs[-1]['path'])
-        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-04-01']}, logs[-1]['arguments'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-03-31']}, logs[-1]['arguments'])
 
     def testClear(self):
         self.startHarvester(repository=REPOSITORY)
@@ -134,7 +135,6 @@ class HarvesterTest(IntegrationTestCase):
 
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
-        self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
         
         r = RepositoryData.read(self.repofilepath)
         r.action='clear'
@@ -154,7 +154,6 @@ class HarvesterTest(IntegrationTestCase):
 
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
-        self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
 
     def testRefresh(self):
         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
@@ -165,7 +164,7 @@ class HarvesterTest(IntegrationTestCase):
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123]]:
             log.notifyHarvestedRecord(uploadId)
             log.deleteIdentifier(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
 
         r = RepositoryData.read(self.repofilepath)
@@ -314,7 +313,7 @@ class HarvesterTest(IntegrationTestCase):
             log.notifyHarvestedRecord(uploadId)
             log.logInvalidData(uploadId, 'ignored message')
             log.logIgnoredIdentifierWarning(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
         totalRecords = 15
         oldUploads = 2
@@ -350,7 +349,7 @@ class HarvesterTest(IntegrationTestCase):
             log.notifyHarvestedRecord(uploadId)
             log.logInvalidData(uploadId, 'ignored message')
             log.logIgnoredIdentifierWarning(uploadId)
-        log.endRepository('token')
+        log.endRepository('token', '2012-01-01T09:00:00Z')
         log.close()
         oldUploads = 4
         oldDeletes = 5

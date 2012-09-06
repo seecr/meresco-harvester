@@ -1,0 +1,1043 @@
+Changeset created on Tue Aug 14 09:23:08 UTC 2012 by Seecr (Seek You Too B.V.)
+
+Description: After last resumptionToken the first partial response's datestamp will be used as new 'from'
+
+    This takes care of some repositories' OAI-PMH implementations that don't include new record updates in a running response
+    (that is split up in separate batches with resumption tokens). According to the OAI-PMH guidelines this is allowed.
+    (Please refer to: http://www.openarchives.org/OAI/2.0/guidelines-harvester.htm#Datestamps, second last sentence).
+
+Baseline version: https://meresco.svn.sourceforge.net/svnroot/meresco/meresco-harvester/workingsets/8.1.4.1-Edurep/version_0
+
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/harvesterlog.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/meresco/harvester/harvesterlog.py
+--- version_0/meresco/harvester/harvesterlog.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/meresco/harvester/harvesterlog.py	2012-08-14 11:22:53.000000000 +0200
+@@ -9,11 +9,10 @@
+ # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
+ # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -64,9 +63,6 @@
+         self._invalidIds = Ids(stateDir, name + "_invalid")
+         self._state = State(stateDir, name)
+         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
+-        self.from_ = self._state.startdate
+-        self.token = self._state.token
+-        self.total = self._state.total
+         self._resetCounts()
+ 
+     def isCurrentDay(self, yyyy_mm_dd):
+@@ -74,7 +70,7 @@
+         
+     def startRepository(self):
+         self._resetCounts()
+-        self._state._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state.getTime())
++        self._state.markStarted()
+ 
+     def _resetCounts(self):
+         self._harvestedCount = 0
+@@ -94,19 +90,16 @@
+     def markDeleted(self):
+         self._ids.clear()
+         self._state.markDeleted()
+-        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
++        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.', id=self._name)
+     
+-    def endRepository(self, token):
+-        self._state._write(self.countsSummary())
+-        self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
++    def endRepository(self, token, responseDate):
++        self._state.markHarvested(self.countsSummary(), token, responseDate)
+         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
+ 
+     def endWithException(self, exType, exValue, exTb):
+-        error = str(exType) + ': ' + str(exValue)
+-        self._state._write(self.countsSummary())
+-        self._state._write( ', Error: ' + error)
+-        error2 = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
+-        self._eventlogger.logError(error2, id=self._name)
++        self._state.markException(exType, exValue, self.countsSummary())
++        error = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
++        self._eventlogger.logError(error, id=self._name)
+ 
+     def countsSummary(self):
+         return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())
+@@ -145,7 +138,7 @@
+         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
+ 
+     def hasWork(self):
+-        return not self.isCurrentDay(self.from_) or self.token
++        return not self.isCurrentDay(self._state.from_) or self._state.token
+     
+     def state(self):
+         return self._state
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/harvester.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/meresco/harvester/harvester.py
+--- version_0/meresco/harvester/harvester.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/meresco/harvester/harvester.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -57,21 +57,22 @@
+         return self.call.info()
+ 
+     def listRecords(self, from_, token, set):
++        kwargs = {}
+         if token:
+-            return self.call.listRecords(resumptionToken=token)
+-        elif from_:
++            kwargs['resumptionToken'] = token
++        else:
++            kwargs['metadataPrefix'] = self._repository.metadataPrefix
++            if from_:
++                kwargs['from_'] = from_
+             if set:
+-                return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_, set = set)
+-            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, from_ = from_)
+-        elif set:
+-            return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix, set = set)
+-        return self.call.listRecords(metadataPrefix=self._repository.metadataPrefix)
++                kwargs['set'] = set
++        return self.call.listRecords(**kwargs)
+ 
+     def fetchRecords(self, from_, token):
+-        records, resumptionToken = self.listRecords(from_, token, self._repository.set)
++        records, resumptionToken, responseDate = self.listRecords(from_, token, self._repository.set)
+         for record in records:
+             self.uploadRecord(record)
+-        return resumptionToken
++        return resumptionToken, responseDate   
+ 
+     def uploadRecord(self, record):
+         upload = self.call.createUpload(self._repository, record)
+@@ -94,8 +95,8 @@
+         try:
+             self.do.startRepository()
+             state = self.call.state()
+-            newtoken = self.fetchRecords(state.startdate, state.token)
+-            self.do.endRepository(newtoken)
++            newtoken, responseDate = self.fetchRecords(state.from_, state.token)
++            self.do.endRepository(newtoken, responseDate)
+             return newtoken
+         except:
+             exType, exValue, exTb = sys.exc_info()
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/oairequest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/meresco/harvester/oairequest.py
+--- version_0/meresco/harvester/oairequest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/meresco/harvester/oairequest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -80,7 +80,7 @@
+                 raise e
+             response = e.response
+         listRecords = wrapp(response.OAI_PMH).ListRecords
+-        return listRecords.record, getattr(listRecords, 'resumptionToken', None)
++        return listRecords.record, getattr(listRecords, 'resumptionToken', None), str(response.OAI_PMH.responseDate).strip()
+ 
+     def getRecord(self, **kwargs):
+         kwargs['verb'] = 'GetRecord'
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/meresco/harvester/state.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/meresco/harvester/state.py
+--- version_0/meresco/harvester/state.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/meresco/harvester/state.py	2012-08-14 11:22:53.000000000 +0200
+@@ -7,9 +7,9 @@
+ # Seek You Too B.V. (CQ2) http://www.cq2.nl 
+ # 
+ # Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
+ # Copyright (C) 2011 Tilburg University http://www.uvt.nl
+-# 
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -33,86 +33,105 @@
+ from os import SEEK_END
+ from time import strftime, gmtime
+ import re
++from simplejson import load as jsonLoad, dump as jsonDump
++
+ 
+ class State(object):
+     def __init__(self, stateDir, name):
+-        self._filename = join(stateDir, '%s.stats' % name)
+-        open(self._filename, 'a').close()
+-        self._statsfile = open(self._filename, 'r+')
++        self._statsfilename = join(stateDir, '%s.stats' % name)
++        self._forceFinalNewlineOnStatsFile()
++        self._resumptionFilename = join(stateDir, '%s.next' % name)
++        self.from_ = None
++        self.token = None
+         self._readState()
+-        self._newlineIfMissing()
++        self._statsfile = open(self._statsfilename, 'a')
+ 
+     def close(self):
+-        self._newlineIfMissing()
+         self._statsfile.close()
++        self._forceFinalNewlineOnStatsFile()
+ 
+-    def setToLastCleanState(self):
+-        cleanState = self._getLastCleanState()
+-        if cleanState != None:
+-            self._write(self._getLastCleanState())
+-        else:
+-            self.markDeleted()
++    def markStarted(self):
++        self._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self.getTime())
++
++    def markHarvested(self, countsSummary, token, responseDate):
++        self._write(countsSummary)
++        self._write(', Done: %s, ResumptionToken: %s' % (self.getTime(), token))
++        self._writeResumptionValues(token, responseDate)
+ 
+     def markDeleted(self):
+-        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self.getTime())
++        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids." % self.getTime())
++        self._writeResumptionValues(None, None)
+ 
+-    def _getLastCleanState(self):
+-        result = None
+-        self._statsfile.seek(0)
+-        for line in self._filterNonErrorLogLine(self._statsfile):
+-            token = getResumptionToken(line)
+-            if token == None:
+-                result = line
+-        self._statsfile.seek(0, SEEK_END)
+-        return result
+-
+-    def _getLastDoneState(self):
+-        result = None
+-        self._statsfile.seek(0)
+-        for line in self._filterNonErrorLogLine(self._statsfile):
+-            result = line
+-        self._statsfile.seek(0, SEEK_END)
+-        return result
++    def markException(self, exType, exValue, countsSummary):
++        error = str(exType) + ': ' + str(exValue)
++        self._write(countsSummary)
++        self._write( ', Error: ' + error)
+ 
+-    def _readState(self):
+-        self.startdate = None
++    def getTime(self):
++        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
++
++    def setToLastCleanState(self):
++        self._write("Started: %s, Done: Reset to last clean state. ResumptionToken: \n" % self.getTime())
+         self.token = None
+-        self.total = 0
+-        if isfile(self._filename):
+-            logline = self._getLastDoneState()
+-            if logline and not self._isDeleted(logline):
+-                self.startdate = getStartDate(logline)
+-                self.token = getResumptionToken(logline)
+-                harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
+-                self.total = int(total)
++        self._writeResumptionValues(None, self.from_)
+ 
+-    def _newlineIfMissing(self):
+-        if self._statsfile.tell() == 0:
+-            return
+-        self._statsfile.seek(-1, SEEK_END)
+-        lastchar = self._statsfile.read()
+-        if lastchar != '\n':
+-            self._write('\n')
++    def _readState(self):
++        if isfile(self._resumptionFilename):
++            values = jsonLoad(open(self._resumptionFilename))
++            self.token = values.get('resumptionToken', None) or None
++            self.from_ = values.get('from', '').split('T')[0] or None
++            return 
++
++        # The mechanism below will only be carried out once in case the resumption file does not yet exist.
++        if isfile(self._statsfilename):
++            self._statsfile = open(self._statsfilename)
++            logline = None
++            for logline in self._filterNonErrorLogLine(self._statsfile):
++                if not self.token:
++                    self.from_ = getStartDate(logline)
++                self.token = getResumptionToken(logline)
++            if logline and self._isDeleted(logline):
++                self.from_ = None
++                self.token = None
++            self._statsfile.close()
++
++    def _forceFinalNewlineOnStatsFile(self):
++        if isfile(self._statsfilename):
++            statsfile = open(self._statsfilename, 'r+')
++            statsfile.seek(0, SEEK_END)
++            if statsfile.tell() == 0:
++                return
++            statsfile.seek(-1, SEEK_END)
++            lastchar = statsfile.read()
++            if lastchar != '\n':
++                statsfile.write('\n')
++            statsfile.close()
+     
+     def _write(self, *args):
+         self._statsfile.write(*args)
+         self._statsfile.flush()
+ 
++    def _writeResumptionValues(self, token, responseDate):
++        newToken = str(token or '')
++        newFrom = ''
++        if responseDate:
++            newFrom = self.from_ if self.token else responseDate
++        jsonDump({'resumptionToken': newToken, 'from': newFrom}, open(self._resumptionFilename, 'w'))
++
+     @staticmethod
+     def _filterNonErrorLogLine(iterator):
+         return (line for line in iterator if 'Done:' in line)
+-    
++
+     @staticmethod
+     def _isDeleted(logline):
+-        return "Done: Deleted all id's" in logline
+-
+-    def getTime(self):
+-        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
++        return "Done: Deleted all ids" in logline or \
++               "Done: Deleted all id's" in logline
+ 
+     @staticmethod
+     def _gmtime():
+         return gmtime()
+                 
++
+ def getStartDate(logline):
+     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
+     return matches.group(1)
+@@ -123,7 +142,3 @@
+         return matches.group(1)
+     return None
+ 
+-def getHarvestedUploadedRecords(logline):
+-    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
+-    return matches.groups('0')
+-   
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/actiontestcase.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/actiontestcase.py
+--- version_0/test/actiontestcase.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/actiontestcase.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -33,9 +33,11 @@
+ ## end license ##
+ 
+ from sys import exc_info
++from os.path import join
++from time import strftime
++
+ from seecr.test import CallTrace, SeecrTestCase
+ from meresco.harvester.harvesterlog import HarvesterLog
+-from os.path import join
+ 
+ 
+ class ActionTestCase(SeecrTestCase):
+@@ -52,7 +54,10 @@
+         self.writeLogLine(2010, 3, 3, exception='Exception')
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
++        self.assertEquals("""Started: 2010-03-01 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-01 12:15:00, ResumptionToken: resumptionToken
++Started: 2010-03-02 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-02 12:15:00, ResumptionToken: 
++Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: <type 'exceptions.Exception'>: Exception
++""", open(h._state._statsfilename).read())
+ 
+     def newHarvesterLog(self):
+         return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
+@@ -77,6 +82,6 @@
+                 exType, exValue, exTb = exc_info()
+                 h.endWithException(exType, exValue, exTb)
+         else:
+-            h.endRepository(token)
++            h.endRepository(token, strftime("%Y-%m-%dT%H:%M:%SZ", h._state._gmtime()))
+         h.close()
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/harvestactiontest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/harvestactiontest.py
+--- version_0/test/harvestactiontest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/harvestactiontest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -75,7 +75,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
++        self.assertEquals(('2010-03-01', None), (h._state.from_, h._state.token))
+ 
+     def testResetState_ToStateBeforeResumptionToken(self):
+         self.writeLogLine(2010, 3, 2, token='')
+@@ -86,7 +86,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
++        self.assertEquals(('2010-03-03', None), (h._state.from_, h._state.token))
+ 
+     def testResetState_ToStartAllOver(self):
+         self.writeLogLine(2010, 3, 3, token='resumptionToken')
+@@ -96,7 +96,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals((None, None), (h.from_, h.token))
++        self.assertEquals(('2010-03-03', None), (h._state.from_, h._state.token))
+ 
+     def newHarvestAction(self):
+         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/harvesterlogtest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/harvesterlogtest.py
+--- version_0/test/harvesterlogtest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/harvesterlogtest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -9,11 +9,10 @@
+ # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
+ # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -64,22 +63,23 @@
+ 
+     def testHasWork(self):
+         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
+-        self.assertEqual((None,None,0),(logger.from_,logger.token,logger.total))
+-        self.assert_(logger.hasWork())
+-        logger.from_=strftime('%Y-%m-%d', gmtime())
+-        self.assert_(not logger.hasWork())
+-        logger.token='SomeToken'
+-        self.assert_(logger.hasWork())
+-        logger.from_='2005-01-02'
+-        self.assert_(logger.hasWork())
+-        logger.token=None
+-        self.assert_(logger.hasWork())
++        self.assertEquals(None, logger._state.from_)
++        self.assertEquals(None, logger._state.token)
++        self.assertTrue(logger.hasWork())
++        logger._state.from_=strftime('%Y-%m-%d', gmtime())
++        self.assertTrue(not logger.hasWork())
++        logger._state.token='SomeToken'
++        self.assertTrue(logger.hasWork())
++        logger._state.from_='2005-01-02'
++        self.assertTrue(logger.hasWork())
++        logger._state.token=None
++        self.assertTrue(logger.hasWork())
+ 
+     def testHasWorkBeforeAndAfterDoingWork(self):
+         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+         self.assertTrue(logger.hasWork())
+         logger.startRepository()
+-        logger.endRepository(None)
++        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", logger._state._gmtime()))
+         logger.close()
+         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+         self.assertFalse(logger.hasWork())
+@@ -105,7 +105,7 @@
+         logger.notifyHarvestedRecord("name:uploadId2")
+         logger.logInvalidData("name:uploadId2", "Test Exception")
+         logger.logIgnoredIdentifierWarning("name:uploadId2")
+-        logger.endRepository(None)
++        logger.endRepository(None, '2012-01-01T09:00:00Z')
+         logger.close()
+         lines = open(self.stateDir + '/name.stats').readlines()
+         eventline = open(self.logDir + '/name.events').readlines()[1].strip()
+@@ -137,9 +137,9 @@
+         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
+         self.assertEquals('ERROR', event.strip())
+         self.assertEquals('name', id)
+-        self.assert_(comments.startswith('Traceback (most recent call last):|File "'))
+-        self.assert_('harvesterlogtest.py", line ' in comments)
+-        self.assert_(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
++        self.assertTrue(comments.startswith('Traceback (most recent call last):|File "'))
++        self.assertTrue('harvesterlogtest.py", line ' in comments)
++        self.assertTrue(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
+ 
+     def testLogWithoutDoubleIDs(self):
+         f = open(self.stateDir+'/name.ids','w')
+@@ -209,42 +209,16 @@
+         self.assertFalse(isfile(self.logDir + '/invalid/repoid/recordid'))
+         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
+ 
+-    def testLogDeleted(self):
+-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='emptyrepoi')
+-        self.assertEquals(None,logger.from_)
+-        self.assertEquals(0, logger.total)
+-        self.assertEquals(None, logger.token)
+-        f = open(self.stateDir+'/name.stats','w')
+-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
+-        f.close()
+-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+-        self.assertEquals('2005-01-02',logger.from_)
+-        self.assertEquals(1650, logger.total)
+-        self.assertEquals('resumption', logger.token)
+-        f = open(self.stateDir+'/name.stats','w')
+-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption\n')
+-        f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s\n')
+-        f.close()
+-        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+-        self.assertEquals(None, logger.token)
+-        self.assertEquals(None,logger.from_)
+-        self.assertEquals(0, logger.total)
+-
+     def testMarkDeleted(self):
+         f = open(self.stateDir+'/name.stats','w')
+         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
+         f.close()
+         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+-        self.assertEquals('resumption', logger.token)
++        self.assertEquals('resumption', logger._state.token)
+         logger.markDeleted()
+         logger.close()
+         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
+-        self.assertEquals(None, logger.token)
+-        self.assertEquals(None,logger.from_)
+-        self.assertEquals(0, logger.total)
+-
+-
+-class MockMailer(object):
+-    def send(self, message):
+-        self.message=message
++        self.assertEquals(None, logger._state.token)
++        self.assertEquals(None, logger._state.from_)
++        self.assertEquals(0, logger.totalIds())
+ 
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/harvestertest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/harvestertest.py
+--- version_0/test/harvestertest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/harvestertest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -1,34 +1,35 @@
+ ## begin license ##
+-#
+-#    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+-#    a web-control panel.
+-#    "Meresco Harvester" is originally called "Sahara" and was developed for
+-#    SURFnet by:
+-#        Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
+-#    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
+-#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+-#    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
+-#       http://www.kennisnetictopschool.nl
+-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-#    Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-#
+-#    This file is part of "Meresco Harvester"
+-#
+-#    "Meresco Harvester" is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    "Meresco Harvester" is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with "Meresco Harvester"; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
++# a web-control panel.
++# "Meresco Harvester" is originally called "Sahara" and was developed for 
++# SURFnet by:
++# Seek You Too B.V. (CQ2) http://www.cq2.nl 
++# 
++# Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
++# Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
++# Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
++# Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
++# Copyright (C) 2009 Tilburg University http://www.uvt.nl
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Meresco Harvester"
++# 
++# "Meresco Harvester" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Meresco Harvester" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Meresco Harvester"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ import shelve
+@@ -47,7 +48,6 @@
+ 
+ from meresco.harvester.harvester import Harvester
+ from meresco.harvester.harvesterlog import HarvesterLog
+-from meresco.harvester.state import getHarvestedUploadedRecords
+ from meresco.harvester.oairequest import OaiRequest
+ from meresco.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
+ from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
+@@ -416,3 +416,9 @@
+                 return self.mockRepository.listRecords(metadataPrefix = metadataPrefix, set = set)
+             return self.mockRepository.listRecords(metadataPrefix = metadataPrefix)
+         return self.mockRepository.listRecords(resumptionToken = resumptionToken)
++
++
++def getHarvestedUploadedRecords(logline):
++    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
++    return matches.groups('0')
++
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/integration/harvestertest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/integration/harvestertest.py
+--- version_0/test/integration/harvestertest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/integration/harvestertest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -119,13 +119,14 @@
+     def testIncrementalHarvesting(self):
+         statsFile = join(self.harvesterStateDir, DOMAIN, '%s.stats' % REPOSITORY)
+         with open(statsFile, 'w') as f:
++            f.write('Started: 2011-03-31 13:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-03-31 13:12:36, ResumptionToken: xyz\n')
+             f.write('Started: 2011-04-01 14:11:44, Harvested/Uploaded/Deleted/Total: 300/300/0/300, Done: 2011-04-01 14:12:36, ResumptionToken:\n')
+         self.startHarvester(repository=REPOSITORY)
+         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
+         logs = self.getLogs()
+         self.assertEquals(1, len(logs))
+         self.assertEquals('/oai', logs[-1]['path'])
+-        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-04-01']}, logs[-1]['arguments'])
++        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['oai_dc'], 'from':['2011-03-31']}, logs[-1]['arguments'])
+ 
+     def testClear(self):
+         self.startHarvester(repository=REPOSITORY)
+@@ -134,7 +135,6 @@
+ 
+         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+         self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
+-        self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
+         
+         r = RepositoryData.read(self.repofilepath)
+         r.action='clear'
+@@ -154,7 +154,6 @@
+ 
+         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+         self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
+-        self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
+ 
+     def testRefresh(self):
+         log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
+@@ -165,7 +164,7 @@
+         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123]]:
+             log.notifyHarvestedRecord(uploadId)
+             log.deleteIdentifier(uploadId)
+-        log.endRepository('token')
++        log.endRepository('token', '2012-01-01T09:00:00Z')
+         log.close()
+ 
+         r = RepositoryData.read(self.repofilepath)
+@@ -314,7 +313,7 @@
+             log.notifyHarvestedRecord(uploadId)
+             log.logInvalidData(uploadId, 'ignored message')
+             log.logIgnoredIdentifierWarning(uploadId)
+-        log.endRepository('token')
++        log.endRepository('token', '2012-01-01T09:00:00Z')
+         log.close()
+         totalRecords = 15
+         oldUploads = 2
+@@ -350,7 +349,7 @@
+             log.notifyHarvestedRecord(uploadId)
+             log.logInvalidData(uploadId, 'ignored message')
+             log.logIgnoredIdentifierWarning(uploadId)
+-        log.endRepository('token')
++        log.endRepository('token', '2012-01-01T09:00:00Z')
+         log.close()
+         oldUploads = 4
+         oldDeletes = 5
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/oairequesttest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/oairequesttest.py
+--- version_0/test/oairequesttest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/oairequesttest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -60,8 +60,9 @@
+             self.assertEquals(u'badResumptionToken', e.errorCode())
+             
+     def testListRecords(self):
+-        records, resumptionToken = self.request.listRecords(metadataPrefix='oai_dc')
++        records, resumptionToken, responseDate = self.request.listRecords(metadataPrefix='oai_dc')
+         self.assertEquals("TestToken", resumptionToken)
++        self.assertEquals("2004-12-29T13:19:27Z", responseDate)
+         self.assertEquals(3, len(records))
+         self.assertEquals('oai:tudelft.nl:007087', str(records[0].header.identifier))
+         if records[0].header.deleted:
+@@ -91,9 +92,10 @@
+         self.assertEquals('oai:rep:12345',record.header.identifier)
+         
+     def testListRecordsWithAnEmptyList(self):
+-        records, resumptionToken = self.request.listRecords(resumptionToken='EmptyListToken')
++        records, resumptionToken, responseDate = self.request.listRecords(resumptionToken='EmptyListToken')
+         self.assertEquals(0, len(records))
+         self.assertEquals("", resumptionToken)
++        self.assertEquals("2005-01-12T14:34:49Z", responseDate)
+ 
+     def testBuildRequestUrl(self):
+         oaiRequest = OaiRequest("http://x.y.z/oai")
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/smoothactiontest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/smoothactiontest.py
+--- version_0/test/smoothactiontest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/smoothactiontest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -74,7 +74,7 @@
+         self.assertTrue(os.path.isfile(self.idfilename))
+         self.assertEquals('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
+         self.assertEquals('', readfile(self.idfilename))
+-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename), readfile(self.statsfilename))
++        self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename), readfile(self.statsfilename))
+         self.assertEquals('Smooth reharvest: initialized.', message)
+         self.assertFalse(done)
+ 
+@@ -92,7 +92,7 @@
+         self.assertEquals('', readfile(self.old_idfilename))
+         self.assertEquals('', readfile(self.idfilename))
+         self.assertEquals('', readfile(self.invalidIdsFilename))
+-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
++        self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename))
+         self.assertEquals('Smooth reharvest: initialized.', message)
+         self.assertFalse(done)
+ 
+@@ -101,7 +101,7 @@
+         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
+         writefile(self.idfilename, '')
+         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n'+
+-        'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s. \n')
++        'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids. \n')
+ 
+         self.smoothaction._harvest = lambda:(HARVESTED, False)
+         done,message,hasResumptionToken = self.smoothaction.do()
+@@ -156,7 +156,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals((None, None), (h.from_, h.token))
++        self.assertEquals((None, None), (h._state.from_, h._state.token))
+ 
+     def testResetState_ToPreviousCleanState(self):
+         self.writeLogLine(2010, 3, 2, token='')
+@@ -169,7 +169,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals((None, None), (h.from_, h.token))
++        self.assertEquals((None, None), (h._state.from_, h._state.token))
+ 
+     def testResetState_ToStartAllOver(self):
+         self.writeLogLine(2010, 3, 3, token='resumptionToken')
+@@ -179,7 +179,7 @@
+         action.resetState()
+ 
+         h = self.newHarvesterLog()
+-        self.assertEquals((None, None), (h.from_, h.token))
++        self.assertEquals((None, None), (h._state.from_, h._state.token))
+     
+     def newSmoothAction(self):
+         action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/statetest.py /home/edurep/development/meresco-harvester/workingsets/8.1.4.1-Edurep/version_1/test/statetest.py
+--- version_0/test/statetest.py	2012-08-13 09:31:38.000000000 +0200
++++ version_1/test/statetest.py	2012-08-14 11:22:53.000000000 +0200
+@@ -11,8 +11,8 @@
+ # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+ # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+ # Copyright (C) 2009 Tilburg University http://www.uvt.nl
+-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+-# 
++# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+ # 
+ # This file is part of "Meresco Harvester"
+ # 
+@@ -32,9 +32,11 @@
+ # 
+ ## end license ##
+ 
+-from meresco.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
+-from seecr.test import SeecrTestCase
+ from os.path import join
++from sys import exc_info
++
++from meresco.harvester.state import State, getResumptionToken, getStartDate
++from seecr.test import SeecrTestCase
+ 
+ class StateTest(SeecrTestCase):
+     def testReadStartDateFromLogLine(self):
+@@ -45,15 +47,7 @@
+         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded: 113/  113, Done: 2004-12-31 16:39:15, ResumptionToken: ga+hier+verder\n'
+         self.assertEquals('1999-12-01', getStartDate(logline))
+ 
+-    def testReadHarvestedRecordsFromLogLine(self):
+-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/ 200/  678, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
+-        self.assertEquals(('199', '200', '0', '678'), getHarvestedUploadedRecords(logline))
+-
+-    def testReadDeletedRecordsFromLogLine(self):
+-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
+-        self.assertEquals(('1', '2', '3', '4'), getHarvestedUploadedRecords(logline))
+-
+-    def testReadResumptionToken(self):
++    def testReadResumptionTokenFromStats(self):
+         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
+         self.assertEquals('^^^oai_dc^45230', getResumptionToken(logline))
+         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded:   113/  113, Error: XXX\n'
+@@ -65,47 +59,6 @@
+         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^452 30\n'
+         self.assertEquals('^^^oai_dc^452 30', getResumptionToken(logline))
+ 
+-    def testParseInfo(self):
+-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Total: 200/201/6600, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
+-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
+-        self.assertEquals('200', harvested)
+-        self.assertEquals('201', uploaded)
+-        self.assertEquals('0', deleted)
+-        self.assertEquals('6600', total)
+-
+-    def testLogWithDeletedCount(self):
+-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Deleted/Total: 200/195/5/449, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
+-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
+-        self.assertEquals('200', harvested)
+-        self.assertEquals('195', uploaded)
+-        self.assertEquals('5', deleted)
+-        self.assertEquals('449', total)
+-
+-    def testFindLastCleanState(self):
+-        f = open(join(self.tempdir, 'repository.stats'), 'w')
+-        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
+-Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:
+-Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
+-Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
+-Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
+-Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
+-        f.close()
+-        s = State(self.tempdir, 'repository')
+-        l = s._getLastCleanState()
+-        self.assertEquals('Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:\n', l)
+-
+-    def testFindLastCleanState_whichDoesNotExist(self):
+-        f = open(join(self.tempdir, 'repository.stats'), 'w')
+-        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
+-Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
+-Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
+-Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
+-Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
+-        f.close()
+-        s = State(self.tempdir, 'repository')
+-        l = s._getLastCleanState()
+-        self.assertEquals(None, l)
+-
+     def testNoRepeatedNewlines(self):
+         s = State(self.tempdir, 'repository')
+         s.close()
+@@ -121,3 +74,145 @@
+         data = open(join(self.tempdir, 'repository.stats')).read()
+         self.assertEquals('line\n', data)
+ 
++    def testStartDateFromLastFirstBatch(self):
++        f = open(join(self.tempdir, 'repository.stats'), 'w')
++        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
++Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
++Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
++Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
++Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
++''')
++        f.close()
++        s = State(self.tempdir, 'repository')
++        self.assertEquals('2005-01-04', s.from_)
++
++    def testStartDateFromLastFirstBatchWihoutResumptionToken(self):
++        f = open(join(self.tempdir, 'repository.stats'), 'w')
++        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
++Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
++Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
++Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
++Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
++Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-07 16:19:45, ResumptionToken: 
++''')
++        f.close()
++        s = State(self.tempdir, 'repository')
++        self.assertEquals('2005-01-07', s.from_)
++
++    def testStartDateFromNewFromFile(self):
++        f = open(join(self.tempdir, 'repository.stats'), 'w')
++        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
++Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
++Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
++''')
++        f.close()
++        
++        open(join(self.tempdir, 'repository.next'), 'w').write('{"from": "2012-01-01T09:00:00Z"}')
++
++        s = State(self.tempdir, 'repository')
++        self.assertEquals('2012-01-01', s.from_)
++
++    def testNoStartDateIfLastLogLineIsDeletedIds(self):
++        f = open(join(self.tempdir, 'repository.stats'), 'w')
++        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
++Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
++Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
++Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids
++''')
++        f.close()
++        
++        s = State(self.tempdir, 'repository')
++        self.assertEquals(None, s.from_)
++        self.assertEquals(None, s.token)
++
++        # and now with 'ids' misspelled as used to be the case
++        f = open(join(self.tempdir, 'repository.stats'), 'w')
++        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
++Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
++Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
++Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's
++''')
++        f.close()
++        
++        s = State(self.tempdir, 'repository')
++        self.assertEquals(None, s.from_)
++        self.assertEquals(None, s.token)
++
++    def testMarkHarvested(self):
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
++        state.markStarted()
++        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
++        state.close()
++
++        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
++        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
++                
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
++        state.markStarted()
++        state.markHarvested("9999/9999/9999/9999", "newToken", "2012-08-13T12:16:00Z")
++        state.close()
++
++        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
++Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:17:00, ResumptionToken: newToken
++""", open(join(self.tempdir, 'repo.stats')).read())
++        self.assertEquals('{"from": "2012-08-13", "resumptionToken": "newToken"}', open(join(self.tempdir, 'repo.next')).read())
++
++    def testMarkDeleted(self):
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
++        state.markStarted()
++        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
++        state.close()
++
++        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
++        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
++                
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
++        state.markDeleted()
++        state.close()
++
++        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
++Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
++""", open(join(self.tempdir, 'repo.stats')).read())
++        self.assertEquals('{"from": "", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
++
++    def testSetToLastCleanState(self):
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
++        state.markStarted()
++        state.markHarvested("9999/9999/9999/9999", "", "2012-08-13T12:14:00")
++        state.close()
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 14, 12, 17, 0, 0, 0, 0)
++        state.markStarted()
++        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-14T12:16:00")
++        state.close()
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 15, 12, 19, 0, 0, 0, 0)
++        state.setToLastCleanState()
++        state.close()
++
++        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: 
++Started: 2012-08-14 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-14 12:17:00, ResumptionToken: resumptionToken
++Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: 
++""", open(join(self.tempdir, 'repo.stats')).read())
++        self.assertEquals('{"from": "2012-08-14", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
++
++    def testMarkException(self):
++        state = State(self.tempdir, 'repo')
++        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
++        state.markStarted()
++        try:
++            raise ValueError("whatever")
++        except:
++            exType, exValue, exTraceback = exc_info()
++            state.markException(exType, exValue, "9999/9999/9999/9999")
++        state.close()
++        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
++""", open(join(self.tempdir, 'repo.stats')).read())
++
++
++

@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -33,9 +33,11 @@
 ## end license ##
 
 from sys import exc_info
+from os.path import join
+from time import strftime
+
 from seecr.test import CallTrace, SeecrTestCase
 from meresco.harvester.harvesterlog import HarvesterLog
-from os.path import join
 
 
 class ActionTestCase(SeecrTestCase):
@@ -52,7 +54,10 @@ class ActionTestCase(SeecrTestCase):
         self.writeLogLine(2010, 3, 3, exception='Exception')
 
         h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
+        self.assertEquals("""Started: 2010-03-01 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-01 12:15:00, ResumptionToken: resumptionToken
+Started: 2010-03-02 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-02 12:15:00, ResumptionToken: 
+Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: <type 'exceptions.Exception'>: Exception
+""", open(h._state._statsfilename).read())
 
     def newHarvesterLog(self):
         return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
@@ -77,6 +82,6 @@ class ActionTestCase(SeecrTestCase):
                 exType, exValue, exTb = exc_info()
                 h.endWithException(exType, exValue, exTb)
         else:
-            h.endRepository(token)
+            h.endRepository(token, strftime("%Y-%m-%dT%H:%M:%SZ", h._state._gmtime()))
         h.close()
 

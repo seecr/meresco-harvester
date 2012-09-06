@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -32,9 +32,12 @@
 # 
 ## end license ##
 
-from meresco.harvester.state import State, getHarvestedUploadedRecords, getResumptionToken, getStartDate
-from seecr.test import SeecrTestCase
 from os.path import join
+from sys import exc_info
+from simplejson import load as jsonLoad
+
+from meresco.harvester.state import State, getResumptionToken, getStartDate
+from seecr.test import SeecrTestCase
 
 class StateTest(SeecrTestCase):
     def testReadStartDateFromLogLine(self):
@@ -45,15 +48,7 @@ class StateTest(SeecrTestCase):
         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded: 113/  113, Done: 2004-12-31 16:39:15, ResumptionToken: ga+hier+verder\n'
         self.assertEquals('1999-12-01', getStartDate(logline))
 
-    def testReadHarvestedRecordsFromLogLine(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/ 200/  678, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals(('199', '200', '0', '678'), getHarvestedUploadedRecords(logline))
-
-    def testReadDeletedRecordsFromLogLine(self):
-        logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
-        self.assertEquals(('1', '2', '3', '4'), getHarvestedUploadedRecords(logline))
-
-    def testReadResumptionToken(self):
+    def testReadResumptionTokenFromStats(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEquals('^^^oai_dc^45230', getResumptionToken(logline))
         logline='Started: 1999-12-01 16:37:41, Harvested/Uploaded:   113/  113, Error: XXX\n'
@@ -64,47 +59,6 @@ class StateTest(SeecrTestCase):
         self.assertEquals('^^^oai_dc^45230', getResumptionToken(logline))
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^452 30\n'
         self.assertEquals('^^^oai_dc^452 30', getResumptionToken(logline))
-
-    def testParseInfo(self):
-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Total: 200/201/6600, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
-        self.assertEquals('200', harvested)
-        self.assertEquals('201', uploaded)
-        self.assertEquals('0', deleted)
-        self.assertEquals('6600', total)
-
-    def testLogWithDeletedCount(self):
-        line = "Started: 2005-04-22 11:48:05, Harvested/Uploaded/Deleted/Total: 200/195/5/449, Done: 2005-04-22 11:48:30, ResumptionToken: slice^33|metadataPrefix^oai_dc|from^1970-01-01"
-        harvested, uploaded, deleted, total = getHarvestedUploadedRecords(line)
-        self.assertEquals('200', harvested)
-        self.assertEquals('195', uploaded)
-        self.assertEquals('5', deleted)
-        self.assertEquals('449', total)
-
-    def testFindLastCleanState(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
-Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:
-Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
-Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
-Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
-Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
-        f.close()
-        s = State(self.tempdir, 'repository')
-        l = s._getLastCleanState()
-        self.assertEquals('Started: 2005-01-03 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken:\n', l)
-
-    def testFindLastCleanState_whichDoesNotExist(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-02 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45231
-Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45232
-Started: 2005-01-05 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Error: ERROR
-Started: 2005-01-06 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45233
-Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45235''')
-        f.close()
-        s = State(self.tempdir, 'repository')
-        l = s._getLastCleanState()
-        self.assertEquals(None, l)
 
     def testNoRepeatedNewlines(self):
         s = State(self.tempdir, 'repository')
@@ -120,4 +74,233 @@ Started: 2005-01-07 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2
         s.close()
         data = open(join(self.tempdir, 'repository.stats')).read()
         self.assertEquals('line\n', data)
+
+    def testStartDateFromLastFirstBatch(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
+Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
+Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
+''')
+        f.close()
+        s = State(self.tempdir, 'repository')
+        self.assertEquals('2005-01-04', s.from_)
+
+    def testStartDateFromLastFirstBatchWihoutResumptionToken(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
+Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
+Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
+Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-07 16:19:45, ResumptionToken: 
+''')
+        f.close()
+        s = State(self.tempdir, 'repository')
+        self.assertEquals('2005-01-07', s.from_)
+
+    def testStartDateFromNewFromFile(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
+''')
+        f.close()
+        
+        open(join(self.tempdir, 'repository.next'), 'w').write('{"from": "2012-01-01T09:00:00Z"}')
+
+        s = State(self.tempdir, 'repository')
+        self.assertEquals('2012-01-01', s.from_)
+
+    def testNoStartDateIfLastLogLineIsDeletedIds(self):
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
+Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids
+''')
+        f.close()
+        
+        s = State(self.tempdir, 'repository')
+        self.assertEquals(None, s.from_)
+        self.assertEquals(None, s.token)
+
+        # and now with 'ids' misspelled as used to be the case
+        f = open(join(self.tempdir, 'repository.stats'), 'w')
+        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken: 
+Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
+Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken: 
+Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's
+''')
+        f.close()
+        
+        s = State(self.tempdir, 'repository')
+        self.assertEquals(None, s.from_)
+        self.assertEquals(None, s.token)
+
+    def testMarkHarvested(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+
+        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+                
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "newToken", "2012-08-13T12:16:00Z")
+        state.close()
+
+        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:17:00, ResumptionToken: newToken
+""", open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-13", "resumptionToken": "newToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkDeleted(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+
+        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+                
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markDeleted()
+        state.close()
+
+        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
+""", open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testSetToLastCleanState(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "", "2012-08-13T12:14:00")
+        state.close()
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 14, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-14T12:16:00")
+        state.close()
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 15, 12, 19, 0, 0, 0, 0)
+        state.setToLastCleanState()
+        state.close()
+
+        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: 
+Started: 2012-08-14 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-14 12:17:00, ResumptionToken: resumptionToken
+Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: 
+""", open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-14", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
+
+    def testMarkException(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+
+        self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("whatever")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
+""", open(join(self.tempdir, 'repo.stats')).read())
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkHarvesterAfterExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("whatever")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkDeletedAfterExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("whatever")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        state.markDeleted()
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+    def testMarkExceptionChange(self):
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 15, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the same exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the same exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+
+        state = State(self.tempdir, 'repo')
+        state._gmtime = lambda: (2012, 8, 13, 12, 19, 0, 0, 0, 0)
+        state.markStarted()
+        try:
+            raise ValueError("the other exception")
+        except:
+            exType, exValue, exTraceback = exc_info()
+            state.markException(exType, exValue, "9999/9999/9999/9999")
+        state.close()
+        self.assertEquals({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
 

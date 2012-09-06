@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -75,7 +75,7 @@ class HarvestActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
+        self.assertEquals(('2010-03-01', None), (h._state.from_, h._state.token))
 
     def testResetState_ToStateBeforeResumptionToken(self):
         self.writeLogLine(2010, 3, 2, token='')
@@ -86,7 +86,7 @@ class HarvestActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-02', None), (h.from_, h.token))
+        self.assertEquals(('2010-03-03', None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -96,7 +96,7 @@ class HarvestActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals(('2010-03-03', None), (h._state.from_, h._state.token))
 
     def newHarvestAction(self):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

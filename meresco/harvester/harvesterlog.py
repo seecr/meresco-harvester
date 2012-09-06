@@ -9,11 +9,10 @@
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -64,9 +63,6 @@ class HarvesterLog(object):
         self._invalidIds = Ids(stateDir, name + "_invalid")
         self._state = State(stateDir, name)
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
-        self.from_ = self._state.startdate
-        self.token = self._state.token
-        self.total = self._state.total
         self._resetCounts()
 
     def isCurrentDay(self, yyyy_mm_dd):
@@ -74,7 +70,7 @@ class HarvesterLog(object):
         
     def startRepository(self):
         self._resetCounts()
-        self._state._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self._state.getTime())
+        self._state.markStarted()
 
     def _resetCounts(self):
         self._harvestedCount = 0
@@ -94,19 +90,16 @@ class HarvesterLog(object):
     def markDeleted(self):
         self._ids.clear()
         self._state.markDeleted()
-        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s.',id=self._name)
+        self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.', id=self._name)
     
-    def endRepository(self, token):
-        self._state._write(self.countsSummary())
-        self._state._write(', Done: %s, ResumptionToken: %s' % (self._state.getTime(), token))
+    def endRepository(self, token, responseDate):
+        self._state.markHarvested(self.countsSummary(), token, responseDate)
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
 
     def endWithException(self, exType, exValue, exTb):
-        error = str(exType) + ': ' + str(exValue)
-        self._state._write(self.countsSummary())
-        self._state._write( ', Error: ' + error)
-        error2 = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
-        self._eventlogger.logError(error2, id=self._name)
+        self._state.markException(exType, exValue, self.countsSummary())
+        error = '|'.join(str.strip(s) for s in traceback.format_exception(exType, exValue, exTb))
+        self._eventlogger.logError(error, id=self._name)
 
     def countsSummary(self):
         return '%d/%d/%d/%d' % (self._harvestedCount, self._uploadedCount, self._deletedCount, self.totalIds())
@@ -145,7 +138,7 @@ class HarvesterLog(object):
         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
     def hasWork(self):
-        return not self.isCurrentDay(self.from_) or self.token
+        return not self.isCurrentDay(self._state.from_) or self._state.token
     
     def state(self):
         return self._state

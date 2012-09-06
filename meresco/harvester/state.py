@@ -7,9 +7,9 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
 # Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
 # Copyright (C) 2011 Tilburg University http://www.uvt.nl
-# 
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -33,86 +33,114 @@ from os.path import join, isfile
 from os import SEEK_END
 from time import strftime, gmtime
 import re
+from simplejson import load as jsonLoad, dump as jsonDump
+
 
 class State(object):
     def __init__(self, stateDir, name):
-        self._filename = join(stateDir, '%s.stats' % name)
-        open(self._filename, 'a').close()
-        self._statsfile = open(self._filename, 'r+')
+        self._statsfilename = join(stateDir, '%s.stats' % name)
+        self._forceFinalNewlineOnStatsFile()
+        self._resumptionFilename = join(stateDir, '%s.next' % name)
+        self._runningFilename = join(stateDir, '%s.running' % name)
+        self.from_ = None
+        self.token = None
         self._readState()
-        self._newlineIfMissing()
+        self._statsfile = open(self._statsfilename, 'a')
 
     def close(self):
-        self._newlineIfMissing()
         self._statsfile.close()
+        self._forceFinalNewlineOnStatsFile()
 
-    def setToLastCleanState(self):
-        cleanState = self._getLastCleanState()
-        if cleanState != None:
-            self._write(self._getLastCleanState())
-        else:
-            self.markDeleted()
+    def markStarted(self):
+        self._write('Started: %s, Harvested/Uploaded/Deleted/Total: ' % self.getTime())
+
+    def markHarvested(self, countsSummary, token, responseDate):
+        self._write(countsSummary)
+        self._write(', Done: %s, ResumptionToken: %s' % (self.getTime(), token))
+        self._writeResumptionValues(token, responseDate)
+        self._markRunningState("Ok")
 
     def markDeleted(self):
-        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's." % self.getTime())
+        self._write("Started: %s, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids." % self.getTime())
+        self._writeResumptionValues(None, None)
+        self._markRunningState("Ok")
 
-    def _getLastCleanState(self):
-        result = None
-        self._statsfile.seek(0)
-        for line in self._filterNonErrorLogLine(self._statsfile):
-            token = getResumptionToken(line)
-            if token == None:
-                result = line
-        self._statsfile.seek(0, SEEK_END)
-        return result
+    def markException(self, exType, exValue, countsSummary):
+        error = str(exType) + ': ' + str(exValue)
+        self._write(countsSummary)
+        self._write( ', Error: ' + error)
+        self._markRunningState("Error", str(exValue))
 
-    def _getLastDoneState(self):
-        result = None
-        self._statsfile.seek(0)
-        for line in self._filterNonErrorLogLine(self._statsfile):
-            result = line
-        self._statsfile.seek(0, SEEK_END)
-        return result
+    def _markRunningState(self, status, message=""):
+        runningDict = jsonLoad(open(self._runningFilename)) if isfile(self._runningFilename) else {}
+        if status != runningDict.get('status', None) or message != runningDict.get('message', None):
+            jsonDump({'changedate': self.getTime(),'status': status, 'message': message}, open(self._runningFilename, 'w'))
+
+    def getTime(self):
+        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
+
+    def setToLastCleanState(self):
+        self._write("Started: %s, Done: Reset to last clean state. ResumptionToken: \n" % self.getTime())
+        self.token = None
+        self._writeResumptionValues(None, self.from_)
 
     def _readState(self):
-        self.startdate = None
-        self.token = None
-        self.total = 0
-        if isfile(self._filename):
-            logline = self._getLastDoneState()
-            if logline and not self._isDeleted(logline):
-                self.startdate = getStartDate(logline)
-                self.token = getResumptionToken(logline)
-                harvested, uploaded, deleted, total = getHarvestedUploadedRecords(logline)
-                self.total = int(total)
+        if isfile(self._resumptionFilename):
+            values = jsonLoad(open(self._resumptionFilename))
+            self.token = values.get('resumptionToken', None) or None
+            self.from_ = values.get('from', '').split('T')[0] or None
+            return 
 
-    def _newlineIfMissing(self):
-        if self._statsfile.tell() == 0:
-            return
-        self._statsfile.seek(-1, SEEK_END)
-        lastchar = self._statsfile.read()
-        if lastchar != '\n':
-            self._write('\n')
+        # The mechanism below will only be carried out once in case the resumption file does not yet exist.
+        if isfile(self._statsfilename):
+            self._statsfile = open(self._statsfilename)
+            logline = None
+            for logline in self._filterNonErrorLogLine(self._statsfile):
+                if not self.token:
+                    self.from_ = getStartDate(logline)
+                self.token = getResumptionToken(logline)
+            if logline and self._isDeleted(logline):
+                self.from_ = None
+                self.token = None
+            self._statsfile.close()
+
+    def _forceFinalNewlineOnStatsFile(self):
+        if isfile(self._statsfilename):
+            statsfile = open(self._statsfilename, 'r+')
+            statsfile.seek(0, SEEK_END)
+            if statsfile.tell() == 0:
+                return
+            statsfile.seek(-1, SEEK_END)
+            lastchar = statsfile.read()
+            if lastchar != '\n':
+                statsfile.write('\n')
+            statsfile.close()
     
     def _write(self, *args):
         self._statsfile.write(*args)
         self._statsfile.flush()
 
+    def _writeResumptionValues(self, token, responseDate):
+        newToken = str(token or '')
+        newFrom = ''
+        if responseDate:
+            newFrom = self.from_ if self.token else responseDate
+        jsonDump({'resumptionToken': newToken, 'from': newFrom}, open(self._resumptionFilename, 'w'))
+
     @staticmethod
     def _filterNonErrorLogLine(iterator):
         return (line for line in iterator if 'Done:' in line)
-    
+
     @staticmethod
     def _isDeleted(logline):
-        return "Done: Deleted all id's" in logline
-
-    def getTime(self):
-        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
+        return "Done: Deleted all ids" in logline or \
+               "Done: Deleted all id's" in logline
 
     @staticmethod
     def _gmtime():
         return gmtime()
                 
+
 def getStartDate(logline):
     matches = re.search('Started: (\d{4}-\d{2}-\d{2})', logline)
     return matches.group(1)
@@ -123,7 +151,3 @@ def getResumptionToken(logline):
         return matches.group(1)
     return None
 
-def getHarvestedUploadedRecords(logline):
-    matches=re.search('Harvested/Uploaded/(?:Deleted/)?Total: \s*(\d*)/\s*(\d*)(?:/\s*(\d*))?/\s*(\d*)', logline)
-    return matches.groups('0')
-   

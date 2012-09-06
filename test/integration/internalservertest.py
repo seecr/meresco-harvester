@@ -30,9 +30,11 @@
 ## end license ##
 
 from os import system
-from utils import getRequest
 from lxml.etree import tostring
+from time import gmtime, strftime
+
 from integrationtestcase import IntegrationTestCase
+from utils import getRequest
 from meresco.harvester.namespaces import xpath
 
 REPOSITORY = 'integrationtest'
@@ -131,4 +133,36 @@ class InternalServerTest(IntegrationTestCase):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'repository2'}, parse='lxml')
         self.assertEquals("Harvester status voor repository2", xpath(result, "/rss/channel/title/text()")[0])
         self.assertEquals(0, len(xpath(result, "/rss/channel/item")))
+
+    def testRssForStatusChangesOk(self):
+        self.startHarvester(repository=REPOSITORY)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/running.rss', {'domainId': 'adomain'}, parse='lxml')
+        self.assertEquals("Harvest status changes for domain 'adomain'", xpath(result, "/rss/channel/title/text()")[0])
+        self.assertEquals("Recente status changes per repository voor domein 'adomain'", xpath(result, "/rss/channel/description/text()")[0])
+        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain", xpath(result, "/rss/channel/link/text()")[0])
+        self.assertEquals(str(60 * 6), xpath(result, "/rss/channel/ttl/text()")[0])
+        TODAY = strftime("%Y-%m-%d", gmtime())
+        items = xpath(result, "/rss/channel/item")
+        self.assertEquals(1, len(items))
+        self.assertEquals("integrationtest: Ok", ''.join(xpath(items[0], "title/text()")))
+        description = ''.join(xpath(items[0], "description/text()"))
+        self.assertTrue(description.startswith("Harvest time: %s" % TODAY), description)
+        self.assertEquals('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split(' ')[0])
+        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
+
+    def testRssForStatusChangesError(self):
+        self.controlHelper(action="raiseExceptionOnIds", id=['%s:oai:record:01' % REPOSITORY] )
+        self.startHarvester(repository=REPOSITORY)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/running.rss', {'domainId': 'adomain'}, parse='lxml')
+        TODAY = strftime("%Y-%m-%d", gmtime())
+        items = xpath(result, "/rss/channel/item")
+        self.assertEquals(1, len(items))
+        self.assertEquals("integrationtest: Error", ''.join(xpath(items[0], "title/text()")))
+        description = ''.join(xpath(items[0], "description/text()"))
+        self.assertTrue(description.startswith("Harvest time: %s" % TODAY), description)
+        self.assertTrue("Exception: ERROR" in description, description)
+        self.assertEquals('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split('T')[0])
+        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
+
+
 

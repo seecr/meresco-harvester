@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -74,7 +74,7 @@ class SmoothActionTest(ActionTestCase):
         self.assertTrue(os.path.isfile(self.idfilename))
         self.assertEquals('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename), readfile(self.statsfilename))
+        self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename), readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
 
@@ -92,7 +92,7 @@ class SmoothActionTest(ActionTestCase):
         self.assertEquals('', readfile(self.old_idfilename))
         self.assertEquals('', readfile(self.idfilename))
         self.assertEquals('', readfile(self.invalidIdsFilename))
-        self.assertTrue('Done: Deleted all id\'s' in  readfile(self.statsfilename))
+        self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename))
         self.assertEquals('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
 
@@ -101,7 +101,7 @@ class SmoothActionTest(ActionTestCase):
         writefile(self.old_idfilename, 'rep:id:1\nrep:id:2\n')
         writefile(self.idfilename, '')
         writefile(self.statsfilename, 'Started: 2005-12-22 16:33:39, Harvested/Uploaded/Deleted/Total: 10/10/0/2, Done: ResumptionToken:\n'+
-        'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id\'s. \n')
+        'Started: 2005-12-28 10:10:10, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids. \n')
 
         self.smoothaction._harvest = lambda:(HARVESTED, False)
         done,message,hasResumptionToken = self.smoothaction.do()
@@ -156,7 +156,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToPreviousCleanState(self):
         self.writeLogLine(2010, 3, 2, token='')
@@ -169,7 +169,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -179,7 +179,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h.from_, h.token))
+        self.assertEquals((None, None), (h._state.from_, h._state.token))
     
     def newSmoothAction(self):
         action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

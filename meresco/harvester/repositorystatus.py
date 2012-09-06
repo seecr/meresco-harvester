@@ -6,9 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -36,6 +36,7 @@ from re import compile
 from itertools import ifilter, islice
 from meresco.core import Observable
 from escaping import escapeFilename, unescapeFilename
+from simplejson import load as jsonLoad
 
 from harvesterlog import INVALID_DATA_MESSAGES_DIR
 from meresco.harvester.deleteids import readIds
@@ -61,6 +62,15 @@ class RepositoryStatus(Observable):
                 for repoId in repositoryIds:
                     yield self._getRepositoryStatus(domainId, groupId, repoId)
         yield "</GetStatus>"
+
+    def getRunningStatesForDomain(self, domainId):
+        return sorted([
+            mergeDicts(jsonLoad(open(filepath)), {'repositoryId': repoId})
+            for groupId in self.call.getRepositoryGroupIds(domainId=domainId)
+            for repoId in self.call.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
+            for filepath in [join(self._statePath, domainId, escapeFilename("%s.running" % repoId))]
+            if isfile(filepath)
+        ], key=lambda d: d['changedate'], reverse=True)
 
     def invalidRecords(self, domainId, repositoryId):
         invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
@@ -139,3 +149,7 @@ def _error(parseState, date, comments):
 def _reformatDate(aDate):
     return aDate[0:len('YYYY-MM-DD')] + 'T' + aDate[len('YYYY-MM-DD '):len('YYYY-MM-DD HH:MM:SS')] + 'Z'
         
+def mergeDicts(dict1, dict2):
+    newDict = dict1.copy()
+    newDict.update(dict2)
+    return newDict
