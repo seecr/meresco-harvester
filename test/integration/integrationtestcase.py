@@ -240,7 +240,7 @@ def fileSubstVars(filepath, **kwargs):
 
 def sleepWheel(seconds, callback=None, interval=0.2):
     parts = ['\\', '|', '/', '-']
-    for i in range(int(seconds/0.2)):
+    for i in range(int(seconds/interval)):
         stdout.write(parts[i%len(parts)])
         stdout.flush()
         sleep(interval)
