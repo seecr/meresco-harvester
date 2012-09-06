@@ -12,4 +12,5 @@ python-meresco-components (>= 4.0)
 python-meresco-components (<< 4.2)
 python-dynamichtml (>= 1.1)
 python-dynamichtml (<< 1.2)
+python-simplejson
 
