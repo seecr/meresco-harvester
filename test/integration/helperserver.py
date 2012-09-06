@@ -76,11 +76,13 @@ class Dump(object):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml, charset=utf-8\r\n', ''])
         try:
             updateRequest = bind_string(Body).updateRequest
-            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
-                raise InvalidDataException('Data not valid.')
             recordId = str(updateRequest.recordIdentifier)
+            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
+                if 'oai:record:02' in recordId:
+                    raise InvalidDataException()
+                raise InvalidDataException('Invalid data')
             if recordId in self._raiseExceptionOnIds:
-                raise Exception('ERROR')
+                raise Exception("ERROR")
             self._number +=1
             filename = '%05d_%s.updateRequest' %(self._number, str(updateRequest.action).rsplit('/')[-1])
             with open(join(self._dumpdir, filename), 'w') as f:
