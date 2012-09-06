@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
-#
-#    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
-#    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for
-#    SURFnet by:
-#        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-#
-#    This file is part of "Meresco Harvester"
-#
-#    "Meresco Harvester" is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    "Meresco Harvester" is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with "Meresco Harvester"; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+# 
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl 
+# 
+# Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# 
+# This file is part of "Meresco Harvester"
+# 
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# 
 ## end license ##
+
 from __future__ import with_statement
 
 from os import system, waitpid, listdir, remove, kill
@@ -129,7 +132,7 @@ class HarvesterTest(IntegrationTestCase):
         logLen = len(self.getLogs())
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['8'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
         self.assertEquals(8, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
         
@@ -149,7 +152,7 @@ class HarvesterTest(IntegrationTestCase):
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/getStatus', {'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse='lxml')
         self.assertEquals(['0'], xpath(result, "/status:saharaget/status:GetStatus/status:status/status:total/text()"))
         self.assertEquals(0, State(join(self.harvesterStateDir, DOMAIN), REPOSITORY).total)
 

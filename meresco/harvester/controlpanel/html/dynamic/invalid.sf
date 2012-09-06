@@ -7,8 +7,8 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -39,7 +39,7 @@ def main(arguments, **kwargs):
 
     yield '<table class="event">'
     yield '<tr><td class="eventheader">Invalid records</td></tr>'
-    for id in call.invalidRecords(domainId, repositoryId):
+    for id in observable.call.invalidRecords(domainId, repositoryId):
         recordId = id.split(":", 1)[-1]
         args = {'recordId': recordId}
         args.update(orginalArgs)

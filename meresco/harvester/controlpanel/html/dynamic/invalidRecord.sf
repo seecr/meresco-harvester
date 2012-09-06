@@ -7,8 +7,8 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl 
 # 
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Meresco Harvester"
 # 
@@ -36,7 +36,7 @@ def main(arguments, **kwargs):
     yield """<div>
     <h3>Repository %s - Record %s</h3>""" % (escapeHtml(repositoryId), escapeHtml(recordId))
 
-    invalidRecord = call.getInvalidRecord(domainId, repositoryId, recordId)
+    invalidRecord = observable.call.getInvalidRecord(domainId, repositoryId, recordId)
 
     diagnosticsDetails = xpath(invalidRecord, '//diag:diagnostic/diag:details/text()')
     yield "<pre>%s</pre>" % escapeHtml(diagnosticsDetails[0] if diagnosticsDetails else "No error message.")

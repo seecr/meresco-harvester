@@ -10,6 +10,6 @@ python-meresco-core (>= 4.0)
 python-meresco-core (<< 4.1)
 python-meresco-components (>= 4.0)
 python-meresco-components (<< 4.1)
-python-dynamichtml (>= 1.0)
-python-dynamichtml (<< 1.1)
+python-dynamichtml (>= 1.1)
+python-dynamichtml (<< 1.2)
 

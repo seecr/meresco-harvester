@@ -24,7 +24,7 @@ if not exists:
   include('/saharageterror?errorCode=idDoesNotExist')
 else:
   type('text/xml; charset=utf-8')
-queryArgs = urlencode(dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId))
-statusUrl = url('%s/getStatus?%s' % (req.get_options()['internalServer'], queryArgs))
+queryArgs = urlencode(dict(verb='GetStatus', domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId))
+statusUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
 req.write(statusUrl.read())
 %>
