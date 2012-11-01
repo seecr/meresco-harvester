@@ -138,7 +138,7 @@ class InternalServerTest(IntegrationTestCase):
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/running.rss', {'domainId': 'adomain'}, parse='lxml')
         self.assertEquals("Harvest status changes for domain 'adomain'", xpath(result, "/rss/channel/title/text()")[0])
-        self.assertEquals("Recente status changes per repository voor domein 'adomain'", xpath(result, "/rss/channel/description/text()")[0])
+        self.assertEquals("Status changes per repository voor domein 'adomain'", xpath(result, "/rss/channel/description/text()")[0])
         self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain", xpath(result, "/rss/channel/link/text()")[0])
         self.assertEquals(str(60 * 6), xpath(result, "/rss/channel/ttl/text()")[0])
         TODAY = strftime("%Y-%m-%d", gmtime())
