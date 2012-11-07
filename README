@@ -49,7 +49,7 @@ Furthermore you will need to configure:
     If you don't have an SSL Certificate for your server you can create your
     own self-signed certificate.
       Create a server key.
-        $ openssl genrsa -out server.pem 2096
+        $ openssl genrsa -out server.pem 2048
       Create a certificate. Fill in some information. BEWARE: As Common Name (CN)
       fill in your domainname, e.g. harvester.example.org
         $ openssl req -new -key server.pem -out server.csr
