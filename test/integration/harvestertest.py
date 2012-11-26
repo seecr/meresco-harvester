@@ -65,7 +65,7 @@ class HarvesterTest(IntegrationTestCase):
         system("mkdir -p %s" % join(self.harvesterStateDir, DOMAIN))
         self.repofilepath = self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
 
-    def saveRepository(self, domain, repositoryId, repositoryGroupId):
+    def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc"):
         repofilepath = join(self.integrationTempdir, 'data', "%s.%s.repository" % (domain, repositoryId))
         repo = RepositoryData(repositoryId)
         repo.use = 'true'
@@ -73,7 +73,7 @@ class HarvesterTest(IntegrationTestCase):
         repo.targetId = 'SRUUPDATE'
         repo.repositoryGroupId = repositoryGroupId
         repo.mappingId = 'MAPPING'
-        repo.metadataPrefix = 'oai_dc'
+        repo.metadataPrefix = metadataPrefix
         repo.maximumIgnore = '5'
         repo.save(repofilepath)
         return repofilepath
@@ -84,6 +84,17 @@ class HarvesterTest(IntegrationTestCase):
 
     def tearDown(self):
         remove(self.repofilepath)
+
+    def testHarvestReturnsErrorWillNotSaveState(self):
+        self.saveRepository(DOMAIN, "repo_invalid_metadataPrefix", REPOSITORYGROUP, metadataPrefix="not_existing")
+        self.startHarvester(repository="repo_invalid_metadataPrefix")
+        self.startHarvester(repository="repo_invalid_metadataPrefix")
+        logs = self.getLogs()
+        self.assertEquals(2, len(logs))
+        self.assertEquals('/oai', logs[0]['path'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['not_existing']}, logs[0]['arguments'])
+        self.assertEquals('/oai', logs[1]['path'])
+        self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['not_existing']}, logs[1]['arguments'])
 
     def testHarvestToSruUpdate(self):
         # initial harvest
