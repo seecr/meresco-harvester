@@ -436,20 +436,23 @@ class HarvesterTest(IntegrationTestCase):
             t.join()
 
     def testDontHarvestDeletedRepository(self):
+        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
         self.saveRepository(DOMAIN, 'xyz', 'xyz')
         t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=False))
         t.start()
 
         while not listdir(self.dumpDir):
             sleep(0.1)
+        log = open(stdoutfile).read()
+        xyzOccurrences = log.count('[xyz]')
 
         self.removeRepository(DOMAIN, 'xyz', 'xyz')
-        stdoutfile = join(self.integrationTempdir, "stdouterr-harvester.log")
         sleepWheel(8)
         log = open(stdoutfile).read()
         try:
             self.assertFalse('Traceback' in log, log)
-            self.assertFalse('[xyz]' in log, log)
+            newXyzOccurrences = log.count('[xyz]')
+            self.assertEquals(xyzOccurrences, newXyzOccurrences, log)
         finally:
             kill(self.harvesterPID, 2)
             t.join()

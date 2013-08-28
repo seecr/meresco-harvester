@@ -48,12 +48,14 @@ from re import compile
 from traceback import format_exc
 from xml.sax.saxutils import escape as escapeXml
 
+from amara.binderytools import bind_string
+
 from weightless.io import Reactor
 from weightless.core import compose, be
 
 from meresco.components.http import ObservableHttpServer, PathFilter, FileServer, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
-from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml, bind_string
+from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml
 from meresco.components import StorageComponent
 from meresco.oai import OaiPmh, OaiJazz
 from meresco.core import Observable
