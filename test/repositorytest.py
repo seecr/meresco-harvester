@@ -1,49 +1,49 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-from meresco.harvester.saharaget import SaharaGet, SaharaGetException
 from meresco.harvester.eventlogger import NilEventLogger
-from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.repository import Repository
 from meresco.harvester.action import Action, DONE, ActionException
 from meresco.harvester.oairequest import OAIError
 from slowfoot.wrappers import wrapp
 from slowfoot.binderytools import bind_string
-from meresco.harvester.timeslot import Timeslot, Wildcard
+from meresco.harvester.timeslot import Wildcard
 from seecr.test import CallTrace
 import tempfile, os, shutil
 import unittest
+from meresco.harvester.namespaces import namespaces
+from lxml.etree import XML
 
 class RepositoryTest(unittest.TestCase):
     def setUp(self):
@@ -64,19 +64,19 @@ class RepositoryTest(unittest.TestCase):
         self.assertFalse(self.repo.shopClosed())
 
     def testInitHarvestExclusionInterval(self):
-        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, XML(GETREPOSITORY))
         slots = self.repo.shopclosed
         self.assertEquals(2, len(slots))
         self.assertEquals('*:*:10:30-*:*:11:45', slots[0])
         self.assertEquals('*:5:5:59-*:5:23:00', slots[1])
 
     def testShopClosed(self):
-        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
-        timeslots = self.repo.closedSlots()
+        self.repo.fill(self, XML(GETREPOSITORY))
+        self.repo.closedSlots()
         self.assertEquals(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testTimeslotInitialization(self):
-        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, XML(GETREPOSITORY))
         timeslots = self.repo.closedSlots()
         self.assertEquals(2, len(timeslots))
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
@@ -85,7 +85,7 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testShopNotClosedAndThenClosed(self):
-        self.repo.fill(self, wrapp(bind_string(GETREPOSITORY).repository))
+        self.repo.fill(self, XML(GETREPOSITORY))
         timeslots = self.repo.closedSlots()
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
@@ -221,7 +221,7 @@ class MockAction(Action):
         return self.done, self.message, self.hasResumptionToken
 
 GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
-<repository>
+<repository xmlns="%(sahara)s">
     <use>true</use>
     <action>refresh</action>
     <id>cq2Repository2_1</id>
@@ -235,5 +235,5 @@ GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
     <shopclosed>*:*:10:30-*:*:11:45</shopclosed>
     <shopclosed>*:5:5:59-*:5:23:00</shopclosed>
 </repository>
-"""
+""" % namespaces
 

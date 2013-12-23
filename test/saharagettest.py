@@ -1,41 +1,42 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 import unittest
 from meresco.harvester.saharaget import SaharaGet, SaharaGetException
-from slowfoot.wrappers import wrapp
-from slowfoot import binderytools
+from StringIO import StringIO
+from lxml.etree import parse
+from meresco.harvester.namespaces import namespaces
 
 class SaharaGetTest(unittest.TestCase):
     def setUp(self):
@@ -105,18 +106,18 @@ class SaharaGetTest(unittest.TestCase):
         self.mock_read_args.append(kwargs)
         verb = kwargs['verb']
         if kwargs['domainId'] == 'error':
-            return wrapp(binderytools.bind_string(GETERROR))
+            return parse(StringIO(GETERROR))
         elif verb == 'GetRepository':
-            return wrapp(binderytools.bind_string(GETREPOSITORY))
+            return parse(StringIO(GETREPOSITORY))
         elif verb == 'GetRepositories':
-            return wrapp(binderytools.bind_string(GETREPOSITORIES))
+            return parse(StringIO(GETREPOSITORIES))
         elif verb == 'GetTarget':
-            return wrapp(binderytools.bind_string(GETTARGET))
+            return parse(StringIO(GETTARGET))
         elif verb == 'GetMapping':
-            return wrapp(binderytools.bind_string(GETMAPPING))
+            return parse(StringIO(GETMAPPING))
         
 GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
-<saharaget>
+<saharaget xmlns="%(sahara)s">
 <responseDate>2006-01-24T13:16:41Z</responseDate>
 <request>
 <verb>GetRepository</verb>
@@ -138,10 +139,10 @@ GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
 </repository>
 </GetRepository>
 </saharaget>
-"""
+""" % namespaces
 
 GETREPOSITORIES = """<?xml version="1.0" encoding="UTF-8"?>
-<saharaget>
+<saharaget xmlns="%(sahara)s">
 <responseDate>2006-01-24T13:16:41Z</responseDate>
 <request>
 <verb>GetRepositories</verb>
@@ -174,10 +175,10 @@ GETREPOSITORIES = """<?xml version="1.0" encoding="UTF-8"?>
 </repository>
 </GetRepositories>
 </saharaget>
-"""
+""" % namespaces
 
 GETTARGET = """<?xml version="1.0" encoding="UTF-8"?>
-<saharaget>
+<saharaget xmlns="%(sahara)s">
 <responseDate>2006-01-24T13:16:41Z</responseDate>
 <request>
 <verb>GetTarget</verb>
@@ -198,10 +199,10 @@ GETTARGET = """<?xml version="1.0" encoding="UTF-8"?>
 </target>
 </GetTarget>
 </saharaget>
-"""
+""" % namespaces
 
 GETMAPPING = """<?xml version="1.0" encoding="UTF-8"?>
-<saharaget>
+<saharaget xmlns="%(sahara)s">
 <responseDate>2006-01-24T13:16:41Z</responseDate>
 <request>
 <verb>GetMapping</verb>
@@ -231,13 +232,13 @@ upload.fields['url'] = showmetadataurl
 </mapping>
 </GetMapping>
 </saharaget>
-"""
+""" % namespaces
 
 GETERROR = """<?xml version="1.0" encoding="UTF-8"?>
-<saharaget>
+<saharaget xmlns="%(sahara)s">
 <responseDate>2006-02-13T16:15:12Z</responseDate>
 <request>https://sahara.cq2.org/saharaget?verb=Blah&amp;domainId=mydomain</request>
 <error code="badVerb">The verb 'Blah' is not recognized</error>
 </saharaget>
-"""
+""" % namespaces
 
