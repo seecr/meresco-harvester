@@ -1,4 +1,4 @@
-## begin license ##
+8## begin license ##
 #
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
@@ -35,11 +35,12 @@
 import os
 from urllib import urlencode, urlopen
 from urlparse import urlparse, urlunparse
-from cgi import parse_qsl 
+from cgi import parse_qsl
 
 from slowfoot import binderytools
 from slowfoot.wrappers import wrapp
 from meresco.harvester.namespaces import xpathFirst, xpath
+from meresco.components import lxmltostring
 
 
 class OaiRequestException(Exception):
@@ -49,10 +50,11 @@ class OaiRequestException(Exception):
 
 
 class OAIError(OaiRequestException):
-    def __init__(self, url, error, errorCode):
+    def __init__(self, url, error, errorCode, response):
         OaiRequestException.__init__(self, url, error)
         self.errorMessage = lambda: error
         self.errorCode = lambda: errorCode
+        self.response = response
 
     @classmethod
     def create(cls, url, response):
@@ -61,6 +63,7 @@ class OAIError(OaiRequestException):
         return cls(url=url,
                 error='Unknown error' if error is None else str(error),
                 errorCode='' if errorCode is None else str(errorCode),
+                response=response
             )
 
 QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
@@ -82,18 +85,20 @@ class OaiRequest(object):
             if e.errorCode() != 'noRecordsMatch':
                 raise e
             response = e.response
-        listRecords = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords')
-        return xpath(listRecords, 'oai:record'), xpathFirst(listRecords, 'oai:resumptionToken/text()'), xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
+        records = xpath(response, '/oai:OAI-PMH/oai:ListRecords/oai:record')
+        resumptionToken = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()') or ''
+        responseDate = xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
+        return records, resumptionToken, responseDate
 
     def getRecord(self, **kwargs):
         kwargs['verb'] = 'GetRecord'
         response = self.request(kwargs)
-        return wrapp(response).OAI_PMH.GetRecord.record
-    
+        return xpathFirst(response, '/oai:OAI-PMH/oai:GetRecord/oai:record')
+
     def identify(self):
         response = self.request({'verb':'Identify'})
-        return wrapp(response.OAI_PMH.Identify)
-    
+        return xpathFirst(response, '/oai:OAI-PMH/oai:Identify')
+
     def request(self, args):
         try:
             argslist = [(k,v) for k,v in args.items() if v]
@@ -103,14 +108,14 @@ class OaiRequest(object):
         if xpathFirst(result, '/oai:OAI-PMH/oai:error') is not None:
             raise OAIError.create(self._buildRequestUrl(argslist), result)
         return result
-    
+
     def _request(self, argslist):
         return binderytools.bind_uri(self._buildRequestUrl(argslist))
-    
+
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.
-            Special case (not actually allowed by OAI-PMH specification): if query parameters 
-            occur in the baseurl, they are kept. Origin: Rijksmuseum OAI-PMH repository insists 
+            Special case (not actually allowed by OAI-PMH specification): if query parameters
+            occur in the baseurl, they are kept. Origin: Rijksmuseum OAI-PMH repository insists
             on 'apikey' query parameter to go with ListRecords."""
         urlElements = list(self._urlElements)
         urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT] = urlencode(self._argslist + argslist)
@@ -122,7 +127,7 @@ class LoggingOaiRequest(OaiRequest):
         OaiRequest.__init__(self, url)
         self.tempdir = tempdir
         self.numberfilename = os.path.join(self.tempdir, 'number')
-        
+
     def getNumber(self):
         number = os.path.isfile(self.numberfilename) and int(open(self.numberfilename).read()) or 0
         try:
@@ -132,7 +137,7 @@ class LoggingOaiRequest(OaiRequest):
             f = open(self.numberfilename, 'w')
             f.write(str(number))
             f.close()
-        
+
     def _request(self, argslist):
         requesturl = binderytools.Uri.MakeUrllibSafe(self._buildRequestUrl(argslist))
         filename = os.path.join(self.tempdir, 'oairequest.' + self.getNumber() + '.xml')

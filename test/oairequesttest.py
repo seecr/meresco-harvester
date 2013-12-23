@@ -42,15 +42,15 @@ from meresco.harvester.namespaces import xpathFirst
 class OaiRequestTest(unittest.TestCase):
     def setUp(self):
         self.request = MockOaiRequest('mocktud')
-        
+
     def testMockOaiRequest(self):
         binding = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
-        self.assertEquals('2004-12-29T13:19:27Z', str(binding.OAI_PMH.responseDate))
-        
+        self.assertEquals('2004-12-29T13:19:27Z', xpathFirst(binding, '/oai:OAI-PMH/oai:responseDate/text()'))
+
     def testOtherOaiRequest(self):
         binding = self.request.request({'verb': 'GetRecord', 'metadataPrefix': 'oai_dc', 'identifier': 'oai:rep:12345'})
-        self.assertEquals('2005-04-28T12:16:27Z', str(binding.OAI_PMH.responseDate))
-        
+        self.assertEquals('2005-04-28T12:16:27Z', xpathFirst(binding, '/oai:OAI-PMH/oai:responseDate/text()'))
+
     def testListRecordsError(self):
         try:
             self.request.listRecords(resumptionToken='BadResumptionToken')
@@ -58,7 +58,7 @@ class OaiRequestTest(unittest.TestCase):
         except OAIError, e:
             self.assertEquals('The value of the resumptionToken argument is invalid or expired.',e.errorMessage())
             self.assertEquals(u'badResumptionToken', e.errorCode())
-            
+
     def testListRecords(self):
         records, resumptionToken, responseDate = self.request.listRecords(metadataPrefix='oai_dc')
         self.assertEquals("TestToken", resumptionToken)
@@ -66,15 +66,15 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals(3, len(records))
         self.assertEquals('oai:tudelft.nl:007087', xpathFirst(records[0], 'oai:header/oai:identifier/text()'))
         self.assertEquals(None, xpathFirst(records[0], 'oai:header/@status'))
-        
+
     def testIdentify(self):
         identify = self.request.identify()
-        self.assertEquals('TU Delft digital repository', str(identify.repositoryName))
+        self.assertEquals('TU Delft digital repository', xpathFirst(identify, 'oai:repositoryName/text()'))
 
     def mockRequest(self, args):
         self.mockRequest_args = args
         return parse(open('mocktud/00001.xml'))
-    
+
     def testListRecordArgs(self):
         self.request.request = self.mockRequest
         self.request.listRecords(metadataPrefix='kaas')
@@ -85,11 +85,11 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals('until', self.mockRequest_args['until'])
         self.assertEquals('set', self.mockRequest_args['set'])
         self.assertEquals('prefix', self.mockRequest_args['metadataPrefix'])
-        
+
     def testGetRecord(self):
         record = self.request.getRecord(identifier='oai:rep:12345', metadataPrefix='oai_dc')
-        self.assertEquals('oai:rep:12345',record.header.identifier)
-        
+        self.assertEquals('oai:rep:12345', xpathFirst(record, 'oai:header/oai:identifier/text()'))
+
     def testListRecordsWithAnEmptyList(self):
         records, resumptionToken, responseDate = self.request.listRecords(resumptionToken='EmptyListToken')
         self.assertEquals(0, len(records))
@@ -103,9 +103,9 @@ class OaiRequestTest(unittest.TestCase):
         oaiRequest = OaiRequest("http://x.y.z/oai?apikey=xyz123")
         self.assertEquals("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
 
-        
+
     def xtest_LIVE_Retrieve(self):
         request = OaiRequest('http://library.wur.nl/oai')
         amarabinding = request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
         amarabinding.OAI_PMH
- 
+
