@@ -42,7 +42,7 @@ from urllib import urlopen
 from os.path import join
 from select import select, error
 from sys import stderr, stdout, exit, argv
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 from os import read
 from signal import SIGINT
 from errno import EBADF, EINTR, EAGAIN
@@ -130,7 +130,7 @@ class StartHarvester(object):
             action="store_true",
             dest="child",
             default=False,
-            help="Option set by harvester. Never do this by yourself.")
+            help=SUPPRESS_HELP)
 
         (options, args) = self.parser.parse_args()
         return options
