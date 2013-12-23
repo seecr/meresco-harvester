@@ -1,38 +1,37 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-import shelve
 import os
 import sys
 import re
@@ -41,16 +40,15 @@ from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
 from StringIO import StringIO
-from lxml.etree import parse
+from lxml.etree import parse, XML
 
 from seecr.test import CallTrace
-from slowfoot.wrappers import wrapp, binderytools
 
 from meresco.harvester.harvester import Harvester
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.oairequest import OaiRequest
 from meresco.harvester.virtualuploader import InvalidDataException, TooMuchInvalidDataException
-from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload, parse_xml
+from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload
 from meresco.harvester import namespaces
 
 from mockoairequest import MockOaiRequest
@@ -307,8 +305,8 @@ class HarvesterTest(unittest.TestCase):
 
     def testUploadRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
-        upload = Upload(record=record)
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
+        upload = Upload(recordNode=record)
         upload.id = 'tud:mockid'
         self.mapper.createUpload = lambda repository,record: upload
         harvester.uploadRecord(record)
@@ -317,8 +315,8 @@ class HarvesterTest(unittest.TestCase):
 
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
-        upload = Upload(record=record)
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
+        upload = Upload(recordNode=record)
         upload.id = "tud:mockid"
         upload.skip = True
         self.mapper.createUpload = lambda repository,record: upload
@@ -328,7 +326,7 @@ class HarvesterTest(unittest.TestCase):
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = parse_xml("""<record><header status="deleted"><identifier>mockid</identifier></header></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header status="deleted"><identifier>mockid</identifier></header></record>""" % namespaces)
         harvester.uploadRecord(record)
         self.assertEquals([], self.sendId)
         self.assertEquals('tud:mockid', self.delete_id)
@@ -338,12 +336,12 @@ class HarvesterTest(unittest.TestCase):
         harvester = self.createHarvesterWithMockUploader('tud')
         self.logger.token='DcIdentifierHttp2'
         harvester.harvest()
-        lines = open(self.stateDir+'/tud.stats').readlines()
+        open(self.stateDir+'/tud.stats').readlines()
 
     def testHarvesterStopsIgnoringAfter100records(self):
-        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(record=record)
+        upload = Upload(recordNode=record)
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 101
@@ -355,9 +353,9 @@ class HarvesterTest(unittest.TestCase):
         self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "logInvalidData", "totalInvalidIds"], [m.name for m in observer.calledMethods])
 
     def testHarvesterIgnoringInvalidDataErrors(self):
-        record = parse_xml("""<record><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(record=record)
+        upload = Upload(recordNode=record)
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 0

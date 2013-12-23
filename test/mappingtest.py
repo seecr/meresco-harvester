@@ -1,46 +1,47 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-import unittest
-from meresco.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException, parse_xml
-import os, tempfile
+from meresco.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException
 from meresco.harvester import mapping
 from StringIO import StringIO
 from meresco.harvester.eventlogger import StreamEventLogger
 from slowfoot.wrappers import wrapp
+from seecr.test import SeecrTestCase
+from lxml.etree import XML
+from meresco.harvester.namespaces import namespaces
 
-class MappingTest(unittest.TestCase):
+class MappingTest(SeecrTestCase):
     def testInValidMapping(self):
         datamap = Mapping('mappingId')
         datamap.code ="""upload.parts['unfinishpython"""
@@ -70,7 +71,7 @@ import os
 upload.parts['record']="<somexml/>"
 logger.logError('Iets om te zeuren')
 """
-        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
@@ -83,18 +84,9 @@ logger.logError('Iets om te zeuren')
 upload.parts['record']="<somexml/>"
 logger.logError('Iets om te zeuren')
 """
-        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
         upload = datamap.createUpload(TestRepository(), record)
         self.assertEquals('<somexml/>',upload.parts['record'])
-
-    def testJoin(self):
-        metadata = parse_xml("""<metadata><dc>
-        <subject>sub1</subject>
-        <subject>sub2</subject>
-        <creator>Groeneveld</creator>
-        </dc></metadata>""").metadata
-        self.assertEquals('Groeneveld', mapping.join(metadata.dc.creator))
-        self.assertEquals('sub1; sub2', mapping.join(metadata.dc.subject))
 
     def testAssertion(self):
         datamap = Mapping('mappingId')
@@ -108,7 +100,7 @@ upload.parts['record']="<somexml/>"
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
         try:
-            record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+            record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
             datamap.createUpload(TestRepository(), record, doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
@@ -116,20 +108,20 @@ upload.parts['record']="<somexml/>"
             self.assertEquals('1 not equal 2', str(ex))
 
         try:
-            datamap.createUpload(TestRepository(), record=wrapp(''), doAsserts=True)
+            datamap.createUpload(TestRepository(), recordNode=XML('<record xmlns="%(oai)s"/>' % namespaces), doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('1 not equal 2', str(ex))
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        datamap.createUpload(TestRepository(),wrapp(''), doAsserts=False)
+        datamap.createUpload(TestRepository(), recordNode=XML('<record xmlns="%(oai)s"/>' % namespaces) , doAsserts=False)
         self.assertEquals('',stream.getvalue())
 
     def assertPart(self, expected, partname, code):
         datamap = Mapping('mappingId')
         datamap.code = code
-        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header></record>""" % namespaces)
         upload = datamap.createUpload(TestRepository(), record)
         self.assertEquals(expected,upload.parts[partname])
 
@@ -146,7 +138,7 @@ upload.parts['record']="<somexml/>"
         datamap.code = """
 skipRecord("Don't like it here.")
 """
-        record = parse_xml("""<record><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""").record
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)

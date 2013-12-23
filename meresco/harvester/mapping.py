@@ -1,45 +1,46 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 from xml.sax.saxutils import escape as xmlEscape
 from eventlogger import NilEventLogger
-from slowfoot import binderytools
-from slowfoot import wrappers
 from urlparse import urljoin
 from urllib import urlencode
 from saharaobject import SaharaObject
 from meresco.core import Observable
+from lxml.etree import XML
+from meresco.harvester.namespaces import namespaces, xpathFirst, xpath
+from meresco.components import lxmltostring
 
 
 nillogger = NilEventLogger()
@@ -68,9 +69,6 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #
 upload.parts['record'] = input.record.xml()
 """
-
-def parse_xml(aString):
-    return wrappers.wrapp(binderytools.bind_string(aString))
 
 def read(filename):
     file = open(filename)
@@ -102,12 +100,6 @@ class TestRepository(object):
 def isUrl(aString):
     return aString.startswith('http:') or aString.startswith('https:') or aString.startswith('ftp:')
 
-def join(collection):
-    result = []
-    for item in collection:
-        result.append(str(item))
-    return '; '.join(result)
-
 def doAssert(aBoolean, message="Assertion failed"):
     if not aBoolean:
         raise DataMapAssertionException(message)
@@ -116,13 +108,10 @@ def doNotAssert(aBoolean, message="This should not happen"):
     pass
 
 class Input(object):
-    def __init__(self, record=None, repository=None, log=None):
+    def __init__(self, recordNode=None, repository=None, log=None):
         self.repository = repository
         self.log = log
-        self.record = record
-        self.header = record.header if record != None else None
-        self.metadata = record.metadata if record != None else None
-        self.about = record.about if record != None else None
+        self.recordNode = recordNode
 
 class UploadDict(dict):
     def __setitem__(self, key, value):
@@ -130,13 +119,14 @@ class UploadDict(dict):
 
 
 class Upload(object):
-    def __init__(self, repository=None, record=None):
+    def __init__(self, repository=None, recordNode=None):
         self.id = ''
-        if repository != None and record != None:
-            self.id = repository.id + ':' + record.header.identifier
+        self.recordIdentifier = None if recordNode is None else xpathFirst(recordNode, 'oai:header/oai:identifier/text()')
+        if repository != None and self.recordIdentifier is not None:
+            self.id = repository.id + ':' + self.recordIdentifier
         self.fulltexturl = None
         self.parts = UploadDict()
-        self.record = record
+        self.record = recordNode
         self.repository = repository
         self.skip = False
 
@@ -156,9 +146,9 @@ class Mapping(SaharaObject, Observable):
     def setCode(self, aString):
         self.code = aString
 
-    def createUpload(self, repository, record, doAsserts=False):
-        upload = Upload(repository=repository, record=record)
-        if record.header.status == 'deleted':
+    def createUpload(self, repository, recordNode, doAsserts=False):
+        upload = Upload(repository=repository, recordNode=recordNode)
+        if xpathFirst(recordNode, 'oai:header/@status') == 'deleted':
             return upload
 
         builtinscopy = __builtins__.copy()
@@ -168,16 +158,18 @@ class Mapping(SaharaObject, Observable):
 
         try:
             exec(self.code, {
-                'input': Input(repository=repository, record=record),
+                'input': Input(repository=repository, recordNode=recordNode),
                 'upload': upload,
                 'isUrl': isUrl,
-                'join': join,
                 'urljoin': urljoin,
                 'urlencode': urlencode,
                 'doAssert': assertionMethod,
                 'logger': self.do,
                 'skipRecord': self.skipSimple,
                 'xmlEscape': xmlEscape,
+                'xpath': xpath,
+                'xpathFirst': xpathFirst,
+                'lxmltostring': lxmltostring,
                 '__builtins__': builtinscopy
             })
             upload.ensureStrings()
@@ -203,6 +195,6 @@ class Mapping(SaharaObject, Observable):
             return False
 
     def validate(self):
-        record = parse_xml("""<record><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record>""")
-        upload = self.createUpload(TestRepository(), record)
+        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record>""" % namespaces)
+        self.createUpload(TestRepository(), record)
 

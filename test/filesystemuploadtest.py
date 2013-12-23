@@ -1,50 +1,49 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-import unittest
 from meresco.harvester.filesystemuploader import FileSystemUploader
 from meresco.harvester.virtualuploader import UploaderException
 from seecr.test import CallTrace, SeecrTestCase
-from slowfoot.wrappers import wrapp
 import os, shutil
 from slowfoot import binderytools
 from tempfile import mkdtemp
-from amara.binderytools import bind_string
-from meresco.harvester.mapping import Upload, parse_xml
+from meresco.harvester.mapping import Upload
 
 from os.path import isfile, join
+from lxml.etree import XML, parse
+from meresco.harvester.namespaces import namespaces, xpathFirst
 
 class FileSystemUploaderTest(SeecrTestCase):
 
@@ -115,18 +114,17 @@ class FileSystemUploaderTest(SeecrTestCase):
         repository.id = 'repositoryId'
 
 
-        record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header status="deleted">
+        record = XML("""<record xmlns="%(oai)s"><header status="deleted">
                 <identifier>id.record</identifier>
-            </header></record>""").record
-        upload = Upload(repository=repository, record=record)
+            </header></record>""" % namespaces)
+        upload = Upload(repository=repository, recordNode=record)
 
 
         self.assertFalse(isfile(RECORD_FILENAME))
         self.uploader.delete(upload)
         self.assertTrue(isfile(RECORD_FILENAME))
 
-        self.assertEqualsWS("""<?xml version="1.0" encoding="UTF-8"?>
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+        self.assertEqualsWS("""<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
     <responseDate>VANDAAG_EN_NU</responseDate>
     <request verb="GetRecord" metadataPrefix="oai_dc" identifier="id.record">http://repository</request>
     <GetRecord>
@@ -198,34 +196,34 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
         
         self.assertTrue(isfile(recordFile))
-        xmlGetRecord = binderytools.bind_file(recordFile)
-        self.assertEquals('header', str(xmlGetRecord.OAI_PMH.GetRecord.record.header))
-        self.assertEquals('http://www.example.com', str(xmlGetRecord.OAI_PMH.request))
-        self.assertEquals('weird&strange', str(xmlGetRecord.OAI_PMH.request.metadataPrefix))
+        xmlGetRecord = parse(open(recordFile))
+        self.assertEquals('oai:id:0', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
+        self.assertEquals('http://www.example.com', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/text()'))
+        self.assertEquals('weird&strange', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/@metadataPrefix'))
         
     def testSendTwice(self):
         self.testSend()
         self.testSend()
 
 def createUpload():
-    record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>""")
+    record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>""")
     repository = CallTrace('repository')
     repository.id = 'repoId'
     
-    upload = Upload(repository=repository, record=record)
+    upload = Upload(repository=repository, recordNode=record)
     upload.id = 'id'
     return upload
     
 def createUploadWithAbout(about):
     upload = CallTrace("Upload")
-    record = parse_xml("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata>%s</record>""" % about)
+    record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>""" % about)
     
     repository = CallTrace('repository')
     repository.id = 'repoId'
     
-    upload = Upload(repository=repository, record=record)
+    upload = Upload(repository=repository, recordNode=record)
     upload.id = 'id'
     return upload
         
-RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata></record>"""
-RECORD_WITH_ABOUT = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header>header</header><metadata>text</metadata>%s</record>"""
+RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>"""
+RECORD_WITH_ABOUT = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>"""

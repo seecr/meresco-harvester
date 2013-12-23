@@ -1,35 +1,35 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
-# 
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 import os
@@ -39,6 +39,7 @@ from cgi import parse_qsl
 
 from slowfoot import binderytools
 from slowfoot.wrappers import wrapp
+from meresco.harvester.namespaces import xpathFirst, xpath
 
 
 class OaiRequestException(Exception):
@@ -48,17 +49,19 @@ class OaiRequestException(Exception):
 
 
 class OAIError(OaiRequestException):
-    def __init__(self, url, message, response):
-        OaiRequestException.__init__(self, url, message)
-        self.response = response
+    def __init__(self, url, error, errorCode):
+        OaiRequestException.__init__(self, url, error)
+        self.errorMessage = lambda: error
+        self.errorCode = lambda: errorCode
 
-    def _error(self):
-        return getattr(self.response.OAI_PMH, 'error', 'Unknown Error')
-    def errorMessage(self):
-        return str(self._error())
-    def errorCode(self):
-        return getattr(self._error(), 'code', '')
-
+    @classmethod
+    def create(cls, url, response):
+        error = xpathFirst(response, '/oai:OAI-PMH/oai:error/text()')
+        errorCode = xpathFirst(response, '/oai:OAI-PMH/oai:error/@code')
+        return cls(url=url,
+                error='Unknown error' if error is None else str(error),
+                errorCode='' if errorCode is None else str(errorCode),
+            )
 
 QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
 
@@ -79,8 +82,8 @@ class OaiRequest(object):
             if e.errorCode() != 'noRecordsMatch':
                 raise e
             response = e.response
-        listRecords = wrapp(response.OAI_PMH).ListRecords
-        return listRecords.record, getattr(listRecords, 'resumptionToken', None), str(response.OAI_PMH.responseDate).strip()
+        listRecords = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords')
+        return xpath(listRecords, 'oai:record'), xpathFirst(listRecords, 'oai:resumptionToken/text()'), xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
 
     def getRecord(self, **kwargs):
         kwargs['verb'] = 'GetRecord'
@@ -95,11 +98,10 @@ class OaiRequest(object):
         try:
             argslist = [(k,v) for k,v in args.items() if v]
             result = self._request(argslist)
-            result.OAI_PMH  # Make sure the xml is a OAI_PMH request
         except Exception, e:
             raise OaiRequestException(self._buildRequestUrl(argslist), message=repr(e))
-        if hasattr(result.OAI_PMH, 'error'):
-            raise OAIError(self._buildRequestUrl(argslist), str(result.OAI_PMH.error), result)
+        if xpathFirst(result, '/oai:OAI-PMH/oai:error') is not None:
+            raise OAIError.create(self._buildRequestUrl(argslist), result)
         return result
     
     def _request(self, argslist):
