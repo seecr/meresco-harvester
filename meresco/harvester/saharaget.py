@@ -78,7 +78,7 @@ class SaharaGet(object):
         if self.doSetActionDone:
             saharageturl = '%s/setactiondone?' % self.saharaurl + \
                 urlencode({'domainId': domainId, 'repositoryId': repositoryId})
-            binderytools.bind_uri(saharageturl)
+            urlopen(saharageturl).read()
 
     def _get(self, **kwargs):
         response = self._read(**kwargs)
