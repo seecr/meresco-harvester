@@ -48,8 +48,8 @@ class SaharaObject(object):
             
     def fill(self, saharaget, lxmlNode):
         for attr in self._attr:
-            setattr(self, attr, str(xpathFirst(lxmlNode, 'sahara:%s/text()' % attr)) or '')
+            setattr(self, attr, str(xpathFirst(lxmlNode, 'sahara:%s/text()' % attr) or ''))
         for attr in self._listattr:
-            setattr(self, attr, [str(i) for i in xpath(lxmlNode, 'sahara:%s/text()' % attr)])
+            setattr(self, attr, [str(i or '') for i in xpath(lxmlNode, 'sahara:%s/text()' % attr)])
         self._saharaget = saharaget
 
