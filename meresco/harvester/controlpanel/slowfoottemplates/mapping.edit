@@ -1,36 +1,38 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-mapping = xml.mapping
+mapping = xpathFirst(lxml, '/mapping')
+mappingId = xpathFirst(mapping, 'id/text()')
+mappingName = xpathFirst(mapping, 'name/text()') or ''
 %>
 
 <p class="head">Mapping Administration</p>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 <fieldset>
-    <legend class="subhead">Mapping (<%=mapping.name%>)</legend>
+    <legend class="subhead">Mapping (<%=mappingName%>)</legend>
 <%
 if session.get('isAdmin',''):
 %>
 
-<form method="post" action="/mapping.save/<%= mapping.id %>.mapping">
-<input type="hidden" name="id" value="<%=mapping.id%>">
+<form method="post" action="/mapping.save/<%= mappingId %>.mapping">
+<input type="hidden" name="id" value="<%=mappingId%>">
 <input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
 
 <table>
   <tr>
     <td>Name:</td>
-    <td><input type="text" name="name" value="<%=mapping.name%>"></td>
+    <td><input type="text" name="name" value="<%=mappingName%>"></td>
   </tr>
   <tr>
     <td valign="top">Description:</td>
     <td>
-      <textarea rows="5" cols="80" name="description"><%escape_html(mapping.description)%></textarea>
+      <textarea rows="5" cols="80" name="description"><%escape_html(xpathFirst(mapping, 'description/text()') or '')%></textarea>
     </td>
   </tr>
 </table>
 
 Script:<br>
-<textarea rows="30" cols="100" name="code"><%escape_html(mapping.code)%></textarea>
+<textarea rows="30" cols="100" name="code"><%escape_html(xpathFirst(mapping, 'code/text()') or '')%></textarea>
 
 <p style="text-align: right">
  <input type="submit" name="action" class="butt" value="Validate and Save" accesskey="s">
@@ -43,18 +45,18 @@ else:
 <table>
   <tr>
     <td>Name:</td>
-    <td><%=mapping.name%></td>
+    <td><%=mappingName%></td>
   </tr>
   <tr>
     <td valign="top">Description:</td>
     <td>
-      <pre><%escape_html(mapping.description)%></pre>
+      <pre><%escape_html(xpathFirst(mapping, 'description/text()') or '')%></pre>
     </td>
   </tr>
 </table>
 
 Script:<br>
-<pre><%escape_html(mapping.code)%></pre>
+<pre><%escape_html(xpathFirst(mapping, 'code/text()') or '')%></pre>
 <%
 #
 %>

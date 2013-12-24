@@ -57,4 +57,4 @@ report = analyser.analyse(repositoryNames, dateSince)
 		<td align="right"><%= report.recordsPerDay() %></td>
 		<td></td>
 	</tr>
-</table> 
+</table>

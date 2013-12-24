@@ -1,16 +1,17 @@
 <%
+from lxml.etree import tostring
 domainId = args.domainId
 originalArgs = dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId)
 args = urlencode(originalArgs)
 theUrl = url('/getStatus?%s' % args)
 loggedIn = bool(session.get('username', ''))
 
-statuses = asxml(theUrl).saharaget.GetStatus.status
+statuses = xpath(aslxml(theUrl), '/sahara:saharaget/sahara:GetStatus/sahara:status')
 
 statusUrl = url('%s/get?verb=GetStatus&%s' % (req.get_options()['internalServer'], args))
 invalid = {}
-for status in asxml(statusUrl).saharaget.GetStatus.status:
-    invalid[status.repositoryId] = status
+for status in xpath(aslxml(statusUrl), '/sahara:saharaget/sahara:GetStatus/sahara:status'):
+    invalid[xpathFirst(status, 'sahara:repositoryId/text()')] = status
 #
 %>
 <p class="head">Harvester Status</p>
@@ -37,22 +38,24 @@ if originalArgs['repositoryId']:
 <td>RSS</td>
 </tr>
 <%
-for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),str(s.repositoryId))):
+for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId').lower(), xpathFirst(s, 'repositoryId'))):
+  repositoryId = xpathFirst(status, '@repositoryId')
+  repositoryGroupId = xpathFirst(status, '@repositoryGroupId')
   total = 0
-  total += int(str(status.total) or '0')
-  errorsnr = int(str(status.totalerrors))
+  total += int(xpathFirst(status, 'sahara:total/text()') or '0')
+  errorsnr = int(xpathFirst(status, 'sahara:totalerrors/text()'))
   style = errorsnr and 'style="font-weight:bold"' or ''
 %>
 <tr>
-<td <%=style%> class="link"><%='<a href="/page/repositoryGroup.edit/%s.%s.repositoryGroup">' % (domainId, status.repositoryGroupId) if loggedIn else ''%><% escape_html(status.repositoryGroupId) %><%='</a>' if loggedIn else ''%></td>
-<td <%=style%> class="link"><%='<a href="/page/repository.edit/%s.%s.repository?%s">' % (domainId, status.repositoryId, urlencode(dict(referrerGroup=status.repositoryGroupId))) if loggedIn else ''%><% escape_html(status.repositoryId) %><%='</a>' if loggedIn else ''%></td>
-<td <%=style%>><% escape_html(status.lastHarvestDate) %></td>
-<td><% escape_html(status.total) %></td>
-<td><% escape_html(status.harvested) %>/<% escape_html(status.uploaded) %>/<% escape_html(status.deleted) %></td>
+<td <%=style%> class="link"><%='<a href="/page/repositoryGroup.edit/%s.%s.repositoryGroup">' % (domainId, repositoryGroupId) if loggedIn else ''%><% escape_html(repositoryGroupId) %><%='</a>' if loggedIn else ''%></td>
+<td <%=style%> class="link"><%='<a href="/page/repository.edit/%s.%s.repository?%s">' % (domainId, repositoryId, urlencode(dict(referrerGroup=repositoryGroupId))) if loggedIn else ''%><% escape_html(repositoryId) %><%='</a>' if loggedIn else ''%></td>
+<td <%=style%>><% escape_html(xpathFirst(status, 'sahara:lastHarvestDate/text()') or '') %></td>
+<td><% escape_html(xpathFirst(status, 'sahara:total/text()') or '') %></td>
+<td><% escape_html(xpathFirst(status, 'sahara:harvested/text()') or '') %>/<% escape_html(xpathFirst(status, 'sahara:uploaded/text()') or '') %>/<% escape_html(xpathFirst(status, 'sahara:deleted/text()') or '') %></td>
 <td class="link">
-<% 
-  nrOfValidationErrors = int(invalid[status.repositoryId].invalid) if status.repositoryId in invalid else 0
-  args = urlencode(dict(domainId=domainId, repositoryId=status.repositoryId))
+<%
+  nrOfValidationErrors = int(xpathFirst(invalid[repositoryId], 'sahara:invalid/text()') or '') if repositoryId in invalid else 0
+  args = urlencode(dict(domainId=domainId, repositoryId=repositoryId))
   if nrOfValidationErrors > 0:
 %>
     <a href="/page/invalid/?<%= args %>"><%=nrOfValidationErrors%> error<%='s' if nrOfValidationErrors != 1 else ''%></a>
@@ -65,7 +68,7 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
   if errorsnr:
 %>
     <a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>"><%=errorsnr%> error<%='s' if errorsnr != 1 else ''%></a>
-<% 
+<%
   #
 %>
 </td>
@@ -83,8 +86,8 @@ for status in sorted(statuses, key=lambda s: (str(s.repositoryGroupId).lower(),s
 <table class="event">
 <%
 for status in statuses:
-  repositoryId = status.repositoryId
-  errorsnr = int(str(status.totalerrors))
+  repositoryId = xpathFirst(status, '@repositoryId')
+  errorsnr = int(xpathFirst(status, 'sahara:totalerrors/text()') or '')
   if errorsnr:
     #
 %>
@@ -117,8 +120,8 @@ for status in statuses:
 <table class="event">
 <%
 for status in statuses:
-  repositoryId = status.repositoryId
-  invalidnr = int(str(status.invalid))
+  repositoryId = xpathFirst(status, '@repositoryId')
+  invalidnr = int(xpathFirst(status, 'sahara:invalid/text()') or '')
   if invalidnr:
     #
 %>
@@ -129,17 +132,17 @@ for status in statuses:
 <td>Nr. of validation errors: <strong><%= invalidnr %></strong></td>
 </tr>
 <%
-    if hasattr(status.recentinvalids, 'invalidId'):
-      for invalidId in status.recentinvalids.invalidId:
-        recordId = invalidId.split(":", 1)[-1]
-        newArgs = {'recordId': recordId, 'repositoryId': repositoryId, 'domainId': domainId}
-        #
+    invalidIds = xpath(status, 'sahara:recentinvalids/sahara:invalidId')
+    for invalidId in invalidIds:
+      recordId = invalidId.split(":", 1)[-1]
+      newArgs = {'recordId': recordId, 'repositoryId': repositoryId, 'domainId': domainId}
+      #
 %>
-        <tr>
-          <td class="link">
-            <a href="/page/invalidRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a>
-          </td>
-        </tr>
+      <tr>
+        <td class="link">
+          <a href="/page/invalidRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a>
+        </td>
+      </tr>
 <%
 #
 %>

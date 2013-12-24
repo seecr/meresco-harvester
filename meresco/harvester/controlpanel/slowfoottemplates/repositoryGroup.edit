@@ -1,22 +1,23 @@
 <%
 from meresco.harvester.controlpanel.tools import getDomainId
 req.req.headers_out['Cache-control'] = 'no-cache'
-group = xml.repositoryGroup
+group = xpathFirst(lxml, '/repositoryGroup')
+groupId = xpathFirst(group, 'id/text()')
 domainId = getDomainId(req.uri)
 if not session.get('isAdmin','') and session.get('domain', '') != domainId:
   raise Exception('Illegal use')
 #
-fileName = "%s.%s.repositoryGroup"%(domainId,group.id)
+fileName = "%s.%s.repositoryGroup"%(domainId,groupId)
 %>
 <p class="head">Repositorygroup Administration</p>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 <form method="post" action="/repositoryGroup.save/<%= fileName %>">
-  <fieldset><legend class="subhead">Repository Group <%= group.id %></legend>
+  <fieldset><legend class="subhead">Repository Group <%= groupId %></legend>
     <table>
-      <tr><td>Key:</td><td><input size="15"  type="hidden" name="id" value="<%=group.id%>"><%=group.id%></td></tr>
-      <tr><td>Dutch Name:</td><td><input size="50"  type="text" name="nl_name" value="<%=unicode(group.xml_xpath("""//name[@xml:lang='nl']""")[0]) %>"></td></tr>
-      <tr><td>English Name:</td><td><input size="50"  type="text" name="en_name" value="<%=unicode(group.xml_xpath("""//name[@xml:lang='en']""")[0]) %>"></td></tr>
+      <tr><td>Key:</td><td><input size="15"  type="hidden" name="id" value="<%=groupId%>"><%=groupId%></td></tr>
+      <tr><td>Dutch Name:</td><td><input size="50"  type="text" name="nl_name" value="<%=unicode(xpathFirst(group, """name[@xml:lang='nl']/text()""") or '') %>"></td></tr>
+      <tr><td>English Name:</td><td><input size="50"  type="text" name="en_name" value="<%=unicode(xpathFirst(group, """name[@xml:lang='en']/text()""") or '') %>"></td></tr>
     </table>
     <p style="text-align: right;">
      <input type="submit" name="action" class="butt" value="Save" accesskey="s">
@@ -41,13 +42,13 @@ fileName = "%s.%s.repositoryGroup"%(domainId,group.id)
 <fieldset><legend>Existing repositories</legend>
  <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
-for repositoryId in sorted(group.repositoryId, key=lambda x:str(x).lower()):
+for repositoryId in sorted(xpath(group, 'repositoryId/text()'), key=lambda x:str(x).lower()):
   #
 %>
   <tr>
    <td><%= repositoryId %></id>
    <td>
-    <a href="/page/repository.edit/<%= domainId %>.<%= repositoryId %>.repository?referrerGroup=<%= group.id %>">
+    <a href="/page/repository.edit/<%= domainId %>.<%= repositoryId %>.repository?referrerGroup=<%= groupId %>">
 	  <img src="/images/edit.png" border="0"> Edit / View
     </a>
    </td>
@@ -83,13 +84,13 @@ for repositoryId in sorted(group.repositoryId, key=lambda x:str(x).lower()):
 <fieldset><legend class="subhead">Status</legend>
  <ul>
  <li>
-  <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&repositoryGroupId=<%= group.id %>">Harvester status of this repositoryGroup</a> 
+  <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&repositoryGroupId=<%= groupId %>">Harvester status of this repositoryGroup</a>
  </li>
  <li>
-  <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryGroupId=<%= group.id %>&since=lastweek">Harvester throughput of this repositorygroup for the past 7 days.</a>
+  <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryGroupId=<%= groupId %>&since=lastweek">Harvester throughput of this repositorygroup for the past 7 days.</a>
  </li>
  <li>
-  <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryGroupId=<%= group.id %>&since=lastmonth">Harvester throughput of this repositorygroup for the past 31 days.</a>
+  <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryGroupId=<%= groupId %>&since=lastmonth">Harvester throughput of this repositorygroup for the past 31 days.</a>
  </li>
  </ul>
 </fieldset>

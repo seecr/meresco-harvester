@@ -1,55 +1,57 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-searchEngineTarget = xml.target
+searchEngineTarget = xpathFirst(lxml, '/target')
+targetId = xpathFirst(searchEngineTarget, 'id/text()')
 %>
 
 <p class="head">Target Administration</p>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
-<fieldset><legend class="subhead">Target (<%=searchEngineTarget.name%>)</legend>
+<fieldset><legend class="subhead">Target (<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>)</legend>
 <%
 if session.get('isAdmin',''):
   #
+  targetType = xpathFirst(searchEngineTarget, 'targetType/text()')
 %>
- <form method="post" action="/target.save/<%= searchEngineTarget.id %>.target">
+ <form method="post" action="/target.save/<%= targetId %>.target">
   <table>
-   <input type="hidden" name="id" value="<%=searchEngineTarget.id%>">
+   <input type="hidden" name="id" value="<%=targetId%>">
    <input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
-   <input type="hidden" name="targetType" value="<%=searchEngineTarget.targetType%>">
+   <input type="hidden" name="targetType" value="<%=xpathFirst(searchEngineTarget, 'targetType/text()') or ''%>">
    <tr>
     <td>Name:</td>
-    <td><input type="text" name="name" value="<%=searchEngineTarget.name%>"></td>
+    <td><input type="text" name="name" value="<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>"></td>
    </tr>
 
    <tr>
     <td>Type:</td>
-    <td><%= searchEngineTarget.targetType %></td>
+    <td><%= targetType %></td>
    </tr>
 
 <%
-  if searchEngineTarget.targetType == 'sruUpdate':
+  if targetType == 'sruUpdate':
 %>
    <tr>
     <td>Base URL: (without &quot;http://&quot;)</td>
-    <td><input type="text" name="baseurl" value="<%=searchEngineTarget.baseurl%>" size="30"></td>
+    <td><input type="text" name="baseurl" value="<%=xpathFirst(searchEngineTarget, 'baseurl/text()') or ''%>" size="30"></td>
    </tr>
 
    <tr>
     <td>Path:</td>
-    <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
+    <td><input type="text" name="path" value="<%=xpathFirst(searchEngineTarget, 'path/text()') or ''%>" size="30"></td>
   </tr>
 
    <tr>
     <td>Port:</td>
-    <td><input type="text" name="port" value="<%=searchEngineTarget.port%>" size="6"></td>
+    <td><input type="text" name="port" value="<%=xpathFirst(searchEngineTarget, 'port/text()') or ''%>" size="6"></td>
    </tr>
 <%
-  elif searchEngineTarget.targetType == 'filesystem':
+  elif targetType == 'filesystem':
 %>
    <tr>
     <td>Path:</td>
-    <td><input type="text" name="path" value="<%=searchEngineTarget.path%>" size="30"></td>
+    <td><input type="text" name="path" value="<%=xpathFirst(searchEngineTarget, 'path/text()') or ''%>" size="30"></td>
    </tr>
    <tr>
     <td>Wrap in OAI-Envelope:</td>
