@@ -1,4 +1,4 @@
-8## begin license ##
+## begin license ##
 #
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
@@ -32,13 +32,13 @@
 #
 ## end license ##
 
-import os
-from urllib import urlencode, urlopen
+from urllib2 import urlopen
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
-from slowfoot import binderytools
 from meresco.harvester.namespaces import xpathFirst, xpath
+from lxml.etree import parse
+from urllib import urlencode
 
 
 class OaiRequestException(Exception):
@@ -108,7 +108,7 @@ class OaiRequest(object):
         return result
 
     def _request(self, argslist):
-        return binderytools.bind_uri(self._buildRequestUrl(argslist))
+        return parse(urlopen(self._buildRequestUrl(argslist)))
 
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.
@@ -118,46 +118,4 @@ class OaiRequest(object):
         urlElements = list(self._urlElements)
         urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT] = urlencode(self._argslist + argslist)
         return urlunparse(urlElements)
-
-
-class LoggingOaiRequest(OaiRequest):
-    def __init__(self, url, tempdir):
-        OaiRequest.__init__(self, url)
-        self.tempdir = tempdir
-        self.numberfilename = os.path.join(self.tempdir, 'number')
-
-    def getNumber(self):
-        number = os.path.isfile(self.numberfilename) and int(open(self.numberfilename).read()) or 0
-        try:
-            return str(number)
-        finally:
-            number += 1
-            f = open(self.numberfilename, 'w')
-            f.write(str(number))
-            f.close()
-
-    def _request(self, argslist):
-        requesturl = binderytools.Uri.MakeUrllibSafe(self._buildRequestUrl(argslist))
-        filename = os.path.join(self.tempdir, 'oairequest.' + self.getNumber() + '.xml')
-        opened = urlopen(requesturl)
-        writefile = file(filename, 'w')
-        try:
-            for l in opened:
-                writefile.write(l)
-        finally:
-            opened.close()
-            writefile.close()
-        return binderytools.bind_file(filename)
-
-
-def loggingListRecords(url, tempdir, **kwargs):
-    """loggingListRecords(url, tempdir, **listRecordsArgs)"""
-    loair = LoggingOaiRequest(url, tempdir)
-    listRecords = loair.listRecords(**kwargs)
-    resumptionToken = str(listRecords.parentNode.resumptionToken)
-    print resumptionToken
-    while resumptionToken:
-        listRecords = loair.listRecords(resumptionToken=resumptionToken)
-        resumptionToken = str(listRecords.parentNode.resumptionToken)
-        print resumptionToken
 
