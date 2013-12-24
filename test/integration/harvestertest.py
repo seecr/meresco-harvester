@@ -78,6 +78,7 @@ class HarvesterTest(IntegrationTestCase):
 
     def tearDown(self):
         remove(self.repofilepath)
+        IntegrationTestCase.tearDown(self)
 
     def testHarvestReturnsErrorWillNotSaveState(self):
         self.saveRepository(DOMAIN, "repo_invalid_metadataPrefix", REPOSITORYGROUP, metadataPrefix="not_existing")
