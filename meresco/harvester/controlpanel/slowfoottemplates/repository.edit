@@ -42,9 +42,9 @@ repoId = xpathFirst(repoNode, 'id/text()')
     <table>
       <tr><td>Id:</td>
           <td><input type="hidden" name="repositoryGroupId" value="<%=xpathFirst(repoNode, 'repositoryGroupId/text()')%>"><input size="5"  type="hidden" name="id" value="<%=repoId%>"><%=repoId%></td></tr>
-      <tr><td>Baseurl:</td><td><input size="50" type="text" name="baseurl" value="<%=xpathFirst(repoNode, 'baseurl/text()')%>"></td></tr>
-      <tr><td>Set:</td><td><input size="50" type="text" name="set" value="<%=xpathFirst(repoNode, 'set/text()')%>"></td></tr>
-      <tr><td>Metadata Prefix:</td><td><input size="50" type="text" name="metadataPrefix" value="<%=xpathFirst(repoNode, 'metadataPrefix/text()')%>"></td></tr>
+      <tr><td>Baseurl:</td><td><input size="50" type="text" name="baseurl" value="<%=xpathFirst(repoNode, 'baseurl/text()') or ''%>"></td></tr>
+      <tr><td>Set:</td><td><input size="50" type="text" name="set" value="<%=xpathFirst(repoNode, 'set/text()') or ''%>"></td></tr>
+      <tr><td>Metadata Prefix:</td><td><input size="50" type="text" name="metadataPrefix" value="<%=xpathFirst(repoNode, 'metadataPrefix/text()') or ''%>"></td></tr>
 
       <tr>
         <td>Mapping:</td>
@@ -78,7 +78,7 @@ for name,id in [('', '')] + targets:
         </td>
       </tr>
 
-      <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=xpathFirst(repoNode, 'collection/text()')%>"></td></tr>
+      <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=xpathFirst(repoNode, 'collection/text()') or ''%>"></td></tr>
       <tr><td>Max. validation errors:</td><td><input size="50" type="text" name="maximumIgnore" value="<%=xpathFirst(repoNode, 'maximumIgnore/text()') or '0'%>"></td></tr>
 
 

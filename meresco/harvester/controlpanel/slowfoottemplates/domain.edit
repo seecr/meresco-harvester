@@ -1,7 +1,8 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-domain = xml.domain
-if not session.get('isAdmin','') and session.get('domain', '') != domain.id:
+domain = xpathFirst(lxml, '/domain')
+domainId = xpathFirst(domain, 'id/text()')
+if not session.get('isAdmin','') and session.get('domain', '') != domainId:
   raise Exception('Illegal use')
 #
 isAdmin = session.get('isAdmin', '')
@@ -11,12 +12,12 @@ isAdmin = session.get('isAdmin', '')
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
-<form method="post" action="/domain.save/<%= domain.id %>.domain">
- <fieldset><legend class="subhead">Domain: <%= domain.id %></legend>
+<form method="post" action="/domain.save/<%= domainId %>.domain">
+ <fieldset><legend class="subhead">Domain: <%= domainId %></legend>
   <table>
-   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domain.id%>"><%=domain.id%></td></tr>
+   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domainId%>"><%=domainId%></td></tr>
    <tr>
-    <td>Description:</td><td><input size="60" type="text" name="description" value="<%=domain.description%>"></td>
+    <td>Description:</td><td><input size="60" type="text" name="description" value="<%=xpathFirst(domain, 'description/text()') or ''%>"></td>
     <td><input type="submit" name="action" class="butt" value="Save" accesskey="s"></td>
    </tr>
   </table>
@@ -26,7 +27,7 @@ isAdmin = session.get('isAdmin', '')
 
 
 <fieldset><legend class="subhead">Repository Groups</legend>
- <form action='/repositoryGroup.new/<%= domain.id %>.domain' method='post'>
+ <form action='/repositoryGroup.new/<%= domainId %>.domain' method='post'>
   <fieldset><legend>Create new group</legend>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
@@ -41,20 +42,20 @@ isAdmin = session.get('isAdmin', '')
  <fieldset><legend>Existing groups (id)</legend>
   <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
-for groupId in sorted(domain.repositoryGroupId, key=lambda x:str(x).lower()):
+for groupId in sorted(xpath(domain, 'repositoryGroupId/text()'), key=lambda x:str(x).lower()):
   #
-  name = asxml(url('/' + domain.id + '.' + groupId + '.repositoryGroup')).repositoryGroup.name
+  name = xpathFirst(aslxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')), '/repositoryGroup/name/text()') or ''
 %>
    <tr>
     <td width="60%"><%=name%> (<%= groupId %>)</td>
     <td>
-     <a href="/page/repositoryGroup.edit/<%= domain.id %>.<%= groupId %>.repositoryGroup">
+     <a href="/page/repositoryGroup.edit/<%= domainId %>.<%= groupId %>.repositoryGroup">
       <img src="/images/edit.png" border="0"> Edit / View
      </a>
     </td>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=repositoryGroup&id=' + groupId,
+       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=repositoryGroup&id=' + groupId,
        'filename':name
       })%>">
        <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
@@ -75,7 +76,7 @@ for groupId in sorted(domain.repositoryGroupId, key=lambda x:str(x).lower()):
 <%
 if isAdmin:
 %>
- <form action='/target.new/<%= domain.id %>.domain' method='post'>
+ <form action='/target.new/<%= domainId %>.domain' method='post'>
   <fieldset><legend>Create new target</legend>
    <table width="320" border="0" cellspacing="4" cellpadding="0">
     <tr>
@@ -101,16 +102,14 @@ if isAdmin:
  <fieldset><legend>Existing targets</legend>
   <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
-def idAndName(id):
-  return id, asxml(url('/xml/'+id+'.target')).target.name
-
-for id,name in map(idAndName, domain.targetId):
+for targetId in xpath(domain, 'targetId/text()'):
   #
+  name = xpathFirst(aslxml(url('/xml/'+targetId+'.target')), '/target/name/text()')
 %>
    <tr>
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/target.edit/<%=id%>.target?referrerDomain=<%=domain.id%>">
+     <a href="/page/target.edit/<%=targetId%>.target?referrerDomain=<%=domainId%>">
       <img src="/images/edit.png" border="0"> <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -119,7 +118,7 @@ for id,name in map(idAndName, domain.targetId):
 %>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=target&id=' + id,
+       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=target&id=' + targetId,
        'filename':name
        })%>">
       <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
@@ -144,7 +143,7 @@ for id,name in map(idAndName, domain.targetId):
 <%
 if isAdmin:
 %>
- <form action='/mapping.new/<%= domain.id %>.domain' method='post'>
+ <form action='/mapping.new/<%= domainId %>.domain' method='post'>
   <fieldset><legend>Create new mapping</legend>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
@@ -162,15 +161,16 @@ if isAdmin:
   <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
 def idAndNameForMapping(id):
-  return id, asxml(url('/xml/'+id+'.mapping')).mapping.name
+  return id,
 
-for id,name in map(idAndNameForMapping, domain.mappingId):
+for mappingId in xpath(domain, 'mappingId/text()'):
   #
+  name = xpathFirst(aslxml(url('/xml/'+mappingId+'.mapping')), '/mapping/name/text()')
 %>
    <tr>
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/mapping.edit/<%=id%>.mapping?referrerDomain=<%=domain.id%>">
+     <a href="/page/mapping.edit/<%=mappingId%>.mapping?referrerDomain=<%=domainId%>">
       <img src="/images/edit.png" border="0"> <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -179,7 +179,7 @@ for id,name in map(idAndNameForMapping, domain.mappingId):
 %>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domain.id + '.domain?kind=mapping&id=' + id,
+       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=mapping&id=' + mappingId,
        'filename':name
        })%>">
       <img src="/images/delete.jpg" width="14" height="14" border="0"> Delete
@@ -189,7 +189,7 @@ for id,name in map(idAndNameForMapping, domain.mappingId):
   #
 %>
     <td>
-     <a href="/page/testmapping/?mappingId=<%=id%>&referrerDomain=<%=domain.id%>">
+     <a href="/page/testmapping/?mappingId=<%=mappingId%>&referrerDomain=<%=domainId%>">
       <img src="/images/exec.png" border="0"> Test
      </a>
     </td>
@@ -208,13 +208,13 @@ for id,name in map(idAndNameForMapping, domain.mappingId):
 <fieldset><legend class="subhead">Status</legend>
 <ul>
  <li>
- <a href="/page/showHarvesterStatus/show?domainId=<%= domain.id %>">Harvester status of this domain</a>
+ <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>">Harvester status of this domain</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domain.id %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domain.id %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
  </li>
 </ul>
 </fieldset>
