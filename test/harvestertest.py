@@ -306,7 +306,7 @@ class HarvesterTest(unittest.TestCase):
     def testUploadRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
-        upload = Upload(recordNode=record)
+        upload = Upload(repository=None, recordNode=record)
         upload.id = 'tud:mockid'
         self.mapper.createUpload = lambda repository,record: upload
         harvester.uploadRecord(record)
@@ -316,7 +316,7 @@ class HarvesterTest(unittest.TestCase):
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
-        upload = Upload(recordNode=record)
+        upload = Upload(repository=None, recordNode=record)
         upload.id = "tud:mockid"
         upload.skip = True
         self.mapper.createUpload = lambda repository,record: upload
@@ -341,7 +341,7 @@ class HarvesterTest(unittest.TestCase):
     def testHarvesterStopsIgnoringAfter100records(self):
         record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(recordNode=record)
+        upload = Upload(repository=None, recordNode=record)
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 101
@@ -355,7 +355,7 @@ class HarvesterTest(unittest.TestCase):
     def testHarvesterIgnoringInvalidDataErrors(self):
         record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(recordNode=record)
+        upload = Upload(repository=None, recordNode=record)
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 0

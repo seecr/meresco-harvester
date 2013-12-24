@@ -121,10 +121,13 @@ class UploadDict(dict):
 
 
 class Upload(object):
-    def __init__(self, repository=None, recordNode=None):
+    def __init__(self, repository, recordNode=None):
         self.id = ''
-        self.recordIdentifier = None if recordNode is None else xpathFirst(recordNode, 'oai:header/oai:identifier/text()')
-        if repository != None and self.recordIdentifier is not None:
+        self.recordIdentifier = None
+        if recordNode is not None:
+            self.isDeleted = xpathFirst(recordNode, 'oai:header/@status') == 'deleted'
+            self.recordIdentifier = xpathFirst(recordNode, 'oai:header/oai:identifier/text()')
+        if repository is not None and self.recordIdentifier is not None:
             self.id = repository.id + ':' + self.recordIdentifier
         self.fulltexturl = None
         self.parts = UploadDict()
@@ -150,7 +153,7 @@ class Mapping(SaharaObject, Observable):
 
     def createUpload(self, repository, recordNode, doAsserts=False):
         upload = Upload(repository=repository, recordNode=recordNode)
-        if xpathFirst(recordNode, 'oai:header/@status') == 'deleted':
+        if upload.isDeleted:
             return upload
 
         builtinscopy = __builtins__.copy()
