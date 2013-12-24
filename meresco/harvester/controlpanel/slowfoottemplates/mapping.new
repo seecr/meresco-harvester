@@ -1,8 +1,5 @@
 <%
-from slowfoot import binderytools
-execcode = '''upload.parts['metadata'] = input.metadata.xml()
-
-upload.parts['header'] = input.header.xml()
+execcode = '''upload.parts['record'] = lxmltostring(input.recordNode)
 
 upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
   <upload><id>%(id)s</id></upload>
@@ -25,7 +22,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
   'repository': input.repository.id,
   'metadataPrefix': input.repository.metadataPrefix,
   'collection': input.repository.collection,
-  'recordId': input.header.identifier,
+  'recordId': upload.recordIdentifier,
 }.items()])
 '''
 description = """This mapping is what has become the default mapping for most Meresco based projects.

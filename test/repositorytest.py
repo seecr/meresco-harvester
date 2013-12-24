@@ -108,8 +108,7 @@ class RepositoryTest(unittest.TestCase):
         self.repo.action = ''
         self.repo.complete = 'true'
         action = CallTrace('Action')
-        oaiError = OAIError('url', 'resumptionToken expired', 'amaraResponse')
-        oaiError.errorCode = lambda :'badResumptionToken'
+        oaiError = OAIError('url', 'resumptionToken expired', 'badResumptionToken', 'lxmlResponse')
         action.exceptions['do'] = oaiError
         self.repo._createAction = lambda **kwargs: action
         message, again = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)

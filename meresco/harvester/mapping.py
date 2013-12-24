@@ -48,12 +48,14 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #Map template
 #
 #Input
-# input.record = OAI Record object
+# input.recordNode = OAI Record lxmlNode
 # input.repository = Repository object
 #
 #Available Methods:
 # isUrl(aString) determines if aString is a url.
-# join(collection) joins items in a collection seperated by '; '
+# lxmltostring(lxmlNode) -> returns the string representation of lxmlNode
+# xpath(lxmlNode, path) -> returns a list with the xpath result.
+# xpathFirst(lxmlNode, path) -> returns the first result of the xpath or None
 # logger.logLine(event, comments, [id=...]) Logs a line.
 # doAssert(expression, comments) perform an assertion. The comments are optional
 # urljoin(baseurl, path) Joins the base url with the path.
@@ -67,7 +69,7 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #     urlencode([('a','b'), ('c','d')]) --> 'a=b&c=d'
 # skipRecord( comments ) Skip a record for a certain reason.
 #
-upload.parts['record'] = input.record.xml()
+upload.parts['record'] = lxmltostring(input.recordNode)
 """
 
 def read(filename):

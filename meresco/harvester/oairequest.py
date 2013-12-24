@@ -38,9 +38,7 @@ from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
 from slowfoot import binderytools
-from slowfoot.wrappers import wrapp
 from meresco.harvester.namespaces import xpathFirst, xpath
-from meresco.components import lxmltostring
 
 
 class OaiRequestException(Exception):
