@@ -75,7 +75,7 @@ logger.logError('Iets om te zeuren')
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
-        upload = datamap.createUpload(TestRepository(), record)
+        datamap.createUpload(TestRepository(), record)
         self.assertEquals('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
 
     def testNoLogging(self):

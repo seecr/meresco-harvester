@@ -4,9 +4,9 @@
   <name>default</name>
   <description>This mapping is what has become the default mapping for most Meresco based projects.
 </description>
-  <code>upload.parts['metadata'] = input.metadata.xml()
+  <code>upload.parts['metadata'] = lxmltostring(xpathFirst(input.recordNode, 'oai:metadata'))
 
-upload.parts['header'] = input.header.xml()
+upload.parts['header'] = lxmltostring(xpathFirst(input.recordNode, 'oai:header'))
 
 upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester/meta"&gt;
   &lt;upload&gt;&lt;id&gt;%(id)s&lt;/id&gt;&lt;/upload&gt;
@@ -29,7 +29,7 @@ upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester
   'repository': input.repository.id,
   'metadataPrefix': input.repository.metadataPrefix,
   'collection': input.repository.collection,
-  'recordId': input.header.identifier,
+  'recordId': upload.recordIdentifier,
 }.items()])
 </code>
 </mapping>
