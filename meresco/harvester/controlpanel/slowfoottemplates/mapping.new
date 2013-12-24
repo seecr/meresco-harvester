@@ -1,4 +1,5 @@
 <%
+from slowfoot import binderytools
 execcode = '''upload.parts['record'] = lxmltostring(input.recordNode)
 
 upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
