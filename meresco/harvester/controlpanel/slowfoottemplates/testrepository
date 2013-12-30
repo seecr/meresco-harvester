@@ -1,10 +1,11 @@
 <%
-repository = xml.repository
-inputquery = { 'verb':'ListRecords', 'metadataPrefix':repository.metadataPrefix }
-if repository.set: 
-  inputquery['set']=repository.set
-inputurl = repository.baseurl + '?' + urlencode(inputquery)
+repository = lxml.getroot()
+inputquery = { 'verb':'ListRecords', 'metadataPrefix': xpathFirst(repository, 'metadataPrefix/text()') }
+repositorySet = xpathFirst(repository, 'set/text()')
+if repositorySet is not None: 
+  inputquery['set']=repositorySet
+inputurl = xpathFirst(repository, 'baseurl/text()') + '?' + urlencode(inputquery)
 domainId = args.name.split('.')[0]
 
-redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId':repository.mappingId, 'inputurl':inputurl}))
+redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId':xpathFirst(repository, 'mappingId/text()'), 'inputurl':inputurl}))
 %>
