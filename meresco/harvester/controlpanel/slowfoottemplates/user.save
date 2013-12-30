@@ -1,26 +1,31 @@
 <%
-users = asxml(url('/users.xml')).users
-from meresco.harvester.controlpanel.tools import getElements
-from slowfoot.wrappers import wrapp
+users = xpath(aslxml(url('/users.xml')), '/users/child::*')
+ATTRS = ['name', 'organization', 'telephone', 'email', 'domain', 'notes']
 f = asform(input)
 target(filepath('users.xml'))
 %><?xml version ="1.0" encoding="UTF-8"?>
 <users>
 <%
-for user in getElements(users):
-  username = user.localName
-  user = wrapp(user)
+for user in users:
+  username = user.tag.split('}')[-1]
+  userdict = {}
+  for attr in ATTRS:
+    value = xpathFirst(user, '%s/text()' % attr)
+    userdict[attr] = '' if value is None else value
+
   if username == f.user:
-    user = f
+    for attr in ATTRS:
+      userdict[attr] = f.get(attr, '')
   #
 %>
 <<%escape_xml(username)%>>
-  <name><%escape_xml(user.name)%></name>
-  <organization><%escape_xml(user.organization)%></organization>
-  <telephone><%escape_xml(user.telephone)%></telephone>
-  <email><%escape_xml(user.email)%></email>
-  <domain><%escape_xml(user.domain)%></domain>
-  <notes><%escape_xml(user.notes)%></notes>
+<%
+  for attr in ATTRS:
+    #
+%>    <<%=attr%>><%escape_xml(userdict[attr])%></<%=attr%>>
+<%
+  # end for attr in ..
+%>
 </<%escape_xml(username)%>>
 <%
 #
