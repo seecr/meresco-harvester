@@ -1,8 +1,8 @@
 <%
-from slowfoot import binderytools
-from slowfoot.account import createAccount,AccountException
+from slowfoot.account import createAccount, AccountException
+from lxml.etree import XML
 f = asform(input)
-users = xml.users
+usersNode = lxml.getroot()
 
 passwdFile = req.get_options()['usersfile']
 
@@ -16,10 +16,10 @@ if newusername:
   else:
     try:
       user = createAccount(newusername, str(f.password1), passwdFile)
-      newuser = getattr(binderytools.bind_string("<%s><domain>%s</domain></%s>"%(newusername,f.domain,newusername)),newusername)
-      users.xml_append(newuser)
+      newuser = XML("<%s><domain>%s</domain></%s>" % (newusername, f.domain, newusername))
+      usersNode.append(newuser)
       target(filepath('users.xml'))
-%><%=xml.xml()%><%
+%><%=lxmltostring(lxml, pretty_print=True, xml_declaration=True)%><%
     except AccountException, e:
       error = str(e)
 else:
