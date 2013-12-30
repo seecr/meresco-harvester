@@ -1,9 +1,9 @@
 <%
-domain = xml.domain
+domain = lxml.getroot()
 kind = args.kind
 kindInXml = kind + 'Id' 
 deleteId = args.id
-domainId = domain.id
+domainId = xpathFirst(domain, 'id/text()')
 
 
 fileName = deleteId + '.' + kind
@@ -11,19 +11,10 @@ if kind == 'repositoryGroup':
 	fileName = domainId + '.' + fileName
 deletefile(filepath(fileName))
 
+deleteObject = xpathFirst(domain, '%s[text()="%s"]' % (kindInXml, deleteId))
+domain.remove(deleteObject)
+
 target(filepath(domainId + '.domain'))
-%><?xml version="1.0"?>
-<domain>
-<%
-for child in domain.xml_children:
-  if child.__class__ == unicode:
-    req.write(child)
-  else:
-    if (child.nodeName != kindInXml) or (unicode(child) != deleteId):
-      req.write(child.xml())
-#
-%>
-</domain>
-<%
+print >> req, lxmltostring(domain, pretty_print=True, xml_declaration=True)
 redirect('/page/domain.edit/' + domainId + '.domain')
 %>
