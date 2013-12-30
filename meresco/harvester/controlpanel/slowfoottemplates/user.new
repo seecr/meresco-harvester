@@ -1,6 +1,5 @@
 <%
 from slowfoot.account import createAccount, AccountException
-from lxml.etree import XML
 f = asform(input)
 usersNode = lxml.getroot()
 

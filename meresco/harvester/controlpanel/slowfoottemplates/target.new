@@ -1,21 +1,19 @@
 <%
-from slowfoot import binderytools
-
 f = asform(input)
 name = f.name
-domain = xml
+domain = lxml.getroot()
+domainId = xpathFirst(domain, 'id/text()')
 
 if name == '':
-  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=No%20name%20given.')
+  redirect('/page/domain.edit/' + domainId + '.domain?error=No%20name%20given.')
 else:
   targetid = uuid()
-  new_target = binderytools.bind_string("<targetId>%s</targetId>"%targetid).targetId
+  new_target = XML("<targetId>%s</targetId>" % targetid)
 
-  domain.domain.xml_append(new_target)
+  domain.append(new_target)
 
-  target(filepath(domain.domain.id + '.domain'))
-  req.write(domain.xml())
-
+  target(filepath(domainId + '.domain'))
+  req.write(lxmltostring(domain, pretty_print=True, xml_declaration=True))
 
   target(filepath(targetid + ".target"))
 %><?xml version="1.0"?>
@@ -25,6 +23,6 @@ else:
   <targetType><%=f.targetType%></targetType>
 </target>
 <%
-  redirect(uri(path='/page/target.edit/' + targetid + '.target', query={'referrerDomain':domain.domain.id}))
+  redirect(uri(path='/page/target.edit/' + targetid + '.target', query={'referrerDomain':domainId}))
 #
 %>
