@@ -1,6 +1,8 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
 searchEngineTarget = xpathFirst(lxml, '/target')
+def targetAttr(attr):
+  return xpathFirst(searchEngineTarget, '%s/text()' % attr) or ''
 targetId = xpathFirst(searchEngineTarget, 'id/text()')
 %>
 
@@ -55,14 +57,14 @@ if session.get('isAdmin',''):
    </tr>
    <tr>
     <td>Wrap in OAI-Envelope:</td>
-    <td><input type="checkbox" name="oaiEnvelope" value="true" <%= searchEngineTarget.oaiEnvelope == 'true' and 'checked'%>></td>
+    <td><input type="checkbox" name="oaiEnvelope" value="true" <%= targetAttr('oaiEnvelope') == 'true' and 'checked'%>></td>
    </tr>
 <%
-  elif searchEngineTarget.targetType == 'composite':
-    targetIds = asxml(url('/%s.domain' % args.referrerDomain)).domain.targetId
-    targetIds = filter(lambda t: t != searchEngineTarget.id, targetIds)
-    targetName = lambda id: asxml(url('/xml/'+id+'.target')).target.name
-    selected = lambda id: id in searchEngineTarget.delegate and 'selected' or ''
+  elif targetType == 'composite':
+    targetIds = xpath(aslxml(url('/%s.domain' % args.referrerDomain)).getroot(), 'targetId/text()')
+    targetIds = filter(lambda t: t != targetId, targetIds)
+    targetName = lambda id: xpathFirst(aslxml(url('/xml/'+id+'.target')).getroot(), 'name/text()')
+    selected = lambda id: id in xpath(searchEngineTarget, 'delegate/text()') and 'selected' or ''
 %>
    <tr>
     <td style="vertical-align:top">Targets (hold CTRL to select multiple targets):</td>
@@ -90,52 +92,52 @@ else:
  <table>
   <tr>
     <td>Name:</td>
-    <td><%=searchEngineTarget.name%></td>
+    <td><%=targetAttr('name')%></td>
   </tr>
 
   <tr>
     <td>Type:</td>
-    <td><%= searchEngineTarget.targetType %></td>
+    <td><%=targetType%></td>
   </tr>
 
 <%
-  if searchEngineTarget.targetType == 'sruUpdate':
+  if targetType == 'sruUpdate':
 %>
   <tr>
     <td>Base URL:</td>
-    <td><%=searchEngineTarget.baseurl%></td>
+    <td><%=targetAttr('baseurl')%></td>
   </tr>
 
   <tr>
     <td>Path:</td>
-    <td><%=searchEngineTarget.path%></td>
+    <td><%=targetAttr('path')%></td>
   </tr>
 
   <tr>
     <td>Port:</td>
-    <td><%=searchEngineTarget.port%></td>
+    <td><%=targetAttr('port')%></td>
   </tr>
 <%
-  elif searchEngineTarget.targetType == 'filesystem':
+  elif targetType == 'filesystem':
 %>
   <tr>
     <td>Path:</td>
-    <td><%=searchEngineTarget.path%></td>
+    <td><%=targetAttr('path')%></td>
   </tr>
   <tr>
     <td>Wrap in OAI-Envelope:</td>
-    <td><%=searchEngineTarget.oaiEnvelope and 'true' or 'false'%></td>
+    <td><%='true' if targetAttr('oaiEnvelope') else 'false'%></td>
   </tr>
 <%
-  elif searchEngineTarget.targetType == 'composite':
+  elif targetType == 'composite':
     #
 %>
   <tr>
     <td>Targets:</td><td>&nbsp;</td>
   </tr>
 <%
-    for id in searchEngineTarget.delegate:
-      targetName = asxml(url('/xml/'+id+'.target')).target.name
+    for id in xpath(searchEngineTarget, 'delegate/text()'):
+      targetName = xpathFirst(aslxml(url('/xml/'+id+'.target')).getroot(), 'name/text()')
 %>
   <tr>
     <td><%escape_html(targetName)%></td>
