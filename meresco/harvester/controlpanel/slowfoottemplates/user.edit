@@ -1,6 +1,12 @@
 <%
 req.req.headers_out['Cache-Control'] = 'no-cache'
-
+username = args.user
+userNode = xpathFirst(lxml, '/users/%s' % username)
+def userAttr(attr):
+  return xpathFirst(userNode, '%s/text()' % attr) or ''
+if userNode is None:
+  redirect('/page/domains/show?' + urlencode({'error':'User %s does not exist' % username}))
+#
 %>
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
@@ -8,42 +14,41 @@ req.req.headers_out['Cache-Control'] = 'no-cache'
 
 <form method="post" action="/user.save">
 <%
-user = getattr(xml.users, str(args.user))
 %>
   <fieldset>
-    <legend class="subhead">User: <%=user.name%></legend>
-	<input type="hidden" name="user" value="<%=user.localName%>">
+    <legend class="subhead">User: <%=userAttr('name')%></legend>
+	<input type="hidden" name="user" value="<%=username%>">
     <table>
       <tr>
         <td>Full name:</td>
-        <td><input type="text" name="name" value="<%escape_html(user.name)%>"></td>
+        <td><input type="text" name="name" value="<%escape_html(userAttr('name'))%>"></td>
       </tr>
       <tr>
         <td>Username:</td>
-        <td><%escape_html(user.localName)%></td>
+        <td><%escape_html(username)%></td>
       </tr>
       <tr>
         <td>Organization:</td>
-        <td><input type="text" name="organization" value="<%escape_html(user.organization)%>"></td>
+        <td><input type="text" name="organization" value="<%escape_html(userAttr('organization'))%>"></td>
       </tr>
       <tr>
         <td>E-mail:</td>
-        <td><input type="text" name="email" value="<%escape_html(user.email)%>"></td>
+        <td><input type="text" name="email" value="<%escape_html(userAttr('email'))%>"></td>
       </tr>
       <tr>
         <td>Telephone:</td>
-        <td><input type="text" name="telephone" value="<%escape_html(user.telephone)%>"></td>
+        <td><input type="text" name="telephone" value="<%escape_html(userAttr('telephone'))%>"></td>
       </tr>
       <tr>
         <td>Domain:</td>
-        <td><input type="text" name="domain" value="<%=user.domain%>"></td>
+        <td><input type="text" name="domain" value="<%=userAttr('domain')%>"></td>
       </tr>
       <tr>
         <td>Notes:</td>
         <td>&nbsp;</td>
       </tr>
       <tr>
-        <td colspan="2"><textarea name="notes" rows="5" cols="60"><% escape_html(user.notes) %></textarea></td>
+        <td colspan="2"><textarea name="notes" rows="5" cols="60"><% escape_html(userAttr('notes')) %></textarea></td>
       </tr>
     </table>
     <p style="text-align: right">
