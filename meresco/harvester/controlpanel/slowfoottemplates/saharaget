@@ -12,8 +12,8 @@ req.headers_out['Last-modified'] = rfc822.formatdate(now)
 errorCode = ''
 
 verb = args.verb
-domain = asxml(url('/' + args.domainId + '.domain')).domain
-if args.domainId != domain.id:
+domainId = xpathFirst(aslxml(url('/' + args.domainId + '.domain')).getroot(), 'id/text()')
+if args.domainId != domainId:
 	errorCode = 'badDomain'
 
 verbs={
