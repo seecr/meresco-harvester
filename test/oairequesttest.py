@@ -102,10 +102,3 @@ class OaiRequestTest(unittest.TestCase):
 
         oaiRequest = OaiRequest("http://x.y.z/oai?apikey=xyz123")
         self.assertEquals("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
-
-
-    def xtest_LIVE_Retrieve(self):
-        request = OaiRequest('http://library.wur.nl/oai')
-        amarabinding = request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
-        amarabinding.OAI_PMH
-

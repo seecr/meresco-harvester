@@ -35,6 +35,7 @@
 from glob import glob
 from sys import path
 from os.path import abspath, dirname, join
+from lxml.etree import XML
 
 mydir = dirname(abspath(__file__))
 
@@ -50,17 +51,17 @@ from re import compile
 from traceback import format_exc
 from xml.sax.saxutils import escape as escapeXml
 
-from amara.binderytools import bind_string
-
 from weightless.io import Reactor
 from weightless.core import compose, be
 
+from meresco.components import lxmltostring
 from meresco.components.http import ObservableHttpServer, PathFilter, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
-from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML, escapeXml
+from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML
 from meresco.components import StorageComponent
 from meresco.oai import OaiPmh, OaiJazz
 from meresco.core import Observable
+from meresco.harvester.namespaces import xpathFirst
 
 from mocksaharaget import MockSaharaGet
 
@@ -79,19 +80,20 @@ class Dump(object):
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml; charset=utf-8\r\n', ''])
         try:
-            updateRequest = bind_string(Body).updateRequest
-            recordId = str(updateRequest.recordIdentifier)
-            if self._allInvalid and str(updateRequest.action) == "info:srw/action/1/replace":
+            updateRequest = XML(Body)
+            recordId = xpathFirst(updateRequest, 'ucp:recordIdentifier/text()')
+            action = xpathFirst(updateRequest, 'ucp:action/text()')
+            if self._allInvalid and action == "info:srw/action/1/replace":
                 if 'oai:record:02' in recordId:
                     raise InvalidDataException()
                 raise InvalidDataException('Invalid data')
             if recordId in self._raiseExceptionOnIds:
                 raise Exception("ERROR")
             self._number +=1
-            filename = '%05d_%s.updateRequest' %(self._number, str(updateRequest.action).rsplit('/')[-1])
+            filename = '%05d_%s.updateRequest' %(self._number, action.rsplit('/')[-1])
             with open(join(self._dumpdir, filename), 'w') as f:
                 stdout.flush()
-                updateRequest.xml(f)
+                f.write(lxmltostring(updateRequest, pretty_print=True))
             answer = RESPONSE_XML % {
                 "operationStatus": "success",
                 "diagnostics": ""}

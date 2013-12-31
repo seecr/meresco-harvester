@@ -1,44 +1,45 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
 #
-#    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
-#    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for
-#    SURFnet by:
-#        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
-#    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
-#    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
-#       http://www.kennisnetictopschool.nl
-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-#    This file is part of "Meresco Harvester"
+# Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
+# Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
+# Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+# Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+# Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
 #
-#    "Meresco Harvester" is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This file is part of "Meresco Harvester"
 #
-#    "Meresco Harvester" is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with "Meresco Harvester"; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
 
 from seecr.test import SeecrTestCase, CallTrace
-from amara.binderytools import bind_string
-from lxml.etree import parse
+from lxml.etree import parse, XML
 from StringIO import StringIO
 
-from meresco.harvester.sruupdateuploader import SruUpdateUploader, UploaderException, InvalidComponentException, InvalidDataException
+from meresco.harvester.sruupdateuploader import SruUpdateUploader, InvalidComponentException, InvalidDataException
 from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
+from meresco.harvester.namespaces import xpathFirst, xpath
 
 class SruUpdateUploaderTest(SeecrTestCase):
     def setUp(self):
@@ -56,21 +57,21 @@ class SruUpdateUploaderTest(SeecrTestCase):
             'meta': '<meta>....</meta>',
             'otherdata': '<stupidXML>abcdefgh'
         }
-        
+
     def testOne(self):
         self.uploader.send(self.upload)
         self.assertEquals(1, len(self.sentData))
 
-        updateRequest = bind_string(self.sentData[0]).updateRequest
-        self.assertEquals('some:id', str(updateRequest.recordIdentifier))
-        self.assertEquals('info:srw/action/1/replace', str(updateRequest.action))
-        document = updateRequest.record.recordData.document
-        self.assertEquals(2, len(document.part))
+        updateRequest = XML(self.sentData[0])
+        self.assertEquals('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
+        self.assertEquals('info:srw/action/1/replace', xpathFirst(updateRequest, 'ucp:action/text()'))
+        documentParts = xpath(updateRequest, 'srw:record/srw:recordData/document:document/document:part')
+        self.assertEquals(2, len(documentParts))
 
         self.uploader.delete(self.upload)
-        updateRequest = bind_string(self.sentData[1]).updateRequest
-        self.assertEquals('some:id', str(updateRequest.recordIdentifier))
-        self.assertEquals('info:srw/action/1/delete', str(updateRequest.action))
+        updateRequest = XML(self.sentData[1])
+        self.assertEquals('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
+        self.assertEquals('info:srw/action/1/delete', xpathFirst(updateRequest, 'ucp:action/text()'))
 
     def testException(self):
         possibleSRUError="""<?xml version="1.0" encoding="UTF-8"?>
@@ -136,7 +137,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
         uploader._sendData(1, "HOW IS EVERYTHING")
-        
+
         self.assertEquals(0, len(answers))
         self.assertEquals(2, len(datas))
         self.assertEquals(1, len(eventLogger.calledMethods))
@@ -145,14 +146,14 @@ class SruUpdateUploaderTest(SeecrTestCase):
     def testRetryOnServiceUnavailableFailsAfter3Times(self):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
-        
+
         answers = [(SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
         def sendDataToRemote(data):
             answer = answers.pop(0)
             datas.append(data)
             return answer
-            
+
         uploader._sendDataToRemote = sendDataToRemote
         exception = None
         try:
@@ -197,7 +198,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.assertEquals("1.0", version)
         self.assertEquals("success", operationStatus)
         self.assertEquals(None, diagnostics)
-        
+
 SUCCES_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
