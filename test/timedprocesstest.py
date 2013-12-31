@@ -48,7 +48,7 @@ sys.exit(123)""")
             fd.close()
 
         tp = TimedProcess()
-        process = tp.executeScript(['python2.6', self.tempfile], 10)
+        process = tp.executeScript(['python', self.tempfile], 10)
         while process.poll() is None:
             sleep(0.1)
         exitstatus = tp.stopScript(process)
