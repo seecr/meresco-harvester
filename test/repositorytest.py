@@ -36,8 +36,6 @@ from meresco.harvester.eventlogger import NilEventLogger
 from meresco.harvester.repository import Repository
 from meresco.harvester.action import Action, DONE, ActionException
 from meresco.harvester.oairequest import OAIError
-from slowfoot.wrappers import wrapp
-from slowfoot.binderytools import bind_string
 from meresco.harvester.timeslot import Wildcard
 from seecr.test import CallTrace
 import tempfile, os, shutil
@@ -50,8 +48,6 @@ class RepositoryTest(unittest.TestCase):
         self.repo = Repository('domainId','rep')
         self.repo._saharaget = self
         self.logAndStateDir = os.path.join(tempfile.gettempdir(),'repositorytest')
-        self._read = self.mock_read
-        self.mock_read_args = []
         os.path.isdir(self.logAndStateDir) or os.mkdir(self.logAndStateDir)
 
 
@@ -200,12 +196,6 @@ class RepositoryTest(unittest.TestCase):
     def repositoryActionDone(self, domainId, repositoryId):
         self.mock_repositoryActionDone_domainId = domainId
         self.mock_repositoryActionDone_repositoryId = repositoryId
-
-    def mock_read(self, **kwargs):
-        self.mock_read_args.append(kwargs)
-        verb = kwargs['verb']
-        if verb == 'GetRepository':
-            return wrapp(bind_string(GETREPOSITORY))
 
 
 class MockAction(Action):

@@ -36,7 +36,6 @@ from meresco.harvester.mapping import Mapping, TestRepository, DataMapException,
 from meresco.harvester import mapping
 from StringIO import StringIO
 from meresco.harvester.eventlogger import StreamEventLogger
-from slowfoot.wrappers import wrapp
 from seecr.test import SeecrTestCase
 from lxml.etree import XML
 from meresco.harvester.namespaces import namespaces

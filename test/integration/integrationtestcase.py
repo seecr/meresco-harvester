@@ -1,45 +1,43 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2011, 2013 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-from __future__ import with_statement
-
-from os.path import isdir, join, abspath, dirname, basename, isfile
-from os import system, listdir, makedirs
+from os.path import isdir, join, abspath, dirname, isfile
+from os import system, listdir
 from sys import stdout
 
-from utils import postRequest, getRequest
+from seecr.test.utils import getRequest
 
 from seecr.test import SeecrTestCase
 from random import randint
-from time import sleep, time 
+from time import sleep
 
 from subprocess import Popen
 from signal import SIGTERM
@@ -51,7 +49,6 @@ from shutil import copytree
 
 from meresco.components import readConfig
 
-from traceback import print_exc
 
 mypath = dirname(abspath(__file__))
 binDir = join(dirname(dirname(mypath)), 'bin')
@@ -99,7 +96,7 @@ class IntegrationTestCase(SeecrTestCase):
         additionalArgs += ['--concurrency=%s' % concurrency] if concurrency is not None else []
         additionalArgs += ['--runOnce'] if runOnce else []
         harvesterProcessInfo = Popen(
-            args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs, 
+            args=[join(binDir, "meresco-harvester"), "-d", "adomain", "--logDir=%s" % self.harvesterLogDir, "--stateDir=%s" % self.harvesterStateDir, "--saharaurl=http://localhost:%s" % self.helperServerPortNumber] + additionalArgs,
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
@@ -121,7 +118,7 @@ class IntegrationState(object):
     def __init__(self, stateName, fastMode):
         self.stateName = stateName
         self._pids = []
-        self.integrationTempdir = '/tmp/integrationtest-meresco-harvester-%s' % stateName 
+        self.integrationTempdir = '/tmp/integrationtest-meresco-harvester-%s' % stateName
         system('rm -rf ' + self.integrationTempdir)
 
         self.helperServerPortNumber = PortNumberGenerator.next()
@@ -138,7 +135,7 @@ class IntegrationState(object):
             if isfile(filepath):
                 fileSubstVars(filepath, helperServerPortNumber=self.helperServerPortNumber, integrationTempdir=self.integrationTempdir)
         config = readConfig(join(examplesPath, 'harvester.config'))
-        
+
         # test example config has neccessary parameters
         def setConfig(config, parameter, value):
             assert config[parameter]
@@ -165,31 +162,31 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir], 
-            cwd=self.integrationTempdir, 
+            args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir],
+            cwd=self.integrationTempdir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
         print "Helper Server PID", processInfo.pid
         self._pids.append(processInfo.pid)
-        self._check(serverProcess=processInfo, 
-                serviceName='TestHelper', 
-                serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber, 
+        self._check(serverProcess=processInfo,
+                serviceName='TestHelper',
+                serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber,
                 stdoutfile=stdoutfile)
 
     def startHarvesterInternalServer(self):
         stdoutfile = join(self.integrationTempdir, "stdouterr-harvesterinternalserver.log")
         stdouterrlog = open(stdoutfile, 'w')
-        configFile = join(self.integrationTempdir, 'harvester.config') 
+        configFile = join(self.integrationTempdir, 'harvester.config')
         processInfo = Popen(
-            args=[join(binDir, "meresco-harvester-internal-server"), configFile], 
+            args=[join(binDir, "meresco-harvester-internal-server"), configFile],
             cwd=binDir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
         print "Harvester Internal Server PID", processInfo.pid
         self._pids.append(processInfo.pid)
-        self._check(serverProcess=processInfo, 
-                serviceName='Harvester-Internal-Server', 
-                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber, 
+        self._check(serverProcess=processInfo,
+                serviceName='Harvester-Internal-Server',
+                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber,
                 stdoutfile=stdoutfile)
 
     def getLogs(self):

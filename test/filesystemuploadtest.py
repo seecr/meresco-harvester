@@ -37,7 +37,6 @@ from meresco.harvester.filesystemuploader import FileSystemUploader
 from meresco.harvester.virtualuploader import UploaderException
 from seecr.test import CallTrace, SeecrTestCase
 import os, shutil
-from slowfoot import binderytools
 from tempfile import mkdtemp
 from meresco.harvester.mapping import Upload
 
@@ -54,16 +53,16 @@ class FileSystemUploaderTest(SeecrTestCase):
         logger = CallTrace("Logger")
         collection = ''
         self.uploader = FileSystemUploader(self.target, logger, collection)
-        
+
     def tearDown(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
-    
+
     def testFilenameForId(self):
         def getFilename(anId):
             repository = CallTrace('Repository')
             repository.repositoryGroupId = 'groupId'
             repository.id = 'repositoryId'
-            
+
             upload = Upload(repository=repository)
             upload.id = anId
             return self.uploader._filenameFor(upload)
@@ -80,15 +79,15 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.assertTrue(isfile(recordFile))
         self.uploader._filenameFor = lambda *args: recordFile
         self.target.oaiEnvelope = 'false'
-        
+
         repository = CallTrace('Repository')
         repository.repositoryGroupId = 'groupId'
         repository.id = 'repositoryId'
 
-        
+
         upload = Upload(repository=repository)
         upload.id = 'id'
-        
+
         self.uploader.delete(upload)
 
         DELETED_RECORDS = join(self.tempdir, 'deleted_records')
@@ -96,7 +95,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.assertTrue(isfile(DELETED_RECORDS))
         self.assertEquals(['id\n'], open(DELETED_RECORDS).readlines())
         self.assertFalse(isfile(recordFile))
-        
+
         upload.id = 'second:id'
         self.uploader.delete(upload)
         self.assertEquals(['id\n', 'second:id\n'], open(DELETED_RECORDS).readlines())
@@ -140,10 +139,10 @@ class FileSystemUploaderTest(SeecrTestCase):
     def testSend(self):
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
-        
+
         upload = createUpload()
         self.uploader.send(upload)
-        
+
         self.assertTrue(isfile(recordFile))
         self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD, open(recordFile).read())
 
@@ -151,22 +150,22 @@ class FileSystemUploaderTest(SeecrTestCase):
         ABOUT = "<about>abouttext</about>"
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
-        
+
         upload = createUploadWithAbout(about=ABOUT)
         self.uploader.send(upload)
-        
+
         self.assertTrue(isfile(recordFile))
         self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
     def testSendWithMultipleAbout(self):
         ABOUT = "<about>about_1</about><about>about_2</about>"
-        
+
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
-        
+
         upload = createUploadWithAbout(about=ABOUT)
         self.uploader.send(upload)
-        
+
         self.assertTrue(isfile(recordFile))
         self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
 
@@ -174,7 +173,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         def raiseError(*args, **kwargs):
             raise Exception('Catch me')
         self.uploader._filenameFor = raiseError
-        
+
         try:
             upload = createUpload()
             self.uploader.send(upload)
@@ -182,25 +181,25 @@ class FileSystemUploaderTest(SeecrTestCase):
         except UploaderException:
             pass
 
-        
+
     def testSendOaiEnvelope(self):
         self.target.oaiEnvelope = 'true'
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
-        
+
         upload = createUpload()
         upload.repository = CallTrace('Repository')
         upload.repository.baseurl = 'http://www.example.com'
         upload.repository.metadataPrefix = 'weird&strange'
-        
+
         self.uploader.send(upload)
-        
+
         self.assertTrue(isfile(recordFile))
         xmlGetRecord = parse(open(recordFile))
         self.assertEquals('oai:id:0', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
         self.assertEquals('http://www.example.com', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/text()'))
         self.assertEquals('weird&strange', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/@metadataPrefix'))
-        
+
     def testSendTwice(self):
         self.testSend()
         self.testSend()
@@ -209,21 +208,21 @@ def createUpload():
     record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>""")
     repository = CallTrace('repository')
     repository.id = 'repoId'
-    
+
     upload = Upload(repository=repository, recordNode=record)
     upload.id = 'id'
     return upload
-    
+
 def createUploadWithAbout(about):
     upload = CallTrace("Upload")
     record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>""" % about)
-    
+
     repository = CallTrace('repository')
     repository.id = 'repoId'
-    
+
     upload = Upload(repository=repository, recordNode=record)
     upload.id = 'id'
     return upload
-        
+
 RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>"""
 RECORD_WITH_ABOUT = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>"""

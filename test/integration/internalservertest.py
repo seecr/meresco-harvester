@@ -1,40 +1,39 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
-# 
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 from os import system
-from lxml.etree import tostring
 from time import gmtime, strftime
 
 from integrationtestcase import IntegrationTestCase
-from utils import getRequest
+from seecr.test.utils import getRequest
 from meresco.harvester.namespaces import xpath
 
 REPOSITORY = 'integrationtest'
@@ -79,7 +78,7 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:GetStatus/status:status/@repositoryGroupId")[0])
         self.assertEquals("6", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:invalid/text()")[0])
-        
+
     def testGetStatusForDomain(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
