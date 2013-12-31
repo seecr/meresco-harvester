@@ -29,13 +29,14 @@ def isDomainRepository(filename):
   return filename.startswith(domainId + '.') and filename.endswith('.repository')
 repositories = filter(isDomainRepository, files())
 for rep in repositories:
-    repXml = asxml(url('/'+rep)).repository
-    inputurl = '%s?verb=ListRecords&metadataPrefix=%s'%(repXml.baseurl,repXml.metadataPrefix)
-    if repXml.set:
-      inputurl += '&set=%s'%repXml.set
+    repository = aslxml(url('/'+rep)).getroot()
+    inputurl = '%s?verb=ListRecords&metadataPrefix=%s' % (xpathFirst(repository, 'baseurl/text()'), xpathFirst(repository, 'metadataPrefix/text()'))
+    aSet = xpathFirst(repository, 'set/text()')
+    if aSet is not None:
+      inputurl += '&set=%s' % aSet
     #
 %>
-  <option value="<%escape_html(inputurl)%>"><%=repXml.id%></option>
+  <option value="<%escape_html(inputurl)%>"><%=xpathFirst(repository, 'id/text()')%></option>
 <%
 #
 %>
