@@ -24,11 +24,11 @@ dateSince = time.strftime("%Y-%m-%d", time.localtime(time.time() - days * 3600 *
 #Determine all repository names.
 repositoryNames = []
 getArgs = {	'verb': 'GetRepositoryGroups', 'domainId': args.domainId}
-groups = asxml(url('/saharaget?' + urlencode(getArgs))).saharaget.GetRepositoryGroups.repositoryGroup
+groups = xpath(aslxml(url('/saharaget?' + urlencode(getArgs))), '/sahara:saharaget/sahara:GetRepositoryGroups/sahara:repositoryGroup')
 
 for repositoryGroup in groups:
-	if not args.repositoryGroupId or args.repositoryGroupId == repositoryGroup.id:
-		for repositoryId in repositoryGroup.repositoryId:
+	if not args.repositoryGroupId or args.repositoryGroupId == xpathFirst(repositoryGroup, 'sahara:id/text()'):
+		for repositoryId in xpath(repositoryGroup, 'sahara:repositoryId/text()'):
 			if not args.repositoryId or args.repositoryId == repositoryId:
 				repositoryNames.append(repositoryId)
 
