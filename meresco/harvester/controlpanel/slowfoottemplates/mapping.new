@@ -1,5 +1,4 @@
 <%
-from slowfoot import binderytools
 execcode = '''upload.parts['record'] = lxmltostring(input.recordNode)
 
 upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
@@ -31,18 +30,19 @@ description = """This mapping is what has become the default mapping for most Me
 
 f = asform(input)
 name = f.name
-domain = xml
+domainNode = lxml.getroot()
+domainId = xpathFirst(domainNode, 'id/text()')
 
 if name == '':
-  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=No%20name%20given.')
+  redirect('/page/domain.edit/' + domainId + '.domain?error=No%20name%20given.')
 else:
   mappingid = uuid()
-  new_mapping = binderytools.bind_string("<mappingId>%s</mappingId>"%mappingid).mappingId
+  new_mappingId = XML("<mappingId>%s</mappingId>" % mappingid)
 
-  domain.domain.xml_append(new_mapping)
+  domainNode.append(new_mappingId)
 
-  target(filepath(domain.domain.id + '.domain'))
-  req.write(domain.xml())
+  target(filepath(domainId + '.domain'))
+  req.write(lxmltostring(domainNode, pretty_print=True, xml_declaration=True))
 
   target(filepath(mappingid + ".mapping"))
 %><?xml version="1.0"?>
@@ -53,6 +53,6 @@ else:
   <description><% escape_xml(description) %></description>
 </mapping>
 <%
-  redirect(uri(path='/page/mapping.edit/' + mappingid + '.mapping', query={'referrerDomain':domain.domain.id}))
+  redirect(uri(path='/page/mapping.edit/' + mappingid + '.mapping', query={'referrerDomain':domainId}))
 #
 %>
