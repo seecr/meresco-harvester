@@ -1,5 +1,6 @@
 <%
 from slowfoot import account
+from os.path import isfile
 f = asform(input)
 username = f.username
 password = f.password
@@ -9,17 +10,13 @@ if not f.username:
 
 passwdFile = req.get_options()['usersfile']
 
-users = asxml(url('/users.xml')).users
-
-domain = None
-user = getattr(users, str(username))
-domain = user.domain
+domainName = xpathFirst(aslxml(url('/users.xml')).getroot(), '%s/domain/text()' % username)
 
 try:
   account.login(str(username), str(password), passwdFile) 
   session['username'] = str(username)
-  if domain and domain == asxml(url('/%s.domain' % domain)).domain.id:
-    session['domain'] = str(domain)
+  if domainName and isfile(filepath('%s.domain' % domainName)):
+    session['domain'] = str(domainName)
   else:
     session['domain'] = ''
   session['isAdmin'] = username == 'admin'
