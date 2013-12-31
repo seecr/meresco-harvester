@@ -162,7 +162,7 @@ class IntegrationState(object):
         stdoutfile = join(self.integrationTempdir, "stdouterr-helper.log")
         stdouterrlog = open(stdoutfile, 'w')
         processInfo = Popen(
-            args=["python2.6", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir],
+            args=["python", join(mypath, "helperserver.py"), str(self.helperServerPortNumber), self.helperDir],
             cwd=self.integrationTempdir,
             stdout=stdouterrlog,
             stderr=stdouterrlog)
