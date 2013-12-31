@@ -1,27 +1,17 @@
 <%
 from meresco.harvester.controlpanel.tools import getDomainId
-group = xml
+groupNode = lxml.getroot()
 domainId = getDomainId(req.uri)
 deleteId = args['repository']
-id = group.repositoryGroup.id
-repositoryFile = "%s.%s.repository"%(domainId,deleteId)
-groupFile = "%s.%s.repositoryGroup"%(domainId,id)
+id = xpathFirst(groupNode, 'id/text()')
+repositoryFile = "%s.%s.repository" % (domainId,deleteId)
+groupFile = "%s.%s.repositoryGroup" % (domainId,id)
+deleteRepo = xpathFirst(groupNode, 'repositoryId[text()="%s"]' % deleteId)
+groupNode.remove(deleteRepo)
 
 deletefile(filepath(repositoryFile))
 
 target(filepath(groupFile))
-%><?xml version="1.0"?>
-<repositoryGroup>
-<%
-for child in group.repositoryGroup.xml_children:
-  if child.__class__ == unicode:
-    req.write(child)
-  else:
-    if (child.nodeName != "repositoryId") or (unicode(child) != deleteId):
-      req.write(child.xml())
-#
-%>
-</repositoryGroup>
-<%
+req.write(lxmltostring(groupNode, pretty_print=True, xml_declaration=True))
 redirect('/page/repositoryGroup.edit/' + groupFile)
 %>

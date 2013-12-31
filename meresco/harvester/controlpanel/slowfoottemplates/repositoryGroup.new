@@ -1,25 +1,25 @@
 <%
-from slowfoot import binderytools
 from meresco.harvester.controlpanel.tools import checkName
 
 f = asform(input)
 id = f.id
-domain = xml
-fileName = "%s.%s.repositoryGroup"%(domain.domain.id,id)
+domain = lxml.getroot()
+domainId = xpathFirst(domain, 'id/text()')
+fileName = "%s.%s.repositoryGroup"%(domainId, id)
 
 if id == '':
-  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=No%20name%20given.')
+  redirect('/page/domain.edit/' + domainId + '.domain?error=No%20name%20given.')
 elif not checkName(id):
-  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=Name%20is%20not%20valid.%20Only%20use%20alphanumeric%20characters.')
+  redirect('/page/domain.edit/' + domainId + '.domain?error=Name%20is%20not%20valid.%20Only%20use%20alphanumeric%20characters.')
 elif os.path.isfile(filepath(fileName)):
-  redirect('/page/domain.edit/' + domain.domain.id + '.domain?error=Deze%20id%20bestaat%20al.')
+  redirect('/page/domain.edit/' + domainId + '.domain?error=Deze%20id%20bestaat%20al.')
 else:
-  new_repositoryGroup = binderytools.bind_string("<repositoryGroupId>%s</repositoryGroupId>"%id).repositoryGroupId
+  newRepositoryGroupId = XML("<repositoryGroupId>%s</repositoryGroupId>" % id)
 
-  domain.domain.xml_append(new_repositoryGroup)
+  domain.append(newRepositoryGroupId)
 
-  target(filepath(domain.domain.id + '.domain'))
-  req.write(domain.xml())
+  target(filepath(domainId + '.domain'))
+  req.write(lxmltostring(domain, pretty_print=True, xml_declaration=True))
 
 
   target(filepath(fileName))
