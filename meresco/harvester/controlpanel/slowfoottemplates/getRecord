@@ -11,9 +11,9 @@ else:
 if repositoryId and identifier:
   from os.path import isfile
   if isfile(req.document_root() + '/%s.%s.repository'%(domainId,repositoryId)):
-    repo = asxml(url('/xml/%s.%s.repository'%(domainId,repositoryId))).repository
-    repourl = repo.baseurl
-    metadataPrefix = args.metadataPrefix or repo.metadataPrefix
+    repo = aslxml(url('/xml/%s.%s.repository'%(domainId,repositoryId))).getroot()
+    repourl = xpathFirst(repo, 'baseurl/text()')
+    metadataPrefix = args.metadataPrefix or xpathFirst(repo, 'metadataPrefix/text()')
     if not repourl:
       errorCode = 'idDoesNotExist'
   else:
@@ -32,10 +32,10 @@ if not errorCode:
   #urllib2 is used by the url function
   if 'rug.nl/' in includeurl:
     from urllib import urlopen
-    oaigetrecord = asxml(urlopen(includeurl))
+    oaigetrecord = aslxml(urlopen(includeurl))
   else:
-    oaigetrecord = asxml(url(includeurl))
-  errOAI = str(oaigetrecord.OAI_PMH.error.code)
+    oaigetrecord = aslxml(url(includeurl))
+  errOAI = xpathFirst(oaigetrecord, '/oai:OAI-PMH/oai:error')
 %><?xml version="1.0" encoding="UTF-8"?>
 <saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
 <%
@@ -47,17 +47,17 @@ if not errorCode:
   <saharaIdentifier><% escape_xml(repositoryId) %>:<% escape_xml(identifier) %></saharaIdentifier>
  </request>
 <%
-  if not errOAI:
+  if errOAI is None:
     #
 %>
  <GetRecord>
 <%
-    oaigetrecord.OAI_PMH.GetRecord.record.xml(req)
+    req.write(lxmltostring(xpathFirst(oaigetrecord, '/oai:OAI-PMH/oai:GetRecord/oai:record')))
 %>
  </GetRecord>
 <%
   else:
-    oaigetrecord.OAI_PMH.error.xml(req)
+    req.write(lxmltostring(errOAI))
   #
 %>
 </saharaget>

@@ -12,12 +12,10 @@ include('/saharagetTime')
  </request>
  <GetRepositoryGroups>
 <%
-group = asxml(url('/' + domainId + '.domain')).domain
-for id in group.repositoryGroupId:
-  repositoryGroup = asxml(url('/' + domainId + '.' + id + '.repositoryGroup')).repositoryGroup
-%>
-  <% repositoryGroup.xml(req) %>
-<%
+groupIds = xpath(aslxml(url('/' + domainId + '.domain')).getroot(), 'repositoryGroupId/text()')
+for id in groupIds:
+  repositoryGroup = aslxml(url('/' + domainId + '.' + id + '.repositoryGroup')).getroot()
+  req.write(lxmltostring(repositoryGroup, pretty_print=True))
 # for
 %>
  </GetRepositoryGroups>

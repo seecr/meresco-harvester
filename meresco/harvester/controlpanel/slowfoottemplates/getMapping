@@ -2,14 +2,9 @@
 domainId = args.domainId
 mappingId = args.mappingId
 
-mappings = asxml(url('/' + domainId + '.domain')).domain.mappingId
-exists = False
-for m in mappings:
-  if m == mappingId:
-    exists = True
-    break
+mappingIds = xpath(aslxml(url('/' + domainId + '.domain')).getroot(), 'mappingId/text()')
 
-if not exists:
+if not mappingId in mappingIds:
   include('/saharageterror?errorCode=idDoesNotExist')
 else:
   type('text/xml; charset=utf-8')
@@ -25,8 +20,7 @@ else:
  </request>
  <GetMapping>
 <%
-  m = asxml(url('/' + mappingId + '.mapping'))
-  m.mapping.xml(req)
+  req.write(lxmltostring(aslxml(url('/' + mappingId + '.mapping')).getroot(), pretty_print=True))
 %>
  </GetMapping>
 </saharaget><%

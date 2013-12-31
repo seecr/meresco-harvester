@@ -17,13 +17,12 @@ def listIds(repositoryId):
   #
 
 repositoryGroupId = args.repositoryGroupId
-groups = asxml(url('/' + domainId + '.domain')).domain.repositoryGroupId
-exists = filter(lambda g:g == repositoryGroupId, groups)
-if not exists:
+groupIds = xpath(aslxml(url('/' + domainId + '.domain')).getroot(), 'repositoryGroupId/text()')
+if not repositoryGroupId in groupIds:
   include('/saharageterror?errorCode=idDoesNotExist')
 else:
   type('text/xml; charset=utf-8')
-  repositories = asxml(url('/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')).repositoryGroup.repositoryId
+  repositoryIds = xpath(aslxml(url('/' + domainId + '.' + repositoryGroupId + '.repositoryGroup')).getroot(), 'repositoryId/text()')
 %><?xml version="1.0" encoding="UTF-8"?>
 <saharaget xmlns="http://sahara.cq2.org/xsd/saharaget.xsd">
 <%
@@ -36,7 +35,7 @@ else:
   </request>
   <GetIdentifiers>
 <%
-  for repositoryId in repositories:
+  for repositoryId in repositoryIds:
     listIds(repositoryId)
   #
 %>

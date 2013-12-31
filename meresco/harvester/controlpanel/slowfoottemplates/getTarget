@@ -2,14 +2,9 @@
 domainId = args.domainId
 targetId = args.targetId
 
-targets = asxml(url('/' + domainId + '.domain')).domain.targetId
-exists = False
-for m in targets:
-  if m == targetId:
-    exists = True
-    break
+targetIds = xpath(aslxml(url('/' + domainId + '.domain')).getroot(), 'targetId/text()')
 
-if not exists:
+if not targetId in targetIds:
   include('/saharageterror?errorCode=idDoesNotExist')
 else:
   type('text/xml; charset=utf-8')
@@ -25,8 +20,7 @@ else:
  </request>
  <GetTarget>
 <%
-  m = asxml(url('/' + targetId + '.target'))
-  m.target.xml(req)
+  req.write(lxmltostring(aslxml(url('/' + targetId + '.target')).getroot(), pretty_print=True))
 %>
  </GetTarget>
 </saharaget><%
