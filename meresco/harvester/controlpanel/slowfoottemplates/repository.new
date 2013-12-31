@@ -1,11 +1,11 @@
 <%
-from slowfoot import binderytools
 from meresco.harvester.controlpanel.tools import checkName, getDomainId
 from meresco.harvester.controlpanel import RepositoryData
 
 f = asform(input)
 repositoryId = f.id
-group = xml
+groupNode = lxml.getroot()
+groupId = xpathFirst(groupNode, 'id/text()')
 domainId = getDomainId(req.uri)
 groupFileName = args.name
 fileName = "%s.%s.repository"%(domainId, repositoryId)
@@ -19,16 +19,16 @@ elif not checkName(repositoryId):
 elif os.path.isfile(filepath(fileName)):
   redirect(errorUrl +'A%20repository%20with%20this%20id%20already%20exists.')
 else:
-  new_repository = binderytools.bind_string("""<?xml version="1.0"?><repositoryId>%s</repositoryId>"""%(repositoryId)).repositoryId
+  new_repositoryId = XML("""<repositoryId>%s</repositoryId>""" % repositoryId)
 
-  group.repositoryGroup.xml_append(new_repository)
+  groupNode.append(new_repositoryId)
 
   target(filepath(groupFileName))
-  req.write(group.xml())
+  req.write(lxmltostring(groupNode, pretty_print=True, xml_declaration=True))
 
   repositoryData = RepositoryData(repositoryId)
-  repositoryData.repositoryGroupId = group.repositoryGroup.id
+  repositoryData.repositoryGroupId = groupId
   repositoryData.save(filepath(fileName))
-  redirect('/page/repository.edit/' + fileName + '?referrerGroup=' + group.repositoryGroup.id)
+  redirect('/page/repository.edit/' + fileName + '?referrerGroup=' + groupId)
 #
 %>
