@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -35,9 +35,7 @@
 from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
 from saharaget import SaharaGet
-from lxml.etree import parse
-from urllib2 import urlopen
-from meresco.harvester.namespaces import xpath
+from meresco.harvester.oairequest import OaiRequest
 
 class OnlineHarvest(object):
     def __init__(self, outputstream, saharaUrl):
@@ -49,10 +47,11 @@ class OnlineHarvest(object):
         mapping.addObserver(StreamEventLogger(self._output))
         self._output.write(mapping.mappingInfo())
         self._output.write('\n')
-        xml = parse(urlopen(urlString))
-        for record in xpath(xml, '/oai:OAI-PMH/oai:ListRecords/oai:record'):
+        response = OaiRequest(urlString).request()
+        for record in response.records:
+            response.selectRecord(record)
             try:
-                upload = mapping.createUpload(TestRepository, record, doAsserts=True)
+                upload = mapping.createUpload(TestRepository, response, doAsserts=True)
                 self.writeUpload(upload)
             except DataMapAssertionException, ex:
                 self.writeLine('AssertionError: '+str(ex))

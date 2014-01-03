@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -41,6 +41,7 @@ from meresco.core import Observable
 from lxml.etree import XML
 from meresco.harvester.namespaces import namespaces, xpathFirst, xpath
 from meresco.components import lxmltostring
+from oairequest import OaiResponse
 
 
 nillogger = NilEventLogger()
@@ -48,7 +49,7 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #Map template
 #
 #Input
-# input.recordNode = OAI Record lxmlNode
+# input.record = OAI Record lxmlNode
 # input.repository = Repository object
 #
 #Available Methods:
@@ -69,7 +70,7 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #     urlencode([('a','b'), ('c','d')]) --> 'a=b&c=d'
 # skipRecord( comments ) Skip a record for a certain reason.
 #
-upload.parts['record'] = lxmltostring(input.recordNode)
+upload.parts['record'] = lxmltostring(input.record)
 """
 
 def read(filename):
@@ -109,29 +110,24 @@ def doAssert(aBoolean, message="Assertion failed"):
 def doNotAssert(aBoolean, message="This should not happen"):
     pass
 
-class Input(object):
-    def __init__(self, recordNode=None, repository=None, log=None):
-        self.repository = repository
-        self.log = log
-        self.recordNode = recordNode
-
 class UploadDict(dict):
     def __setitem__(self, key, value):
         return dict.__setitem__(self, key, str(value))
 
-
 class Upload(object):
-    def __init__(self, repository, recordNode=None):
+    def __init__(self, repository, oaiResponse=None):
         self.id = ''
+        self.oaiResponse = oaiResponse
         self.recordIdentifier = None
-        if recordNode is not None:
-            self.isDeleted = xpathFirst(recordNode, 'oai:header/@status') == 'deleted'
-            self.recordIdentifier = xpathFirst(recordNode, 'oai:header/oai:identifier/text()')
+        self.record = None
+        if oaiResponse is not None:
+            self.record = oaiResponse.record
+            self.isDeleted = xpathFirst(self.record, 'oai:header/@status') == 'deleted'
+            self.recordIdentifier = xpathFirst(self.record, 'oai:header/oai:identifier/text()')
         if repository is not None and self.recordIdentifier is not None:
             self.id = repository.id + ':' + self.recordIdentifier
         self.fulltexturl = None
         self.parts = UploadDict()
-        self.record = recordNode
         self.repository = repository
         self.skip = False
 
@@ -151,8 +147,8 @@ class Mapping(SaharaObject, Observable):
     def setCode(self, aString):
         self.code = aString
 
-    def createUpload(self, repository, recordNode, doAsserts=False):
-        upload = Upload(repository=repository, recordNode=recordNode)
+    def createUpload(self, repository, oaiResponse, doAsserts=False):
+        upload = Upload(repository=repository, oaiResponse=oaiResponse)
         if upload.isDeleted:
             return upload
 
@@ -163,7 +159,7 @@ class Mapping(SaharaObject, Observable):
 
         try:
             exec(self.code, {
-                'input': Input(repository=repository, recordNode=recordNode),
+                'input': upload, # backwards compatible
                 'upload': upload,
                 'isUrl': isUrl,
                 'urljoin': urljoin,
@@ -200,6 +196,6 @@ class Mapping(SaharaObject, Observable):
             return False
 
     def validate(self):
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record>""" % namespaces)
-        self.createUpload(TestRepository(), record)
+        response = XML("""<OAI-PMH xmlns="%(oai)s"><responseDate>2000-01-02T03:04:05Z</responseDate><ListRecords><record><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record></ListRecords></OAI-PMH>""" % namespaces)
+        self.createUpload(TestRepository(), OaiResponse(response))
 

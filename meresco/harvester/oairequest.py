@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -39,6 +39,7 @@ from cgi import parse_qsl
 from meresco.harvester.namespaces import xpathFirst, xpath
 from lxml.etree import parse
 from urllib import urlencode
+from meresco.components import lxmltostring
 
 
 class OaiRequestException(Exception):
@@ -56,8 +57,8 @@ class OAIError(OaiRequestException):
 
     @classmethod
     def create(cls, url, response):
-        error = xpathFirst(response, '/oai:OAI-PMH/oai:error/text()')
-        errorCode = xpathFirst(response, '/oai:OAI-PMH/oai:error/@code')
+        error = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/text()')
+        errorCode = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/@code')
         return cls(url=url,
                 error='Unknown error' if error is None else str(error),
                 errorCode='' if errorCode is None else str(errorCode),
@@ -78,34 +79,29 @@ class OaiRequest(object):
             del kwargs['from_']
         kwargs['verb'] = 'ListRecords'
         try:
-            response = self.request(kwargs)
+            return self.request(kwargs)
         except OAIError, e:
             if e.errorCode() != 'noRecordsMatch':
                 raise e
-            response = e.response
-        records = xpath(response, '/oai:OAI-PMH/oai:ListRecords/oai:record')
-        resumptionToken = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()') or ''
-        responseDate = xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
-        return records, resumptionToken, responseDate
+            return e.response
 
     def getRecord(self, **kwargs):
         kwargs['verb'] = 'GetRecord'
-        response = self.request(kwargs)
-        return xpathFirst(response, '/oai:OAI-PMH/oai:GetRecord/oai:record')
+        return self.request(kwargs)
 
     def identify(self):
-        response = self.request({'verb':'Identify'})
-        return xpathFirst(response, '/oai:OAI-PMH/oai:Identify')
+        return self.request({'verb':'Identify'})
 
-    def request(self, args):
+    def request(self, args=None):
+        args = {} if args is None else args
         try:
             argslist = [(k,v) for k,v in args.items() if v]
             result = self._request(argslist)
         except Exception, e:
             raise OaiRequestException(self._buildRequestUrl(argslist), message=repr(e))
         if xpathFirst(result, '/oai:OAI-PMH/oai:error') is not None:
-            raise OAIError.create(self._buildRequestUrl(argslist), result)
-        return result
+            raise OAIError.create(self._buildRequestUrl(argslist), OaiResponse(result))
+        return OaiResponse(result)
 
     def _request(self, argslist):
         return parse(urlopen(self._buildRequestUrl(argslist)))
@@ -119,3 +115,13 @@ class OaiRequest(object):
         urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT] = urlencode(self._argslist + argslist)
         return urlunparse(urlElements)
 
+class OaiResponse(object):
+    def __init__(self, response):
+        self.response = response
+        self.records = xpath(response, '/oai:OAI-PMH/oai:ListRecords/oai:record')
+        self.resumptionToken = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()') or ''
+        self.responseDate = xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
+        self.selectRecord(xpathFirst(response, '/oai:OAI-PMH/oai:*/oai:record'))
+
+    def selectRecord(self, record):
+        self.record = record

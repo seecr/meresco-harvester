@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -40,7 +40,7 @@ from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
 from StringIO import StringIO
-from lxml.etree import parse, XML
+from lxml.etree import parse
 
 from seecr.test import CallTrace
 
@@ -52,6 +52,7 @@ from meresco.harvester.mapping import Mapping, DEFAULT_CODE, Upload
 from meresco.harvester import namespaces
 
 from mockoairequest import MockOaiRequest
+from oairequesttest import oaiResponse
 
 
 class DeletedRecordHeader(object):
@@ -297,37 +298,27 @@ class HarvesterTest(unittest.TestCase):
         lines = open(self.stateDir+'/tud.stats').readlines()
         self.assert_('Harvested/Uploaded/Deleted/Total: 0/0/0/0' in lines[0])
 
-    def testNoDcIdentifier(self):
-        harvester = self.createHarvesterWithMockUploader('tud')
-        self.logger.token='DcIdentifierNo'
-        harvester.harvest()
-        lines = open(self.stateDir+'/tud.stats').readlines()
-
     def testUploadRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
-        upload = Upload(repository=None, recordNode=record)
-        upload.id = 'tud:mockid'
-        self.mapper.createUpload = lambda repository,record: upload
-        harvester.uploadRecord(record)
+        harvester.upload(oaiResponse(identifier='mockid'))
         self.assertEquals(['tud:mockid'], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
 
     def testSkippedRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
-        upload = Upload(repository=None, recordNode=record)
-        upload.id = "tud:mockid"
-        upload.skip = True
-        self.mapper.createUpload = lambda repository,record: upload
-        harvester.uploadRecord(record)
+        def createUpload(repository, oaiResponse):
+            upload = Upload(repository=repository, oaiResponse=oaiResponse)
+            upload.id = "tud:mockid"
+            upload.skip = True
+            return upload
+        self.mapper.createUpload = createUpload
+        harvester.upload(oaiResponse(identifier='mockid'))
         self.assertEquals([], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        record = XML("""<record xmlns="%(oai)s"><header status="deleted"><identifier>mockid</identifier></header></record>""" % namespaces)
-        harvester.uploadRecord(record)
+        harvester.upload(oaiResponse(identifier='mockid', deleted=True))
         self.assertEquals([], self.sendId)
         self.assertEquals('tud:mockid', self.delete_id)
 
@@ -339,9 +330,8 @@ class HarvesterTest(unittest.TestCase):
         open(self.stateDir+'/tud.stats').readlines()
 
     def testHarvesterStopsIgnoringAfter100records(self):
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(repository=None, recordNode=record)
+        upload = Upload(repository=None, oaiResponse=oaiResponse(identifier='mockid'))
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 101
@@ -349,13 +339,12 @@ class HarvesterTest(unittest.TestCase):
         repository=CallTrace("repository", returnValues={'maxIgnore': 100})
         harvester = Harvester(repository)
         harvester.addObserver(observer)
-        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.uploadRecord(record))
+        self.assertRaises(TooMuchInvalidDataException, lambda: harvester.upload(oaiResponse(identifier='mockid')))
         self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "logInvalidData", "totalInvalidIds"], [m.name for m in observer.calledMethods])
 
     def testHarvesterIgnoringInvalidDataErrors(self):
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>mockid</identifier></header><metadata><dc><title>mocktitle</title></dc></metadata><about/></record>""" % namespaces)
         observer = CallTrace('observer')
-        upload = Upload(repository=None, recordNode=record)
+        upload = Upload(repository=None, oaiResponse=oaiResponse(identifier='mockid'))
         upload.id = 'mockid'
         observer.returnValues['createUpload'] = upload
         observer.returnValues['totalInvalidIds'] = 0
@@ -363,7 +352,7 @@ class HarvesterTest(unittest.TestCase):
         repository=CallTrace("repository", returnValues={'maxIgnore': 100})
         harvester = Harvester(repository)
         harvester.addObserver(observer)
-        harvester.uploadRecord(record)
+        harvester.upload(oaiResponse())
         self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", 'logInvalidData', "totalInvalidIds", 'logIgnoredIdentifierWarning'], [m.name for m in observer.calledMethods])
 
     #self shunt:

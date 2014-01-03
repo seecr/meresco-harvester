@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -65,15 +65,16 @@ class Harvester(Observable):
         return self.call.listRecords(**kwargs)
 
     def fetchRecords(self, from_, token):
-        records, resumptionToken, responseDate = self.listRecords(from_, token, self._repository.set)
-        for record in records:
-            self.uploadRecord(record)
-        return resumptionToken, responseDate   
+        response = self.listRecords(from_, token, self._repository.set)
+        for record in response.records:
+            response.selectRecord(record)
+            self.upload(response)
+        return response
 
-    def uploadRecord(self, record):
-        upload = self.call.createUpload(self._repository, record)
+    def upload(self, oaiResponse):
+        upload = self.call.createUpload(self._repository, oaiResponse)
         self.do.notifyHarvestedRecord(upload.id)
-        if xpathFirst(record, 'oai:header/@status') == "deleted":
+        if xpathFirst(oaiResponse.record, 'oai:header/@status') == "deleted":
             self.do.delete(upload)
             self.do.deleteIdentifier(upload.id)
         elif not upload.skip:
@@ -91,9 +92,9 @@ class Harvester(Observable):
         try:
             self.do.startRepository()
             state = self.call.state()
-            newtoken, responseDate = self.fetchRecords(state.from_, state.token)
-            self.do.endRepository(newtoken, responseDate)
-            return newtoken
+            response = self.fetchRecords(state.from_, state.token)
+            self.do.endRepository(response.resumptionToken, response.responseDate)
+            return response.resumptionToken
         except:
             exType, exValue, exTb = sys.exc_info()
             self.do.endWithException(exType, exValue, exTb)

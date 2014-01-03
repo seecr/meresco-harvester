@@ -1,5 +1,5 @@
 <%
-execcode = '''upload.parts['record'] = lxmltostring(input.recordNode)
+execcode = '''upload.parts['record'] = lxmltostring(input.record)
 
 upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
   <upload><id>%(id)s</id></upload>

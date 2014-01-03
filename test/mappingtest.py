@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -37,8 +37,7 @@ from meresco.harvester import mapping
 from StringIO import StringIO
 from meresco.harvester.eventlogger import StreamEventLogger
 from seecr.test import SeecrTestCase
-from lxml.etree import XML
-from meresco.harvester.namespaces import namespaces
+from oairequesttest import oaiResponse
 
 class MappingTest(SeecrTestCase):
     def testInValidMapping(self):
@@ -70,11 +69,10 @@ import os
 upload.parts['record']="<somexml/>"
 logger.logError('Iets om te zeuren')
 """
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
-        datamap.createUpload(TestRepository(), record)
+        datamap.createUpload(TestRepository(), oaiResponse=oaiResponse())
         self.assertEquals('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
 
     def testNoLogging(self):
@@ -83,8 +81,7 @@ logger.logError('Iets om te zeuren')
 upload.parts['record']="<somexml/>"
 logger.logError('Iets om te zeuren')
 """
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
-        upload = datamap.createUpload(TestRepository(), record)
+        upload = datamap.createUpload(TestRepository(), oaiResponse())
         self.assertEquals('<somexml/>',upload.parts['record'])
 
     def testAssertion(self):
@@ -99,29 +96,27 @@ upload.parts['record']="<somexml/>"
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
         try:
-            record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
-            datamap.createUpload(TestRepository(), record, doAsserts=True)
+            datamap.createUpload(TestRepository(), oaiResponse(), doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('ERROR\t[repository.id:oai:ident:321]\tAssertion: 1 not equal 2\n',stream.getvalue()[26:])
             self.assertEquals('1 not equal 2', str(ex))
 
         try:
-            datamap.createUpload(TestRepository(), recordNode=XML('<record xmlns="%(oai)s"/>' % namespaces), doAsserts=True)
+            datamap.createUpload(TestRepository(), oaiResponse(), doAsserts=True)
             self.fail()
         except DataMapAssertionException, ex:
             self.assertEquals('1 not equal 2', str(ex))
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
-        datamap.createUpload(TestRepository(), recordNode=XML('<record xmlns="%(oai)s"/>' % namespaces) , doAsserts=False)
+        datamap.createUpload(TestRepository(), oaiResponse() , doAsserts=False)
         self.assertEquals('',stream.getvalue())
 
     def assertPart(self, expected, partname, code):
         datamap = Mapping('mappingId')
         datamap.code = code
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header></record>""" % namespaces)
-        upload = datamap.createUpload(TestRepository(), record)
+        upload = datamap.createUpload(TestRepository(), oaiResponse())
         self.assertEquals(expected,upload.parts[partname])
 
     def testUrlEncode(self):
@@ -137,16 +132,15 @@ upload.parts['record']="<somexml/>"
         datamap.code = """
 skipRecord("Don't like it here.")
 """
-        record = XML("""<record xmlns="%(oai)s"><header><identifier>oai:ident:321</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header><metadata></metadata><about/></record>""" % namespaces)
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
-        upload = datamap.createUpload(TestRepository(), record)
+        upload = datamap.createUpload(TestRepository(), oaiResponse())
         self.assertTrue(upload.skip)
         self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n", stream.getvalue()[26:])
 
     def testCreateUploadParts(self):
-        upload = mapping.Upload(repository=None, recordNode=None)
+        upload = mapping.Upload(repository=None, oaiResponse=None)
         self.assertEquals({}, upload.parts)
 
         upload.parts['name'] = 'value'
@@ -154,4 +148,5 @@ skipRecord("Don't like it here.")
 
         self.assertEquals('value', upload.parts['name'])
         self.assertEquals('1', upload.parts['number'])
+
 

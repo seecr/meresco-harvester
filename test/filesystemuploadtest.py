@@ -13,7 +13,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -42,7 +42,9 @@ from meresco.harvester.mapping import Upload
 
 from os.path import isfile, join
 from lxml.etree import XML, parse
-from meresco.harvester.namespaces import namespaces, xpathFirst
+from meresco.harvester.namespaces import namespaces, xpathFirst, xpath
+from oairequesttest import oaiResponse
+from meresco.components import lxmltostring
 
 class FileSystemUploaderTest(SeecrTestCase):
 
@@ -112,12 +114,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         repository.baseurl = "http://repository"
         repository.id = 'repositoryId'
 
-
-        record = XML("""<record xmlns="%(oai)s"><header status="deleted">
-                <identifier>id.record</identifier>
-            </header></record>""" % namespaces)
-        upload = Upload(repository=repository, recordNode=record)
-
+        upload = Upload(repository=repository, oaiResponse=oaiResponse(identifier='id.record', deleted=True))
 
         self.assertFalse(isfile(RECORD_FILENAME))
         self.uploader.delete(upload)
@@ -130,6 +127,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         <record>
             <header status="deleted">
                 <identifier>id.record</identifier>
+                <datestamp>2005-08-29T07:08:09Z</datestamp>
             </header>
         </record>
     </GetRecord>
@@ -144,30 +142,31 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD, open(recordFile).read())
+        self.assertEqualsLxml(oaiResponse().record, parse(open(recordFile)))
 
     def testSendWithAbout(self):
-        ABOUT = "<about>abouttext</about>"
+        ABOUT = '<about xmlns="%(oai)s">abouttext</about>' % namespaces
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
 
-        upload = createUploadWithAbout(about=ABOUT)
+        upload = createUpload(about=ABOUT)
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+        self.assertEquals(ABOUT, lxmltostring(xpathFirst(parse(open(recordFile)), '//oai:about')))
 
     def testSendWithMultipleAbout(self):
-        ABOUT = "<about>about_1</about><about>about_2</about>"
+        ABOUT = '<about xmlns="%(oai)s">about_1</about><about xmlns="%(oai)s">about_2</about>' % namespaces
 
         recordFile = self.tempdir + '/group/repo/id.record'
         self.uploader._filenameFor = lambda *args: recordFile
 
-        upload = createUploadWithAbout(about=ABOUT)
+        upload = createUpload(about=ABOUT)
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEquals("<?xml version='1.0' encoding='UTF-8'?>\n"+RECORD_WITH_ABOUT % ABOUT, open(recordFile).read())
+        self.assertEquals(ABOUT, ''.join(lxmltostring(x) for x in xpath(parse(open(recordFile)), '//oai:about')))
+
 
     def testSendRaisesError(self):
         def raiseError(*args, **kwargs):
@@ -196,7 +195,7 @@ class FileSystemUploaderTest(SeecrTestCase):
 
         self.assertTrue(isfile(recordFile))
         xmlGetRecord = parse(open(recordFile))
-        self.assertEquals('oai:id:0', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
+        self.assertEquals('oai:ident:321', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
         self.assertEquals('http://www.example.com', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/text()'))
         self.assertEquals('weird&strange', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/@metadataPrefix'))
 
@@ -204,25 +203,12 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.testSend()
         self.testSend()
 
-def createUpload():
-    record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>""")
+def createUpload(about=None):
     repository = CallTrace('repository')
     repository.id = 'repoId'
 
-    upload = Upload(repository=repository, recordNode=record)
+    upload = Upload(repository=repository, oaiResponse=oaiResponse(about=about))
     upload.id = 'id'
     return upload
 
-def createUploadWithAbout(about):
-    upload = CallTrace("Upload")
-    record = XML("""<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>""" % about)
-
-    repository = CallTrace('repository')
-    repository.id = 'repoId'
-
-    upload = Upload(repository=repository, recordNode=record)
-    upload.id = 'id'
-    return upload
-
-RECORD = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata></record>"""
 RECORD_WITH_ABOUT = """<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:id:0</identifier></header><metadata>text</metadata>%s</record>"""

@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -33,10 +33,10 @@
 ## end license ##
 
 import unittest
-from meresco.harvester.oairequest import OaiRequest, OAIError
+from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
 from mockoairequest import MockOaiRequest
-from lxml.etree import parse
-from meresco.harvester.namespaces import xpathFirst
+from lxml.etree import parse, XML
+from meresco.harvester.namespaces import xpathFirst, namespaces
 
 
 class OaiRequestTest(unittest.TestCase):
@@ -44,12 +44,12 @@ class OaiRequestTest(unittest.TestCase):
         self.request = MockOaiRequest('mocktud')
 
     def testMockOaiRequest(self):
-        binding = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
-        self.assertEquals('2004-12-29T13:19:27Z', xpathFirst(binding, '/oai:OAI-PMH/oai:responseDate/text()'))
+        response = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
+        self.assertEquals('2004-12-29T13:19:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
 
     def testOtherOaiRequest(self):
-        binding = self.request.request({'verb': 'GetRecord', 'metadataPrefix': 'oai_dc', 'identifier': 'oai:rep:12345'})
-        self.assertEquals('2005-04-28T12:16:27Z', xpathFirst(binding, '/oai:OAI-PMH/oai:responseDate/text()'))
+        response = self.request.request({'verb': 'GetRecord', 'metadataPrefix': 'oai_dc', 'identifier': 'oai:rep:12345'})
+        self.assertEquals('2005-04-28T12:16:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
 
     def testListRecordsError(self):
         try:
@@ -60,16 +60,12 @@ class OaiRequestTest(unittest.TestCase):
             self.assertEquals(u'badResumptionToken', e.errorCode())
 
     def testListRecords(self):
-        records, resumptionToken, responseDate = self.request.listRecords(metadataPrefix='oai_dc')
-        self.assertEquals("TestToken", resumptionToken)
-        self.assertEquals("2004-12-29T13:19:27Z", responseDate)
-        self.assertEquals(3, len(records))
-        self.assertEquals('oai:tudelft.nl:007087', xpathFirst(records[0], 'oai:header/oai:identifier/text()'))
-        self.assertEquals(None, xpathFirst(records[0], 'oai:header/@status'))
-
-    def testIdentify(self):
-        identify = self.request.identify()
-        self.assertEquals('TU Delft digital repository', xpathFirst(identify, 'oai:repositoryName/text()'))
+        response = self.request.listRecords(metadataPrefix='oai_dc')
+        self.assertEquals("TestToken", response.resumptionToken)
+        self.assertEquals("2004-12-29T13:19:27Z", response.responseDate)
+        self.assertEquals(3, len(response.records))
+        self.assertEquals('oai:tudelft.nl:007087', xpathFirst(response.records[0], 'oai:header/oai:identifier/text()'))
+        self.assertEquals(None, xpathFirst(response.records[0], 'oai:header/@status'))
 
     def mockRequest(self, args):
         self.mockRequest_args = args
@@ -87,14 +83,14 @@ class OaiRequestTest(unittest.TestCase):
         self.assertEquals('prefix', self.mockRequest_args['metadataPrefix'])
 
     def testGetRecord(self):
-        record = self.request.getRecord(identifier='oai:rep:12345', metadataPrefix='oai_dc')
-        self.assertEquals('oai:rep:12345', xpathFirst(record, 'oai:header/oai:identifier/text()'))
+        response = self.request.getRecord(identifier='oai:rep:12345', metadataPrefix='oai_dc')
+        self.assertEquals('oai:rep:12345', xpathFirst(response.record, 'oai:header/oai:identifier/text()'))
 
     def testListRecordsWithAnEmptyList(self):
-        records, resumptionToken, responseDate = self.request.listRecords(resumptionToken='EmptyListToken')
-        self.assertEquals(0, len(records))
-        self.assertEquals("", resumptionToken)
-        self.assertEquals("2005-01-12T14:34:49Z", responseDate)
+        response = self.request.listRecords(resumptionToken='EmptyListToken')
+        self.assertEquals(0, len(response.records))
+        self.assertEquals("", response.resumptionToken)
+        self.assertEquals("2005-01-12T14:34:49Z", response.responseDate)
 
     def testBuildRequestUrl(self):
         oaiRequest = OaiRequest("http://x.y.z/oai")
@@ -102,3 +98,16 @@ class OaiRequestTest(unittest.TestCase):
 
         oaiRequest = OaiRequest("http://x.y.z/oai?apikey=xyz123")
         self.assertEquals("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
+
+def oaiResponse(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
+    about = '<about/>' if about is None else about
+    return OaiResponse(XML("""<OAI-PMH xmlns="{namespaces.oai}"><responseDate>{responseDate}</responseDate><{verb}><record><header{statusDeleted}><identifier>{identifier}</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>{metadata}{about}</record></{verb}></OAI-PMH>""".format(
+                namespaces=namespaces,
+                verb=verb,
+                responseDate=responseDate,
+                identifier=identifier,
+                statusDeleted=' status="deleted"' if deleted else '',
+                metadata='<metadata></metadata>' if not deleted else '',
+                about=about if not deleted else '',
+            )
+        ))
