@@ -1,10 +1,11 @@
 <%
-execcode = '''upload.parts['record'] = lxmltostring(input.record)
+execcode = '''upload.parts['record'] = lxmltostring(upload.record)
 
 upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
   <upload><id>%(id)s</id></upload>
   <record>
     <id>%(recordId)s</id>
+    <harvestdate>%(harvestDate)s</harvestdate>
   </record>
   <repository>
     <id>%(repository)s</id>
@@ -16,13 +17,14 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
   </repository>
 </meta>""" % dict([(k,xmlEscape(v)) for k,v in {
   'id': upload.id,
-  'set': input.repository.set,
-  'baseurl': input.repository.baseurl,
-  'repositoryGroupId':  input.repository.repositoryGroupId,
-  'repository': input.repository.id,
-  'metadataPrefix': input.repository.metadataPrefix,
-  'collection': input.repository.collection,
+  'set': upload.repository.set,
+  'baseurl': upload.repository.baseurl,
+  'repositoryGroupId':  upload.repository.repositoryGroupId,
+  'repository': upload.repository.id,
+  'metadataPrefix': upload.repository.metadataPrefix,
+  'collection': upload.repository.collection,
   'recordId': upload.recordIdentifier,
+  'harvestDate': upload.oaiResponse.responseDate,
 }.items()])
 '''
 description = """This mapping is what has become the default mapping for most Meresco based projects.

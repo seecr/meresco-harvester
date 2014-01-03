@@ -4,9 +4,9 @@
   <name>default</name>
   <description>This mapping is what has become the default mapping for most Meresco based projects.
 </description>
-  <code>upload.parts['metadata'] = lxmltostring(xpathFirst(input.record, 'oai:metadata'))
+  <code>upload.parts['metadata'] = lxmltostring(xpathFirst(upload.record, 'oai:metadata'))
 
-upload.parts['header'] = lxmltostring(xpathFirst(input.record, 'oai:header'))
+upload.parts['header'] = lxmltostring(xpathFirst(upload.record, 'oai:header'))
 
 upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester/meta"&gt;
   &lt;upload&gt;&lt;id&gt;%(id)s&lt;/id&gt;&lt;/upload&gt;
@@ -23,12 +23,12 @@ upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester
   &lt;/repository&gt;
 &lt;/meta&gt;""" % dict([(k,xmlEscape(v)) for k,v in {
   'id': upload.id,
-  'set': input.repository.set,
-  'baseurl': input.repository.baseurl,
-  'repositoryGroupId':  input.repository.repositoryGroupId,
-  'repository': input.repository.id,
-  'metadataPrefix': input.repository.metadataPrefix,
-  'collection': input.repository.collection,
+  'set': upload.repository.set,
+  'baseurl': upload.repository.baseurl,
+  'repositoryGroupId':  upload.repository.repositoryGroupId,
+  'repository': upload.repository.id,
+  'metadataPrefix': upload.repository.metadataPrefix,
+  'collection': upload.repository.collection,
   'recordId': upload.recordIdentifier,
 }.items()])
 </code>

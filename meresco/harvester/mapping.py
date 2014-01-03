@@ -49,8 +49,8 @@ execcode = DEFAULT_DC_CODE = DEFAULT_CODE = """
 #Map template
 #
 #Input
-# input.record = OAI Record lxmlNode
-# input.repository = Repository object
+# upload.record = OAI Record lxmlNode
+# upload.repository = Repository object
 #
 #Available Methods:
 # isUrl(aString) determines if aString is a url.
