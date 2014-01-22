@@ -67,7 +67,7 @@ for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId'
 <%
   if errorsnr:
 %>
-    <a name="top_<%= status.repositoryId %>" href="#<%= status.repositoryId %>"><%=errorsnr%> error<%='s' if errorsnr != 1 else ''%></a>
+    <a name="top_<%= repositoryId %>" href="#<%= repositoryId %>"><%=errorsnr%> error<%='s' if errorsnr != 1 else ''%></a>
 <%
   #
 %>
@@ -94,7 +94,7 @@ for status in statuses:
 <tr class="eventinfo">
 <td><a name="<%= repositoryId %>" href="#top_<%= repositoryId %>"><%= repositoryId %></a></td>
 <td>Last successful harvest</td>
-<td><%= status.lastHarvestDate %></td>
+<td><%= escape_html(xpathFirst(status, 'sahara:lastHarvestDate/text()') or '') %></td>
 </tr>
 <tr>
 <td>&nbsp;</td>
@@ -102,14 +102,13 @@ for status in statuses:
 <td><b><%= errorsnr %></b></td>
 </tr>
 <%
-    if hasattr(status.recenterrors, 'error'):
-      for error in status.recenterrors.error:
-        #
+    for error in xpath(status, 'sahara:recenterrors/sahara:error'):
+      #
 %>
   <tr class="eventerror">
     <td>&nbsp;</td>
-    <td class="alt"><%= error.date %></td>
-    <td class="alt"><% escape_html(error.split('|')[-1]) %></td>
+    <td class="alt"><%= xpathFirst(error, '@date') %></td>
+    <td class="alt"><% escape_html(error.text.split('|')[-1]) %></td>
   </tr>
 <%
 #
@@ -134,7 +133,7 @@ for status in statuses:
 <%
     invalidIds = xpath(status, 'sahara:recentinvalids/sahara:invalidId')
     for invalidId in invalidIds:
-      recordId = invalidId.split(":", 1)[-1]
+      recordId = invalidId.text.split(":", 1)[-1]
       newArgs = {'recordId': recordId, 'repositoryId': repositoryId, 'domainId': domainId}
       #
 %>
