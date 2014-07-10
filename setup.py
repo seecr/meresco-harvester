@@ -48,7 +48,6 @@ setup(
         ]
     },
     scripts=[
-        'bin/meresco-harvester-create-service',
         'bin/meresco-harvester-internal-server',
         'bin/meresco-harvester',
     ],
