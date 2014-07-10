@@ -21,9 +21,9 @@ function show_usage {
 }
 
 DOMAIN=
-HARVESTER_URL=DEFAULT_HARVESTER_URL
-SLEEP=DEFAULT_SLEEP
-CONCURRENCY=DEFAULT_CONCURRENCY
+HARVESTER_URL=${DEFAULT_HARVESTER_URL}
+SLEEP=${DEFAULT_SLEEP}
+CONCURRENCY=${DEFAULT_CONCURRENCY}
 
 TEMP=$(getopt \
     --options "" \
@@ -70,19 +70,21 @@ if [ ! -f /etc/meresco-harvester/install.config ]; then
 fi
 
 source /etc/meresco-harvester/install.config
-if [ ! -f ${DATAPATH}/${DOMAIN}.domain ]; then
+if [ ! -f ${DATAPATH}/harvester-data/${DOMAIN}.domain ]; then
     echo "Domain '${DOMAIN}' not found."
     exit 1
 fi
 
-RUN_SCRIPT="meresco-harvester \
-    --domain=${DOMAIN} \
-    --saharaurl=${HARVESTER_URL} \
-    --concurrency=${CONCURRENCY} \
-    --runOnce \
-    2>&1 "$@"
-"
+RUN_SCRIPT="
+sleep ${SLEEP}
 
+exec setuidgid ${USER} meresco-harvester \\
+    --domain=${DOMAIN} \\
+    --saharaurl=${HARVESTER_URL} \\
+    --concurrency=${CONCURRENCY} \\
+    --runOnce \\
+    2>&1 \"\$@\"
+"
 SERVICE_NAME=meresco-harvester-${DOMAIN}
-svc_create_service ${USERNAME} $(user_groupname ${USERNAME}) ${SERVICE_DIR} "" ${SERVICE_NAME} "${RUN_SCRIPT}"
+svc_create_service ${USER} $(user_groupname ${USER}) ${SERVICE_DIR} "" ${SERVICE_NAME} "${RUN_SCRIPT}"
 svc_prepare_service ${SERVICE_DIR} ${SERVICE_NAME}
