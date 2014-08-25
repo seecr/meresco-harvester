@@ -37,7 +37,7 @@ class HTTPSConnectionV3(HTTPSConnection):
         HTTPSConnection.__init__(self, *args, **kwargs)
 
     def connect(self):
-        sock = socket.create_connection((self.host, self.port), self.timeout)
+        sock = create_connection((self.host, self.port), self.timeout)
         if version_info < (2, 6, 7):
             if hasattr(self, '_tunnel_host'):
                 self.sock = sock
