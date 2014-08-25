@@ -32,7 +32,7 @@
 #
 ## end license ##
 
-from urllib2 import urlopen
+from urllib2 import urlopen, install_opener, build_opener
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
@@ -41,6 +41,8 @@ from lxml.etree import parse
 from urllib import urlencode
 from meresco.components import lxmltostring
 
+from httpsconnection import HTTPSHandlerV3
+install_opener(build_opener(HTTPSHandlerV3()))
 
 class OaiRequestException(Exception):
     def __init__(self, url, message):
