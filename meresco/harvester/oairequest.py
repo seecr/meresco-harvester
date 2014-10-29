@@ -41,8 +41,10 @@ from lxml.etree import parse
 from urllib import urlencode
 from meresco.components import lxmltostring
 
-from httpsconnection import HTTPSHandlerV3
-install_opener(build_opener(HTTPSHandlerV3()))
+#from httpsconnection import HTTPSHandlerV3
+#install_opener(build_opener(HTTPSHandlerV3()))
+from httpsconnection import HTTPSHandlerTLS
+install_opener(build_opener(HTTPSHandlerTLS()))
 
 class OaiRequestException(Exception):
     def __init__(self, url, message):
