@@ -59,7 +59,7 @@ from meresco.components.http import ObservableHttpServer, PathFilter, StringServ
 from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML
 from meresco.components import StorageComponent
-from meresco.oai import OaiPmh, OaiJazz
+from meresco.oai4 import OaiPmh, OaiJazz
 from meresco.core import Observable
 from meresco.harvester.namespaces import xpathFirst
 
