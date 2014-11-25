@@ -438,6 +438,7 @@ class HarvesterTest(IntegrationTestCase):
 
         while not listdir(self.dumpDir):
             sleep(0.1)
+        sleepWheel(1)
         log = open(stdoutfile).read()
         xyzOccurrences = log.count('[xyz]')
 
@@ -447,7 +448,7 @@ class HarvesterTest(IntegrationTestCase):
         try:
             self.assertFalse('Traceback' in log, log)
             newXyzOccurrences = log.count('[xyz]')
-            self.assertEquals(xyzOccurrences, newXyzOccurrences, log)
+            self.assertEquals(xyzOccurrences, newXyzOccurrences, "%s!=%s\n%s" % (xyzOccurrences, newXyzOccurrences, log))
         finally:
             kill(self.harvesterPID, 2)
             t.join()
