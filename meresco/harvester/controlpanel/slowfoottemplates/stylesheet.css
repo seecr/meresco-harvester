@@ -181,6 +181,10 @@ input[type=submit] {
     cursor: pointer;
 }
 
+.eventerror .trace {
+  font-family: Courier;
+}
+
 /** LOGIN PAGE **/
 #loginpage h1::before, #loginpage h4::before, #login-form dd::before, #login-form p.error::before {
     content: '';

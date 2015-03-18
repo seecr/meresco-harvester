@@ -27,9 +27,8 @@ if originalArgs['repositoryId']:
     %><h3>Repository: <%=originalArgs['repositoryId']%></h3><%
 #
 %>
-<table class="event">
+<table class="event" width="100%" cellspacing="0" cellpadding="0">
 <tr class="eventheader">
-<td>RepositoryGroup</td>
 <td>Repository</td>
 <td>Last successful harvest</td>
 <td>Total records</td>
@@ -48,7 +47,6 @@ for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId'
   style = errorsnr and 'style="font-weight:bold"' or ''
 %>
 <tr class="table_row">
-<td <%=style%> class="link"><%='<a href="/page/repositoryGroup.edit/%s.%s.repositoryGroup">' % (domainId, repositoryGroupId) if loggedIn else ''%><% escape_html(repositoryGroupId) %><%='</a>' if loggedIn else ''%></td>
 <td <%=style%> class="link"><%='<a href="/page/repository.edit/%s.%s.repository?%s">' % (domainId, repositoryId, urlencode(dict(referrerGroup=repositoryGroupId))) if loggedIn else ''%><% escape_html(repositoryId) %><%='</a>' if loggedIn else ''%></td>
 <td <%=style%>><% escape_html(xpathFirst(status, 'sahara:lastHarvestDate/text()') or '') %></td>
 <td><% escape_html(xpathFirst(status, 'sahara:total/text()') or '') %></td>
@@ -84,7 +82,7 @@ for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId'
 </div>
 
 <div><h3>Harvester Errors</h3>
-<table class="event">
+<table class="event" width="100%" cellspacing="0" cellpadding="0">
 <%
 for status in statuses:
   repositoryId = xpathFirst(status, '@repositoryId')
@@ -94,22 +92,15 @@ for status in statuses:
 %>
 <tr class="eventinfo">
 <td><a name="<%= repositoryId %>" href="#top_<%= repositoryId %>"><%= repositoryId %></a></td>
-<td>Last successful harvest</td>
-<td><%= escape_html(xpathFirst(status, 'sahara:lastHarvestDate/text()') or '') %></td>
-</tr>
-<tr>
-<td>&nbsp;</td>
-<td>Nr. of errors since:</td>
-<td><b><%= errorsnr %></b></td>
+<td>Nr. of errors since: <b><%= errorsnr %></b></td>
 </tr>
 <%
     for error in xpath(status, 'sahara:recenterrors/sahara:error'):
       #
 %>
   <tr class="eventerror">
-    <td>&nbsp;</td>
-    <td class="alt"><%= xpathFirst(error, '@date') %></td>
-    <td class="alt"><% escape_html(error.text.split('|')[-1]) %></td>
+    <td nowrap="nowrap" valign="top"><%= xpathFirst(error, '@date') %></td>
+    <td class="trace"><% escape_html(error.text.split('|')[-1]) %></td>
   </tr>
 <%
 #
@@ -118,7 +109,7 @@ for status in statuses:
 </div>
 
 <div><h3>Validatie Errors</h3>
-<table class="event">
+<table class="event" width="100%" cellspacing="0" cellpadding="0">
 <%
 for status in statuses:
   repositoryId = xpathFirst(status, '@repositoryId')
