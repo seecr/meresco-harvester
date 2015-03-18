@@ -1,11 +1,8 @@
-<p class="head">Domains Administration</p>
-
-<p>
- <fieldset><legend class="subhead">Domains</legend>
+<h1>Domains Administration</h1>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
+  <div>
   <form action='/domain.new' method='post'>
-   <fieldset><legend>Create new domain</legend>
     <table width="320" border="0" cellspacing="0" cellpadding="0">
      <tr>
       <td width="60">Name:&nbsp;</td>
@@ -13,13 +10,13 @@
       <td width="40"><input name="submit" type="submit" class="butt" value="Create"></td>
      </tr>
     </table>
-   </fieldset>
   </form>
+  </div>
 
 
 
-  <fieldset><legend>Existing domains</legend>
-   <table border="0" cellspacing="4" cellpadding="0">
+  <div>
+   <table border="0" cellspacing="0" cellpadding="0" width="50%">
 <%
 def nameFile(fname):
   return fname[:-len('.domain')], fname
@@ -27,11 +24,11 @@ def nameFile(fname):
 for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
   #
 %>
-    <tr>
+    <tr class="table_row">
      <td><%=id%></td>
      <td>
       <a href="/page/domain.edit/<%=file%>">
-       <img src="/images/edit.png" border="0"> Edit / View
+       Edit / View
       </a>
      </td>
     </tr>
@@ -39,17 +36,13 @@ for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
 #
 %>
    </table>
-  </fieldset>
- </fieldset>
-</p>
+  </div>
 
 
 
 
-<p>
- <fieldset><legend class="subhead">Users</legend>
+<h1>Users Administration</h1>
   <form action='/user.new/users.xml' method='post'>
-   <fieldset><legend>Create new user</legend>
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
      <tr>
       <td width="60">Username:&nbsp;</td>
@@ -78,23 +71,23 @@ for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
       <td width="200"><input name="password2" type="password" class="zkveld" value=""></td>
      </tr>
      <tr>
-      <td colspan="2" style="text-align: right;"><input name="submit" type="submit" class="butt" value="Create"></td>
+      <td></td>
+      <td><input name="submit" type="submit" class="butt" value="Create"></td>
      </tr>
     </table>
-   </fieldset>
   </form>
 
 
-  <fieldset><legend>Existing users</legend>
+  <div>
    <table width="100%" border="0" cellspacing="4" cellpadding="0">
 <%
 for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
   user_localname = user.tag.split('}')[-1]
   user_fullname = xpathFirst(user, 'name/text()') or ''
 %>
-    <tr>
+    <tr class="table_row">
      <td>
-      <fieldset><legend>User: <% escape_html(user_fullname) %></legend>
+       <h3><% escape_html(user_fullname) %></h3>
        <table width="100%">
         <tr>
          <td width="15%"><b>Full name:</b></td>
@@ -119,24 +112,20 @@ for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
          <td colspan="3" ><pre><% escape_html(xpathFirst(user, 'notes/text()') or '') %></pre></td>
         </tr>
        </table>
-       <p style="text-align: right;">
+       <p>
        <a href="/page/user.edit/users.xml?user=<%= user_localname %>">
-        <img src="/images/edit.png" border="0"> Edit / View
+        Edit / View
        </a>
        &nbsp;
-       <a class="butt" href="/page/areYouSure/show?<%= 
+       <a class="butt" href="/page/areYouSure/show?<%=
          urlencode({'ok':'/user.delete/users.xml?user=' + user_localname,
          'filename':user_localname
          })%>">
-        <img src="/images/delete.jpg" border="0"> Delete
+        Delete
        </a>
        </p>
-      </fieldset>
 <%
 #
 %>
    </table>
-  </fieldset>
- </fieldset>
-</fieldset>
-</p>
+  </div>

@@ -1,6 +1,7 @@
 <%
 prepareHeaders('no-cache')
 version = '$Version: trunk$'[9:-1].strip()
+version = '9.0'
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -11,21 +12,18 @@ version = '$Version: trunk$'[9:-1].strip()
     <meta http-equiv="Cache-Control" content="no-cache"/>
     <meta http-equiv="Expires" content="-1"/>
   <link href="/css/stylesheet.css" rel="stylesheet" type="text/css"/>
-  <link href="/css/form.css" rel="stylesheet" type="text/css"/>
+  <link rel="shortcut icon" href="https://cdn.seecr.nl/favicon.ico" />
   <script type="text/javascript" src="/scripts.js"></script>
 </head>
 <body>
-<table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="10" bgcolor="#FFFFFF">
+<table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="10">
   <tr>
     <td align="left" valign="top">
       <table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="0">
         <tr>
-          <td colspan="2" class="sahara">&nbsp;</td>
+          <td class="customer">&nbsp;</td>
+          <td class="logo">&nbsp;</td>
         </tr>
-        <tr>
-          <td width="160" class="horline"></td>
-          <td class="horline"></td>
-        </tr>		
         <tr>
           <td align="left" valign="top">
             <%include('/page.sitemap')%>

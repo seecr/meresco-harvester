@@ -12,28 +12,22 @@ U bent al ingelogd als: <%=username%><br>
 else:
 %>
 <%=args.login and 'Username or password invalid.<br>' or ''%>
-<form action="/logintosahara" method="post">
-  <fieldset>
-  <legend>Logging in</legend>
-  <table>
-  <tr>
-    <td><label>username:</label></td>
-    <td><input type="text" name="username" value=""></td>
-  </tr>
-  <tr>
-    <td><label>password:</label></td>
-    <td><input type="password" name="password" value=""></td>
-  </tr>
-  <tr>
-    <td>&nbsp;</td>
-    <td>
-      <input type="hidden" name="referer" value="<%=args.referer or referer%>">
-      <input type="submit" name="action" class="butt" value="login">
-    </td>
-  </tr>
-  </table>
-  </fieldset>
-</form>
+<div id="loginpage">
+            <h1>Inloggen</h1>
+            <h4>Log in met uw persoonlijke account</h4>
+            <div id="login-form">
+
+    <form method="POST" name="login" action="/logintosahara">
+        <input type="hidden" name="formUrl" value="/index"/>
+        <dl>
+            <dt>Gebruikersnaam</dt>
+            <dd><input type="text" name="username" value=""/></dd>
+            <dt>Wachtwoord</dt>
+            <dd><input type="password" name="password"/></dd>
+            <dd class="submit"><input type="submit" value="Inloggen"/></dd>
+        </dl>
+    </form>
+</div>
 <%
 #
 %>

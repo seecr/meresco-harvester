@@ -10,13 +10,12 @@ if userNode is None:
 %>
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
-<p class="head">User Administration</p>
+<h1>User Administration</h1>
 
+<div><h4>User: <%=userAttr('name')%></h4>
 <form method="post" action="/user.save">
 <%
 %>
-  <fieldset>
-    <legend class="subhead">User: <%=userAttr('name')%></legend>
 	<input type="hidden" name="user" value="<%=username%>">
     <table>
       <tr>
@@ -51,10 +50,9 @@ if userNode is None:
         <td colspan="2"><textarea name="notes" rows="5" cols="60"><% escape_html(userAttr('notes')) %></textarea></td>
       </tr>
     </table>
-    <p style="text-align: right">
+    <p>
      <input type="submit" name="action" class="butt" value="Save" accesskey="s">
     </p>
-	</fieldset>
  </form>
-</p>
+</div>
 <a href="/page/domains/show">Back to Domains & Users</a>

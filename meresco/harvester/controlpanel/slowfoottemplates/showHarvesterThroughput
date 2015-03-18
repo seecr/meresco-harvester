@@ -17,7 +17,7 @@ dateSince = time.strftime("%Y-%m-%d", time.localtime(time.time() - days * 3600 *
 %>
 
 <p>
-<h3><%= "Harvester throughput for the '%s' %s for the past %i days." % (caption, objectType, days) %></h3>
+<h2><%= "Harvester throughput for the '%s' %s for the past %i days." % (caption, objectType, days) %></h2>
 </p>
 
 <%

@@ -14,16 +14,17 @@ for status in xpath(aslxml(statusUrl), '/sahara:saharaget/sahara:GetStatus/sahar
     invalid[xpathFirst(status, 'sahara:repositoryId/text()')] = status
 #
 %>
-<p class="head">Harvester Status</p>
-<p>Domain: <%=domainId%> <a href="/running.rss?<%= urlencode(dict(domainId=domainId)) %>"><img src="/images/rss.png"/></a></p>
+<h1>Harvester Status</h1>
+<h2>Domain: <%=domainId%> <a href="/running.rss?<%= urlencode(dict(domainId=domainId)) %>"><img src="/images/rss.png"/></a></h2>
+<div>
 <%
 if originalArgs['repositoryGroupId']:
-    %><p>RepositoryGroup: <%=originalArgs['repositoryGroupId']%></p><%
+    %><h3>RepositoryGroup: <%=originalArgs['repositoryGroupId']%></h3><%
 #
 %>
 <%
 if originalArgs['repositoryId']:
-    %><p>Repository: <%=originalArgs['repositoryId']%></p><%
+    %><h3>Repository: <%=originalArgs['repositoryId']%></h3><%
 #
 %>
 <table class="event">
@@ -46,7 +47,7 @@ for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId'
   errorsnr = int(xpathFirst(status, 'sahara:totalerrors/text()'))
   style = errorsnr and 'style="font-weight:bold"' or ''
 %>
-<tr>
+<tr class="table_row">
 <td <%=style%> class="link"><%='<a href="/page/repositoryGroup.edit/%s.%s.repositoryGroup">' % (domainId, repositoryGroupId) if loggedIn else ''%><% escape_html(repositoryGroupId) %><%='</a>' if loggedIn else ''%></td>
 <td <%=style%> class="link"><%='<a href="/page/repository.edit/%s.%s.repository?%s">' % (domainId, repositoryId, urlencode(dict(referrerGroup=repositoryGroupId))) if loggedIn else ''%><% escape_html(repositoryId) %><%='</a>' if loggedIn else ''%></td>
 <td <%=style%>><% escape_html(xpathFirst(status, 'sahara:lastHarvestDate/text()') or '') %></td>
@@ -80,9 +81,9 @@ for status in sorted(statuses, key=lambda s: (xpathFirst(s, '@repositoryGroupId'
 #
 %>
 </table>
-<br/>
+</div>
 
-<p class="head">Harvester Errors</p>
+<div><h3>Harvester Errors</h3>
 <table class="event">
 <%
 for status in statuses:
@@ -114,8 +115,9 @@ for status in statuses:
 #
 %>
 </table>
+</div>
 
-<p class="head">Validatie Errors</p>
+<div><h3>Validatie Errors</h3>
 <table class="event">
 <%
 for status in statuses:
@@ -146,3 +148,4 @@ for status in statuses:
 #
 %>
 </table>
+</div>

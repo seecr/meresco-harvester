@@ -6,11 +6,11 @@ def targetAttr(attr):
 targetId = xpathFirst(searchEngineTarget, 'id/text()')
 %>
 
-<p class="head">Target Administration</p>
+<h1>Target Administration</h1>
+<div><h4>Target (<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>)</h4>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
-<fieldset><legend class="subhead">Target (<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>)</legend>
 <%
 if session.get('isAdmin',''):
   #
@@ -143,7 +143,7 @@ else:
     <td><%escape_html(targetName)%></td>
     <td>
       <a href="/page/target.edit/<%= id %>.target?referrerDomain=<%= args.referrerDomain %>">
-      <img src="/images/edit.png" border="0">View
+      View
       </a>
     </td>
   </tr>
@@ -156,12 +156,12 @@ else:
 <%
 #
 %>
- <p style="text-align: right;">
+ <p >
   <input type="submit" name="action" class="butt" value="Save" accesskey="s">
  </p>
 </form>
 
-</fieldset>
+</div>
 <p>
  <a href="/page/domain.edit/<%=args.referrerDomain%>.domain">Back to domain</a>
 </p>

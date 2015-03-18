@@ -5,11 +5,10 @@ mappingId = xpathFirst(mapping, 'id/text()')
 mappingName = xpathFirst(mapping, 'name/text()') or ''
 %>
 
-<p class="head">Mapping Administration</p>
+<h1>Mapping Administration</h1>
+<div><h4>Mapping (<%=mappingName%>)</h4>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
-<fieldset>
-    <legend class="subhead">Mapping (<%=mappingName%>)</legend>
 <%
 if session.get('isAdmin',''):
 %>
@@ -29,15 +28,17 @@ if session.get('isAdmin',''):
       <textarea rows="5" cols="80" name="description"><%escape_html(xpathFirst(mapping, 'description/text()') or '')%></textarea>
     </td>
   </tr>
-</table>
-
-Script:<br>
+  <tr>
+    <td valign="top">Script:</td>
+    <td>
 <textarea rows="30" cols="100" name="code"><%escape_html(xpathFirst(mapping, 'code/text()') or '')%></textarea>
 
-<p style="text-align: right">
+</td>
+</tr>
+</table>
+<p>
  <input type="submit" name="action" class="butt" value="Validate and Save" accesskey="s">
 </p>
-
 </form>
 <%
 else:
@@ -60,5 +61,7 @@ Script:<br>
 <%
 #
 %>
+<p>
+ <a href="/page/domain.edit/<%=args.referrerDomain%>.domain">Back to domain</a>
+</p>
 
-</fieldset>

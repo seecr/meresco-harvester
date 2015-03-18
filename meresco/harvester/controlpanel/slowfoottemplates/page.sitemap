@@ -8,7 +8,7 @@ if session.get('username',''):
 %>
   <tr>
     <td class="button">
-      <a href="/page/home">HOME</a>
+      <a href="/page/home">Home</a>
     </td>
   </tr>
 <%

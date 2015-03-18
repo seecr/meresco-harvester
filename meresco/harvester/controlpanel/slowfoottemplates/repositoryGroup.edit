@@ -9,26 +9,24 @@ if not session.get('isAdmin','') and session.get('domain', '') != domainId:
 #
 fileName = "%s.%s.repositoryGroup"%(domainId,groupId)
 %>
-<p class="head">Repositorygroup Administration</p>
+<h1>Repositorygroup Administration</h1>
 
+<div><h3>Repository Group <%= groupId %></h3>
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 <form method="post" action="/repositoryGroup.save/<%= fileName %>">
-  <fieldset><legend class="subhead">Repository Group <%= groupId %></legend>
-    <table>
+    <table cellspacing="0" cellpadding="0">
       <tr><td>Key:</td><td><input size="15"  type="hidden" name="id" value="<%=groupId%>"><%=groupId%></td></tr>
       <tr><td>Dutch Name:</td><td><input size="50"  type="text" name="nl_name" value="<%=unicode(xpathFirst(group, """name[@xml:lang='nl']/text()""") or '') %>"></td></tr>
       <tr><td>English Name:</td><td><input size="50"  type="text" name="en_name" value="<%=unicode(xpathFirst(group, """name[@xml:lang='en']/text()""") or '') %>"></td></tr>
     </table>
-    <p style="text-align: right;">
+    <p>
      <input type="submit" name="action" class="butt" value="Save" accesskey="s">
     </p>
-  </fieldset>
 </form>
+</div>
 
-<p>
-<fieldset><legend class="subhead">Repositories</legend>
+<div><h3>Repositories</h3>
  <form action='/repository.new/<%= fileName %>' method='post'>
-  <fieldset><legend>Create new repository</legend>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Key:&nbsp;</td>
@@ -37,32 +35,28 @@ fileName = "%s.%s.repositoryGroup"%(domainId,groupId)
     </tr>
    </table>
  </form>
-</fieldset>
 
-<fieldset><legend>Existing repositories</legend>
- <table width="100%" border="0" cellspacing="4" cellpadding="0">
+ <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <%
 for repositoryId in sorted(xpath(group, 'repositoryId/text()'), key=lambda x:str(x).lower()):
   #
 %>
-  <tr>
+  <tr class="table_row">
    <td><%= repositoryId %></id>
    <td>
     <a href="/page/repository.edit/<%= domainId %>.<%= repositoryId %>.repository?referrerGroup=<%= groupId %>">
-	  <img src="/images/edit.png" border="0"> Edit / View
+	  Edit / View
     </a>
    </td>
    <td>
     <a href="/page/areYouSure/show?<%=
        urlencode({'filename':'repository '+repositoryId,
        'ok':'/repositoryGroup.deleteRepository/' + fileName + '?repository=' + repositoryId })%>">
-     <img src="/images/delete.jpg" width="14" height="14" border="0">
 	  Delete
     </a>
    </td>
    <td>
 	 <a href="/testrepository/<%= domainId %>.<%= repositoryId %>.repository">
-	  <img src="/images/exec.png" border="0">
 	  Test mapping
 	 </a>
    </td>
@@ -71,17 +65,10 @@ for repositoryId in sorted(xpath(group, 'repositoryId/text()'), key=lambda x:str
 #
 %>
  </table>
-</fieldset>
-
-</fieldset>
-</p>
+</div>
 
 
-
-
-
-<p>
-<fieldset><legend class="subhead">Status</legend>
+<div><h3>Status</h3>
  <ul>
  <li>
   <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&repositoryGroupId=<%= groupId %>">Harvester status of this repositoryGroup</a>
@@ -93,8 +80,7 @@ for repositoryId in sorted(xpath(group, 'repositoryId/text()'), key=lambda x:str
   <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryGroupId=<%= groupId %>&since=lastmonth">Harvester throughput of this repositorygroup for the past 31 days.</a>
  </li>
  </ul>
-</fieldset>
-</p>
+</div>
 <p>
 <a href="/page/domain.edit/<%=domainId%>.domain">Back to domain</a>
 </p>
