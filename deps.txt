@@ -1,5 +1,5 @@
 python-lxml (>= 2.1)
-python-lxml (<< 3.0)
+python-lxml (<< 3.5)
 python-slowfoot (>= 9.0)
 python-slowfoot (<< 9.1)
 python-escaping (>= 0.1)
