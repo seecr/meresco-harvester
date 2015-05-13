@@ -11,12 +11,11 @@ U bent al ingelogd als: <%=username%><br>
 <%
 else:
 %>
-<%=args.login and 'Username or password invalid.<br>' or ''%>
 <div id="loginpage">
             <h1>Inloggen</h1>
             <h4>Log in met uw persoonlijke account</h4>
             <div id="login-form">
-
+            <%=args.login and '<p class="error">Ongeldige gebruikersnaam of wachtwoord.</p>' or ''%>
     <form method="POST" name="login" action="/logintosahara">
         <input type="hidden" name="formUrl" value="/index"/>
         <dl>
