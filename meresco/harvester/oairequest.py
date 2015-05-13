@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -41,8 +41,6 @@ from lxml.etree import parse
 from urllib import urlencode
 from meresco.components import lxmltostring
 
-#from httpsconnection import HTTPSHandlerV3
-#install_opener(build_opener(HTTPSHandlerV3()))
 from httpsconnection import HTTPSHandlerTLS
 install_opener(build_opener(HTTPSHandlerTLS()))
 

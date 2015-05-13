@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2014-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -27,21 +27,10 @@
 ## end license ##
 
 from httplib import HTTPSConnection
-from ssl import wrap_socket, PROTOCOL_SSLv23, PROTOCOL_SSLv3, SSLError, PROTOCOL_TLSv1
+from ssl import wrap_socket, PROTOCOL_TLSv1
 from socket import create_connection
 from urllib2 import HTTPSHandler
 
-
-class HTTPSConnectionV3(HTTPSConnection):
-    def connect(self):
-        sock = create_connection((self.host, self.port), self.timeout)
-        if not getattr(self, '_tunnel_host') is None:
-            self.sock = sock
-            self._tunnel()
-        try:
-            self.sock = wrap_socket(sock, self.key_file, self.cert_file, ssl_version=PROTOCOL_SSLv3)
-        except SSLError:
-            self.sock = wrap_socket(sock, self.key_file, self.cert_file, ssl_version=PROTOCOL_SSLv23)
 
 class HTTPSConnectionTLS(HTTPSConnection):
     def connect(self):
@@ -50,10 +39,6 @@ class HTTPSConnectionTLS(HTTPSConnection):
             self.sock = sock
             self._tunnel()
         self.sock = wrap_socket(sock, self.key_file, self.cert_file, ssl_version=PROTOCOL_TLSv1)
-
-class HTTPSHandlerV3(HTTPSHandler):
-    def https_open(self, req):
-        return self.do_open(HTTPSConnectionV3, req)
 
 class HTTPSHandlerTLS(HTTPSHandler):
     def https_open(self, req):
