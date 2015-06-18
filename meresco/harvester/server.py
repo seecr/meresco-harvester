@@ -40,7 +40,7 @@ from weightless.core import compose, be
 
 from meresco.core import Observable
 
-from seecr.html import DynamicHtml
+from meresco.html import DynamicHtml
 
 from meresco.components import readConfig
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer
