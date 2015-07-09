@@ -14,5 +14,7 @@ python-meresco-xml (>= 4.1.6)
 python-meresco-xml (<< 4.3)
 python-meresco-html (>= 1.4.2)
 python-meresco-html (<< 1.5)
+seecr-zulutime (>= 0.2.3)
+seecr-zulutime (<< 0.3)
 python-simplejson
 
