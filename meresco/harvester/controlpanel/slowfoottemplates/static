@@ -1,0 +1,5 @@
+<%
+repositoriesUrl = url('%s%s' % (req.get_options()['internalServer'], req.uri))
+type(repositoriesUrl.info().gettype())
+req.write(repositoriesUrl.read())
+%>

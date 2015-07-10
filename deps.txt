@@ -16,5 +16,7 @@ python-meresco-html (>= 1.4.2)
 python-meresco-html (<< 1.5)
 seecr-zulutime (>= 0.2.3)
 seecr-zulutime (<< 0.3)
+seecr-web-lib (>= 0.1)
+seecr-web-lib (<< 0.2)
 python-simplejson
 

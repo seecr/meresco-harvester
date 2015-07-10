@@ -11,11 +11,11 @@ version = '$Version: master$'[9:-1].strip()
     <meta http-equiv="Cache-Control" content="no-cache"/>
     <meta http-equiv="Expires" content="-1"/>
   <link href="/css/stylesheet.css" rel="stylesheet" type="text/css"/>
-  <link href="//cdn.seecr.nl/tablesorter/style.css" rel="stylesheet" type="text/css"/>
-  <link rel="shortcut icon" href="https://cdn.seecr.nl/favicon.ico" />
+  <link href="/static/tablesorter-2.0.5/style.css" rel="stylesheet" type="text/css"/>
+  <link rel="shortcut icon" href="/static/favicon.ico" />
   <script type="text/javascript" src="/scripts.js"></script>
-  <script type="text/javascript" src="//cdn.seecr.nl/javascript/jquery-1.11.2.min.js"></script>
-  <script type="text/javascript" src="//cdn.seecr.nl/tablesorter/jquery.tablesorter.min.js"></script>
+  <script type="text/javascript" src="/static/javascript/jquery-1.11.2.min.js"></script>
+  <script type="text/javascript" src="/static/tablesorter-2.0.5/jquery.tablesorter.min.js"></script>
 </head>
 <body>
 <table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="10">

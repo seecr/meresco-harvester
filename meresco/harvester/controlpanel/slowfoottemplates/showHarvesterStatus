@@ -34,7 +34,7 @@ if originalArgs['repositoryId']:
 <th>Repository</th>
 <th>Last successful harvest</th>
 <th>Total records</th>
-<th>Harvested<br/>Uploaded<br/>Deleted</th>
+<th title="Harvested/Uploaded/Deleted">H/U/D</th>
 <th>#Validation<br/>Errors</th>
 <th>#Errors</th>
 <th>RSS</th>
@@ -111,7 +111,9 @@ $("table").tablesorter({
                 4: {sorter: 'errors'},
                 5: {sorter: 'errors'},
                 6: {sorter: false}
-            }
+            },
+            sortList: [[0,0]],
+            sortInitialOrder: "desc"
         });
 
 </script>
