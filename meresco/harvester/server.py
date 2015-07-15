@@ -1,4 +1,3 @@
-#!/usr/bin/env python2.5
 ## begin license ##
 #
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -40,7 +39,7 @@ from weightless.core import compose, be
 
 from meresco.core import Observable
 
-from seecr.html import DynamicHtml
+from meresco.html import DynamicHtml
 from seecr.weblib import seecrWebLibPath
 
 from meresco.components import readConfig
