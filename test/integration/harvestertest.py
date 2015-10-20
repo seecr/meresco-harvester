@@ -9,7 +9,7 @@
 #
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -264,7 +264,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals(set([
                 'harvestertestrepository:oai:record:10', 'harvestertestrepository:oai:record:09', 'harvestertestrepository:oai:record:08',
                 'harvestertestrepository:oai:record:07', 'harvestertestrepository:oai:record:06', 'harvestertestrepository:oai:record:05',
-                'harvestertestrepository:oai:record:04', 'harvestertestrepository:oai:record:03', 'harvestertestrepository:%0A oai:record:02%2F&gkn',
+                'harvestertestrepository:oai:record:04', 'harvestertestrepository:oai:record:03', 'harvestertestrepository:oai:record:02%2F&gkn',
                 'harvestertestrepository:oai:record:01'
             ]),
             set([id.strip() for id in open(join(self.filesystemDir, 'deleted_records'))])
@@ -309,7 +309,7 @@ class HarvesterTest(IntegrationTestCase):
         log.startRepository()
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,2,120,121]]:
             if uploadId == '%s:oai:record:02' % (REPOSITORY):
-                uploadId = '%s:\n oai:record:02/&gkn' % (REPOSITORY)
+                uploadId = '%s:oai:record:02/&gkn' % (REPOSITORY)
             log.notifyHarvestedRecord(uploadId)
             log.uploadIdentifier(uploadId)
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [4,5,122,123,124]]:

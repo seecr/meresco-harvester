@@ -7,7 +7,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
@@ -49,15 +49,15 @@ class InternalServerTest(IntegrationTestCase):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalid', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(['oai:record:08', 'oai:record:07', 'oai:record:05', 'oai:record:04', '\n oai:record:02/&gkn', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
+        self.assertEquals(['oai:record:08', 'oai:record:07', 'oai:record:05', 'oai:record:04', 'oai:record:02/&gkn', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
         self.assertEquals("/page/invalidRecord/?recordId=oai%3Arecord%3A08&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
         self.assertEquals("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
 
     def testViewInvalidRecordWithoutDetails(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': '\n oai:record:02/&gkn'}, parse='lxml')
-        self.assertEquals("Repository integrationtest - Record \n oai:record:02/&gkn", result.xpath("//h3/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02/&gkn'}, parse='lxml')
+        self.assertEquals("Repository integrationtest - Record oai:record:02/&gkn", result.xpath("//h3/text()")[0])
         self.assertEquals("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
         self.assertEquals(["No error message."], result.xpath("/div/pre/text()"))
 

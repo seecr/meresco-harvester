@@ -2,4 +2,5 @@ cq2utils (>= 5.4.18)
 cq2utils (<< 5.5)
 seecr-test (>= 1.1)
 seecr-test (<< 1.2)
-python-meresco-oai4 (=4.4)
+python-meresco-oai
+python-meresco-sequentialstore
