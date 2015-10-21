@@ -1,35 +1,6 @@
-<?xml version="1.0"?>
-<mapping>
-  <id>MAPPING</id>
-  <name>default</name>
-  <description>This mapping is what has become the default mapping for most Meresco based projects.
-</description>
-  <code>upload.parts['metadata'] = lxmltostring(xpathFirst(upload.record, 'oai:metadata'))
-
-upload.parts['header'] = lxmltostring(xpathFirst(upload.record, 'oai:header'))
-
-upload.parts['meta'] = """&lt;meta xmlns="http://meresco.org/namespace/harvester/meta"&gt;
-  &lt;upload&gt;&lt;id&gt;%(id)s&lt;/id&gt;&lt;/upload&gt;
-  &lt;record&gt;
-    &lt;id&gt;%(recordId)s&lt;/id&gt;
-  &lt;/record&gt;
-  &lt;repository&gt;
-    &lt;id&gt;%(repository)s&lt;/id&gt;
-    &lt;set&gt;%(set)s&lt;/set&gt;
-    &lt;baseurl&gt;%(baseurl)s&lt;/baseurl&gt;
-    &lt;repositoryGroupId&gt;%(repositoryGroupId)s&lt;/repositoryGroupId&gt;
-    &lt;metadataPrefix&gt;%(metadataPrefix)s&lt;/metadataPrefix&gt;
-    &lt;collection&gt;%(collection)s&lt;/collection&gt;
-  &lt;/repository&gt;
-&lt;/meta&gt;""" % dict([(k,xmlEscape(v)) for k,v in {
-  'id': upload.id,
-  'set': upload.repository.set,
-  'baseurl': upload.repository.baseurl,
-  'repositoryGroupId':  upload.repository.repositoryGroupId,
-  'repository': upload.repository.id,
-  'metadataPrefix': upload.repository.metadataPrefix,
-  'collection': upload.repository.collection,
-  'recordId': upload.recordIdentifier,
-}.items()])
-</code>
-</mapping>
+{
+    "code": "upload.parts['metadata'] = lxmltostring(xpathFirst(upload.record, 'oai:metadata'))\n\nupload.parts['header'] = lxmltostring(xpathFirst(upload.record, 'oai:header'))\n\nupload.parts['meta'] = \"\"\"<meta xmlns=\"http://meresco.org/namespace/harvester/meta\">\n  <upload><id>%(id)s</id></upload>\n  <record>\n    <id>%(recordId)s</id>\n  </record>\n  <repository>\n    <id>%(repository)s</id>\n    <set>%(set)s</set>\n    <baseurl>%(baseurl)s</baseurl>\n    <repositoryGroupId>%(repositoryGroupId)s</repositoryGroupId>\n    <metadataPrefix>%(metadataPrefix)s</metadataPrefix>\n    <collection>%(collection)s</collection>\n  </repository>\n</meta>\"\"\" % dict([(k,xmlEscape(v)) for k,v in {\n  'id': upload.id,\n  'set': upload.repository.set,\n  'baseurl': upload.repository.baseurl,\n  'repositoryGroupId':  upload.repository.repositoryGroupId,\n  'repository': upload.repository.id,\n  'metadataPrefix': upload.repository.metadataPrefix,\n  'collection': upload.repository.collection,\n  'recordId': upload.recordIdentifier,\n}.items()])\n",
+    "description": "This mapping is what has become the default mapping for most Meresco based projects.\n",
+    "identifier": "MAPPING",
+    "name": "default"
+}

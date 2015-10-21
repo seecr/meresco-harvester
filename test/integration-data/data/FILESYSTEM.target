@@ -1,9 +1,11 @@
-<?xml version="1.0"?>
-<target>
-  <id>FILESYSTEM</id>
-  <name>FILESYSTEM</name>
-  <username></username>
-  <targetType>filesystem</targetType>
-  <path>${integrationTempdir}/filesystem</path>
-  <oaiEnvelope>false</oaiEnvelope>
-</target>
+{
+    "baseurl": null,
+    "delegates": [],
+    "identifier": "FILESYSTEM",
+    "name": "FILESYSTEM",
+    "oaiEnvelope": false,
+    "path": "${integrationTempdir}/filesystem",
+    "port": 0,
+    "targetType": "filesystem",
+    "username": null
+}

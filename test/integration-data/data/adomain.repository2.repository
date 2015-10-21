@@ -1,15 +1,14 @@
-<?xml version="1.0"?>
-<repository>
-  <id>repository2</id>
-  <repositoryGroupId>Group2</repositoryGroupId>
-  <use>true</use>
-  <complete></complete>
-  <action></action>
-  <baseurl>http://localhost:${helperServerPortNumber}/oai</baseurl>
-  <set></set>
-  <collection>Integration</collection>
-  <targetId>SRUUPDATE</targetId>
-  <metadataPrefix>oai_dc</metadataPrefix>
-  <mappingId>MAPPING</mappingId>
-  <maximumIgnore>5</maximumIgnore>
-</repository>
+{
+    "action": null,
+    "baseurl": "http://localhost:${helperServerPortNumber}/oai",
+    "collection": "Integration",
+    "complete": false,
+    "identifier": "repository2",
+    "mappingId": "MAPPING",
+    "maximumIgnore": 5,
+    "metadataPrefix": "oai_dc",
+    "repositoryGroupId": "Group2",
+    "set": null,
+    "targetId": "SRUUPDATE",
+    "use": true
+}

@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<domain>
-    <id>adomain</id>
-    <mappingId>MAPPING</mappingId>
-    <repositoryGroupId>IntegrationTest</repositoryGroupId>
-    <repositoryGroupId>Group2</repositoryGroupId>
-</domain>
+{
+    "identifier": "adomain",
+    "mappingIds": [
+        "MAPPING"
+    ],
+    "repositoryGroupIds": [
+        "IntegrationTest",
+        "Group2"
+    ],
+    "targetIds": []
+}

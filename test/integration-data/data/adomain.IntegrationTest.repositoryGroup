@@ -1,8 +1,10 @@
-<?xml version="1.0"?>
-<repositoryGroup>
-  <id>IntegrationTest</id>
-  <name xml:lang="nl">IntegrationTest</name>
-  <name xml:lang="en">IntegrationTest</name>
-  <repositoryId>integrationtest</repositoryId>
-</repositoryGroup>
-
+{
+    "identifier": "IntegrationTest",
+    "name": {
+        "en": "IntegrationTest",
+        "nl": "IntegrationTest"
+    },
+    "repositoryIds": [
+        "integrationtest"
+    ]
+}

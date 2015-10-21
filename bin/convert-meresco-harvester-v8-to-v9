@@ -1,0 +1,138 @@
+#!/usr/bin/env python
+## begin license ##
+#
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+#
+# This file is part of "Meresco Harvester"
+#
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
+
+from seecrdeps import includeParentAndDeps       #DO_NOT_DISTRIBUTE
+includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
+
+from meresco.components import ParseArguments
+from meresco.components.json import JsonDict
+from meresco.xml.namespaces import xpathFirst, xpath
+from os import listdir, rename
+from os.path import abspath, join
+from lxml.etree import parse, XMLSyntaxError
+
+class Convert(object):
+    def __init__(self, dataDir, **ignored):
+        self._dataDir = abspath(dataDir)
+
+    def go(self):
+        for filename in listdir(self._dataDir):
+            if filename.endswith('.domain'):
+                self._convert(filename, self._convertDomain)
+            if filename.endswith('.repositoryGroup'):
+                self._convert(filename, self._convertRepositoryGroup)
+            if filename.endswith('.repository'):
+                self._convert(filename, self._convertRepository)
+            if filename.endswith('.target'):
+                self._convert(filename, self._convertTarget)
+            if filename.endswith('.mapping'):
+                self._convert(filename, self._convertMapping)
+
+    def _convert(self, filename, convert):
+        print filename,
+        filepath = join(self._dataDir, filename)
+        try:
+            xml = parse(open(filepath))
+            with open(filepath+'~', 'w') as f:
+                result = convert(xml)
+                result.dump(f, indent=4, sort_keys=True)
+            rename(filepath+'~', filepath)
+            print 'converted'
+        except XMLSyntaxError:
+            JsonDict.load(open(filepath))
+            print 'ok'
+
+    @staticmethod
+    def _convertDomain(xml):
+        return JsonDict(
+            identifier=xpathFirst(xml, '/domain/id/text()'),
+            mappingIds=xpath(xml, '/domain/mappingId/text()'),
+            targetIds=xpath(xml, '/domain/targetId/text()'),
+            repositoryGroupIds=xpath(xml, '/domain/repositoryGroupId/text()'),
+        )
+
+    @staticmethod
+    def _convertRepositoryGroup(xml):
+        return JsonDict(
+            identifier=xpathFirst(xml, '/repositoryGroup/id/text()'),
+            name=dict(
+                nl=xpathFirst(xml, '/repositoryGroup/name[@xml:lang="nl"]/text()'),
+                en=xpathFirst(xml, '/repositoryGroup/name[@xml:lang="en"]/text()'),
+            ),
+            repositoryIds=xpath(xml, '/repositoryGroup/repositoryId/text()'),
+        )
+
+    @staticmethod
+    def _convertRepository(xml):
+        return JsonDict(
+            identifier=xpathFirst(xml, '/repository/id/text()'),
+            repositoryGroupId=xpathFirst(xml, '/repository/repositoryGroupId/text()'),
+            use=xpathFirst(xml, '/repository/use/text()') == 'true',
+            complete=xpathFirst(xml, '/repository/complete/text()') == 'true',
+            action=xpathFirst(xml, '/repository/action/text()'),
+            baseurl=xpathFirst(xml, '/repository/baseurl/text()'),
+            set=xpathFirst(xml, '/repository/set/text()'),
+            collection=xpathFirst(xml, '/repository/collection/text()'),
+            targetId=xpathFirst(xml, '/repository/targetId/text()'),
+            metadataPrefix=xpathFirst(xml, '/repository/metadataPrefix/text()'),
+            mappingId=xpathFirst(xml, '/repository/mappingId/text()'),
+            maximumIgnore=int(xpathFirst(xml, '/repository/maximumIgnore/text()') or '0'),
+        )
+
+    @staticmethod
+    def _convertTarget(xml):
+        return JsonDict(
+            identifier=xpathFirst(xml, '/target/id/text()'),
+            name=xpathFirst(xml, '/target/name/text()'),
+            username=xpathFirst(xml, '/target/username/text()'),
+            port=int(xpathFirst(xml, '/target/port/text()') or '0'),
+            targetType=xpathFirst(xml, '/target/targetType/text()'),
+            delegates=xpath(xml, '/target/delegate/text()'),
+            path=xpathFirst(xml, '/target/path/text()'),
+            baseurl=xpathFirst(xml, '/target/baseurl/text()'),
+            oaiEnvelope=xpathFirst(xml, '/target/oaiEnvelope/text()') == 'true',
+        )
+
+    @staticmethod
+    def _convertMapping(xml):
+        return JsonDict(
+            identifier=xpathFirst(xml, '/mapping/id/text()'),
+            name=xpathFirst(xml, '/mapping/name/text()'),
+            description=xpathFirst(xml, '/mapping/description/text()'),
+            code=xpathFirst(xml, '/mapping/code/text()'),
+        )
+
+
+if __name__ == '__main__':
+    parser = ParseArguments()
+    parser.addOption('-d', '--dataDir', help="Datadir with v8 files.", mandatory=True)
+
+    options, arguments = parser.parse()
+
+    Convert(**vars(options)).go()

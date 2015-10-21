@@ -1,10 +1,11 @@
-<?xml version="1.0"?>
-<target>
-  <id>SRUUPDATE</id>
-  <name>SRUUPDATE</name>
-  <username></username>
-  <port>${helperServerPortNumber}</port>
-  <targetType>sruUpdate</targetType>
-  <path>/dump</path>
-  <baseurl>localhost</baseurl>
-</target>
+{
+    "baseurl": "localhost",
+    "delegates": [],
+    "identifier": "SRUUPDATE",
+    "name": "SRUUPDATE",
+    "oaiEnvelope": false,
+    "path": "/dump",
+    "port": ${helperServerPortNumber},
+    "targetType": "sruUpdate",
+    "username": null
+}

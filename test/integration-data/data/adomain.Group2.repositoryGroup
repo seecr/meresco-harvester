@@ -1,8 +1,10 @@
-<?xml version="1.0"?>
-<repositoryGroup>
-  <id>Group2</id>
-  <name xml:lang="nl">Groep2</name>
-  <name xml:lang="en">Group2</name>
-  <repositoryId>repository2</repositoryId>
-</repositoryGroup>
-
+{
+    "identifier": "Group2",
+    "name": {
+        "en": "Group2",
+        "nl": "Groep2"
+    },
+    "repositoryIds": [
+        "repository2"
+    ]
+}
