@@ -34,12 +34,13 @@ class HarvesterDataActions(PostActions):
 
     def __init__(self, **kwargs):
         PostActions.__init__(self, **kwargs)
-        self.registerAction('/addDomain', self._addDomain)
+        self.registerAction('addDomain', self._addDomain)
 
     def _addDomain(self, arguments, **kwargs):
         domainId = arguments.get('id')
         try:
             self.call.addDomain(id=domainId)
         except ValueError, e:
-            redirectHttp('/page/domains/show?{}.'.format(urlencode(dict(error=str(e)))))
+            return redirectHttp('/page/domains/show?{}.'.format(urlencode(dict(error=str(e)))))
+        return redirectHttp('/page/domain.edit/{}.domain'.format(domainId))
 

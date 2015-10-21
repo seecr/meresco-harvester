@@ -1,34 +1,33 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
-# 
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-from __future__ import with_statement
 from os import makedirs
 from os.path import join
 
@@ -93,7 +92,7 @@ class RepositoryStatusTest(SeecrTestCase):
             {'repositoryId': 'repoId3', 'changedate': "2012-08-13 12:00:00",'status': "Error", 'message': "an error message"},
         ]
         self.assertEquals(expected, self.status.getRunningStatesForDomain(self.domainId))
-        
+
 
     def testGetStatusForRepoIdAndDomainId(self):
         self.assertEqualsWS("""<GetStatus>
@@ -228,10 +227,10 @@ class RepositoryStatusTest(SeecrTestCase):
 
     def testGetInvalidRecord(self):
         def getInvalidRecord(repoId, recordId):
-            return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId)) 
-        self.assertEquals("<diagnostic>ERROR1</diagnostic>", getInvalidRecord("repoId1", "invalidId1")) 
-        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId&2")) 
-        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId/2", "invalidId/3")) 
+            return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId))
+        self.assertEquals("<diagnostic>ERROR1</diagnostic>", getInvalidRecord("repoId1", "invalidId1"))
+        self.assertEquals("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId&2"))
+        self.assertEquals("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId/2", "invalidId/3"))
 
     def testRecentInvalidsOnlyGives10InCaseOfManyMoreInvalids(self):
         with open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w') as f:
@@ -313,7 +312,7 @@ class RepositoryStatusTest(SeecrTestCase):
         self.assertEquals(20, state["totalerrors"])
         self.assertEquals(10, len(state["recenterrors"]))
         self.assertEquals([('2006-03-11T12:19:14Z', 'Error 19, Crash'), ('2006-03-11T12:18:14Z', 'Error 18, Crash'), ('2006-03-11T12:17:14Z', 'Error 17, Crash'), ('2006-03-11T12:16:14Z', 'Error 16, Crash'), ('2006-03-11T12:15:14Z', 'Error 15, Crash'), ('2006-03-11T12:14:14Z', 'Error 14, Crash'), ('2006-03-11T12:13:14Z', 'Error 13, Crash'), ('2006-03-11T12:12:14Z', 'Error 12, Crash'), ('2006-03-11T12:11:14Z', 'Error 11, Crash'), ('2006-03-11T12:10:14Z', 'Error 10, Crash')], state["recenterrors"])
-        
+
     def testIntegration(self):
         open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write("""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
 [2005-08-21 20:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 4/3/2/10

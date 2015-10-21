@@ -1,5 +1,6 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
+domain = JsonDict.load(url('/get?%s' % (req.get_options()['internalServer'], urlencode(dict(verb='GetDomain', identifier=args.identifier)))))
 domain = xpathFirst(lxml, '/domain')
 domainId = xpathFirst(domain, 'id/text()')
 if not session.get('isAdmin','') and session.get('domain', '') != domainId:

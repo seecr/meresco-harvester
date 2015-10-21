@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2009, 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -37,6 +37,7 @@ from disallowfileplugin import DisallowFilePlugin
 from urllib import urlencode
 from urllib2 import urlopen
 from os.path import dirname, join
+from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.namespaces import xpath, xpathFirst
 
 templatesPath = join(dirname(__file__), 'slowfoottemplates')
@@ -86,13 +87,15 @@ def handler(req):
 
     req.get_options()['templatesPath'] = templatesPath
     req.get_options().setdefault('localhostUrl', 'http://localhost')
-    req = Request(req, handlepsp, util, _psp_login, retrieveSession, 
+    req = Request(req, handlepsp, util, _psp_login, retrieveSession,
         additionalGlobals=dict(
                 xpath=xpath,
                 xpathFirst=xpathFirst,
+                JsonList=JsonList,
+                JsonDict=JsonDict,
             )
         )
-    
+
     req.addPlugin('PREOPEN', dfp)
     req.go()
     return apache.OK

@@ -35,6 +35,7 @@ from time import gmtime, strftime
 from integrationtestcase import IntegrationTestCase
 from seecr.test.utils import getRequest
 from meresco.harvester.namespaces import xpath
+from simplejson import loads
 
 REPOSITORY = 'integrationtest'
 class InternalServerTest(IntegrationTestCase):
@@ -94,15 +95,23 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
         self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
 
+    def testGetDomains(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetDomains'}, parse=False)
+        data = loads(result)
+        self.assertEquals(1, len(data['response']['GetDomains']))
+        self.assertEquals(['adomain'], [r['identifier'] for r in data['response']['GetDomains']])
+
     def testGetRepositoriesForDomain(self):
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain'}, parse='lxml')
-        self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
-        self.assertEquals(['integrationtest', 'repository2'], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain'}, parse=False)
+        data = loads(result)
+        self.assertEquals(2, len(data['response']['GetRepositories']))
+        self.assertEquals(['integrationtest', 'repository2'], [r['identifier'] for r in data['response']['GetRepositories']])
 
     def testGetRepositoriesForDomainAndRepositoryGroup(self):
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
-        self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetRepositories/status:repository")))
-        self.assertEquals(["integrationtest"], xpath(result, "/status:saharaget/status:GetRepositories/status:repository/status:id/text()"))
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse=False)
+        data = loads(result)
+        self.assertEquals(1, len(data['response']['GetRepositories']))
+        self.assertEquals(['integrationtest'], [r['identifier'] for r in data['response']['GetRepositories']])
 
     def testGetRepository(self):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepository', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')

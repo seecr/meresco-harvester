@@ -49,7 +49,8 @@ from meresco.components.http.utils import ContentTypePlainText
 from __version__ import VERSION_STRING
 from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
-
+from harvesterdataactions import HarvesterDataActions
+from harvesterdataretrieve import HarvesterDataRetrieve
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
@@ -68,7 +69,7 @@ def dna(reactor, observableHttpServer, config):
                             (FileServer(seecrWebLibPath),)
                         )
                     ),
-                    (PathFilter('/', excluding=['/info/version', '/static']),
+                    (PathFilter('/', excluding=['/info/version', '/static', '/action', '/get']),
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
@@ -84,6 +85,16 @@ def dna(reactor, observableHttpServer, config):
                             (RepositoryStatus(config["logPath"], config["statePath"]),
                                 (harvesterData,)
                             ),
+                            (harvesterData,)
+                        )
+                    ),
+                    (PathFilter('/action'),
+                        (HarvesterDataActions(),
+                            (harvesterData,)
+                        ),
+                    ),
+                    (PathFilter('/get'),
+                        (HarvesterDataRetrieve(),
                             (harvesterData,)
                         )
                     )
