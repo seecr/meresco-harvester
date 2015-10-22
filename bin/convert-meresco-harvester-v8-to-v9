@@ -72,6 +72,7 @@ class Convert(object):
     def _convertDomain(xml):
         return JsonDict(
             identifier=xpathFirst(xml, '/domain/id/text()'),
+            description=xpathFirst(xml, '/domain/description/text()'),
             mappingIds=xpath(xml, '/domain/mappingId/text()'),
             targetIds=xpath(xml, '/domain/targetId/text()'),
             repositoryGroupIds=xpath(xml, '/domain/repositoryGroupId/text()'),
