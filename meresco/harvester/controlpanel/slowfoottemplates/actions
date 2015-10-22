@@ -1,0 +1,13 @@
+<%
+if not session.get('username', None):
+    redirect('/error')
+if req.method != 'POST':
+    redirect(referer or '/')
+postTo = '%s%s' % (req.get_options()['internalServer'], req.uri)
+response = post2(postTo, input.read())
+if response.status == 302:
+    redirect(response.getheader('Location'))
+else:
+    redirect('%s?%s' % (referer or '/', urlencode({'error': 'Error in post "%s"' % response.read()})))
+#
+%>

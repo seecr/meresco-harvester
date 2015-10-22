@@ -1,9 +1,8 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-domain = JsonDict.load(url('/get?%s' % (req.get_options()['internalServer'], urlencode(dict(verb='GetDomain', identifier=args.identifier)))))
-domain = xpathFirst(lxml, '/domain')
-domainId = xpathFirst(domain, 'id/text()')
-if not session.get('isAdmin','') and session.get('domain', '') != domainId:
+domain = req.proxy.getDomain(args.identifier)
+domainIdentifier = domain['identifier']
+if not session.get('isAdmin','') and session.get('domain', '') != domainIdentifier:
   raise Exception('Illegal use')
 #
 isAdmin = session.get('isAdmin', '')
@@ -13,12 +12,12 @@ isAdmin = session.get('isAdmin', '')
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
-<div><h3>Domain: <%= domainId %></h3>
-<form method="post" action="/domain.save/<%= domainId %>.domain">
+<div><h3>Domain: <%= domainIdentifier %></h3>
+<form method="post" action="/domain.save/<%= domainIdentifier %>.domain">
    <table width="320" border="0" cellspacing="0" cellpadding="0">
-   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domainId%>"><%=domainId%></td></tr>
+   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domainIdentifier%>"><%=domainIdentifier%></td></tr>
    <tr>
-    <td>Description:</td><td><input size="60" type="text" name="description" value="<%=xpathFirst(domain, 'description/text()') or ''%>"></td>
+    <td>Description:</td><td><input size="60" type="text" name="description" value="<%=domain.get('description', '')%>"></td>
     <td><input type="submit" name="action" class="butt" value="Save" accesskey="s"></td>
    </tr>
   </table>
@@ -28,7 +27,7 @@ isAdmin = session.get('isAdmin', '')
 
 
 <div><h3>Repository Groups</h3>
- <form action='/repositoryGroup.new/<%= domainId %>.domain' method='post'>
+ <form action='/repositoryGroup.new/<%= domainIdentifier %>.domain' method='post'>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -40,20 +39,22 @@ isAdmin = session.get('isAdmin', '')
 
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <%
-for groupId in sorted(xpath(domain, 'repositoryGroupId/text()'), key=lambda x:str(x).lower()):
+for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).lower()):
   #
-  name = xpathFirst(aslxml(url('/' + domainId + '.' + groupId + '.repositoryGroup')), '/repositoryGroup/name/text()') or ''
+  repositoryGroup = req.proxy.getRepositoryGroup(identifier=groupId, domainId=domainIdentifier)
+
+  name = repositoryGroup.get('name', {}).get('nl', '')
 %>
    <tr class="table_row">
     <td width="60%"><%=name%> (<%= groupId %>)</td>
     <td>
-     <a href="/page/repositoryGroup.edit/<%= domainId %>.<%= groupId %>.repositoryGroup">
+     <a href="/page/repositoryGroup.edit/<%= domainIdentifier %>.<%= groupId %>.repositoryGroup">
        Edit / View
      </a>
     </td>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=repositoryGroup&id=' + groupId,
+       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=repositoryGroup&id=' + groupId,
        'filename':name
       })%>">
         Delete
@@ -72,7 +73,7 @@ for groupId in sorted(xpath(domain, 'repositoryGroupId/text()'), key=lambda x:st
 <%
 if isAdmin:
 %>
- <form action='/target.new/<%= domainId %>.domain' method='post'>
+ <form action='/target.new/<%= domainIdentifier %>.domain' method='post'>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -95,14 +96,15 @@ if isAdmin:
 %>
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <%
-for targetId in xpath(domain, 'targetId/text()'):
+for targetId in domain.get('targetIds', []):
   #
-  name = xpathFirst(aslxml(url('/xml/'+targetId+'.target')), '/target/name/text()')
+  target = req.proxy.getTarget(targetId)
+  name = target.get('name','')
 %>
    <tr class="table_row">
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/target.edit/<%=targetId%>.target?referrerDomain=<%=domainId%>">
+     <a href="/page/target.edit/<%=targetId%>.target?referrerDomain=<%=domainIdentifier%>">
       <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -111,7 +113,7 @@ for targetId in xpath(domain, 'targetId/text()'):
 %>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=target&id=' + targetId,
+       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=target&id=' + targetId,
        'filename':name
        })%>">
       Delete
@@ -132,7 +134,7 @@ for targetId in xpath(domain, 'targetId/text()'):
 <%
 if isAdmin:
 %>
- <form action='/mapping.new/<%= domainId %>.domain' method='post'>
+ <form action='/mapping.new/<%= domainIdentifier %>.domain' method='post'>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -149,14 +151,14 @@ if isAdmin:
 def idAndNameForMapping(id):
   return id,
 
-for mappingId in xpath(domain, 'mappingId/text()'):
+for mappingId in domain.get('mappingIds', []):
   #
-  name = xpathFirst(aslxml(url('/xml/'+mappingId+'.mapping')), '/mapping/name/text()')
+  name = req.proxy.getMapping(mappingId).get('name', '')
 %>
    <tr class="table_row">
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/mapping.edit/<%=mappingId%>.mapping?referrerDomain=<%=domainId%>">
+     <a href="/page/mapping.edit/<%=mappingId%>.mapping?referrerDomain=<%=domainIdentifier%>">
       <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -165,7 +167,7 @@ for mappingId in xpath(domain, 'mappingId/text()'):
 %>
     <td>
      <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainId + '.domain?kind=mapping&id=' + mappingId,
+       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=mapping&id=' + mappingId,
        'filename':name
        })%>">
       Delete
@@ -175,7 +177,7 @@ for mappingId in xpath(domain, 'mappingId/text()'):
   #
 %>
     <td>
-     <a href="/page/testmapping/?mappingId=<%=mappingId%>&referrerDomain=<%=domainId%>">
+     <a href="/page/testmapping/?mappingId=<%=mappingId%>&referrerDomain=<%=domainIdentifier%>">
       Test
      </a>
     </td>
@@ -191,13 +193,13 @@ for mappingId in xpath(domain, 'mappingId/text()'):
 <div><h3>Status</h3>
 <ul>
  <li>
- <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>">Harvester status of this domain</a>
+ <a href="/page/showHarvesterStatus/show?domainId=<%= domainIdentifier %>">Harvester status of this domain</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
  </li>
 </ul>
 </div>

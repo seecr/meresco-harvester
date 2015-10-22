@@ -32,7 +32,6 @@ from os.path import join, isfile
 
 from re import compile as compileRe
 from xml.sax.saxutils import quoteattr, escape as escapeXml
-from simplejson import load
 from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.controlpanel.tools import checkName
 
@@ -43,55 +42,72 @@ class HarvesterData(object):
     def __init__(self, dataPath):
         self._dataPath = dataPath
 
-    def getDomains(self):
+    def getDomainIds(self):
         return JsonList(
-                [load(open(join(self._dataPath, d))) for d in listdir(self._dataPath) if d.endswith('.domain')]
+                [d.split('.domain',1)[0] for d in listdir(self._dataPath) if d.endswith('.domain')]
             )
 
-    def addDomain(self, domainId):
-        if domainId == '':
+    def getDomain(self, identifier):
+        domainFile = join(self._dataPath, '{0}.domain'.format(identifier))
+        try:
+            return JsonDict.load(open(domainFile))
+        except IOError:
+            raise ValueError('idDoesNotExist')
+
+    def addDomain(self, identifier):
+        if identifier == '':
             raise ValueError('No name given.')
-        elif not checkName(domainId):
+        elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
-        domainFile = join(self._dataPath, "{}.domain".format(domainId))
+        domainFile = join(self._dataPath, "{}.domain".format(identifier))
         if isfile(domainFile):
             raise ValueError('The domain already exists.')
         with open(domainFile, 'w') as f:
-            JsonDict(dict(id=domainId)).dump(f, indent=4)
+            JsonDict(dict(id=identifier)).dump(f, indent=4)
 
     def getRepositoryGroupIds(self, domainId):
-        return load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])
+        return JsonDict.load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])
+
+    def getRepositoryGroup(self, identifier, domainId):
+        return JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))))
 
     def getRepositoryIds(self, domainId, repositoryGroupId=None):
         result = []
         allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
         for repositoryGroupId in allIds:
-            jsonData = load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))
+            jsonData = JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))
             result.extend(jsonData.get('repositoryIds', []))
         return result
 
     def getRepositoryGroupId(self, domainId, repositoryId):
-        return load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))['repositoryGroupId']
+        return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))['repositoryGroupId']
 
     def getRepositories(self, domainId, repositoryGroupId=None):
         try:
             repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
         except IOError:
-            return self._error("idDoesNotExist")
+            raise ValueError("idDoesNotExist")
         return JsonList([
-                load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))
+                JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))
                 for repositoryId in repositoryIds
             ])
 
-    def getRepository(self, domainId, repositoryId):
+    def getTarget(self, identifier):
         try:
-            return open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))).read()
+            return JsonDict.load(open(join(self._dataPath, '%s.target' % identifier)))
         except IOError:
-            return self._error("idDoesNotExist")
+            raise ValueError("idDoesNotExist")
 
-    def _error(self, code):
-        yield '<error code=%s>%s</error>' % (quoteattr(code), escapeXml(messages[code]))
+    def getMapping(self, identifier):
+        try:
+            return JsonDict.load(open(join(self._dataPath, '%s.mapping' % identifier)))
+        except IOError:
+            raise ValueError("idDoesNotExist")
 
-
+    def getRepository(self, identifier, domainId):
+        try:
+            return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))))
+        except IOError:
+            raise ValueError("idDoesNotExist")
 
 
