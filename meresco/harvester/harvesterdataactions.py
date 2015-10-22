@@ -29,6 +29,7 @@
 from meresco.components.http.utils import redirectHttp
 from meresco.html import PostActions
 from urllib import urlencode
+from urlparse import parse_qs
 
 class HarvesterDataActions(PostActions):
 
@@ -36,11 +37,12 @@ class HarvesterDataActions(PostActions):
         PostActions.__init__(self, **kwargs)
         self.registerAction('addDomain', self._addDomain)
 
-    def _addDomain(self, arguments, **kwargs):
-        domainId = arguments.get('id')
+    def _addDomain(self, Body, **kwargs):
+        arguments = parse_qs(Body)
+        domainId = arguments.get('identifier')[0]
         try:
-            self.call.addDomain(id=domainId)
+            self.call.addDomain(identifier=domainId)
         except ValueError, e:
-            return redirectHttp('/page/domains/show?{}.'.format(urlencode(dict(error=str(e)))))
-        return redirectHttp('/page/domain.edit/{}.domain'.format(domainId))
+            return redirectHttp % '/page/domains/show?{}.'.format(urlencode(dict(error=str(e))))
+        return redirectHttp % '/page/domain.edit/?identifier={}'.format(domainId)
 
