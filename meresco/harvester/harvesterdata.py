@@ -63,7 +63,7 @@ class HarvesterData(object):
         if isfile(domainFile):
             raise ValueError('The domain already exists.')
         with open(domainFile, 'w') as f:
-            JsonDict(dict(id=identifier)).dump(f, indent=4)
+            JsonDict(dict(identifier=identifier)).dump(f, indent=4)
 
     def getRepositoryGroupIds(self, domainId):
         return JsonDict.load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])

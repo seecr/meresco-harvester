@@ -112,43 +112,48 @@ class HarvesterDataTest(SeecrTestCase):
 ]""", result.dumps())
 
     def testGetRepositoriesWithError(self):
-        result = ''.join(compose(self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')))
-        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
-        result = ''.join(compose(self.hd.getRepositories(domainId='baddomain')))
-        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
+        try:
+            self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('idDoesNotExist', str(e))
+
+        try:
+            self.hd.getRepositories(domainId='baddomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('idDoesNotExist', str(e))
 
     def testGetRepository(self):
-        result = self.hd.getRepository(domainId='adomain', repositoryId='repository1')
-        self.assertEqualsWS("""{
+        result = self.hd.getRepository(domainId='adomain', identifier='repository1')
+        self.assertEquals({
     "identifier": "repository1",
     "repositoryGroupId": "Group1"
-}""", result)
+}, result)
 
     def testGetRepositoryWithErrors(self):
-        result = ''.join(compose(self.hd.getRepository(domainId='adomain', repositoryId='repository12')))
-        self.assertEqualsWS("""<error code="idDoesNotExist">The value of an argument (id or key) is unknown or illegal.</error>""", result)
+        try:
+            self.hd.getRepository(domainId='adomain', identifier='repository12')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('idDoesNotExist', str(e))
 
     def testAddDomain(self):
-        self.assertEqual([
-                {'mappingIds': ['ignored MAPPING'], 'identifier': 'adomain', 'repositoryGroupIds': ['Group1', 'Group2']}
-            ], self.hd.getDomains())
-        self.hd.addDomain(domainId="newdomain")
-        self.assertEqual([
-                {'mappingIds': ['ignored MAPPING'], 'identifier': 'adomain', 'repositoryGroupIds': ['Group1', 'Group2']},
-                {'id': 'newdomain'}
-            ], self.hd.getDomains())
+        self.assertEqual(['adomain'], self.hd.getDomainIds())
+        self.hd.addDomain(identifier="newdomain")
+        self.assertEqual(['adomain', 'newdomain'], self.hd.getDomainIds())
         try:
-            self.hd.addDomain(domainId="newdomain")
+            self.hd.addDomain(identifier="newdomain")
             self.fail()
         except ValueError, e:
             self.assertEqual('The domain already exists.', str(e))
         try:
-            self.hd.addDomain(domainId="domain#with#invalid%characters")
+            self.hd.addDomain(identifier="domain#with#invalid%characters")
             self.fail()
         except ValueError, e:
             self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
         try:
-            self.hd.addDomain(domainId="")
+            self.hd.addDomain(identifier="")
             self.fail()
         except ValueError, e:
             self.assertEqual('No name given.', str(e))
