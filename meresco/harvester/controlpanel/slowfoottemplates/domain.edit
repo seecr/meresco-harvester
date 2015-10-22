@@ -13,9 +13,10 @@ isAdmin = session.get('isAdmin', '')
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
 <div><h3>Domain: <%= domainIdentifier %></h3>
-<form method="post" action="/domain.save/<%= domainIdentifier %>.domain">
+<form method="post" action="/actions/updateDomain">
+   <input type="hidden" name="redirectUri" value="/page/domain.edit/"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
-   <tr><td>Id:</td><td><input size="15"  type="hidden" name="id" value="<%=domainIdentifier%>"><%=domainIdentifier%></td></tr>
+   <tr><td>Id:</td><td><input size="15"  type="hidden" name="identifier" value="<%=domainIdentifier%>"><%=domainIdentifier%></td></tr>
    <tr>
     <td>Description:</td><td><input size="60" type="text" name="description" value="<%=domain.get('description', '')%>"></td>
     <td><input type="submit" name="action" class="butt" value="Save" accesskey="s"></td>
@@ -27,11 +28,13 @@ isAdmin = session.get('isAdmin', '')
 
 
 <div><h3>Repository Groups</h3>
- <form action='/repositoryGroup.new/<%= domainIdentifier %>.domain' method='post'>
+ <form action='/actions/addRepositoryGroup' method='post'>
+   <input type="hidden" name="redirectUri" value="/page/repositoryGroup.edit/?domainId=<%=domainIdentifier%>"/>
+   <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
-     <td width="200"><input name="id" type="text" class="zkveld" value=""></td>
+     <td width="200"><input name="identifier" type="text" class="zkveld" value=""></td>
      <td width="40"><input name="submit" type="submit" class="butt" value="Create Repository Group"></td>
     </tr>
    </table>
@@ -48,17 +51,19 @@ for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).
    <tr class="table_row">
     <td width="60%"><%=name%> (<%= groupId %>)</td>
     <td>
-     <a href="/page/repositoryGroup.edit/<%= domainIdentifier %>.<%= groupId %>.repositoryGroup">
+     <a href="/page/repositoryGroup.edit/?domainId=<%=domainIdentifier%>&amp;identifier=<%=groupId%>">
        Edit / View
      </a>
     </td>
     <td>
-     <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=repositoryGroup&id=' + groupId,
-       'filename':name
-      })%>">
+     <form method='post' action='/actions/deleteRepositoryGroup' name="deleteRepositoryGroup_<%=groupId%>">
+        <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
+        <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
+        <input type="hidden" name="identifier" value="<%=groupId%>"/>
+     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteRepositoryGroup_<%=groupId%>.submit();}; return false;">
         Delete
      </a>
+     </form>
     </td>
    </tr>
 <%

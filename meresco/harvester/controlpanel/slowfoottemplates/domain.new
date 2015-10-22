@@ -1,4 +1,0 @@
-<%
-f = asform(input)
-req.write(url('%s/action/addDomain?%s' % (req.get_options()['internalServer'], urlencode(dict(id=f.id)))).read())
-%>

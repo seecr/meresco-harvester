@@ -27,11 +27,10 @@
 #
 ## end license ##
 
-from os import listdir
+from os import listdir, remove
 from os.path import join, isfile
 
 from re import compile as compileRe
-from xml.sax.saxutils import quoteattr, escape as escapeXml
 from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.controlpanel.tools import checkName
 
@@ -42,6 +41,7 @@ class HarvesterData(object):
     def __init__(self, dataPath):
         self._dataPath = dataPath
 
+    #domain
     def getDomainIds(self):
         return JsonList(
                 [d.split('.domain',1)[0] for d in listdir(self._dataPath) if d.endswith('.domain')]
@@ -59,18 +59,48 @@ class HarvesterData(object):
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
-        domainFile = join(self._dataPath, "{}.domain".format(identifier))
-        if isfile(domainFile):
+        filename = "{}.domain".format(identifier)
+        if self._exists(filename):
             raise ValueError('The domain already exists.')
-        with open(domainFile, 'w') as f:
-            JsonDict(dict(identifier=identifier)).dump(f, indent=4)
+        self._save(JsonDict(dict(identifier=identifier)), filename)
 
+    def updateDomain(self, identifier, description):
+        domain = self.getDomain(identifier)
+        domain['description'] = description
+        self._save(domain, "{}.domain".format(identifier))
+
+    #repositorygroup
     def getRepositoryGroupIds(self, domainId):
         return JsonDict.load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])
 
     def getRepositoryGroup(self, identifier, domainId):
         return JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))))
 
+    def addRepositoryGroup(self, identifier, domainId):
+        domain = self.getDomain(domainId)
+        filename = "{}.{}.repositoryGroup".format(domainId, identifier)
+        if identifier == '':
+            raise ValueError('No name given.')
+        elif not checkName(identifier):
+            raise ValueError('Name is not valid. Only use alphanumeric characters.')
+        if self._exists(filename):
+            raise ValueError('The repositoryGroup already exists.')
+        self._save(JsonDict(dict(identifier=identifier)), filename)
+        domain.setdefault('repositoryGroupIds', []).append(identifier)
+        self._save(domain, "{}.domain".format(domainId))
+
+    def updateRepositoryGroup(self, identifier, domainId, name):
+        group = self.getRepositoryGroup(identifier, domainId=domainId)
+        group.setdefault('name', {}).update(name)
+        self._save(group, "{}.{}.repositoryGroup".format(domainId, identifier))
+
+    def deleteRepositoryGroup(self, identifier, domainId):
+        domain = self.getDomain(domainId)
+        domain['repositoryGroupIds'].remove(identifier)
+        self._delete("{}.{}.repositoryGroup".format(domainId, identifier))
+        self._save(domain, "{}.domain".format(domainId))
+
+    #repository
     def getRepositoryIds(self, domainId, repositoryGroupId=None):
         result = []
         allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
@@ -92,6 +122,12 @@ class HarvesterData(object):
                 for repositoryId in repositoryIds
             ])
 
+    def getRepository(self, identifier, domainId):
+        try:
+            return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))))
+        except IOError:
+            raise ValueError("idDoesNotExist")
+
     def getTarget(self, identifier):
         try:
             return JsonDict.load(open(join(self._dataPath, '%s.target' % identifier)))
@@ -104,10 +140,13 @@ class HarvesterData(object):
         except IOError:
             raise ValueError("idDoesNotExist")
 
-    def getRepository(self, identifier, domainId):
-        try:
-            return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))))
-        except IOError:
-            raise ValueError("idDoesNotExist")
+    def _save(self, data, filename):
+        with open(join(self._dataPath, filename), 'w') as f:
+            data.dump(f, indent=4, sort_keys=True)
 
+    def _delete(self, filename):
+        remove(join(self._dataPath, filename))
+
+    def _exists(self, filename):
+        return isfile(join(self._dataPath, filename))
 

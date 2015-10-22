@@ -4,7 +4,10 @@ if not session.get('username', None):
 if req.method != 'POST':
     redirect(referer or '/')
 postTo = '%s%s' % (req.get_options()['internalServer'], req.uri)
-response = post2(postTo, input.read())
+data = asform(input)
+data['referer'] = referer
+data = urlencode(data)
+response = post2(postTo, data)
 if response.status == 302:
     redirect(response.getheader('Location'))
 else:

@@ -3,6 +3,7 @@
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
   <div><h3>Domains</h3>
   <form action='/actions/addDomain' method='post'>
+    <input type="hidden" name="redirectUri" value="/page/domain.edit/"/>
     <table width="320" border="0" cellspacing="0" cellpadding="0">
      <tr>
       <td width="60">Name:&nbsp;</td>

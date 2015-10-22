@@ -157,3 +157,44 @@ class HarvesterDataTest(SeecrTestCase):
             self.fail()
         except ValueError, e:
             self.assertEqual('No name given.', str(e))
+
+    def testUpdateDomain(self):
+        self.assertEqual('', self.hd.getDomain('adomain').get('description', ''))
+        self.hd.updateDomain('adomain', description='Beschrijving')
+        self.assertEqual('Beschrijving', self.hd.getDomain('adomain').get('description', ''))
+
+    def testAddRepositoryGroup(self):
+        self.assertEqual(['Group1', 'Group2'], self.hd.getRepositoryGroupIds(domainId='adomain'))
+        self.hd.addRepositoryGroup(identifier="newgroup", domainId='adomain')
+        self.assertEqual(['Group1', 'Group2', 'newgroup'], self.hd.getRepositoryGroupIds(domainId='adomain'))
+        try:
+            self.hd.addRepositoryGroup(identifier="Group1", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('The repositoryGroup already exists.', str(e))
+        try:
+            self.hd.addRepositoryGroup(identifier="group#with#invalid%characters", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
+        try:
+            self.hd.addRepositoryGroup(identifier="", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('No name given.', str(e))
+
+    def testUpdateRepositoryGroup(self):
+        self.assertEqual('Groep1', self.hd.getRepositoryGroup('Group1', 'adomain').get('name', {}).get('nl', ''))
+        self.hd.updateRepositoryGroup('Group1', domainId='adomain', name={"nl":"naam"})
+        self.assertEqual('naam', self.hd.getRepositoryGroup('Group1', 'adomain')['name']['nl'])
+        self.assertEqual('Group1', self.hd.getRepositoryGroup('Group1', 'adomain')['name']['en'])
+
+    def testDeleteRepositoryGroup(self):
+        self.assertEqual(['Group1', 'Group2'], self.hd.getRepositoryGroupIds(domainId='adomain'))
+        self.hd.deleteRepositoryGroup('Group2', domainId='adomain')
+        self.assertEqual(['Group1'], self.hd.getRepositoryGroupIds(domainId='adomain'))
+
+
+
+
+
