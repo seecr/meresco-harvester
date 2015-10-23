@@ -23,14 +23,13 @@ dateSince = time.strftime("%Y-%m-%d", time.localtime(time.time() - days * 3600 *
 <%
 #Determine all repository names.
 repositoryNames = []
-getArgs = {	'verb': 'GetRepositoryGroups', 'domainId': args.domainId}
-groups = xpath(aslxml(url('/saharaget?' + urlencode(getArgs))), '/sahara:saharaget/sahara:GetRepositoryGroups/sahara:repositoryGroup')
 
-for repositoryGroup in groups:
-	if not args.repositoryGroupId or args.repositoryGroupId == xpathFirst(repositoryGroup, 'sahara:id/text()'):
-		for repositoryId in xpath(repositoryGroup, 'sahara:repositoryId/text()'):
-			if not args.repositoryId or args.repositoryId == repositoryId:
-				repositoryNames.append(repositoryId)
+repositories = req.proxy.getRepositories(domainId=args.domainId)
+
+for repository in repositories:
+	if not args.repositoryGroupId or args.repositoryGroupId == repository['repositoryGroupId']:
+		if not args.repositoryId or args.repositoryId == repository['identifier']:
+			repositoryNames.append(repository['identifier'])
 
 logDir = req.get_options()['logDir']
 analyser = ThroughputAnalyser(logDir + '/' + args.domainId)

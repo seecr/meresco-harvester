@@ -37,9 +37,10 @@ groupId = repository['repositoryGroupId']
 <h1>Repository Administration</h1>
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 <div><h3>Repository: <%=repositoryId%></h3>
-<form method="post" name="repositorySave" action="/actions/updateRepository/">
+<form method="post" name="repositorySave" action="/actions/updateRepository">
     <input type="hidden" name="redirectUri" value="/page/repository.edit/?domainId=<%=domainId%>"/>
     <input type="hidden" name="identifier" value="<%=repositoryId%>"/>
+    <input type="hidden" name="domainId" value="<%=domainId%>"/>
     <input type="hidden" name="repositoryGroupId" value="<%=repository['repositoryGroupId']%>">
     <table cellspacing="0" cellpadding="0">
       <tr><td>Id:</td>
