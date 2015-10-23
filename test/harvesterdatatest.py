@@ -39,6 +39,7 @@ class HarvesterDataTest(SeecrTestCase):
         open(join(self.tempdir, 'adomain.domain'), 'w').write("""{
     "identifier": "adomain",
     "mappingIds": ["ignored MAPPING"],
+    "targetIds": ["ignored TARGET"],
     "repositoryGroupIds": ["Group1", "Group2"]
 }""")
         open(join(self.tempdir, 'adomain.Group1.repositoryGroup'), 'w').write("""{
@@ -269,11 +270,7 @@ class HarvesterDataTest(SeecrTestCase):
     def testUpdateMapping(self):
         mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
         self.assertEqual(mappingId, self.hd.getMapping(mappingId)["identifier"])
-        try:
-            self.hd.updateMapping(mappingId, name='newName', description="a description", code="new code")
-            self.fail()
-        except SyntaxError:
-            pass
+        self.assertRaises(ValueError, lambda: self.hd.updateMapping(mappingId, name='newName', description="a description", code="new code"))
         self.assertEqual('newName', self.hd.getMapping(mappingId)['name'])
         self.assertEqual('a description', self.hd.getMapping(mappingId)['description'])
         self.assertEqual('new code', self.hd.getMapping(mappingId)['code'])
@@ -283,3 +280,49 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(['ignored MAPPING', mappingId], self.hd.getDomain('adomain')['mappingIds'])
         self.hd.deleteMapping(identifier=mappingId, domainId='adomain')
         self.assertEqual(['ignored MAPPING'], self.hd.getDomain('adomain')['mappingIds'])
+
+    def testAddTarget(self):
+        self.assertEquals(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
+        targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
+        targetIds = self.hd.getDomain('adomain')['targetIds']
+        self.assertEquals(2, len(targetIds))
+        target = self.hd.getTarget(targetId)
+        self.assertEquals(targetId, targetIds[-1])
+        self.assertEqual('new target', target['name'])
+        self.assertEqual(targetId, target['identifier'])
+        try:
+            self.hd.addTarget(name="", domainId='adomain', targetType='sruUpdate')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('No name given.', str(e))
+
+    def testUpdateTarget(self):
+        targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
+        self.hd.updateTarget(identifier=targetId,
+                name='updated target',
+                username='username',
+                port=1234,
+                targetType='composite',
+                delegateIds=['id1', 'id2'],
+                path='path',
+                baseurl='baseurl',
+                oaiEnvelope=False,
+            )
+        target = self.hd.getTarget(targetId)
+        self.assertEquals('updated target', target['name'])
+        self.assertEquals('username', target['username'])
+        self.assertEquals(1234, target['port'])
+        self.assertEquals('composite', target['targetType'])
+        self.assertEquals(['id1', 'id2'], target['delegateIds'])
+        self.assertEquals('path', target['path'])
+        self.assertEquals('baseurl', target['baseurl'])
+        self.assertEquals(False, target['oaiEnvelope'])
+
+    def testDeleteTarget(self):
+        targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
+        self.assertEquals(['ignored TARGET', targetId], self.hd.getDomain('adomain')['targetIds'])
+        self.hd.deleteTarget(targetId, domainId='adomain')
+        self.assertEquals(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
+
+
+

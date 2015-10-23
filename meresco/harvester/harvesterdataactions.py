@@ -49,6 +49,9 @@ class HarvesterDataActions(PostActions):
         self._register('addMapping', self._addMapping)
         self._register('updateMapping', self._updateMapping)
         self._register('deleteMapping', self._deleteMapping)
+        self._register('addTarget', self._addTarget)
+        self._register('updateTarget', self._updateTarget)
+        self._register('deleteTarget', self._deleteTarget)
         self.defaultAction(lambda path, **kwargs: badRequestHtml + "Invalid action: " + path)
 
     def _addDomain(self, identifier, arguments):
@@ -89,26 +92,6 @@ class HarvesterDataActions(PostActions):
                 repositoryGroupId=arguments.get('repositoryGroupId', [''])[0],
             )
 
-    def _addMapping(self, arguments, **ignored):
-        return self.call.addMapping(
-                name=arguments.get('name', [''])[0],
-                domainId=arguments.get('domainId', [''])[0],
-            )
-
-    def _updateMapping(self, identifier, arguments):
-        self.call.updateMapping(
-                identifier=identifier,
-                name=arguments.get('name', [''])[0],
-                description=arguments.get('description', [''])[0],
-                code=arguments.get('code', [''])[0],
-            )
-
-    def _deleteMapping(self, identifier, arguments):
-        self.call.deleteMapping(
-                identifier=identifier,
-                domainId=arguments.get('domainId', [''])[0],
-            )
-
     def _updateRepository(self, identifier, arguments):
         shopclosed = []
         shopStart = 0 if 'addTimeslot' in arguments else 1
@@ -145,6 +128,54 @@ class HarvesterDataActions(PostActions):
                 domainId=arguments.get('domainId', [''])[0],
                 repositoryGroupId=arguments.get('repositoryGroupId', [''])[0],
             )
+
+    def _addMapping(self, arguments, **ignored):
+        return self.call.addMapping(
+                name=arguments.get('name', [''])[0],
+                domainId=arguments.get('domainId', [''])[0],
+            )
+
+    def _updateMapping(self, identifier, arguments):
+        self.call.updateMapping(
+                identifier=identifier,
+                name=arguments.get('name', [''])[0],
+                description=arguments.get('description', [''])[0],
+                code=arguments.get('code', [''])[0].replace('\r', ''),
+            )
+
+    def _deleteMapping(self, identifier, arguments):
+        self.call.deleteMapping(
+                identifier=identifier,
+                domainId=arguments.get('domainId', [''])[0],
+            )
+
+    def _addTarget(self, arguments, **ignored):
+        return self.call.addTarget(
+                name=arguments.get('name', [''])[0],
+                domainId=arguments.get('domainId', [''])[0],
+                targetType=arguments.get('targetType', [''])[0],
+            )
+
+    def _updateTarget(self, identifier, arguments):
+        self.call.updateTarget(
+                identifier=identifier,
+                name=arguments.get('name', [''])[0],
+                username=arguments.get('username', [''])[0],
+                port=int(arguments.get('port', [''])[0] or '0'),
+                targetType=arguments.get('targetType', [''])[0],
+                path=arguments.get('path', [''])[0],
+                baseurl=arguments.get('baseurl', [''])[0],
+                oaiEnvelope='oaiEnvelope' in arguments,
+                delegateIds=arguments.get('delegate',[]),
+            )
+
+    def _deleteTarget(self, identifier, arguments):
+        self.call.deleteTarget(
+                identifier=identifier,
+                domainId=arguments.get('domainId', [''])[0],
+            )
+
+
 
     def _register(self, name, actionMethod):
         self.registerAction(name, partial(self._do, actionMethod=actionMethod))

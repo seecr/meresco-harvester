@@ -171,6 +171,39 @@ class HarvesterData(object):
         except IOError:
             raise ValueError("idDoesNotExist")
 
+    def addTarget(self, name, domainId, targetType):
+        domain = self.getDomain(domainId)
+        if not name:
+            raise ValueError('No name given.')
+        identifier = str(uuid4())
+        target = JsonDict(
+                name=name,
+                identifier=identifier,
+                targetType=targetType,
+            )
+        domain.setdefault('targetIds', []).append(identifier)
+        self._save(target, "{}.target".format(identifier))
+        self._save(domain, "{}.domain".format(domainId))
+        return identifier
+
+    def updateTarget(self, identifier, name, username, port, targetType, delegateIds, path, baseurl, oaiEnvelope):
+        target = self.getTarget(identifier)
+        target['name'] = name
+        target['username'] = username
+        target['port'] = port
+        target['targetType'] = targetType
+        target['delegateIds'] = delegateIds
+        target['path'] = path
+        target['baseurl'] = baseurl
+        target['oaiEnvelope'] = oaiEnvelope
+        self._save(target, "{}.target".format(identifier))
+
+    def deleteTarget(self, identifier, domainId):
+        domain = self.getDomain(domainId)
+        domain['targetIds'].remove(identifier)
+        self._save(domain, "{}.domain".format(domainId))
+        self._delete("{}.target".format(identifier))
+
     #mapping
     def getMapping(self, identifier):
         try:

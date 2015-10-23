@@ -80,7 +80,7 @@ if isAdmin:
 %>
  <form action='/actions/addTarget' method='post'>
    <input type="hidden" name="redirectUri" value="/page/target.edit/?referrerDomain=<%=domainIdentifier%>"/>
-   <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
+   <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -119,11 +119,11 @@ for targetId in domain.get('targetIds', []):
   if isAdmin:
 %>
     <td>
-     <form method='post' action='/actions/deleteTarget' name="deleteTarget_<%=groupId%>">
+     <form method='post' action='/actions/deleteTarget' name="deleteTarget_<%=targetId.replace('-','')%>">
         <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
-        <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
+        <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
         <input type="hidden" name="identifier" value="<%=targetId%>"/>
-     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteTarget_<%=groupId%>.submit();}; return false;">
+     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteTarget_<%=targetId.replace('-','')%>.submit();}; return false;">
         Delete
      </a>
      </form>
@@ -177,11 +177,11 @@ for mappingId in domain.get('mappingIds', []):
   if isAdmin:
 %>
     <td>
-      <form method='post' action='/actions/deleteMapping' name="deleteMapping_<%=name%>">
+      <form method='post' action='/actions/deleteMapping' name="deleteMapping_<%=mappingId.replace('-', '')%>">
         <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
         <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
         <input type="hidden" name="identifier" value="<%=mappingId%>"/>
-     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteMapping_<%=name%>.submit();}; return false;">
+     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteMapping_<%=mappingId.replace('-', '')%>.submit();}; return false;">
         Delete
      </a>
      </form>

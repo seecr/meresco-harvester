@@ -16,6 +16,7 @@ if session.get('isAdmin',''):
   targetType = target.get('targetType')
 %>
  <form method="post" action="/actions/updateTarget">
+  <input type="hidden" name="redirectUri" value="/page/target.edit/?referrerDomain=<%=args.referrerDomain%>">
   <table>
    <input type="hidden" name="identifier" value="<%=targetId%>">
    <input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
@@ -63,12 +64,12 @@ if session.get('isAdmin',''):
     targetIds = req.proxy.getDomain(args.referrerDomain).get('targetIds', [])
     targetIds = filter(lambda t: t != targetId, targetIds)
     targetName = lambda id: req.proxy.getTarget(id).get('name') or ''
-    selected = lambda id: id in target.get('delegate') and 'selected' or ''
+    selected = lambda id: id in target.get('delegateIds', []) and 'selected' or ''
 %>
    <tr>
-    <td style="vertical-align:top">Targets (hold CTRL to select multiple targets):</td>
+    <td style="vertical-align:top">Targets (hold CTRL/CMD to select multiple targets):</td>
     <td>
-      <select name="delegate" multiple size="7">
+      <select name="delegate" multiple size="3">
 <%
     for targetId in targetIds:
 %>
