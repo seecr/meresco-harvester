@@ -79,12 +79,12 @@ for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
         Edit / View
        </a>
        &nbsp;
-       <a class="butt" href="/page/areYouSure/show?<%=
-         urlencode({'ok':'/user.delete/users.xml?user=' + user_localname,
-         'filename':user_localname
-         })%>">
+       <form method='post' action='/user.delete/users.xml' name="deleteUser_<%=user_localname%>">
+        <input type="hidden" name="user" value="<%=user_localname%>"/>
+        <a onclick="if(confirm('Weet u het zeker?')) { document.deleteUser_<%=user_localname%>.submit();}; return false;">
         Delete
-       </a>
+        </a>
+       </form>
        </p>
 <%
 #
