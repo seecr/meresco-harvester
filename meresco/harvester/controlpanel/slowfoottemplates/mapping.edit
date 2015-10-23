@@ -15,9 +15,8 @@ if session.get('isAdmin',''):
 %>
 
 <form method="post" action="/actions/updateMapping">
+<input type="hidden" name="redirectUri" value="/page/mapping.edit/?referrerDomain=<%=args.referrerDomain%>">
 <input type="hidden" name="identifier" value="<%=mappingId%>">
-<input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
-
 <table>
   <tr>
     <td>Name:</td>

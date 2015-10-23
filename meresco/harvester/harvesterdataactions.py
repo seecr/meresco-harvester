@@ -46,6 +46,9 @@ class HarvesterDataActions(PostActions):
         self._register('addRepository', self._addRepository)
         self._register('deleteRepository', self._deleteRepository)
         self._register('updateRepository', self._updateRepository)
+        self._register('addMapping', self._addMapping)
+        self._register('updateMapping', self._updateMapping)
+        self._register('deleteMapping', self._deleteMapping)
         self.defaultAction(lambda path, **kwargs: badRequestHtml + "Invalid action: " + path)
 
     def _addDomain(self, identifier, arguments):
@@ -84,6 +87,26 @@ class HarvesterDataActions(PostActions):
                 identifier=identifier,
                 domainId=arguments.get('domainId', [''])[0],
                 repositoryGroupId=arguments.get('repositoryGroupId', [''])[0],
+            )
+
+    def _addMapping(self, arguments, **ignored):
+        return self.call.addMapping(
+                name=arguments.get('name', [''])[0],
+                domainId=arguments.get('domainId', [''])[0],
+            )
+
+    def _updateMapping(self, identifier, arguments):
+        self.call.updateMapping(
+                identifier=identifier,
+                name=arguments.get('name', [''])[0],
+                description=arguments.get('description', [''])[0],
+                code=arguments.get('code', [''])[0],
+            )
+
+    def _deleteMapping(self, identifier, arguments):
+        self.call.deleteMapping(
+                identifier=identifier,
+                domainId=arguments.get('domainId', [''])[0],
             )
 
     def _updateRepository(self, identifier, arguments):
@@ -132,10 +155,10 @@ class HarvesterDataActions(PostActions):
         referer = arguments.pop('referer', ['/error'])[0]
         redirectUri = arguments.pop('redirectUri', ['/'])[0]
         try:
-            actionMethod(identifier=identifier, arguments=arguments)
+            result = actionMethod(identifier=identifier, arguments=arguments)
         except ValueError, e:
             return redirectHttp % self._link(referer, error=str(e))
-        return redirectHttp % self._link(redirectUri, identifier=identifier)
+        return redirectHttp % self._link(redirectUri, identifier=identifier or result)
 
     def _link(self, link, **kwargs):
         u = urlparse(link)

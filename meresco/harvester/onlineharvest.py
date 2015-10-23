@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2013-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -35,17 +35,22 @@
 from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
 from saharaget import SaharaGet
+from meresco.harvester.mapping import Mapping
 from meresco.harvester.oairequest import OaiRequest
+from meresco.harvester.controlpanel.internalserverproxy import InternalServerProxy
 
 class OnlineHarvest(object):
     def __init__(self, outputstream, saharaUrl):
         self._output = outputstream
         self._saharaGet = SaharaGet(saharaUrl)
+        self._proxy = InternalServerProxy(outputstream)
 
     def performMapping(self, domainId, mappingId, urlString):
-        mapping = self._saharaGet.getMapping(domainId, mappingId)
+        mappingDict = self._proxy.getMapping(mappingId)
+        mapping = Mapping(mappingId)
+        mapping.setCode(mappingDict.get('code', ''))
         mapping.addObserver(StreamEventLogger(self._output))
-        self._output.write(mapping.mappingInfo())
+        self._output.write("Mappingname '{}'".format(mappingDict.get('name')))
         self._output.write('\n')
         response = OaiRequest(urlString).request()
         for record in response.records:

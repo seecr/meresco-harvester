@@ -248,4 +248,38 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEquals('action', repository['action'])
         self.assertEquals(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
 
+    def testAddMapping(self):
+        domain = self.hd.getDomain('adomain')
+        self.assertEqual(['ignored MAPPING'], domain['mappingIds'])
+        mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
+        mappingIds = self.hd.getDomain('adomain')['mappingIds']
+        self.assertEquals(2, len(mappingIds))
+        mapping = self.hd.getMapping(mappingId)
+        self.assertEquals(mappingId, mappingIds[-1])
+        self.assertEqual('newMapping', mapping['name'])
+        self.assertEqual('This mapping is what has become the default mapping for most Meresco based projects.\n', mapping['description'])
+        self.assertTrue(len(mapping['code']) > 100)
+        self.assertEqual(mappingIds[1], mapping['identifier'])
+        try:
+            self.hd.addMapping(name="", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('No name given.', str(e))
 
+    def testUpdateMapping(self):
+        mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
+        self.assertEqual(mappingId, self.hd.getMapping(mappingId)["identifier"])
+        try:
+            self.hd.updateMapping(mappingId, name='newName', description="a description", code="new code")
+            self.fail()
+        except SyntaxError:
+            pass
+        self.assertEqual('newName', self.hd.getMapping(mappingId)['name'])
+        self.assertEqual('a description', self.hd.getMapping(mappingId)['description'])
+        self.assertEqual('new code', self.hd.getMapping(mappingId)['code'])
+
+    def testDeleteMapping(self):
+        mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
+        self.assertEqual(['ignored MAPPING', mappingId], self.hd.getDomain('adomain')['mappingIds'])
+        self.hd.deleteMapping(identifier=mappingId, domainId='adomain')
+        self.assertEqual(['ignored MAPPING'], self.hd.getDomain('adomain')['mappingIds'])

@@ -33,6 +33,8 @@ from os.path import join, isfile
 from re import compile as compileRe
 from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.controlpanel.tools import checkName
+from meresco.harvester.mapping import Mapping
+from uuid import uuid4
 
 XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')
 
@@ -169,12 +171,77 @@ class HarvesterData(object):
         except IOError:
             raise ValueError("idDoesNotExist")
 
+    #mapping
     def getMapping(self, identifier):
         try:
             return JsonDict.load(open(join(self._dataPath, '%s.mapping' % identifier)))
         except IOError:
             raise ValueError("idDoesNotExist")
 
+    def addMapping(self, name, domainId):
+        domain = self.getDomain(domainId)
+        if not name:
+            raise ValueError('No name given.')
+        identifier = str(uuid4())
+        mapping = JsonDict(
+                identifier=identifier,
+                name=name,
+                code = '''upload.parts['record'] = lxmltostring(upload.record)
+
+upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/meta">
+  <upload><id>%(id)s</id></upload>
+  <record>
+    <id>%(recordId)s</id>
+    <harvestdate>%(harvestDate)s</harvestdate>
+  </record>
+  <repository>
+    <id>%(repository)s</id>
+    <set>%(set)s</set>
+    <baseurl>%(baseurl)s</baseurl>
+    <repositoryGroupId>%(repositoryGroupId)s</repositoryGroupId>
+    <metadataPrefix>%(metadataPrefix)s</metadataPrefix>
+    <collection>%(collection)s</collection>
+  </repository>
+</meta>""" % dict([(k,xmlEscape(v)) for k,v in {
+  'id': upload.id,
+  'set': upload.repository.set,
+  'baseurl': upload.repository.baseurl,
+  'repositoryGroupId':  upload.repository.repositoryGroupId,
+  'repository': upload.repository.id,
+  'metadataPrefix': upload.repository.metadataPrefix,
+  'collection': upload.repository.collection,
+  'recordId': upload.recordIdentifier,
+  'harvestDate': upload.oaiResponse.responseDate,
+}.items()])
+''',
+                description = """This mapping is what has become the default mapping for most Meresco based projects.
+""",
+            )
+        domain.setdefault('mappingIds', []).append(identifier)
+        self._save(mapping, "{}.mapping".format(identifier))
+        self._save(domain, "{}.domain".format(domainId))
+        return identifier
+
+    def updateMapping(self, identifier, name, description, code):
+        mapping = self.getMapping(identifier)
+        mapping['name'] = name
+        mapping['description'] = description
+        mapping['code'] = code
+        self._save(mapping, "{}.mapping".format(identifier))
+        mapping = Mapping(identifier)
+        mapping.setCode(code)
+        try:
+            mapping.validate()
+        except Exception, e:
+            raise ValueError(e)
+
+    def deleteMapping(self, identifier, domainId):
+        domain = self.getDomain(domainId)
+        domain['mappingIds'].remove(identifier)
+        self._save(domain, "{}.domain".format(domainId))
+        self._delete("{}.mapping".format(identifier))
+
+    #
     def _save(self, data, filename):
         with open(join(self._dataPath, filename), 'w') as f:
             data.dump(f, indent=4, sort_keys=True)
