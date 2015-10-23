@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -31,14 +31,12 @@
 from os import makedirs
 from os.path import join
 
-from lxml.etree import tostring, parse
-from StringIO import StringIO
+from lxml.etree import tostring
 from simplejson import dump as jsonDump
 
 from seecr.test import SeecrTestCase, CallTrace
 
 from escaping import escapeFilename
-from weightless.core import compose
 from meresco.harvester.repositorystatus import RepositoryStatus
 
 
@@ -95,127 +93,127 @@ class RepositoryStatusTest(SeecrTestCase):
 
 
     def testGetStatusForRepoIdAndDomainId(self):
-        self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>2</invalid>
-                <recentinvalids>
-                    <invalidId>invalidId&amp;2</invalidId>
-                    <invalidId>invalidId1</invalidId>
-                </recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))))
-        self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>0</invalid>
-                <recentinvalids></recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))))
+        self.assertEquals([{
+                        "repositoryId": "repoId1",
+                        "repositoryGroupId": "repoGroupId1",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 2,
+                        "recentinvalids": [
+                            "invalidId&2",
+                            "invalidId1"
+                        ],
+                        "lastHarvestAttempt": ""
+                    }], self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))
+        self.assertEquals([{
+                        "repositoryId": "anotherRepoId",
+                        "repositoryGroupId": "repoGroupId2",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 0,
+                        "recentinvalids": [],
+                        "lastHarvestAttempt": ""
+                    }], self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))
 
     def testGetStatusForDomainIdAndRepositoryGroupId(self):
-        self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>2</invalid>
-                <recentinvalids>
-                    <invalidId>invalidId&amp;2</invalidId>
-                    <invalidId>invalidId1</invalidId>
-                </recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-            <status repositoryId="repoId/2" repositoryGroupId="repoGroupId1">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>1</invalid>
-                <recentinvalids>
-                    <invalidId>invalidId/3</invalidId>
-                </recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-            </GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryGroupId="repoGroupId1"))))
+        self.assertEquals([{
+                        "repositoryId": "repoId1",
+                        "repositoryGroupId": "repoGroupId1",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 2,
+                        "recentinvalids": [
+                            "invalidId&2",
+                            "invalidId1"
+                        ],
+                        "lastHarvestAttempt": ""
+                    }, {
+                        "repositoryId": "repoId/2",
+                        "repositoryGroupId": "repoGroupId1",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 1,
+                        "recentinvalids": ['invalidId/3'],
+                        "lastHarvestAttempt": ""
+                    }], self.status.getStatus(domainId=self.domainId, repositoryGroupId='repoGroupId1'))
 
     def testGetStatusForDomainId(self):
-        self.assertEqualsWS("""<GetStatus>
-            <status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>2</invalid>
-                <recentinvalids>
-                    <invalidId>invalidId&amp;2</invalidId>
-                    <invalidId>invalidId1</invalidId>
-                </recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-            <status repositoryId="repoId/2" repositoryGroupId="repoGroupId1">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>1</invalid>
-                <recentinvalids>
-                    <invalidId>invalidId/3</invalidId>
-                </recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-            <status repositoryId="repoId3" repositoryGroupId="repoGroupId2">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>0</invalid>
-                <recentinvalids></recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-            <status repositoryId="anotherRepoId" repositoryGroupId="repoGroupId2">
-                <lastHarvestDate></lastHarvestDate>
-                <harvested></harvested>
-                <uploaded></uploaded>
-                <deleted></deleted>
-                <total></total>
-                <totalerrors>0</totalerrors>
-                <recenterrors></recenterrors>
-                <invalid>0</invalid>
-                <recentinvalids></recentinvalids>
-                <lastHarvestAttempt></lastHarvestAttempt>
-            </status>
-        </GetStatus>""", ''.join(compose(self.status.getStatus(self.domainId))))
+        self.assertEquals([{
+                        "repositoryId": "repoId1",
+                        "repositoryGroupId": "repoGroupId1",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 2,
+                        "recentinvalids": [
+                            "invalidId&2",
+                            "invalidId1"
+                        ],
+                        "lastHarvestAttempt": ""
+                    }, {
+                        "repositoryId": "repoId/2",
+                        "repositoryGroupId": "repoGroupId1",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 1,
+                        "recentinvalids": ['invalidId/3'],
+                        "lastHarvestAttempt": ""
+                    }, {
+                        "repositoryId": "repoId3",
+                        "repositoryGroupId": "repoGroupId2",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 0,
+                        "recentinvalids": [],
+                        "lastHarvestAttempt": ""
+                    }, {
+                        "repositoryId": "anotherRepoId",
+                        "repositoryGroupId": "repoGroupId2",
+                        "lastHarvestDate": "",
+                        "harvested": 0,
+                        "uploaded": 0,
+                        "deleted": 0,
+                        "total": 0,
+                        "totalerrors": 0,
+                        "recenterrors": [],
+                        "invalid": 0,
+                        "recentinvalids": [],
+                        "lastHarvestAttempt": ""
+                    }], self.status.getStatus(domainId=self.domainId))
 
     def testGetAllInvalidRecords(self):
         def invalidRecords(repoId):
@@ -236,10 +234,9 @@ class RepositoryStatusTest(SeecrTestCase):
         with open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w') as f:
             for i in range(20):
                 f.write("invalidId%d\n" % i)
-        statusXml = ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")))
-        lxmlResult = parse(StringIO(statusXml))
-        self.assertEquals("20", lxmlResult.xpath("/GetStatus/status/invalid/text()")[0])
-        self.assertEquals(10, len(lxmlResult.xpath("/GetStatus/status/recentinvalids/invalidId")))
+        status = self.status.getStatus(domainId=self.domainId, repositoryId="repoId1")
+        self.assertEquals(20, status[0]['invalid'])
+        self.assertEquals(10, len(status[0]['recentinvalids']))
 
     def testSucces(self):
         logLine = '\t'.join(['[2006-03-13 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: None'])
@@ -324,22 +321,17 @@ class RepositoryStatusTest(SeecrTestCase):
 [2005-08-24 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/20
 [2005-08-24 20:00:00.456]\tERROR\t[repositoryId]\tError With Scary Characters < & > " '
 """)
-        self.assertEqualsWS("""<GetStatus>
-<status repositoryId="repoId1" repositoryGroupId="repoGroupId1">
-  <lastHarvestDate>2005-08-24T00:00:00Z</lastHarvestDate>
-  <harvested>8</harvested>
-  <uploaded>4</uploaded>
-  <deleted>3</deleted>
-  <total>20</total>
-  <totalerrors>1</totalerrors>
-  <recenterrors>
-    <error date="2005-08-24T20:00:00Z">Error With Scary Characters &lt; &amp; &gt; " '</error>
-  </recenterrors>
-  <invalid>2</invalid>
-  <recentinvalids>
-    <invalidId>invalidId&amp;2</invalidId>
-    <invalidId>invalidId1</invalidId>
-  </recentinvalids>
-  <lastHarvestAttempt>2005-08-24T20:00:00Z</lastHarvestAttempt>
-</status>
-</GetStatus>""", ''.join(compose(self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))))
+        self.assertEquals([{
+                "repositoryId": "repoId1",
+                "repositoryGroupId": "repoGroupId1",
+                "lastHarvestDate": "2005-08-24T00:00:00Z",
+                "harvested": 8,
+                "uploaded": 4,
+                "deleted": 3,
+                "total": 20,
+                "totalerrors": 1,
+                "recenterrors": [dict(date="2005-08-24T20:00:00Z", error='Error With Scary Characters < & > " \'')],
+                "invalid": 2,
+                "recentinvalids": ['invalidId&2', 'invalidId1'],
+                "lastHarvestAttempt": "2005-08-24T20:00:00Z"
+            }], self.status.getStatus(domainId=self.domainId, repositoryId='repoId1'))

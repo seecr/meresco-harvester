@@ -1,45 +1,44 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
-# 
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-from os.path import join, isfile, isdir
-from os import listdir
+from os.path import join, isfile
 from lxml.etree import parse
-from xml.sax.saxutils import escape as escapeXml
 from re import compile
 from itertools import ifilter, islice
+from meresco.components.json import JsonDict, JsonList
 from meresco.core import Observable
 from escaping import escapeFilename, unescapeFilename
 from simplejson import load as jsonLoad
 
 from harvesterlog import INVALID_DATA_MESSAGES_DIR
-from meresco.harvester.deleteids import readIds
+from weightless.core import asList
 
 
 NUMBERS_RE = compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
@@ -50,8 +49,10 @@ class RepositoryStatus(Observable):
         self._logPath = logPath
         self._statePath = statePath
 
-    def getStatus(self, domainId, repositoryGroupId=None, repositoryId=None):
-        yield "<GetStatus>"
+    def getStatus(self, **kwargs):
+        return JsonList([x for x in asList(self._getStatus(**kwargs))])
+
+    def _getStatus(self, domainId, repositoryGroupId=None, repositoryId=None):
         if repositoryId:
             groupId = self.call.getRepositoryGroupId(domainId=domainId, repositoryId=repositoryId)
             yield self._getRepositoryStatus(domainId, groupId, repositoryId)
@@ -61,7 +62,6 @@ class RepositoryStatus(Observable):
                 repositoryIds = self.call.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
                 for repoId in repositoryIds:
                     yield self._getRepositoryStatus(domainId, groupId, repoId)
-        yield "</GetStatus>"
 
     def getRunningStatesForDomain(self, domainId):
         return sorted([
@@ -77,7 +77,7 @@ class RepositoryStatus(Observable):
         if not isfile(invalidFile):
             return []
         return reversed(
-            [x[:-1] if x[-1] == '\n' else x for x in 
+            [x[:-1] if x[-1] == '\n' else x for x in
                 (unescapeFilename(line) for line in open(invalidFile) if line.strip())
             ]
         )
@@ -88,24 +88,20 @@ class RepositoryStatus(Observable):
 
     def _getRepositoryStatus(self, domainId, groupId, repoId):
         stats = self._parseEventsFile(domainId, repoId)
-        yield '<status repositoryId="%s" repositoryGroupId="%s">\n' % (repoId, groupId)
-        yield '<lastHarvestDate>%s</lastHarvestDate>\n' % stats.get('lastHarvestDate', '')
-        yield '<harvested>%s</harvested>\n' % stats.get('harvested', '')
-        yield '<uploaded>%s</uploaded>\n' % stats.get('uploaded', '')
-        yield '<deleted>%s</deleted>\n' % stats.get('deleted', '')
-        yield '<total>%s</total>\n' % stats.get('total', '')
-        yield '<totalerrors>%s</totalerrors>\n' % stats.get('totalerrors', '')
-        yield '<recenterrors>\n'
-        for error in stats['recenterrors']:
-            yield '<error date="%s">%s</error>\n' % (error[0], escapeXml(error[1])) 
-        yield '</recenterrors>\n'
-        yield '<invalid>%s</invalid>\n' % self._invalidCount(domainId, repoId)
-        yield '<recentinvalids>\n'
-        for invalidRecord in islice(self.invalidRecords(domainId, repoId), 10):
-            yield '<invalidId>%s</invalidId>\n' % escapeXml(invalidRecord)
-        yield '</recentinvalids>\n'
-        yield '<lastHarvestAttempt>%s</lastHarvestAttempt>\n' % stats.get('lastHarvestAttempt', '')
-        yield '</status>\n'
+        return JsonDict(
+                repositoryId=repoId,
+                repositoryGroupId=groupId,
+                lastHarvestDate=stats.get('lastHarvestDate', ''),
+                harvested=int(stats.get('harvested', 0)),
+                uploaded=int(stats.get('uploaded', 0)),
+                deleted=int(stats.get('deleted', 0)),
+                total=int(stats.get('total', 0)),
+                totalerrors=int(stats.get('totalerrors', 0)),
+                recenterrors=[dict(date=error[0], error=error[1]) for error in stats['recenterrors']],
+                invalid=int(self._invalidCount(domainId, repoId)),
+                recentinvalids=list(islice(self.invalidRecords(domainId, repoId), 10)),
+                lastHarvestAttempt=stats.get('lastHarvestAttempt', '')
+            )
 
     def _invalidCount(self, domainId, repositoryId):
         invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
@@ -148,7 +144,7 @@ def _error(parseState, date, comments):
 
 def _reformatDate(aDate):
     return aDate[0:len('YYYY-MM-DD')] + 'T' + aDate[len('YYYY-MM-DD '):len('YYYY-MM-DD HH:MM:SS')] + 'Z'
-        
+
 def mergeDicts(dict1, dict2):
     newDict = dict1.copy()
     newDict.update(dict2)
