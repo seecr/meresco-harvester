@@ -17,7 +17,7 @@ def mappingTuple(mappingId):
   return req.proxy.getMapping(mappingId).get('name', ''), mappingId
 
 targets = [targetTuple(targetId) for targetId in domain.get('targetIds', [])]
-mappings = [mappingTuple(mappingId) for mappingId in domain.get('mappingIds')]
+mappings = [mappingTuple(mappingId) for mappingId in domain.get('mappingIds', [])]
 
 %>
 

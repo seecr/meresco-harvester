@@ -29,6 +29,7 @@ if not session.get('isAdmin','') and session.get('domain', '') != domainId:
 
 <div><h3>Repositories</h3>
  <form action='/actions/addRepository' method='post'>
+      <input type="hidden" name="redirectUri" value="/page/repository.edit/?domainId=<%=domainId%>"/>
      <input type="hidden" name="domainId" value="<%=domainId%>"/>
     <input type="hidden" name="repositoryGroupId" value="<%=groupId%>"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
