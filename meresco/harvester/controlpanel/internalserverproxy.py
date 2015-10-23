@@ -7,6 +7,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -40,6 +41,9 @@ class InternalServerProxy(object):
     def getRepository(self, identifier, domainId):
         return self.urlJsonDict(verb='GetRepository', identifier=identifier, domainId=domainId)['response']['GetRepository']
 
+    def getRepositories(self, domainId, repositoryGroupId=None):
+        return self.urlJsonDict(verb='GetRepositories', domainId=domainId, repositoryGroupId=repositoryGroupId)['response']['GetRepositories']
+
     def getTarget(self, identifier):
         return self.urlJsonDict(verb='GetTarget', identifier=identifier)['response']['GetTarget']
 
@@ -52,8 +56,13 @@ class InternalServerProxy(object):
     def getDomainIds(self):
         return self.urlJsonDict(verb='GetDomainIds')['response']['GetDomainIds']
 
+    def getStatus(self, **kwargs):
+        return self.urlJsonDict(verb='GetStatus', **kwargs)['response']['GetStatus']
+
     def urlJsonDict(self, **kwargs):
-        return JsonDict.load(self._url(self._geturl + urlencode(kwargs)))
+        arguments = dict((k ,v) for k, v in kwargs.items() if v)
+        return JsonDict.load(self._url(self._geturl + urlencode(arguments)))
 
     def urlJsonList(self, **kwargs):
-        return JsonList.load(self._url(self._geturl + urlencode(kwargs)))
+        arguments = dict((k ,v) for k, v in kwargs.items() if v)
+        return JsonList.load(self._url(self._geturl + urlencode(arguments)))

@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -57,6 +57,10 @@ dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 
 def dna(reactor, observableHttpServer, config):
     harvesterData = HarvesterData(config["dataPath"])
+    repositoryStatus = be((RepositoryStatus(config["logPath"], config["statePath"]),
+            (harvesterData,)
+        ))
+
     return \
         (Observable(),
             (observableHttpServer,
@@ -82,10 +86,8 @@ def dna(reactor, observableHttpServer, config):
                             },
                             indexPage="/index.html",
                             ),
-                            (RepositoryStatus(config["logPath"], config["statePath"]),
-                                (harvesterData,)
-                            ),
-                            (harvesterData,)
+                            (harvesterData,),
+                            (repositoryStatus,),
                         )
                     ),
                     (PathFilter('/action'),
@@ -95,7 +97,8 @@ def dna(reactor, observableHttpServer, config):
                     ),
                     (PathFilter('/get'),
                         (HarvesterDataRetrieve(),
-                            (harvesterData,)
+                            (harvesterData,),
+                            (repositoryStatus,),
                         )
                     )
                 )
