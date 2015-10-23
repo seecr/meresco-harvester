@@ -13,7 +13,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011, 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -53,6 +53,7 @@ from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
 from harvesterdatatest import HarvesterDataTest
+from harvesterdataactionstest import HarvesterDataActionsTest
 from harvesterdataretrievetest import HarvesterDataRetrieveTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest

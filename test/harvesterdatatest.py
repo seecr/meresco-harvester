@@ -7,7 +7,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -194,7 +194,58 @@ class HarvesterDataTest(SeecrTestCase):
         self.hd.deleteRepositoryGroup('Group2', domainId='adomain')
         self.assertEqual(['Group1'], self.hd.getRepositoryGroupIds(domainId='adomain'))
 
+    def testAddRepository(self):
+        self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
+        self.hd.addRepository(identifier="newrepo", domainId='adomain', repositoryGroupId='Group1')
+        self.assertEqual(['repository1', 'repository2', 'newrepo'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
+        self.assertEquals('Group1', self.hd.getRepository(identifier='newrepo', domainId='adomain')['repositoryGroupId'])
+        try:
+            self.hd.addRepositoryGroup(identifier="Group1", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('The repositoryGroup already exists.', str(e))
+        try:
+            self.hd.addRepositoryGroup(identifier="group#with#invalid%characters", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
+        try:
+            self.hd.addRepositoryGroup(identifier="", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('No name given.', str(e))
 
+    def testDeleteRepository(self):
+        self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
+        self.hd.deleteRepository(identifier="repository2", domainId='adomain', repositoryGroupId='Group1')
+        self.assertEqual(['repository1'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
 
+    def testUpdateRepository(self):
+        self.hd.updateRepository('repository1',
+                domainId='adomain',
+                baseurl='baseurl',
+                set='set',
+                metadataPrefix='metadataPrefix',
+                mappingId='mappingId',
+                targetId='targetId',
+                collection='collection',
+                maximumIgnore=0,
+                use=False,
+                complete=True,
+                action='action',
+                shopclosed=['40:1:09:55-40:1:10:00'],
+            )
+        repository = self.hd.getRepository('repository1', 'adomain')
+        self.assertEquals('baseurl', repository['baseurl'])
+        self.assertEquals('set', repository['set'])
+        self.assertEquals('metadataPrefix', repository['metadataPrefix'])
+        self.assertEquals('mappingId', repository['mappingId'])
+        self.assertEquals('targetId', repository['targetId'])
+        self.assertEquals('collection', repository['collection'])
+        self.assertEquals(0, repository['maximumIgnore'])
+        self.assertEquals(False, repository['use'])
+        self.assertEquals(True, repository['complete'])
+        self.assertEquals('action', repository['action'])
+        self.assertEquals(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
 
 

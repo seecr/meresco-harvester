@@ -1,45 +1,41 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2009, 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-import unittest
-import datetime
-import time
-import re
-
 from meresco.harvester.timeslot import Timeslot, Wildcard, _parse as parse, ParseException
+from seecr.test import SeecrTestCase
 
-class TimeslotTest(unittest.TestCase):
+class TimeslotTest(SeecrTestCase):
 
 	def testWildCard(self):
 		self.assertEquals('*', Wildcard())
@@ -62,6 +58,7 @@ class TimeslotTest(unittest.TestCase):
 	def testStringFormat(self):
 		timeslot = Timeslot('33:1:09:55-45:5:10:33')
 		self.assertEquals('33:1:9:55-45:5:10:33', str(timeslot))
+		self.assertEquals('33', timeslot.beginweek)
 
 	def testInTimeslot(self):
 		timeslot = Timeslot('33:1:09:55-45:5:10:33')
@@ -71,7 +68,7 @@ class TimeslotTest(unittest.TestCase):
 		self.assertFalse(Timeslot('*:*:20:00-*:*:10:00').valid())
 		self.assertFalse(Timeslot('*:*:10:00-*:*:10:00').valid())
 		self.assertTrue(Timeslot('*:*:10:00-*:*:20:00').valid())
-		
+
 	def testNotWithinTimeslot(self):
 		timeslot = Timeslot('36:1:09:55-45:5:10:33')
 		self.assertFalse(timeslot.areWeWithinTimeslot((1983,  1, 23, 10, 45)))

@@ -7,6 +7,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -26,7 +27,8 @@
 #
 ## end license ##
 
-from meresco.components.http.utils import redirectHttp
+from meresco.components.http.utils import redirectHttp, badRequestHtml
+from meresco.harvester.timeslot import Timeslot
 from meresco.html import PostActions
 from urllib import urlencode
 from urlparse import parse_qs, urlparse
@@ -41,6 +43,10 @@ class HarvesterDataActions(PostActions):
         self._register('addRepositoryGroup', self._addRepositoryGroup)
         self._register('deleteRepositoryGroup', self._deleteRepositoryGroup)
         self._register('updateRepositoryGroup', self._updateRepositoryGroup)
+        self._register('addRepository', self._addRepository)
+        self._register('deleteRepository', self._deleteRepository)
+        self._register('updateRepository', self._updateRepository)
+        self.defaultAction(lambda path, **kwargs: badRequestHtml + "Invalid action: " + path)
 
     def _addDomain(self, identifier, arguments):
         self.call.addDomain(identifier=identifier)
@@ -71,6 +77,50 @@ class HarvesterDataActions(PostActions):
         self.call.deleteRepositoryGroup(
                 identifier=identifier,
                 domainId=arguments.get('domainId', [''])[0],
+            )
+
+    def _addRepository(self, identifier, arguments):
+        self.call.addRepository(
+                identifier=identifier,
+                domainId=arguments.get('domainId', [''])[0],
+                repositoryGroupId=arguments.get('repositoryGroupId', [''])[0],
+            )
+
+    def _updateRepository(self, identifier, arguments):
+        shopclosed = []
+        shopStart = 0 if 'addTimeslot' in arguments else 1
+        shopEnd = 1 + int(arguments.get('numberOfTimeslots', [''])[0] or '0')
+        for i in xrange(shopStart, shopEnd):
+            if arguments.get('deleteTimeslot_%s.x' % i, [None])[0]:
+                continue
+            shopclosed.append(str(Timeslot('{week}:{weekday}:{begin}:00-{week}:{weekday}:{end}:00'.format(
+                    week=arguments.get('shopclosedWeek_%s' % i, ['*'])[0],
+                    weekday=arguments.get('shopclosedWeekDay_%s' % i, ['*'])[0],
+                    begin=arguments.get('shopclosedBegin_%s' % i, ['*'])[0],
+                    end=arguments.get('shopclosedEnd_%s' % i, ['*'])[0],
+                ))))
+
+        self.call.updateRepository(
+                identifier=identifier,
+                domainId=arguments['domainId'][0],
+                baseurl=arguments.get('baseurl', [''])[0],
+                set=arguments.get('set', [''])[0],
+                metadataPrefix=arguments.get('metadataPrefix', [''])[0],
+                mappingId=arguments.get('mappingId', [''])[0],
+                targetId=arguments.get('targetId', [''])[0],
+                collection=arguments.get('collection', [''])[0],
+                maximumIgnore=int(arguments.get('maximumIgnore', [''])[0] or '0'),
+                use='use' in arguments,
+                complete='complete' in arguments,
+                action=arguments.get('repositoryAction', [''])[0],
+                shopclosed=shopclosed,
+            )
+
+    def _deleteRepository(self, identifier, arguments):
+        self.call.deleteRepository(
+                identifier=identifier,
+                domainId=arguments.get('domainId', [''])[0],
+                repositoryGroupId=arguments.get('repositoryGroupId', [''])[0],
             )
 
     def _register(self, name, actionMethod):

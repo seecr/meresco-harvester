@@ -7,7 +7,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -128,6 +128,41 @@ class HarvesterData(object):
         except IOError:
             raise ValueError("idDoesNotExist")
 
+    def addRepository(self, identifier, domainId, repositoryGroupId):
+        group = self.getRepositoryGroup(repositoryGroupId, domainId)
+        filename = "{}.{}.repository".format(domainId, identifier)
+        if identifier == '':
+            raise ValueError('No name given.')
+        elif not checkName(identifier):
+            raise ValueError('Name is not valid. Only use alphanumeric characters.')
+        if self._exists(filename):
+            raise ValueError('The repository already exists.')
+        self._save(JsonDict(dict(identifier=identifier, repositoryGroupId=repositoryGroupId)), filename)
+        group.setdefault('repositoryIds', []).append(identifier)
+        self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
+
+    def deleteRepository(self, identifier, domainId, repositoryGroupId):
+        group = self.getRepositoryGroup(repositoryGroupId, domainId)
+        group['repositoryIds'].remove(identifier)
+        self._delete("{}.{}.repository".format(domainId, identifier))
+        self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
+
+    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, complete, action, shopclosed):
+        repository = self.getRepository(identifier, domainId)
+        repository['baseurl'] = baseurl
+        repository['set'] = set
+        repository['metadataPrefix'] = metadataPrefix
+        repository['mappingId'] = mappingId
+        repository['targetId'] = targetId
+        repository['collection'] = collection
+        repository['maximumIgnore'] = maximumIgnore
+        repository['use'] = use
+        repository['complete'] = complete
+        repository['action'] = action
+        repository['shopclosed'] = shopclosed
+        self._save(repository, "{}.{}.repository".format(domainId, identifier))
+
+    #target
     def getTarget(self, identifier):
         try:
             return JsonDict.load(open(join(self._dataPath, '%s.target' % identifier)))
