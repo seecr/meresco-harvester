@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011, 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -40,6 +40,7 @@ from os.path import dirname, join
 from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.namespaces import xpath, xpathFirst
 from internalserverproxy import InternalServerProxy
+from urlparse import urlparse, parse_qs
 
 templatesPath = join(dirname(__file__), 'slowfoottemplates')
 
@@ -94,6 +95,8 @@ def handler(req):
                 xpathFirst=xpathFirst,
                 JsonList=JsonList,
                 JsonDict=JsonDict,
+                urlparse=urlparse,
+                parse_qs=parse_qs,
             )
         )
     req.proxy = InternalServerProxy(req)
