@@ -1,11 +1,11 @@
 <%
-repository = lxml.getroot()
-inputquery = { 'verb':'ListRecords', 'metadataPrefix': xpathFirst(repository, 'metadataPrefix/text()') }
-repositorySet = xpathFirst(repository, 'set/text()')
-if repositorySet is not None: 
+repository = req.proxy.getRepository(identifier=args.repositoryId, domainId=args.domainId)
+inputquery = { 'verb':'ListRecords', 'metadataPrefix': repository.get('metadataPrefix') }
+repositorySet = repository.get('set')
+if repositorySet is not None:
   inputquery['set']=repositorySet
-inputurl = xpathFirst(repository, 'baseurl/text()') + '?' + urlencode(inputquery)
+inputurl = repository.get('baseurl') + '?' + urlencode(inputquery)
 domainId = args.name.split('.')[0]
 
-redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId':xpathFirst(repository, 'mappingId/text()'), 'inputurl':inputurl}))
+redirect('/onlinemapping?' + urlencode({'domainId': domainId, 'mappingId': repository.get('mappingId'), 'inputurl':inputurl}))
 %>

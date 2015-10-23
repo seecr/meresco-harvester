@@ -3,7 +3,7 @@
 The mappings can be tested using an <i>online harvester</i>. It will harvest a certain repository and uses the mapping to provide a result which is directly shown on screen. This may help in testing the mapping.
 </p>
 <p>The mapping can be tested in two ways.<p>
-<p>First by giving it a url which provides a OAI ListRecords answer. Something like: http://repository.example.org/oai?verb=ListRecords&metadataPrefix=oai_dc 
+<p>First by giving it a url which provides a OAI ListRecords answer. Something like: http://repository.example.org/oai?verb=ListRecords&metadataPrefix=oai_dc
 
 <form action="/onlinemapping" method="get">
 <input type="hidden" name="mappingId" value="<%=args.mappingId%>">
@@ -27,16 +27,15 @@ domainId = args.referrerDomain
 print >> req, domainId
 def isDomainRepository(filename):
   return filename.startswith(domainId + '.') and filename.endswith('.repository')
-repositories = filter(isDomainRepository, files())
-for rep in repositories:
-    repository = aslxml(url('/'+rep)).getroot()
-    inputurl = '%s?verb=ListRecords&metadataPrefix=%s' % (xpathFirst(repository, 'baseurl/text()'), xpathFirst(repository, 'metadataPrefix/text()'))
-    aSet = xpathFirst(repository, 'set/text()')
+repositories = req.proxy.getRepositories(domainId=domainId)
+for repository in repositories:
+    inputurl = '%s?verb=ListRecords&metadataPrefix=%s' % (repository.get('baseurl'), repository.get('metadataPrefix'))
+    aSet = repository.get('set')
     if aSet is not None:
       inputurl += '&set=%s' % aSet
     #
 %>
-  <option value="<%escape_html(inputurl)%>"><%=xpathFirst(repository, 'id/text()')%></option>
+  <option value="<%escape_html(inputurl)%>"><%=repository['identifier']%></option>
 <%
 #
 %>

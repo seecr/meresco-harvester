@@ -78,7 +78,9 @@ for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).
 <%
 if isAdmin:
 %>
- <form action='/target.new/<%= domainIdentifier %>.domain' method='post'>
+ <form action='/actions/addTarget' method='post'>
+   <input type="hidden" name="redirectUri" value="/page/target.edit/?referrerDomain=<%=domainIdentifier%>"/>
+   <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -109,7 +111,7 @@ for targetId in domain.get('targetIds', []):
    <tr class="table_row">
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/target.edit/<%=targetId%>.target?referrerDomain=<%=domainIdentifier%>">
+     <a href="/page/target.edit/?identifier=<%=targetId%>&amp;referrerDomain=<%=domainIdentifier%>">
       <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -117,12 +119,14 @@ for targetId in domain.get('targetIds', []):
   if isAdmin:
 %>
     <td>
-     <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=target&id=' + targetId,
-       'filename':name
-       })%>">
-      Delete
+     <form method='post' action='/actions/deleteTarget' name="deleteTarget_<%=groupId%>">
+        <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
+        <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
+        <input type="hidden" name="identifier" value="<%=targetId%>"/>
+     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteTarget_<%=groupId%>.submit();}; return false;">
+        Delete
      </a>
+     </form>
     </td>
 <%
   # end ifAdmin
@@ -139,7 +143,9 @@ for targetId in domain.get('targetIds', []):
 <%
 if isAdmin:
 %>
- <form action='/mapping.new/<%= domainIdentifier %>.domain' method='post'>
+ <form action='/actions/addMapping' method='post'>
+   <input type="hidden" name="redirectUri" value="/page/mapping.edit/?referrerDomain=<%=domainIdentifier%>"/>
+   <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Name:&nbsp;</td>
@@ -163,7 +169,7 @@ for mappingId in domain.get('mappingIds', []):
    <tr class="table_row">
     <td width="60%"><%=name%></td>
     <td>
-     <a href="/page/mapping.edit/<%=mappingId%>.mapping?referrerDomain=<%=domainIdentifier%>">
+     <a href="/page/mapping.edit/?identifier=<%=mappingId%>&amp;referrerDomain=<%=domainIdentifier%>">
       <%=isAdmin and 'Edit / View' or 'View'%>
      </a>
     </td>
@@ -171,18 +177,20 @@ for mappingId in domain.get('mappingIds', []):
   if isAdmin:
 %>
     <td>
-     <a href="/page/areYouSure/show?<%=
-       urlencode({'ok':'/domain.deleteChild/' + domainIdentifier + '.domain?kind=mapping&id=' + mappingId,
-       'filename':name
-       })%>">
-      Delete
+      <form method='post' action='/actions/deleteMapping' name="deleteMapping_<%=mappingId%>">
+        <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
+        <input type="hidden" name="referrerDomain" value="<%=domainIdentifier%>"/>
+        <input type="hidden" name="identifier" value="<%=mappingId%>"/>
+     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteMapping_<%=groupId%>.submit();}; return false;">
+        Delete
      </a>
+     </form>
     </td>
 <%
   #
 %>
     <td>
-     <a href="/page/testmapping/?mappingId=<%=mappingId%>&referrerDomain=<%=domainIdentifier%>">
+     <a href="/page/testmapping/?mappingId=<%=mappingId%>&amp;referrerDomain=<%=domainIdentifier%>">
       Test
      </a>
     </td>
@@ -201,10 +209,10 @@ for mappingId in domain.get('mappingIds', []):
  <a href="/page/showHarvesterStatus/show?domainId=<%= domainIdentifier %>">Harvester status of this domain</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&amp;since=lastweek">Harvester throughput of this domain for the past 7 days.</a>
  </li>
  <li>
- <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
+ <a href="/page/showHarvesterThroughput/show?domainId=<%= domainIdentifier %>&amp;since=lastmonth">Harvester throughput of this domain for the past 31 days.</a>
  </li>
 </ul>
 </div>
@@ -212,7 +220,7 @@ for mappingId in domain.get('mappingIds', []):
 if isAdmin:
 %>
 <p>
- <a href="/page/domains/show">Back to Domains & Users</a>
+ <a href="/page/domains/show">Back to Domains &amp; Users</a>
 </p>
 <%
 #

@@ -1,29 +1,28 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-searchEngineTarget = xpathFirst(lxml, '/target')
-def targetAttr(attr):
-  return xpathFirst(searchEngineTarget, '%s/text()' % attr) or ''
-targetId = xpathFirst(searchEngineTarget, 'id/text()')
+
+target = req.proxy.getTarget(args.identifier)
+targetId = target['identifier']
 %>
 
 <h1>Target Administration</h1>
-<div><h4>Target (<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>)</h4>
+<div><h4>Target (<%=target.get('name') or ''%>)</h4>
 
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
 <%
 if session.get('isAdmin',''):
   #
-  targetType = xpathFirst(searchEngineTarget, 'targetType/text()')
+  targetType = target.get('targetType')
 %>
- <form method="post" action="/target.save/<%= targetId %>.target">
+ <form method="post" action="/actions/updateTarget">
   <table>
-   <input type="hidden" name="id" value="<%=targetId%>">
+   <input type="hidden" name="identifier" value="<%=targetId%>">
    <input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
-   <input type="hidden" name="targetType" value="<%=xpathFirst(searchEngineTarget, 'targetType/text()') or ''%>">
+   <input type="hidden" name="targetType" value="<%=targetType or ''%>">
    <tr>
     <td>Name:</td>
-    <td><input type="text" name="name" value="<%=xpathFirst(searchEngineTarget, 'name/text()') or ''%>"></td>
+    <td><input type="text" name="name" value="<%=target.get('name') or ''%>"></td>
    </tr>
 
    <tr>
@@ -36,35 +35,35 @@ if session.get('isAdmin',''):
 %>
    <tr>
     <td>Base URL: (without &quot;http://&quot;)</td>
-    <td><input type="text" name="baseurl" value="<%=xpathFirst(searchEngineTarget, 'baseurl/text()') or ''%>" size="30"></td>
+    <td><input type="text" name="baseurl" value="<%=target.get('baseurl') or ''%>" size="30"></td>
    </tr>
 
    <tr>
     <td>Path:</td>
-    <td><input type="text" name="path" value="<%=xpathFirst(searchEngineTarget, 'path/text()') or ''%>" size="30"></td>
+    <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
   </tr>
 
    <tr>
     <td>Port:</td>
-    <td><input type="text" name="port" value="<%=xpathFirst(searchEngineTarget, 'port/text()') or ''%>" size="6"></td>
+    <td><input type="text" name="port" value="<%=target.get('port') or ''%>" size="6"></td>
    </tr>
 <%
   elif targetType == 'filesystem':
 %>
    <tr>
     <td>Path:</td>
-    <td><input type="text" name="path" value="<%=xpathFirst(searchEngineTarget, 'path/text()') or ''%>" size="30"></td>
+    <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
    </tr>
    <tr>
     <td>Wrap in OAI-Envelope:</td>
-    <td><input type="checkbox" name="oaiEnvelope" value="true" <%= targetAttr('oaiEnvelope') == 'true' and 'checked'%>></td>
+    <td><input type="checkbox" name="oaiEnvelope" value="true" <%= target.get('oaiEnvelope') and 'checked'%>></td>
    </tr>
 <%
   elif targetType == 'composite':
-    targetIds = xpath(aslxml(url('/%s.domain' % args.referrerDomain)).getroot(), 'targetId/text()')
+    targetIds = req.proxy.getDomain(args.referrerDomain).get('targetIds', [])
     targetIds = filter(lambda t: t != targetId, targetIds)
-    targetName = lambda id: xpathFirst(aslxml(url('/xml/'+id+'.target')).getroot(), 'name/text()')
-    selected = lambda id: id in xpath(searchEngineTarget, 'delegate/text()') and 'selected' or ''
+    targetName = lambda id: req.proxy.getTarget(id).get('name') or ''
+    selected = lambda id: id in target.get('delegate') and 'selected' or ''
 %>
    <tr>
     <td style="vertical-align:top">Targets (hold CTRL to select multiple targets):</td>
@@ -92,7 +91,7 @@ else:
  <table>
   <tr>
     <td>Name:</td>
-    <td><%=targetAttr('name')%></td>
+    <td><%=target.get('name') or ''%></td>
   </tr>
 
   <tr>
@@ -105,28 +104,28 @@ else:
 %>
   <tr>
     <td>Base URL:</td>
-    <td><%=targetAttr('baseurl')%></td>
+    <td><%=target.get('baseurl') or ''%></td>
   </tr>
 
   <tr>
     <td>Path:</td>
-    <td><%=targetAttr('path')%></td>
+    <td><%=target.get('path') or ''%></td>
   </tr>
 
   <tr>
     <td>Port:</td>
-    <td><%=targetAttr('port')%></td>
+    <td><%=target.get('port') or ''%></td>
   </tr>
 <%
   elif targetType == 'filesystem':
 %>
   <tr>
     <td>Path:</td>
-    <td><%=targetAttr('path')%></td>
+    <td><%=target.get('path') or ''%></td>
   </tr>
   <tr>
     <td>Wrap in OAI-Envelope:</td>
-    <td><%='true' if targetAttr('oaiEnvelope') else 'false'%></td>
+    <td><%='true' if target.get('oaiEnvelope') else 'false'%></td>
   </tr>
 <%
   elif targetType == 'composite':
@@ -136,13 +135,13 @@ else:
     <td>Targets:</td><td>&nbsp;</td>
   </tr>
 <%
-    for id in xpath(searchEngineTarget, 'delegate/text()'):
-      targetName = xpathFirst(aslxml(url('/xml/'+id+'.target')).getroot(), 'name/text()')
+    for id in target.get('delegate', []):
+      targetName = req.proxy.getTarget(id).get('name') or ''
 %>
   <tr>
     <td><%escape_html(targetName)%></td>
     <td>
-      <a href="/page/target.edit/<%= id %>.target?referrerDomain=<%= args.referrerDomain %>">
+      <a href="/page/target.edit/?identifier=<%=id%>&amp;referrerDomain=<%= args.referrerDomain %>">
       View
       </a>
     </td>
@@ -163,5 +162,5 @@ else:
 
 </div>
 <p>
- <a href="/page/domain.edit/<%=args.referrerDomain%>.domain">Back to domain</a>
+ <a href="/page/domain.edit/?identifier=<%=args.referrerDomain%>">Back to domain</a>
 </p>

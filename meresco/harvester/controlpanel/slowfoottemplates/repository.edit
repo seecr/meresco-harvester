@@ -1,25 +1,23 @@
 <%
 req.req.headers_out['Cache-Control'] = 'no-cache'
 
-from meresco.harvester.controlpanel.tools import getDomainId
 from meresco.harvester.timeslot import Timeslot
 
-repositoryFile = args.name
-groupId = args.referrerGroup
-domainId = getDomainId(req.uri)
+repositoryId = args.identifier
+domainId = args.domainId
 if not session.get('isAdmin','') and session.get('domain', '') != domainId:
   raise Exception('Illegal use')
 #
-domainLxml = aslxml(url('/xml/'+ domainId + '.domain'))
+domain = req.proxy.getDomain(domainId)
 
 def targetTuple(targetId):
-  return xpathFirst(aslxml(url('/xml/'+ targetId + '.target')), '/target/name/text()'), targetId
+  return req.proxy.getTarget(targetId).get('name', ''), targetId
 
 def mappingTuple(mappingId):
-  return xpathFirst(aslxml(url('/xml/'+ mappingId + '.mapping')), '/mapping/name/text()'), mappingId
+  return req.proxy.getMapping(mappingId).get('name', ''), mappingId
 
-targets = [targetTuple(targetId) for targetId in xpath(domainLxml, '/domain/targetId/text()')]
-mappings = [mappingTuple(mappingId) for mappingId in xpath(domainLxml, '/domain/mappingId/text()')]
+targets = [targetTuple(targetId) for targetId in domain.get('targetIds', [])]
+mappings = [mappingTuple(mappingId) for mappingId in domain.get('mappingIds')]
 
 %>
 
@@ -33,25 +31,29 @@ function submitForm(submitName) {
 </script>
 
 <%
-repoNode = xpathFirst(lxml, '/repository')
-repoId = xpathFirst(repoNode, 'id/text()')
+repository = req.proxy.getRepository(identifier=repositoryId, domainId=domainId)
+groupId = repository['repositoryGroupId']
 %>
 <h1>Repository Administration</h1>
-<div><h3>Repository: <%=repoId%></h3>
-<form method="post" name="repositorySave" action="/repository.save/<%= repositoryFile %>?referrerGroup=<%= groupId %>">
+<%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
+<div><h3>Repository: <%=repositoryId%></h3>
+<form method="post" name="repositorySave" action="/actions/updateRepository/">
+    <input type="hidden" name="redirectUri" value="/page/repository.edit/?domainId=<%=domainId%>"/>
+    <input type="hidden" name="identifier" value="<%=repositoryId%>"/>
+    <input type="hidden" name="repositoryGroupId" value="<%=repository['repositoryGroupId']%>">
     <table cellspacing="0" cellpadding="0">
       <tr><td>Id:</td>
-          <td><input type="hidden" name="repositoryGroupId" value="<%=xpathFirst(repoNode, 'repositoryGroupId/text()')%>"><input size="5"  type="hidden" name="id" value="<%=repoId%>"><%=repoId%></td></tr>
-      <tr><td>Baseurl:</td><td><input size="50" type="text" name="baseurl" value="<%=xpathFirst(repoNode, 'baseurl/text()') or ''%>"></td></tr>
-      <tr><td>Set:</td><td><input size="50" type="text" name="set" value="<%=xpathFirst(repoNode, 'set/text()') or ''%>"></td></tr>
-      <tr><td>Metadata Prefix:</td><td><input size="50" type="text" name="metadataPrefix" value="<%=xpathFirst(repoNode, 'metadataPrefix/text()') or ''%>"></td></tr>
+          <td><%=repositoryId%></td></tr>
+      <tr><td>Baseurl:</td><td><input size="50" type="text" name="baseurl" value="<%=repository.get('baseurl') or ''%>"></td></tr>
+      <tr><td>Set:</td><td><input size="50" type="text" name="set" value="<%=repository.get('set') or ''%>"></td></tr>
+      <tr><td>Metadata Prefix:</td><td><input size="50" type="text" name="metadataPrefix" value="<%=repository.get('metadataPrefix', '')%>"></td></tr>
 
       <tr>
         <td>Mapping:</td>
         <td>
           <select name="mappingId">
 <%
-mappingId = xpathFirst(repoNode, 'mappingId/text()') or ''
+mappingId = repository.get('mappingId') or ''
 for name,id in [('', '')] + mappings:
 %>
           <option value="<%=id%>" <%='selected' if mappingId == id else ''%>><%escape_html(name)%></option>
@@ -67,7 +69,7 @@ for name,id in [('', '')] + mappings:
         <td>
           <select name="targetId">
 <%
-targetId = xpathFirst(repoNode, 'targetId/text()') or ''
+targetId = repository.get('targetId') or ''
 for name,id in [('', '')] + targets:
 %>
           <option value="<%=id%>" <%='selected' if targetId == id else ''%>><%escape_html(name)%></option>
@@ -78,24 +80,24 @@ for name,id in [('', '')] + targets:
         </td>
       </tr>
 
-      <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=xpathFirst(repoNode, 'collection/text()') or ''%>"></td></tr>
-      <tr><td>Max. validation errors:</td><td><input size="50" type="text" name="maximumIgnore" value="<%=xpathFirst(repoNode, 'maximumIgnore/text()') or '0'%>"></td></tr>
+      <tr><td>Target Collection:</td><td><input size="50" type="text" name="collection" value="<%=repository.get('collection') or ''%>"></td></tr>
+      <tr><td>Max. validation errors:</td><td><input size="50" type="text" name="maximumIgnore" value="<%=repository.get('maximumIgnore') or '0'%>"></td></tr>
 
 
 		<tr>
         <td>Harvest:</td>
-        <td><input type="checkbox" name="use" value="true" <%='checked' if xpathFirst(repoNode, 'use/text()') == 'true' else ''%>></td>
+        <td><input type="checkbox" name="use" value="true" <%='checked' if repository.get('use') else ''%>></td>
       </tr>
       <tr>
         <td>Complete in one attempt:</td>
-        <td><input type="checkbox" name="complete" value="true" <%='checked' if xpathFirst(repoNode, 'complete/text()') else ''%>>Tells the harvester to complete harvesting in one attempt. Generally this option should not be required. Only for repositories with shortlived resumptionTokens.</td>
+        <td><input type="checkbox" name="complete" value="true" <%='checked' if repository.get('complete') else ''%>>Tells the harvester to complete harvesting in one attempt. Generally this option should not be required. Only for repositories with shortlived resumptionTokens.</td>
       </tr>
       <tr>
         <td>Next action:</td>
         <td>
           <select name="repositoryAction">
 <%
-repoAction = xpathFirst(repoNode, 'action/text()')
+repoAction = repository.get('action')
 %>
             <option value="" <%= repoAction == '' and 'selected' or ''%>>-</option>
             <option value="clear" <%= repoAction == 'clear' and 'selected' or ''%>>Clear</option>
@@ -174,7 +176,7 @@ for i in ['Week', 'Day', 'Begin', 'End', '']:
   req.write('<th>%s</th>' % i)
 req.write('</tr>')
 index = 0
-for shopclosed in xpath(repoNode, 'shopclosed/text()'):
+for shopclosed in repository.get('shopclosed', []):
 	index = index + 1
 	closed=Timeslot(shopclosed)
 	#
@@ -201,17 +203,17 @@ for shopclosed in xpath(repoNode, 'shopclosed/text()'):
 <div><h3>Status</h3>
   <ul>
    <li>
-    <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&repositoryId=<%= repoId %>">
+    <a href="/page/showHarvesterStatus/show?domainId=<%= domainId %>&amp;repositoryId=<%= repositoryId %>">
    Harvester status of this repository
     </a>
    </li>
 	 <li>
-    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryId=<%= repoId %>&since=lastweek">
+    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&amp;repositoryId=<%= repositoryId %>&amp;since=lastweek">
    Harvester throughput for this repository for the past 7 days.
     </a>
    </li>
 	 <li>
-    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&repositoryId=<%= repoId %>&since=lastmonth">
+    <a href="/page/showHarvesterThroughput/show?domainId=<%= domainId %>&amp;repositoryId=<%= repositoryId %>&amp;since=lastmonth">
    Harvester throughput for this repository for the past 31 days.
     </a>
    </li>
@@ -222,12 +224,12 @@ for shopclosed in xpath(repoNode, 'shopclosed/text()'):
 <div><h3>Useful links</h3>
   <ul>
    <li>
-	 <a target="_blank" href="<%=xpathFirst(repoNode, 'baseurl/text()')%>?verb=ListMetadataFormats">
+	 <a target="_blank" href="<%=repository.get('baseurl')%>?verb=ListMetadataFormats">
      List all metadata formats.
     </a>
    </li>
 	<li>
-    <a href="/testrepository/<%= repositoryFile %>">
+    <a href="/testrepository/?domainId=<%=domainId%>&amp;repositoryId=<%=repositoryId%>">
      Test mapping
     </a>
    </li>
@@ -235,5 +237,5 @@ for shopclosed in xpath(repoNode, 'shopclosed/text()'):
   <i>(You may need to save first.)</i>
 </div>
 <p>
-<a href="/page/repositoryGroup.edit/<%=domainId%>.<%=groupId%>.repositoryGroup">Back to repositorygroup</a>
+<a href="/page/repositoryGroup.edit/?domainId=<%=domainId%>&amp;identifier=<%=groupId%>">Back to repositorygroup</a>
 </p>

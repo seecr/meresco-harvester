@@ -102,7 +102,7 @@ for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
       <td width="200">
         <select name="domain">
 <%
-for id,file in map(nameFile, filter(lambda f:f.endswith('.domain'),files())):
+for id in req.proxy.getDomainIds():
 %>
           <option value="<%=id%>"><%=id%></option>
 <%

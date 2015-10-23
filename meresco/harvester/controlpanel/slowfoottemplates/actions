@@ -11,6 +11,9 @@ response = post2(postTo, data)
 if response.status == 302:
     redirect(response.getheader('Location'))
 else:
-    redirect('%s?%s' % (referer or '/', urlencode({'error': 'Error in post "%s"' % response.read()})))
+    u = urlparse(referer or '/')
+    args = parse_qs(u.query)
+    args['error'] = 'Error in post "%s"' % response.read()
+    redirect('%s?%s' % (u.path, urlencode(args)))
 #
 %>

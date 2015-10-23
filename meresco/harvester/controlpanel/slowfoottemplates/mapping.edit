@@ -1,8 +1,9 @@
 <%
 req.req.headers_out['Cache-control'] = 'no-cache'
-mapping = xpathFirst(lxml, '/mapping')
-mappingId = xpathFirst(mapping, 'id/text()')
-mappingName = xpathFirst(mapping, 'name/text()') or ''
+
+mapping = req.proxy.getMapping(args.identifier)
+mappingId = mapping['identifier']
+mappingName = mapping.get('name', '')
 %>
 
 <h1>Mapping Administration</h1>
@@ -13,8 +14,8 @@ mappingName = xpathFirst(mapping, 'name/text()') or ''
 if session.get('isAdmin',''):
 %>
 
-<form method="post" action="/mapping.save/<%= mappingId %>.mapping">
-<input type="hidden" name="id" value="<%=mappingId%>">
+<form method="post" action="/actions/updateMapping">
+<input type="hidden" name="identifier" value="<%=mappingId%>">
 <input type="hidden" name="referrerDomain" value="<%=args.referrerDomain%>">
 
 <table>
@@ -25,13 +26,13 @@ if session.get('isAdmin',''):
   <tr>
     <td valign="top">Description:</td>
     <td>
-      <textarea rows="5" cols="80" name="description"><%escape_html(xpathFirst(mapping, 'description/text()') or '')%></textarea>
+      <textarea rows="5" cols="80" name="description"><%escape_html(mapping.get('description') or '')%></textarea>
     </td>
   </tr>
   <tr>
     <td valign="top">Script:</td>
     <td>
-<textarea rows="30" cols="100" name="code"><%escape_html(xpathFirst(mapping, 'code/text()') or '')%></textarea>
+<textarea rows="30" cols="100" name="code"><%escape_html(mapping.get('code') or '')%></textarea>
 
 </td>
 </tr>
@@ -51,17 +52,17 @@ else:
   <tr>
     <td valign="top">Description:</td>
     <td>
-      <pre><%escape_html(xpathFirst(mapping, 'description/text()') or '')%></pre>
+      <pre><%escape_html(mapping.get('description') or '')%></pre>
     </td>
   </tr>
 </table>
 
 Script:<br>
-<pre><%escape_html(xpathFirst(mapping, 'code/text()') or '')%></pre>
+<pre><%escape_html(mapping.get('code') or '')%></pre>
 <%
 #
 %>
 <p>
- <a href="/page/domain.edit/<%=args.referrerDomain%>.domain">Back to domain</a>
+ <a href="/page/domain.edit/?identifier=<%=args.referrerDomain%>">Back to domain</a>
 </p>
 
