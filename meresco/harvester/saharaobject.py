@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -35,21 +35,21 @@
 from meresco.harvester.namespaces import xpath, xpathFirst
 
 class SaharaObject(object):
-    
+
     def __init__(self, attr, listattr = []):
         self._attr = attr
         self._listattr = listattr
         self._initAttributes()
         self._saharaget = None
-    
+
     def _initAttributes(self):
         for attr in self._attr + self._listattr:
             setattr(self, attr, None)
-            
-    def fill(self, saharaget, lxmlNode):
+
+    def fill(self, saharaget, jsonDict):
         for attr in self._attr:
-            setattr(self, attr, str(xpathFirst(lxmlNode, 'sahara:%s/text()' % attr) or ''))
+            setattr(self, attr, jsonDict.get(attr, '') or '')
         for attr in self._listattr:
-            setattr(self, attr, [str(i or '') for i in xpath(lxmlNode, 'sahara:%s/text()' % attr)])
+            setattr(self, attr, jsonDict.get(attr, []))
         self._saharaget = saharaget
 

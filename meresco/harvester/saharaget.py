@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -32,10 +32,9 @@
 #
 ## end license ##
 
-from meresco.harvester.namespaces import xpath, xpathFirst
+from meresco.components.json import JsonDict
 from repository import Repository
 from urllib import urlencode, urlopen
-from lxml.etree import parse
 from target import Target
 from mapping import Mapping
 
@@ -43,37 +42,30 @@ class SaharaGet(object):
     def __init__(self, saharaurl, doSetActionDone=True):
         self.doSetActionDone = doSetActionDone
         self.saharaurl = saharaurl
-        
-    def getRepository(self, domainId, repositoryId):
-        response = self._get(verb = 'GetRepository',
-                                    domainId = domainId,
-                                    repositoryId = repositoryId)
-        repository = Repository(domainId, repositoryId)
-        repository.fill(self, xpathFirst(response, '/sahara:saharaget/sahara:GetRepository/sahara:repository'))
+
+    def getRepository(self, domainId, identifier):
+        response = self._get(verb='GetRepository', domainId = domainId, identifier=identifier)
+        repository = Repository(domainId, identifier)
+        repository.fill(self, response['GetRepository'])
         return repository
-    
-    def getTarget(self, domainId, targetId):
-        response = self._get(verb = 'GetTarget',
-                                    domainId = domainId,
-                                    targetId = targetId)
-        target = Target(targetId)
-        target.fill(self, xpathFirst(response, '/sahara:saharaget/sahara:GetTarget/sahara:target'))
+
+    def getTarget(self, domainId, identifier):
+        response = self._get(verb='GetTarget', domainId=domainId, identifier=identifier)
+        target = Target(identifier)
+        target.fill(self, response['GetTarget'])
         target.domainId = domainId
         return target
-    
-    def getMapping(self, domainId, mappingId):
-        response = self._get(verb = 'GetMapping',
-                                    domainId = domainId,
-                                    mappingId = mappingId)
-        mapping = Mapping(mappingId)
-        mapping.fill(self, xpathFirst(response, '/sahara:saharaget/sahara:GetMapping/sahara:mapping'))
+
+    def getMapping(self, domainId, identifier):
+        response = self._get(verb='GetMapping', domainId=domainId, identifier=identifier)
+        mapping = Mapping(identifier)
+        mapping.fill(self, response['GetMapping'])
         return mapping
-    
+
     def getRepositoryIds(self, domainId):
-        response = self._get(verb = 'GetRepositories',
-                                    domainId = domainId)
-        return xpath(response, '/sahara:saharaget/sahara:GetRepositories/sahara:repository/sahara:id/text()')
-    
+        response = self._get(verb = 'GetRepositoryIds', domainId=domainId)
+        return response['GetRepositoryIds']
+
     def repositoryActionDone(self, domainId, repositoryId):
         if self.doSetActionDone:
             saharageturl = '%s/setactiondone?' % self.saharaurl + \
@@ -81,15 +73,14 @@ class SaharaGet(object):
             urlopen(saharageturl).read()
 
     def _get(self, **kwargs):
-        response = self._read(**kwargs)
-        error = xpathFirst(response, '/sahara:saharaget/sahara:error/text()')
-        if error is None:
-            return response
-        raise SaharaGetException(error)
-        
-    def _read(self, **kwargs):
-        saharageturl = '%s/saharaget?%s' % (self.saharaurl, urlencode(kwargs))
-        return parse(urlopen(saharageturl))
-        
+        response = JsonDict.load(self._urlopen('{0}?{1}'.format(self.saharaurl, urlencode(kwargs))))
+        if 'error' in response:
+            raise SaharaGetException(response['error']['message'])
+        return response['response']
+
+    @staticmethod
+    def _urlopen(url):
+        return urlopen(url)
+
 class SaharaGetException(Exception):
     pass
