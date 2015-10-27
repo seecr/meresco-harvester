@@ -1,5 +1,0 @@
-<%
-deletefile(str(args.name))
-
-redirect(referer)
-%>

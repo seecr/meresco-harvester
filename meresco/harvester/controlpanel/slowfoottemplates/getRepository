@@ -1,8 +1,0 @@
-<%
-type('text/xml; charset=utf-8')
-domainId = args.domainId
-repositoryId = args.repositoryId
-queryArgs = urlencode(dict(verb='GetRepository', domainId=domainId, repositoryId=repositoryId))
-repositoryUrl = url('%s/get?%s' % (req.get_options()['internalServer'], queryArgs))
-req.write(repositoryUrl.read())
-%>

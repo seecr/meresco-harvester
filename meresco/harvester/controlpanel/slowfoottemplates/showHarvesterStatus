@@ -1,5 +1,4 @@
 <%
-from lxml.etree import tostring
 from seecr.zulutime import ZuluTime
 domainId = args.domainId
 originalArgs = dict(domainId=domainId, repositoryGroupId=args.repositoryGroupId, repositoryId=args.repositoryId)
