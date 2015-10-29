@@ -249,6 +249,25 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEquals('action', repository['action'])
         self.assertEquals(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
 
+    def testRepositoryDone(self):
+        self.hd.updateRepository('repository1',
+                domainId='adomain',
+                baseurl='baseurl',
+                set='set',
+                metadataPrefix='metadataPrefix',
+                mappingId='mappingId',
+                targetId='targetId',
+                collection='collection',
+                maximumIgnore=0,
+                use=False,
+                complete=True,
+                action='action',
+                shopclosed=['40:1:09:55-40:1:10:00'],
+            )
+        self.hd.repositoryDone(identifier='repository1', domainId='adomain')
+        repository = self.hd.getRepository('repository1', 'adomain')
+        self.assertEqual('', repository['action'])
+
     def testAddMapping(self):
         domain = self.hd.getDomain('adomain')
         self.assertEqual(['ignored MAPPING'], domain['mappingIds'])
@@ -323,6 +342,5 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEquals(['ignored TARGET', targetId], self.hd.getDomain('adomain')['targetIds'])
         self.hd.deleteTarget(targetId, domainId='adomain')
         self.assertEquals(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
-
 
 

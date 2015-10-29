@@ -38,20 +38,21 @@ class HarvesterDataActions(PostActions):
 
     def __init__(self, **kwargs):
         PostActions.__init__(self, **kwargs)
-        self._register('addDomain', self._addDomain)
-        self._register('updateDomain', self._updateDomain)
-        self._register('addRepositoryGroup', self._addRepositoryGroup)
-        self._register('deleteRepositoryGroup', self._deleteRepositoryGroup)
-        self._register('updateRepositoryGroup', self._updateRepositoryGroup)
-        self._register('addRepository', self._addRepository)
-        self._register('deleteRepository', self._deleteRepository)
-        self._register('updateRepository', self._updateRepository)
-        self._register('addMapping', self._addMapping)
-        self._register('updateMapping', self._updateMapping)
-        self._register('deleteMapping', self._deleteMapping)
-        self._register('addTarget', self._addTarget)
-        self._register('updateTarget', self._updateTarget)
-        self._register('deleteTarget', self._deleteTarget)
+        self._registerFormAction('addDomain', self._addDomain)
+        self._registerFormAction('updateDomain', self._updateDomain)
+        self._registerFormAction('addRepositoryGroup', self._addRepositoryGroup)
+        self._registerFormAction('deleteRepositoryGroup', self._deleteRepositoryGroup)
+        self._registerFormAction('updateRepositoryGroup', self._updateRepositoryGroup)
+        self._registerFormAction('addRepository', self._addRepository)
+        self._registerFormAction('deleteRepository', self._deleteRepository)
+        self._registerFormAction('updateRepository', self._updateRepository)
+        self._registerFormAction('addMapping', self._addMapping)
+        self._registerFormAction('updateMapping', self._updateMapping)
+        self._registerFormAction('deleteMapping', self._deleteMapping)
+        self._registerFormAction('addTarget', self._addTarget)
+        self._registerFormAction('updateTarget', self._updateTarget)
+        self._registerFormAction('deleteTarget', self._deleteTarget)
+        self.registerAction('repositoryDone', self._repositoryDone)
         self.defaultAction(lambda path, **kwargs: badRequestHtml + "Invalid action: " + path)
 
     def _addDomain(self, identifier, arguments):
@@ -175,9 +176,13 @@ class HarvesterDataActions(PostActions):
                 domainId=arguments.get('domainId', [''])[0],
             )
 
+    def _repositoryDone(self, Body, **kwargs):
+        arguments = parse_qs(Body)
+        identifier = arguments.pop('identifier', [None])[0]
+        domainId = arguments.pop('domainId', [None])[0]
+        self.call.repositoryDone(identifier=identifier, domainId=domainId)
 
-
-    def _register(self, name, actionMethod):
+    def _registerFormAction(self, name, actionMethod):
         self.registerAction(name, partial(self._do, actionMethod=actionMethod))
 
     def _do(self, actionMethod, Body, **kwargs):

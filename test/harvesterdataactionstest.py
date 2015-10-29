@@ -184,6 +184,15 @@ class HarvesterDataActionsTest(SeecrTestCase):
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEquals(['4:5:9:0-4:5:10:0',], repository['shopclosed'])
 
+    def testSetRepositoryDone(self):
+        self.updateTheRepository(action='refresh')
+        repository = self.hd.getRepository('repository', 'domain')
+        self.assertEquals('refresh', repository['action'])
+
+        data = dict(domainId='domain', identifier='repository')
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/repositoryDone', Body=urlencode(data, doseq=True)))
+        repository = self.hd.getRepository('repository', 'domain')
+        self.assertEquals('', repository['action'])
 
     def updateTheRepository(self, baseurl='', set='', metadataPrefix='', mappingId='', targetId='', collection='', maximumIgnore=0, use=False, complete=True, action='', shopclosed=None):
         self.hd.updateRepository('repository', domainId='domain',
@@ -199,4 +208,5 @@ class HarvesterDataActionsTest(SeecrTestCase):
             action=action,
             shopclosed=shopclosed or []
         )
+
 

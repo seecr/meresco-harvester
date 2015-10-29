@@ -68,9 +68,8 @@ class SaharaGet(object):
 
     def repositoryActionDone(self, domainId, repositoryId):
         if self.doSetActionDone:
-            saharageturl = '%s/setactiondone?' % self.internalurl + \
-                urlencode({'domainId': domainId, 'repositoryId': repositoryId})
-            urlopen(saharageturl).read()
+            data = urlencode({'domainId': domainId, 'repositoryId': repositoryId})
+            urlopen("{}/action/repositoryDone".format(self.internalurl), data=data).read()
 
     def _get(self, **kwargs):
         response = JsonDict.load(self._urlopen('{0}?{1}'.format(self.internalurl, urlencode(kwargs))))

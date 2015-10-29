@@ -164,6 +164,11 @@ class HarvesterData(object):
         repository['shopclosed'] = shopclosed
         self._save(repository, "{}.{}.repository".format(domainId, identifier))
 
+    def repositoryDone(self, identifier, domainId):
+        repository = self.getRepository(identifier, domainId)
+        repository['action'] = ''
+        self._save(repository, "{}.{}.repository".format(domainId, identifier))
+
     #target
     def getTarget(self, identifier):
         try:
