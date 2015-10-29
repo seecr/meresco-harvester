@@ -32,7 +32,6 @@
 #
 ## end license ##
 
-from meresco.harvester.namespaces import xpath, xpathFirst
 
 class SaharaObject(object):
 

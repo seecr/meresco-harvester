@@ -1,42 +1,40 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# 
-# 
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-from eventlogger import EventLogger, NilEventLogger, CompositeLogger, StreamEventLogger
-from harvester import Harvester
+from eventlogger import CompositeLogger, StreamEventLogger
 from saharaget import SaharaGet
 from time import sleep
-import traceback
 from timedprocess import TimedProcess
 from urllib import urlopen
 from os.path import join
@@ -45,7 +43,8 @@ from sys import stderr, stdout, exit, argv
 from optparse import OptionParser, SUPPRESS_HELP
 from os import read
 from signal import SIGINT
-from errno import EBADF, EINTR, EAGAIN
+from errno import EINTR, EAGAIN
+from meresco.components.json import JsonDict
 
 AGAIN_EXITCODE = 42
 
@@ -62,12 +61,13 @@ class StartHarvester(object):
         if self._concurrency < 1:
             self.parser.error("Concurrency must be at least 1.")
 
-        if self._logDir == None:
-            self._logDir = urlopen(self.saharaurl + '/_getoptions/logDir').read()
-        if self._stateDir == None:
-            self._stateDir = urlopen(self.saharaurl + '/_getoptions/stateDir').read()
+        config = JsonDict.load(urlopen(self.internalurl + '/info/config'))
+        if self._logDir is None:
+            self._logDir = config['logDir']
+        if self._stateDir is None:
+            self._stateDir = config['stateDir']
 
-        self.saharaget = SaharaGet(self.saharaurl, self.setActionDone)
+        self.saharaget = SaharaGet(self.internalurl, self.setActionDone)
 
         self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
 
@@ -75,54 +75,54 @@ class StartHarvester(object):
     def parse_args(self):
         self.parser.add_option("-d", "--domain",
             dest="domainId",
-            help="Mandatory argument denoting the domain.", 
+            help="Mandatory argument denoting the domain.",
             metavar="DOMAIN")
-        self.parser.add_option("-s", "--saharaurl", 
-            dest="saharaurl",
-            help="The url of the SAHARA web interface, e.g. https://username:password@sahara.example.org", 
-            default="http://localhost")
-        self.parser.add_option("-r", "--repository", 
+        self.parser.add_option("-u", "--url",
+            dest="internalurl",
+            help="The url of the Meresco Harvester Internal Server",
+            default="http://localhost:8888")
+        self.parser.add_option("-r", "--repository",
             dest="repositoryId",
-            help="Process a single repository within the given domain. Defaults to all repositories from the domain.", 
+            help="Process a single repository within the given domain. Defaults to all repositories from the domain.",
             metavar="REPOSITORY")
-        self.parser.add_option("-t", "--set-process-timeout", 
+        self.parser.add_option("-t", "--set-process-timeout",
             dest="processTimeout",
-            type="int", 
-            default=60*60, 
+            type="int",
+            default=60*60,
             metavar="TIMEOUT",
             help="Subprocess will be timed out after amount of seconds.")
-        self.parser.add_option("--logDir", "", 
+        self.parser.add_option("--logDir", "",
             dest="_logDir",
             help="Override the logDir in the apache configuration.",
-            metavar="DIRECTORY", 
+            metavar="DIRECTORY",
             default=None)
-        self.parser.add_option("--stateDir", 
+        self.parser.add_option("--stateDir",
             dest="_stateDir",
-            help="Override the stateDir in the apache configuration.", 
-            metavar="DIRECTORY", 
+            help="Override the stateDir in the apache configuration.",
+            metavar="DIRECTORY",
             default=None)
-        self.parser.add_option("--concurrency", 
+        self.parser.add_option("--concurrency",
             dest="_concurrency",
             type="int",
             default=1,
-            help="Number of repositories to be concurrently harvested. Defaults to 1 (no concurrency).", 
+            help="Number of repositories to be concurrently harvested. Defaults to 1 (no concurrency).",
             metavar="NUMBER")
-        self.parser.add_option("--force-target", "", 
+        self.parser.add_option("--force-target", "",
             dest="forceTarget",
-            help="Overrides the repository's target", 
+            help="Overrides the repository's target",
             metavar="TARGETID")
-        self.parser.add_option("--force-mapping", "", 
+        self.parser.add_option("--force-mapping", "",
             dest="forceMapping",
-            help="Overrides the repository's mapping", 
+            help="Overrides the repository's mapping",
             metavar="MAPPINGID")
-        self.parser.add_option("--no-action-done", "", 
+        self.parser.add_option("--no-action-done", "",
             action="store_false",
-            dest="setActionDone", 
+            dest="setActionDone",
             default=True,
-            help="Do not set SAHARA's actions", 
+            help="Do not set SAHARA's actions",
             metavar="TARGETID")
-        self.parser.add_option("--runOnce", "", 
-            dest="runOnce", 
+        self.parser.add_option("--runOnce", "",
+            dest="runOnce",
             action="store_true",
             default=False,
             help="Prevent harvester from looping (if combined with --repository)")
@@ -211,7 +211,7 @@ class StartHarvester(object):
         if not extraArg in argv:
             args += [extraArg]
         return args
-    
+
     def _updateWaiting(self, waiting, running):
         repositoryIds = self.saharaget.getRepositoryIds(self.domainId)
         for repoId in waiting[:]:

@@ -34,23 +34,17 @@
 
 from mapping import TestRepository,DataMapAssertionException
 from eventlogger import StreamEventLogger
-from saharaget import SaharaGet
-from meresco.harvester.mapping import Mapping
 from meresco.harvester.oairequest import OaiRequest
-from meresco.harvester.controlpanel.internalserverproxy import InternalServerProxy
 
 class OnlineHarvest(object):
-    def __init__(self, outputstream, saharaUrl):
+    def __init__(self, outputstream, proxy):
         self._output = outputstream
-        self._saharaGet = SaharaGet(saharaUrl)
-        self._proxy = InternalServerProxy(outputstream)
+        self._proxy = proxy
 
     def performMapping(self, domainId, mappingId, urlString):
-        mappingDict = self._proxy.getMapping(mappingId)
-        mapping = Mapping(mappingId)
-        mapping.setCode(mappingDict.get('code', ''))
+        mapping = self._proxy.getMappingObject(mappingId)
         mapping.addObserver(StreamEventLogger(self._output))
-        self._output.write("Mappingname '{}'".format(mappingDict.get('name')))
+        self._output.write(mapping.mappingInfo())
         self._output.write('\n')
         response = OaiRequest(urlString).request()
         for record in response.records:

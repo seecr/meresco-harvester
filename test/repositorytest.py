@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -40,8 +40,6 @@ from meresco.harvester.timeslot import Wildcard
 from seecr.test import CallTrace
 import tempfile, os, shutil
 import unittest
-from meresco.harvester.namespaces import namespaces
-from lxml.etree import XML
 
 class RepositoryTest(unittest.TestCase):
     def setUp(self):
@@ -60,19 +58,19 @@ class RepositoryTest(unittest.TestCase):
         self.assertFalse(self.repo.shopClosed())
 
     def testInitHarvestExclusionInterval(self):
-        self.repo.fill(self, XML(GETREPOSITORY))
+        self.repo.fill(self, GETREPOSITORY)
         slots = self.repo.shopclosed
         self.assertEquals(2, len(slots))
         self.assertEquals('*:*:10:30-*:*:11:45', slots[0])
         self.assertEquals('*:5:5:59-*:5:23:00', slots[1])
 
     def testShopClosed(self):
-        self.repo.fill(self, XML(GETREPOSITORY))
+        self.repo.fill(self, GETREPOSITORY)
         self.repo.closedSlots()
         self.assertEquals(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testTimeslotInitialization(self):
-        self.repo.fill(self, XML(GETREPOSITORY))
+        self.repo.fill(self, GETREPOSITORY)
         timeslots = self.repo.closedSlots()
         self.assertEquals(2, len(timeslots))
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
@@ -81,7 +79,7 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testShopNotClosedAndThenClosed(self):
-        self.repo.fill(self, XML(GETREPOSITORY))
+        self.repo.fill(self, GETREPOSITORY)
         timeslots = self.repo.closedSlots()
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
@@ -209,20 +207,18 @@ class MockAction(Action):
         self.called = True
         return self.done, self.message, self.hasResumptionToken
 
-GETREPOSITORY = """<?xml version="1.0" encoding="UTF-8"?>
-<repository xmlns="%(sahara)s">
-    <use>true</use>
-    <action>refresh</action>
-    <id>cq2Repository2_1</id>
-    <baseurl>http://baseurl.example.org</baseurl>
-    <set>set</set>
-    <collection>collection</collection>
-    <metadataPrefix>oai_dc</metadataPrefix>
-    <targetId>aTargetId</targetId>
-    <mappingId>aMappingId</mappingId>
-    <repositoryGroupId>cq2Group2</repositoryGroupId>
-    <shopclosed>*:*:10:30-*:*:11:45</shopclosed>
-    <shopclosed>*:5:5:59-*:5:23:00</shopclosed>
-</repository>
-""" % namespaces
+GETREPOSITORY = {
+    "use": True,
+    "action": "refresh",
+    "id": "cq2Repository2_1",
+    "baseurl": "http://baseurl.example.org",
+    "set": "set",
+    "collection": "collection",
+    "metadataPrefix": "oai_dc",
+    "targetId": "aTargetId",
+    "mappingId": "aMappingId",
+    "repositoryGroupId": "cq2Group2",
+    "shopclosed": ["*:*:10:30-*:*:11:45", "*:5:5:59-*:5:23:00"]
+}
+
 

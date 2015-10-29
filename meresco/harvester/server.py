@@ -37,6 +37,7 @@ from lxml.etree import XML
 from weightless.io import Reactor
 from weightless.core import compose, be
 
+from meresco.components.json import JsonDict
 from meresco.core import Observable
 
 from meresco.html import DynamicHtml
@@ -51,22 +52,32 @@ from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
 from harvesterdataactions import HarvesterDataActions
 from harvesterdataretrieve import HarvesterDataRetrieve
+from meresco.components.http.utils import ContentTypeJson
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 
-def dna(reactor, observableHttpServer, config):
-    harvesterData = HarvesterData(config["dataPath"])
-    repositoryStatus = be((RepositoryStatus(config["logPath"], config["statePath"]),
+def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignored):
+    harvesterData = HarvesterData(dataPath)
+    repositoryStatus = be((RepositoryStatus(logPath, statePath),
             (harvesterData,)
         ))
+    configDict = JsonDict(
+            logPath=logPath,
+            statePath=statePath,
+            harvesterStatusUrl=harvesterStatusUrl,
+            dataPath=dataPath,
+        )
 
     return \
         (Observable(),
-            (observableHttpServer,
+            (ObservableHttpServer(reactor, port),
                 (ApacheLogger(stdout),
                     (PathFilter("/info/version"),
                         (StringServer(VERSION_STRING, ContentTypePlainText), )
+                    ),
+                    (PathFilter("/info/config"),
+                        (StringServer(configDict.dumps(), ContentTypeJson), )
                     ),
                     (PathFilter("/static"),
                         (PathRename(lambda name: name[len('/static/'):]),
@@ -79,7 +90,7 @@ def dna(reactor, observableHttpServer, config):
                             reactor=reactor,
                             additionalGlobals = {
                                 'time': time,
-                                'config': config,
+                                'harvesterStatusUrl': harvesterStatusUrl,
                                 'escapeXml': escapeXml,
                                 'compose': compose,
                                 'XML': XML,
@@ -109,15 +120,16 @@ def startServer(configFile):
     config = readConfig(configFile)
 
     portNumber = int(config['portNumber'])
-    saharaUrl = config['saharaUrl']
-    dataPath = config['dataPath']
-    logPath = config['logPath']
-    statePath = config['statePath']
 
     reactor = Reactor()
-    observableHttpServer = ObservableHttpServer(reactor, portNumber)
 
-    server = be(dna(reactor, observableHttpServer, config))
+    server = be(dna(reactor,
+            port=portNumber,
+            dataPath=config['dataPath'],
+            logPath=config['logPath'],
+            statePath=config['statePath'],
+            harvesterStatusUrl=config['harvesterStatusUrl'],
+        ))
     list(compose(server.once.observer_init()))
 
     print "Ready to rumble at", portNumber

@@ -39,9 +39,9 @@ from target import Target
 from mapping import Mapping
 
 class SaharaGet(object):
-    def __init__(self, saharaurl, doSetActionDone=True):
+    def __init__(self, internalurl, doSetActionDone=True):
         self.doSetActionDone = doSetActionDone
-        self.saharaurl = saharaurl
+        self.internalurl = internalurl
 
     def getRepository(self, domainId, identifier):
         response = self._get(verb='GetRepository', domainId = domainId, identifier=identifier)
@@ -68,12 +68,12 @@ class SaharaGet(object):
 
     def repositoryActionDone(self, domainId, repositoryId):
         if self.doSetActionDone:
-            saharageturl = '%s/setactiondone?' % self.saharaurl + \
+            saharageturl = '%s/setactiondone?' % self.internalurl + \
                 urlencode({'domainId': domainId, 'repositoryId': repositoryId})
             urlopen(saharageturl).read()
 
     def _get(self, **kwargs):
-        response = JsonDict.load(self._urlopen('{0}?{1}'.format(self.saharaurl, urlencode(kwargs))))
+        response = JsonDict.load(self._urlopen('{0}?{1}'.format(self.internalurl, urlencode(kwargs))))
         if 'error' in response:
             raise SaharaGetException(response['error']['message'])
         return response['response']

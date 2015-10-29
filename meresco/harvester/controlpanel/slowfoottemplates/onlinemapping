@@ -10,7 +10,7 @@ Gebruikte url:
 
 Gebruikte mapping:
 <%
-harvest = OnlineHarvest(req, saharaUrl=req.get_options()['localhostUrl'])
+harvest = OnlineHarvest(req, req.proxy)
 
 xmlurl = str(f.inputurl)
 harvest.performMapping(domainId=args.domainId, mappingId=args.mappingId, urlString=xmlurl)

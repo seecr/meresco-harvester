@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2013 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -32,54 +32,54 @@
 #
 ## end license ##
 
-import unittest
 from meresco.harvester.onlineharvest import OnlineHarvest
 from StringIO import StringIO
-from meresco.harvester.mapping import Mapping, Upload, DataMapAssertionException, DEFAULT_DC_CODE
+from meresco.harvester.mapping import Mapping, DataMapAssertionException, DEFAULT_DC_CODE
 import os
-from seecr.test import CallTrace
+from seecr.test import CallTrace, SeecrTestCase
 
-class OnlineHarvestTest(unittest.TestCase):
+class OnlineHarvestTest(SeecrTestCase):
     def setUp(self):
+        SeecrTestCase.setUp(self)
         self.mock_createUpload_exception = ''
         self._testpath = os.path.realpath(os.path.curdir)
         self.output = StringIO()
-        self.harvest = OnlineHarvest(self.output, 'saharaUrl')
-        self.saharaGet = CallTrace('SaharaGet')
-        self.harvest._saharaGet = self.saharaGet
+        self.mapping = Mapping('mappingId')
+        self.mapping.code = DEFAULT_DC_CODE
+        self.proxy = CallTrace(returnValues=dict(getMappingObject=self.mapping))
+        self.harvest = OnlineHarvest(self.output, self.proxy)
 
     def testRealMapping(self):
-        mapping = Mapping('mappingId')
-        mapping.code = DEFAULT_DC_CODE
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.saharaGet.returnValues['getMapping'] = mapping
-        self.harvest.performMapping('domainId', mapping, data)
+        self.harvest.performMapping('domainId', 'mapping', data)
         self.assertEquals(3,self.output.getvalue().count('upload.id='))
 
     def testMapping(self):
         upload = CallTrace('upload')
         upload.id = 'id'
         upload.isDeleted = True
-        mapping = CallTrace('mapping')
+        mapping = CallTrace()
         mapping.returnValues['createUpload'] = upload
-        self.saharaGet.returnValues['getMapping'] = mapping
+        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
+        self.harvest = OnlineHarvest(self.output, self.proxy)
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping('domainId', mapping, data)
+        self.harvest.performMapping('domainId', 'mapping', data)
         self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
         for createUploadMethod in mapping.calledMethods[2:]:
             self.assertTrue(createUploadMethod.kwargs['doAsserts'])
 
     def testMappingWithDeletedRecord(self):
-        mapping = Mapping('mappingId')
-        mapping.code = DEFAULT_DC_CODE
-        mapping.name = 'My Mapping'
+        self.mapping.code = DEFAULT_DC_CODE
+        self.mapping.name = 'My Mapping'
         data = 'file://%s/mocktud/00003.xml' % self._testpath
-        self.saharaGet.returnValues['getMapping'] = mapping
-        self.harvest.performMapping('domainId', mapping, data)
+        self.harvest.performMapping('domainId', 'mapping', data)
         self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
 
     def testMappingRaisesDataMapAssertionException(self):
-        mapping = CallTrace('mapping')
+        mapping = CallTrace()
+        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
+        self.harvest = OnlineHarvest(self.output, self.proxy)
+
         calls = []
         def createUpload(*args, **kwargs):
             calls.append(1)
@@ -90,14 +90,15 @@ class OnlineHarvestTest(unittest.TestCase):
             upload.isDeleted = True
             return upload
         mapping.methods['createUpload'] = createUpload
-        self.saharaGet.returnValues['getMapping'] = mapping
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         self.harvest.performMapping('domainId', 'mappingId', data)
         self.assertEquals(2,self.output.getvalue().count('upload.id='))
 
     def testMappingRaisesException(self):
-        mapping = CallTrace('mapping')
-        self.saharaGet.returnValues['getMapping'] = mapping
+        mapping = CallTrace()
+        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
+        self.harvest = OnlineHarvest(self.output, self.proxy)
+
         mapping.exceptions['createUpload'] = Exception('Mushroom, mushroom')
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         try:

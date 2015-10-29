@@ -28,6 +28,7 @@
 ## end license ##
 
 from meresco.components.json import JsonDict, JsonList
+from meresco.harvester.mapping import Mapping
 from urllib import urlencode
 
 class InternalServerProxy(object):
@@ -49,6 +50,11 @@ class InternalServerProxy(object):
 
     def getMapping(self, identifier):
         return self.urlJsonDict(verb='GetMapping', identifier=identifier)['response']['GetMapping']
+
+    def getMappingObject(self, identifier):
+        result = Mapping(identifier)
+        result.fill(self.getMapping(identifier=identifier))
+        return result
 
     def getDomain(self, identifier):
         return self.urlJsonDict(verb='GetDomain', identifier=identifier)['response']['GetDomain']
