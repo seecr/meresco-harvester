@@ -73,7 +73,6 @@ def handler(req):
             req.uri = '/internalServerError?' + urlencode({'originalUri': req.uri, 'error': e.code, 'message': str(e)})
 
     req.get_options()['templatesPath'] = templatesPath
-    req.get_options().setdefault('localhostUrl', 'http://localhost')
     req = Request(req, handlepsp, util, _psp_login, retrieveSession,
         additionalGlobals=dict(
                 xpath=xpath,

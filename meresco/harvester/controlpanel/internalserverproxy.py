@@ -53,7 +53,7 @@ class InternalServerProxy(object):
 
     def getMappingObject(self, identifier):
         result = Mapping(identifier)
-        result.fill(self.getMapping(identifier=identifier))
+        result.fill(self, self.getMapping(identifier=identifier))
         return result
 
     def getDomain(self, identifier):

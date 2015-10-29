@@ -31,8 +31,8 @@ for repository in repositories:
 		if not args.repositoryId or args.repositoryId == repository['identifier']:
 			repositoryNames.append(repository['identifier'])
 
-logDir = req.get_options()['logDir']
-analyser = ThroughputAnalyser(logDir + '/' + args.domainId)
+config = JsonDict.load(url(req.get_options()['internalServer'] + '/info/config'))
+analyser = ThroughputAnalyser(config['logPath'] + '/' + args.domainId)
 report = analyser.analyse(repositoryNames, dateSince)
 %>
 <table>
