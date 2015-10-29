@@ -68,7 +68,7 @@ class SaharaGet(object):
 
     def repositoryActionDone(self, domainId, repositoryId):
         if self.doSetActionDone:
-            data = urlencode({'domainId': domainId, 'repositoryId': repositoryId})
+            data = urlencode({'domainId': domainId, 'identifier': repositoryId})
             urlopen("{}/action/repositoryDone".format(self.internalurl), data=data).read()
 
     def _get(self, **kwargs):

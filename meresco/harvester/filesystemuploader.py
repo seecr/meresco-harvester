@@ -12,8 +12,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -44,14 +44,14 @@ from escaping import escapeFilename
 from meresco.components import lxmltostring
 
 OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
-<OAI-PMH 
+<OAI-PMH
     xmlns="http://www.openarchives.org/OAI/2.0/"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"
 >
     <responseDate>%(responseDate)s</responseDate>
-    <request 
-        verb="GetRecord" 
+    <request
+        verb="GetRecord"
         metadataPrefix="%(metadataPrefix)s"
         identifier="%(identifier)s"
     >%(baseurl)s</request>
@@ -59,7 +59,7 @@ OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
 </OAI-PMH>"""
 
 class FileSystemUploader(VirtualUploader):
-    
+
     def __init__(self, aTarget, aLogger, aCollection):
         VirtualUploader.__init__(self, aLogger)
         self._target = aTarget
@@ -87,7 +87,7 @@ class FileSystemUploader(VirtualUploader):
             raise UploaderException(uploadId=anUpload.id, message=str(e))
 
     def _createOutput(self, anUpload):
-        if str(self._target.oaiEnvelope) != 'true':
+        if not self._target.oaiEnvelope:
             return anUpload.record
         envelopedata = {
             'identifier': xmlEscape(anUpload.recordIdentifier),
@@ -107,10 +107,10 @@ class FileSystemUploader(VirtualUploader):
     def _filenameFor(self, anUpload):
         filename = self._properFilename(anUpload.id)
         return os.path.join(self._target.path, anUpload.repository.repositoryGroupId, anUpload.repository.id, filename)
-            
+
     def delete(self, anUpload):
         filename = self._filenameFor(anUpload)
-        if str(self._target.oaiEnvelope) == 'false':
+        if not self._target.oaiEnvelope:
             os.path.isfile(filename) and os.remove(filename)
             f = open(os.path.join(self._target.path,
                 'deleted_records'),'a')
@@ -127,6 +127,6 @@ class FileSystemUploader(VirtualUploader):
                 fd.close()
 
         self._logDelete(anUpload.id)
-    
+
     def info(self):
         return 'Writing records to path:%s' % (self._target.path)

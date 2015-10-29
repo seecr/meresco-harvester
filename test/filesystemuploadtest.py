@@ -12,8 +12,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2013-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -52,8 +52,9 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.tempdir = mkdtemp()
         self.target = CallTrace("Target")
         self.target.path = self.tempdir
+        self.target.oaiEnvelope = False
         logger = CallTrace("Logger")
-        collection = ''
+        collection = None
         self.uploader = FileSystemUploader(self.target, logger, collection)
 
     def tearDown(self):
@@ -80,7 +81,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         os.system('touch ' + recordFile)
         self.assertTrue(isfile(recordFile))
         self.uploader._filenameFor = lambda *args: recordFile
-        self.target.oaiEnvelope = 'false'
+        self.target.oaiEnvelope = False
 
         repository = CallTrace('Repository')
         repository.repositoryGroupId = 'groupId'
@@ -106,7 +107,7 @@ class FileSystemUploaderTest(SeecrTestCase):
         RECORD_FILENAME = join(self.tempdir, 'id.record')
         self.uploader._filenameFor = lambda *args: RECORD_FILENAME
         self.uploader.tznow = lambda: "VANDAAG_EN_NU"
-        self.target.oaiEnvelope = 'true'
+        self.target.oaiEnvelope = True
 
         repository = CallTrace('Repository')
         repository.repositoryGroupId = 'groupId'

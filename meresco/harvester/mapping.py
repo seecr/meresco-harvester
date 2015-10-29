@@ -157,7 +157,6 @@ class Mapping(SaharaObject, Observable):
 
         assertionMethod = doAsserts and doAssert or doNotAssert
 
-        print self.code, upload.repository.collection, upload.repository.metadataPrefix, upload.repository.baseurl, upload.repository.set
         try:
             exec(self.code, {
                 'input': upload, # backwards compatible

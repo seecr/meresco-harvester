@@ -81,14 +81,16 @@ class HarvesterIntegrationState(IntegrationState):
         args.update(kwargs)
         urlopen("http://localhost:%s/control?%s" % (self.helperServerPortNumber, urlencode(args,doseq=True)))
 
-    def startHarvester(self, repository=None, concurrency=None, runOnce=True, verbose=False, waitForNothingToDo=False):
+    def startHarvester(self, repository=None, concurrency=None, runOnce=True, verbose=False, **kwargs):
         arguments = dict(domain='adomain', logDir=self.harvesterLogDir, stateDir=self.harvesterStateDir, url="http://localhost:{}".format(self.harvesterInternalServerPortNumber))
+        arguments.update(kwargs)
         if repository is not None:
             arguments['repository'] = repository
         if concurrency is not None:
             arguments['concurrency'] = concurrency
-        self._runExecutable(
+        return self._runExecutable(
                 self.binPath('meresco-harvester'),
+                processName='harvester',
                 flagOptions=['runOnce'] if runOnce else [],
                 **arguments
             )

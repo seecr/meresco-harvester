@@ -169,6 +169,7 @@ class RepositoryTest(unittest.TestCase):
 
     def testCreateAction(self):
         self._testAction(False, None, 'NoneAction')
+        self._testAction(None, None, 'NoneAction')
         self._testAction(True, None, 'HarvestAction')
         self._testAction(False, 'clear', 'DeleteIdsAction')
         self._testAction(True, 'clear', 'DeleteIdsAction')

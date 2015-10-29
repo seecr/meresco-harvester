@@ -62,7 +62,7 @@ class Action(object):
         actionUse2Class = {
             'clear': lambda use: DeleteIdsAction,
             'refresh': lambda use: SmoothAction,
-            None: lambda use: {True: HarvestAction, False: NoneAction}[use]
+            None: lambda use: {True: HarvestAction, False: NoneAction, None: NoneAction}[use]
         }
         try:
             actionClass = actionUse2Class[repository.action](repository.use)

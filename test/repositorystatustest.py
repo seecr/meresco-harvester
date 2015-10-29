@@ -96,7 +96,7 @@ class RepositoryStatusTest(SeecrTestCase):
         self.assertEquals([{
                         "repositoryId": "repoId1",
                         "repositoryGroupId": "repoGroupId1",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -108,12 +108,12 @@ class RepositoryStatusTest(SeecrTestCase):
                             "invalidId&2",
                             "invalidId1"
                         ],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }], self.status.getStatus(domainId=self.domainId, repositoryId="repoId1"))
         self.assertEquals([{
                         "repositoryId": "anotherRepoId",
                         "repositoryGroupId": "repoGroupId2",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -122,14 +122,14 @@ class RepositoryStatusTest(SeecrTestCase):
                         "recenterrors": [],
                         "invalid": 0,
                         "recentinvalids": [],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }], self.status.getStatus(domainId=self.domainId, repositoryId="anotherRepoId"))
 
     def testGetStatusForDomainIdAndRepositoryGroupId(self):
         self.assertEquals([{
                         "repositoryId": "repoId1",
                         "repositoryGroupId": "repoGroupId1",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -141,11 +141,11 @@ class RepositoryStatusTest(SeecrTestCase):
                             "invalidId&2",
                             "invalidId1"
                         ],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }, {
                         "repositoryId": "repoId/2",
                         "repositoryGroupId": "repoGroupId1",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -154,14 +154,14 @@ class RepositoryStatusTest(SeecrTestCase):
                         "recenterrors": [],
                         "invalid": 1,
                         "recentinvalids": ['invalidId/3'],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }], self.status.getStatus(domainId=self.domainId, repositoryGroupId='repoGroupId1'))
 
     def testGetStatusForDomainId(self):
         self.assertEquals([{
                         "repositoryId": "repoId1",
                         "repositoryGroupId": "repoGroupId1",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -173,11 +173,11 @@ class RepositoryStatusTest(SeecrTestCase):
                             "invalidId&2",
                             "invalidId1"
                         ],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }, {
                         "repositoryId": "repoId/2",
                         "repositoryGroupId": "repoGroupId1",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -186,11 +186,11 @@ class RepositoryStatusTest(SeecrTestCase):
                         "recenterrors": [],
                         "invalid": 1,
                         "recentinvalids": ['invalidId/3'],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }, {
                         "repositoryId": "repoId3",
                         "repositoryGroupId": "repoGroupId2",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -199,11 +199,11 @@ class RepositoryStatusTest(SeecrTestCase):
                         "recenterrors": [],
                         "invalid": 0,
                         "recentinvalids": [],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }, {
                         "repositoryId": "anotherRepoId",
                         "repositoryGroupId": "repoGroupId2",
-                        "lastHarvestDate": "",
+                        "lastHarvestDate": None,
                         "harvested": 0,
                         "uploaded": 0,
                         "deleted": 0,
@@ -212,7 +212,7 @@ class RepositoryStatusTest(SeecrTestCase):
                         "recenterrors": [],
                         "invalid": 0,
                         "recentinvalids": [],
-                        "lastHarvestAttempt": ""
+                        "lastHarvestAttempt": None
                     }], self.status.getStatus(domainId=self.domainId))
 
     def testGetAllInvalidRecords(self):

@@ -27,7 +27,7 @@
 #
 ## end license ##
 
-from meresco.components.http.utils import redirectHttp, badRequestHtml
+from meresco.components.http.utils import redirectHttp, badRequestHtml, Ok
 from meresco.harvester.timeslot import Timeslot
 from meresco.html import PostActions
 from urllib import urlencode
@@ -110,16 +110,16 @@ class HarvesterDataActions(PostActions):
         self.call.updateRepository(
                 identifier=identifier,
                 domainId=arguments['domainId'][0],
-                baseurl=arguments.get('baseurl', [''])[0],
-                set=arguments.get('set', [''])[0],
-                metadataPrefix=arguments.get('metadataPrefix', [''])[0],
-                mappingId=arguments.get('mappingId', [''])[0],
-                targetId=arguments.get('targetId', [''])[0],
-                collection=arguments.get('collection', [''])[0],
-                maximumIgnore=int(arguments.get('maximumIgnore', [''])[0] or '0'),
+                baseurl=arguments.get('baseurl', [None])[0],
+                set=arguments.get('set', [None])[0],
+                metadataPrefix=arguments.get('metadataPrefix', [None])[0],
+                mappingId=arguments.get('mappingId', [None])[0],
+                targetId=arguments.get('targetId', [None])[0],
+                collection=arguments.get('collection', [None])[0],
+                maximumIgnore=int(arguments.get('maximumIgnore', [None])[0] or '0'),
                 use='use' in arguments,
                 complete='complete' in arguments,
-                action=arguments.get('repositoryAction', [''])[0],
+                action=arguments.get('repositoryAction', [None])[0],
                 shopclosed=shopclosed,
             )
 
@@ -181,6 +181,7 @@ class HarvesterDataActions(PostActions):
         identifier = arguments.pop('identifier', [None])[0]
         domainId = arguments.pop('domainId', [None])[0]
         self.call.repositoryDone(identifier=identifier, domainId=domainId)
+        yield Ok
 
     def _registerFormAction(self, name, actionMethod):
         self.registerAction(name, partial(self._do, actionMethod=actionMethod))
