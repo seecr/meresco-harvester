@@ -63,9 +63,9 @@ class StartHarvester(object):
 
         config = JsonDict.load(urlopen(self.internalurl + '/info/config'))
         if self._logDir is None:
-            self._logDir = config['logDir']
+            self._logDir = config['logPath']
         if self._stateDir is None:
-            self._stateDir = config['stateDir']
+            self._stateDir = config['statePath']
 
         self.saharaget = SaharaGet(self.internalurl, self.setActionDone)
 

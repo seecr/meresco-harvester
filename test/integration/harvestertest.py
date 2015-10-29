@@ -66,6 +66,10 @@ class HarvesterTest(IntegrationTestCase):
             pass
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
 
+    def tearDown(self):
+        self.removeRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
+        IntegrationTestCase.tearDown(self)
+
     def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False):
         try:
             self.harvesterData.addRepository(identifier=repositoryId, domainId=domain, repositoryGroupId=repositoryGroupId)

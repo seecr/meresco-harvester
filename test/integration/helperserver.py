@@ -44,7 +44,7 @@ for p in glob(join(baseDir, 'deps.d') + '/*'):      #DO_NOT_DISTRIBUTE
     path.insert(0, p)                               #DO_NOT_DISTRIBUTE
 path.insert(0, baseDir)                             #DO_NOT_DISTRIBUTE
 
-from sys import stdout, argv, exit
+from sys import stdout
 from os.path import isdir, basename
 from os import makedirs, remove
 from re import compile
@@ -56,14 +56,13 @@ from weightless.core import compose, be
 
 from meresco.components import lxmltostring, ParseArguments
 from meresco.components.http import ObservableHttpServer, PathFilter, StringServer
-from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
+from meresco.components.http.utils import ContentTypePlainText, okPlainText
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML
 from meresco.oai import OaiPmh, OaiJazz
 from meresco.core import Observable
 from meresco.harvester.namespaces import xpathFirst
 from meresco.sequentialstore import MultiSequentialStorage
 
-from mocksaharaget import MockSaharaGet
 
 notWordCharRE = compile('\W+')
 
@@ -192,17 +191,9 @@ def main(reactor, port, directory):
                         )
                     )
                 ),
-                (PathFilter("/saharaget"),
-                    (MockSaharaGet(),)
-                ),
                 (PathFilter("/log"),
                     (RetrieveLog(),
                         (Log(),)
-                    )
-                ),
-                (PathFilter("/setactiondone"),
-                    (Log(),
-                        (StringServer('<success>true</success>', ContentTypeXml),)
                     )
                 ),
                 (PathFilter("/ready"),
