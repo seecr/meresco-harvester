@@ -8,7 +8,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 # Copyright (C) 2012-2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
@@ -35,9 +35,8 @@ from time import sleep
 from threading import Thread
 from lxml.etree import parse
 
-from seecr.test.utils import getRequest
-
-from integrationtestcase import IntegrationTestCase, sleepWheel
+from seecr.test import IntegrationTestCase
+from seecr.test.utils import getRequest, sleepWheel
 
 from meresco.harvester.state import getResumptionToken
 from meresco.harvester.harvesterlog import HarvesterLog
@@ -152,7 +151,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals('/setactiondone', logs[-1]["path"])
         self.assertEquals({'domainId': [DOMAIN], 'repositoryId': [REPOSITORY]}, logs[-1]["arguments"])
         r = RepositoryData.read(self.repofilepath) #really set action done
-        r.action=''
+        r.action = None
         r.save(self.repofilepath)
         self.assertEquals(18, self.sizeDumpDir())
         for filename in sorted(listdir(self.dumpDir))[-8:]:
@@ -198,7 +197,7 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals('/setactiondone', logs[-1]["path"])
         self.assertEquals({'domainId': [DOMAIN], 'repositoryId': [REPOSITORY]}, logs[-1]["arguments"])
         r = RepositoryData.read(self.repofilepath) #really set action done
-        r.action=''
+        r.action = None
         r.save(self.repofilepath)
         self.assertEquals(17, self.sizeDumpDir())
         deletedIds = set([

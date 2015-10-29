@@ -11,7 +11,7 @@
 # Copyright (C) 2007 SURFnet. http://www.surfnet.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009, 2011 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 # Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
@@ -54,7 +54,7 @@ from xml.sax.saxutils import escape as escapeXml
 from weightless.io import Reactor
 from weightless.core import compose, be
 
-from meresco.components import lxmltostring
+from meresco.components import lxmltostring, ParseArguments
 from meresco.components.http import ObservableHttpServer, PathFilter, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText, ContentTypeXml
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML
@@ -166,15 +166,15 @@ class RetrieveLog(Observable):
         yield '\n'.join(self.call.logs())
 
 
-def main(reactor, portNumber, dir):
-    dumpdir = join(dir, 'dump')
+def main(reactor, port, directory):
+    dumpdir = join(directory, 'dump')
     isdir(dumpdir) or makedirs(dumpdir)
     dump = Dump(dumpdir)
-    oaiStorage = MultiSequentialStorage(join(dir, 'storage'))
-    oaiJazz = OaiJazz(join(dir, 'oai'))
+    oaiStorage = MultiSequentialStorage(join(directory, 'storage'))
+    oaiJazz = OaiJazz(join(directory, 'oai'))
     server = be(
         (Observable(),
-            (ObservableHttpServer(reactor, portNumber),
+            (ObservableHttpServer(reactor, port),
                 (PathFilter("/dump"),
                     (dump,)
                 ),
@@ -223,15 +223,14 @@ def main(reactor, portNumber, dir):
             list(compose(oaiJazz.delete(identifier=identifier)))
 
 if __name__== '__main__':
-    args = argv[1:]
-    if len(args) != 2:
-        print "Usage %s <portnumber> <dir>" % argv[0]
-        exit(1)
-    portNumber = int(args[0])
-    dir = args[1]
+    parser = ParseArguments()
+    parser.addOption('', '--port', mandatory=True, type=int)
+    parser.addOption('', '--directory', mandatory=True)
+    options, arguments = parser.parse()
+
     reactor = Reactor()
-    main(reactor, portNumber, dir)
-    print 'Ready to rumble the dumpserver at', portNumber
-    print '  - dumps are written to', join(dir, 'dump')
+    main(reactor, **vars(options))
+    print 'Ready to rumble the dumpserver at', options.port
+    print '  - dumps are written to', join(options.directory, 'dump')
     stdout.flush()
     reactor.loop()

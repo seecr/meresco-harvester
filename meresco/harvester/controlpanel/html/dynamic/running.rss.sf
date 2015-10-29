@@ -36,7 +36,7 @@ def toZuluTime(timestamp):
 def main(path, arguments, **kwargs):
     domainId = arguments.get('domainId', [None])[0]
 
-    linkToStatusPage = "%s?%s" % (harvesterStatusURL, urlencode(dict(domainId=domainId)))
+    linkToStatusPage = "%s?%s" % (harvesterStatusUrl, urlencode(dict(domainId=domainId)))
 
     yield "HTTP/1.0 200 OK\r\n"
     yield "Content-Type: application/rss+xml\r\n"

@@ -9,7 +9,7 @@
 #
 # Copyright (C) 2011-2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -32,8 +32,9 @@
 from os import system
 from time import gmtime, strftime
 
-from integrationtestcase import IntegrationTestCase
+from seecr.test import IntegrationTestCase
 from seecr.test.utils import getRequest
+from meresco.components.json import JsonDict
 from meresco.harvester.namespaces import xpath
 from simplejson import loads
 
@@ -42,6 +43,7 @@ class InternalServerTest(IntegrationTestCase):
 
     def setUp(self):
         IntegrationTestCase.setUp(self)
+        self.controlHelper(action='reset')
         system("rm -rf %s/*" % self.dumpDir)
         system("rm -rf %s" % self.harvesterLogDir)
         system("rm -rf %s" % self.harvesterStateDir)
@@ -73,33 +75,36 @@ class InternalServerTest(IntegrationTestCase):
     def testGetStatusForDomainAndRepositoryId(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals("GetStatus", xpath(result, "/status:saharaget/status:request/status:verb/text()")[0])
-        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
-        self.assertEquals("integrationtest", xpath(result, "/status:saharaget/status:request/status:repositoryId/text()")[0])
-        self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:GetStatus/status:status/@repositoryGroupId")[0])
-        self.assertEquals("6", xpath(result, "/status:saharaget/status:GetStatus/status:status[@repositoryId='integrationtest']/status:invalid/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse=False)
+        data = JsonDict.loads(result)
+        self.assertEquals("GetStatus", data['request']['verb'])
+        self.assertEquals("adomain", data['request']['domainId'])
+        self.assertEquals("integrationtest", data['request']['repositoryId'])
+        self.assertEquals("IntegrationTest", data['response']['GetStatus'][0]['repositoryGroupId'])
+        self.assertEquals(6, data['response']['GetStatus'][0]['invalid'])
 
     def testGetStatusForDomain(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain'}, parse='lxml')
-        self.assertEquals(2, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
-        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain'}, parse=False)
+        data = JsonDict.loads(result)
+        self.assertEquals(2, len(data['response']['GetStatus']))
+        self.assertEquals("adomain", data['request']['domainId'])
 
     def testGetStatusForDomainAndRepositoryGroup(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse='lxml')
-        self.assertEquals(1, len(xpath(result, "/status:saharaget/status:GetStatus/status:status")))
-        self.assertEquals("adomain", xpath(result, "/status:saharaget/status:request/status:domainId/text()")[0])
-        self.assertEquals("IntegrationTest", xpath(result, "/status:saharaget/status:request/status:repositoryGroupId/text()")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': 'adomain', 'repositoryGroupId': 'IntegrationTest'}, parse=False)
+        data = JsonDict.loads(result)
+        self.assertEquals(1, len(data['response']['GetStatus']))
+        self.assertEquals("adomain", data['request']['domainId'])
+        self.assertEquals("IntegrationTest", data['response']['GetStatus'][0]['repositoryGroupId'])
 
     def testGetDomains(self):
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetDomains'}, parse=False)
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetDomainIds'}, parse=False)
         data = loads(result)
-        self.assertEquals(1, len(data['response']['GetDomains']))
-        self.assertEquals(['adomain'], [r['identifier'] for r in data['response']['GetDomains']])
+        self.assertEquals(1, len(data['response']['GetDomainIds']))
+        self.assertEquals(['adomain'], data['response']['GetDomainIds'])
 
     def testGetRepositoriesForDomain(self):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepositories', 'domainId': 'adomain'}, parse=False)
@@ -114,8 +119,9 @@ class InternalServerTest(IntegrationTestCase):
         self.assertEquals(['integrationtest'], [r['identifier'] for r in data['response']['GetRepositories']])
 
     def testGetRepository(self):
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepository', 'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEquals(['IntegrationTest'], xpath(result, "/status:saharaget/status:GetRepository/status:repository/status:repositoryGroupId/text()"))
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetRepository', 'domainId': 'adomain', 'identifier': 'integrationtest'}, parse=False)
+        data = JsonDict.loads(result)
+        self.assertEquals("IntegrationTest", data['response']['GetRepository']['repositoryGroupId'])
 
     def testRssForHarvesterStatus(self):
         self.controlHelper(action="noneInvalid")

@@ -34,7 +34,7 @@ def main(path, arguments, **kwargs):
     repositoryGroupId = arguments.get('repositoryGroupId', [None])[0]
     repositoryId = arguments.get('repositoryId', [None])[0]
 
-    linkToStatusPage = "%s?%s" % (harvesterStatusURL, escapeXml(urlencode(dict(domainId=domainId, repositoryId=repositoryId))))
+    linkToStatusPage = "%s?%s" % (harvesterStatusUrl, escapeXml(urlencode(dict(domainId=domainId, repositoryId=repositoryId))))
     status = observable.call.getStatus(domainId=domainId, repositoryGroupId=repositoryGroupId, repositoryId=repositoryId)[0]
 
     yield "HTTP/1.0 200 OK\r\n"
@@ -57,7 +57,7 @@ def main(path, arguments, **kwargs):
         'totalerrors': status.get("totalerrors"),
     }
     lastHarvestAttempt = status.get("lastHarvestAttempt")
-    if len(lastHarvestAttempt) == 1:
+    if lastHarvestAttempt:
         yield RSS_TEMPLATE % {
             "title": 'Harvester status voor %s' % repositoryId,
             "description": """Last harvest date: %(lastHarvestDate)s&lt;br/&gt;

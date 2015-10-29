@@ -91,7 +91,7 @@ class RepositoryStatus(Observable):
         return JsonDict(
                 repositoryId=repoId,
                 repositoryGroupId=groupId,
-                lastHarvestDate=stats.get('lastHarvestDate', ''),
+                lastHarvestDate=stats.get('lastHarvestDate'),
                 harvested=int(stats.get('harvested', 0)),
                 uploaded=int(stats.get('uploaded', 0)),
                 deleted=int(stats.get('deleted', 0)),
@@ -100,7 +100,7 @@ class RepositoryStatus(Observable):
                 recenterrors=[dict(date=error[0], error=error[1]) for error in stats['recenterrors']],
                 invalid=int(self._invalidCount(domainId, repoId)),
                 recentinvalids=list(islice(self.invalidRecords(domainId, repoId), 10)),
-                lastHarvestAttempt=stats.get('lastHarvestAttempt', '')
+                lastHarvestAttempt=stats.get('lastHarvestAttempt')
             )
 
     def _invalidCount(self, domainId, repositoryId):
