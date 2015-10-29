@@ -1,44 +1,45 @@
 ## begin license ##
 #
-#    "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
-#    a web-control panel.
-#    "Meresco Harvester" is originally called "Sahara" and was developed for
-#    SURFnet by:
-#        Seek You Too B.V. (CQ2) http://www.cq2.nl
-#    Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
-#    Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
-#    Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
-#    Copyright (C) 2007-2009 Stichting Kennisnet Ict op school.
-#       http://www.kennisnetictopschool.nl
-#    Copyright (C) 2009 Tilburg University http://www.uvt.nl
-#    Copyright (C) 2010-2011  Stichting Kennisnet http://www.kennisnet.nl
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-#    This file is part of "Meresco Harvester"
+# Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
+# Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
+# Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
+# Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
+# Copyright (C) 2009 Tilburg University http://www.uvt.nl
+# Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
-#    "Meresco Harvester" is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This file is part of "Meresco Harvester"
 #
-#    "Meresco Harvester" is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with "Meresco Harvester"; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
 
 from os.path import isfile, join
-from os import remove, rename
+from os import remove
 
 from weightless.core import be
 
 from deleteids import DeleteIds, readIds, writeIds
 from eventlogger import CompositeLogger, EventLogger
-from harvester import Harvester, HARVESTED, NOTHING_TO_DO
+from harvester import Harvester, NOTHING_TO_DO
 from harvesterlog import HarvesterLog
 from state import State
 
@@ -61,13 +62,13 @@ class Action(object):
         actionUse2Class = {
             'clear': lambda use: DeleteIdsAction,
             'refresh': lambda use: SmoothAction,
-            '': lambda use: {'true': HarvestAction, '': NoneAction}[use]
+            None: lambda use: {True: HarvestAction, False: NoneAction}[use]
         }
         try:
             actionClass = actionUse2Class[repository.action](repository.use)
             return actionClass(repository, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
         except KeyError:
-            raise ActionException("Action '%s' not supported."%repository.action)
+            raise ActionException("Action '%s' not supported." % repository.action)
 
     def do(self):
         """

@@ -48,7 +48,6 @@ class RepositoryTest(unittest.TestCase):
         self.logAndStateDir = os.path.join(tempfile.gettempdir(),'repositorytest')
         os.path.isdir(self.logAndStateDir) or os.mkdir(self.logAndStateDir)
 
-
     def tearDown(self):
         shutil.rmtree(self.logAndStateDir)
 
@@ -87,20 +86,20 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testDoNothing(self):
-        self.repo.use = ''
-        self.repo.action = ''
+        self.repo.use = False
+        self.repo.action = None
         action = MockAction()
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals(('', False), result)
         self.assert_(action.called)
-        self.assertEquals('', self.repo.use)
-        self.assertEquals('', self.repo.action)
+        self.assertEquals(False, self.repo.use)
+        self.assertEquals(None, self.repo.action)
 
     def testHarvestWithBadResumptionToken(self):
-        self.repo.use = 'true'
-        self.repo.action = ''
-        self.repo.complete = 'true'
+        self.repo.use = True
+        self.repo.action = None
+        self.repo.complete = True
         action = CallTrace('Action')
         oaiError = OAIError('url', 'resumptionToken expired', 'badResumptionToken', 'lxmlResponse')
         action.exceptions['do'] = oaiError
@@ -111,29 +110,29 @@ class RepositoryTest(unittest.TestCase):
         self.assertTrue(again)
 
     def testDoHarvest(self):
-        self.repo.use = 'true'
-        self.repo.action = ''
+        self.repo.use = True
+        self.repo.action = None
         action = MockAction(DONE)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, False), result)
         self.assert_(action.called)
-        self.assertEquals('true', self.repo.use)
-        self.assertEquals('', self.repo.action)
+        self.assertEquals(True, self.repo.use)
+        self.assertEquals(None, self.repo.action)
 
     def testDoHarvestWithCompleteHarvestingEnabled(self):
-        self.repo.use = 'true'
-        self.repo.action = ''
-        self.repo.complete = 'true'
+        self.repo.use = True
+        self.repo.action = None
+        self.repo.complete = True
         action = MockAction(DONE, hasResumptionToken=True)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, True), result)
 
     def testDoHarvestWithCompleteHarvestingDisabled(self):
-        self.repo.use = 'true'
-        self.repo.action = ''
-        self.repo.complete = ''
+        self.repo.use = True
+        self.repo.action = None
+        self.repo.complete = False
         action = MockAction(DONE, hasResumptionToken=True)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
@@ -147,19 +146,19 @@ class RepositoryTest(unittest.TestCase):
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals((DONE, False), result)
         self.assert_(action.called)
-        self.assertEquals('', self.repo.action)
+        self.assertEquals(None, self.repo.action)
         self.assertEquals('domainId', self.mock_repositoryActionDone_domainId)
         self.assertEquals('rep', self.mock_repositoryActionDone_repositoryId)
 
     def testDoSomeActionThatMustBeRepeated(self):
-        self.repo.use = 'true'
+        self.repo.use = True
         self.repo.action = 'someaction'
         action = MockAction('Not yet done!', False)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result, hasResumptionToken = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertEquals('Not yet done!', result)
         self.assert_(action.called)
-        self.assertEquals('true', self.repo.use)
+        self.assertEquals(True, self.repo.use)
         self.assertEquals('someaction', self.repo.action)
 
     def _testAction(self, use, action, expectedTypeName):
@@ -169,14 +168,14 @@ class RepositoryTest(unittest.TestCase):
         self.assertEquals(expectedTypeName, createdAction.__class__.__name__)
 
     def testCreateAction(self):
-        self._testAction('', '', 'NoneAction')
-        self._testAction('true', '', 'HarvestAction')
-        self._testAction('', 'clear', 'DeleteIdsAction')
-        self._testAction('true', 'clear', 'DeleteIdsAction')
-        self._testAction('', 'refresh', 'SmoothAction')
-        self._testAction('true', 'refresh', 'SmoothAction')
+        self._testAction(False, None, 'NoneAction')
+        self._testAction(True, None, 'HarvestAction')
+        self._testAction(False, 'clear', 'DeleteIdsAction')
+        self._testAction(True, 'clear', 'DeleteIdsAction')
+        self._testAction(False, 'refresh', 'SmoothAction')
+        self._testAction(True, 'refresh', 'SmoothAction')
         try:
-            self._testAction('true', 'nonexisting', 'ignored')
+            self._testAction(True, 'nonexisting', 'ignored')
             self.fail()
         except ActionException, afe:
             self.assertEquals("Action 'nonexisting' not supported.", str(afe))

@@ -266,7 +266,7 @@ class HarvesterDataTest(SeecrTestCase):
             )
         self.hd.repositoryDone(identifier='repository1', domainId='adomain')
         repository = self.hd.getRepository('repository1', 'adomain')
-        self.assertEqual('', repository['action'])
+        self.assertEqual(None, repository['action'])
 
     def testAddMapping(self):
         domain = self.hd.getDomain('adomain')

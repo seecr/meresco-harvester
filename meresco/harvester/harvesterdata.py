@@ -166,7 +166,7 @@ class HarvesterData(object):
 
     def repositoryDone(self, identifier, domainId):
         repository = self.getRepository(identifier, domainId)
-        repository['action'] = ''
+        repository['action'] = None
         self._save(repository, "{}.{}.repository".format(domainId, identifier))
 
     #target

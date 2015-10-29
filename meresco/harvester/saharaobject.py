@@ -47,7 +47,7 @@ class SaharaObject(object):
 
     def fill(self, saharaget, jsonDict):
         for attr in self._attr:
-            setattr(self, attr, jsonDict.get(attr, '') or '')
+            setattr(self, attr, jsonDict.get(attr))
         for attr in self._listattr:
             setattr(self, attr, jsonDict.get(attr, []))
         self._saharaget = saharaget

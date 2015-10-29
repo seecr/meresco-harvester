@@ -192,7 +192,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         data = dict(domainId='domain', identifier='repository')
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/repositoryDone', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals('', repository['action'])
+        self.assertEquals(None, repository['action'])
 
     def updateTheRepository(self, baseurl='', set='', metadataPrefix='', mappingId='', targetId='', collection='', maximumIgnore=0, use=False, complete=True, action='', shopclosed=None):
         self.hd.updateRepository('repository', domainId='domain',

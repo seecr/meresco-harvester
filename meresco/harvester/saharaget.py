@@ -50,14 +50,14 @@ class SaharaGet(object):
         return repository
 
     def getTarget(self, domainId, identifier):
-        response = self._get(verb='GetTarget', domainId=domainId, identifier=identifier)
+        response = self._get(verb='GetTarget', identifier=identifier)
         target = Target(identifier)
         target.fill(self, response['GetTarget'])
         target.domainId = domainId
         return target
 
     def getMapping(self, domainId, identifier):
-        response = self._get(verb='GetMapping', domainId=domainId, identifier=identifier)
+        response = self._get(verb='GetMapping', identifier=identifier)
         mapping = Mapping(identifier)
         mapping.fill(self, response['GetMapping'])
         return mapping
@@ -72,7 +72,7 @@ class SaharaGet(object):
             urlopen("{}/action/repositoryDone".format(self.internalurl), data=data).read()
 
     def _get(self, **kwargs):
-        response = JsonDict.load(self._urlopen('{0}?{1}'.format(self.internalurl, urlencode(kwargs))))
+        response = JsonDict.load(self._urlopen('{0}/get?{1}'.format(self.internalurl, urlencode(kwargs))))
         if 'error' in response:
             raise SaharaGetException(response['error']['message'])
         return response['response']

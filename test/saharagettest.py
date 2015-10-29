@@ -42,7 +42,7 @@ from urlparse import parse_qs, urlparse
 class SaharaGetTest(SeecrTestCase):
     def setUp(self):
         SeecrTestCase.setUp(self)
-        self.get = SaharaGet('http://localhost:1234/get')
+        self.get = SaharaGet('http://localhost:1234')
         self.urlopen = CallTrace()
         self.get._urlopen = self.urlopen._urlopen
 
@@ -92,13 +92,13 @@ class SaharaGetTest(SeecrTestCase):
         self.assertEquals(repository.targetId, target.id)
         url, query = self.getRequest()
         self.assertEqual('http://localhost:1234/get', url)
-        self.assertEqual({'verb': ['GetTarget'], 'domainId': ['cq2Test1'], 'identifier': [repository.targetId]}, query)
+        self.assertEqual({'verb': ['GetTarget'], 'identifier': [repository.targetId]}, query)
 
         mapping = repository.mapping()
         self.assertEquals(repository.mappingId, mapping.id)
         url, query = self.getRequest()
         self.assertEqual('http://localhost:1234/get', url)
-        self.assertEqual({'verb': ['GetMapping'], 'domainId': ['cq2Test1'], 'identifier': [repository.mappingId]}, query)
+        self.assertEqual({'verb': ['GetMapping'], 'identifier': [repository.mappingId]}, query)
 
     def testSaharaGetError(self):
         self.setError(dict(message="The verb 'Blah' is not recognized", code='badVerb'))
