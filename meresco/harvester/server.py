@@ -84,7 +84,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                             (FileServer(seecrWebLibPath),)
                         )
                     ),
-                    (PathFilter('/', excluding=['/info/version', '/static', '/action', '/get']),
+                    (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get']),
                         (DynamicHtml(
                             [dynamicHtmlPath],
                             reactor=reactor,
@@ -116,23 +116,12 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
             )
         )
 
-def startServer(configFile):
-    config = readConfig(configFile)
-
-    portNumber = int(config['portNumber'])
-
+def startServer(port, **kwargs):
     reactor = Reactor()
-
-    server = be(dna(reactor,
-            port=portNumber,
-            dataPath=config['dataPath'],
-            logPath=config['logPath'],
-            statePath=config['statePath'],
-            harvesterStatusUrl=config['harvesterStatusUrl'],
-        ))
+    server = be(dna(reactor, port, **kwargs))
     list(compose(server.once.observer_init()))
 
-    print "Ready to rumble at", portNumber
+    print "Ready to rumble at", port
     stdout.flush()
     reactor.loop()
 

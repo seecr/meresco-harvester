@@ -12,8 +12,8 @@
 # Copyright (C) 2007-2009, 2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2013 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011, 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -46,14 +46,17 @@ for path in glob('../deps.d/*'):                    #DO_NOT_DISTRIBUTE
     systemPath.insert(0, path)                      #DO_NOT_DISTRIBUTE
 systemPath.insert(0, '..')                          #DO_NOT_DISTRIBUTE
 
-from sys import argv, exit
+from meresco.components import ParseArguments
 
 if __name__ == '__main__':
-    if len(argv[1:]) != 1:
-        print 'Usage: %s harvester.config' % argv[0]
-        exit(123)
-    configFile = argv[1]
+    parser = ParseArguments()
+    parser.addOption('-p', '--port', help='Service portnumber', type=int, mandatory=True)
+    parser.addOption('', '--dataPath', help='Meresco harvester data directory', mandatory=True)
+    parser.addOption('', '--logPath', help='Meresco harvester log directory', mandatory=True)
+    parser.addOption('', '--statePath', help='Meresco harvester state directory', mandatory=True)
+    parser.addOption('', '--harvesterStatusUrl', help='Meresco harvester status url', mandatory=True)
+
+    options, arguments = parser.parse()
 
     from meresco.harvester.server import startServer
-    startServer(configFile)
-
+    startServer(**vars(options))
