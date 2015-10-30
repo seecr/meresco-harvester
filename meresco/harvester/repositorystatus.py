@@ -110,8 +110,12 @@ class RepositoryStatus(Observable):
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}
         eventsfile = join(self._logPath, domainId, "%s.events" % repositoryId)
+        count = 0
         if isfile(eventsfile):
             for line in open(eventsfile):
+                count += 1
+                if count > 500:
+                    break
                 stateLine = line.strip().split('\t')
                 if len(stateLine) != 4:
                     continue
