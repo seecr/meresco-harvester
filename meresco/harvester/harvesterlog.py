@@ -135,9 +135,12 @@ class HarvesterLog(object):
                 self._invalidIds.remove(id)
         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
-    def hasWork(self, continuous=False):
-        if continuous:
-            return self._state.from_ is None or ZuluTime().epoch - ZuluTime(self._state.from_).epoch > 5 * 60
+    def hasWork(self, continuousInterval=None):
+        if continuousInterval is not None:
+            from_ = self._state.from_
+            if from_ and 'T' not in from_:
+                from_ += "T00:00:00Z"
+            return from_ is None or ZuluTime().epoch - ZuluTime(from_).epoch > continuousInterval
         return self._state.token or self._state.from_ is None or not self.isCurrentDay(self._state.from_)
 
     def state(self):

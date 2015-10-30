@@ -57,7 +57,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "collection": "the collection",
             "maximumIgnore": "23",
             "complete": "1",
-            "continuous": "1",
+            "continuous": "60",
             "repositoryAction": "clear",
             "numberOfTimeslots": "0"
         }
@@ -73,7 +73,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.assertEquals("the collection", repository["collection"])
         self.assertEquals(23, repository["maximumIgnore"])
         self.assertEquals(True, repository["complete"])
-        self.assertEquals(True, repository["continuous"])
+        self.assertEquals(60, repository["continuous"])
         self.assertEquals(False, repository["use"])
         self.assertEquals("clear", repository["action"])
         self.assertEquals([], repository['shopclosed'])
@@ -96,6 +96,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.assertEquals(None, repository["targetId"])
         self.assertEquals(None, repository["collection"])
         self.assertEquals(0, repository["maximumIgnore"])
+        self.assertEquals(None, repository["continuous"])
         self.assertEquals(False, repository["complete"])
         self.assertEquals(False, repository["use"])
         self.assertEquals(None, repository["action"])

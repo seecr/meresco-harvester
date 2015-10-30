@@ -118,7 +118,7 @@ class HarvesterDataActions(PostActions):
                 collection=arguments.get('collection', [None])[0],
                 maximumIgnore=int(arguments.get('maximumIgnore', [None])[0] or '0'),
                 use='use' in arguments,
-                continuous='continuous' in arguments,
+                continuous=int(arguments.get('continuous', ['0'])[0]) or None,
                 complete='complete' in arguments,
                 action=arguments.get('repositoryAction', [None])[0],
                 shopclosed=shopclosed,

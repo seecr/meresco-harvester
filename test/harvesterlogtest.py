@@ -80,17 +80,18 @@ class HarvesterLogTest(SeecrTestCase):
 
     def testHasWorkBeforeAndAfterDoingWorkContinuous(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
-        self.assertTrue(logger.hasWork(continuous=True))
+        self.assertTrue(logger.hasWork(continuousInterval=60))
         logger.startRepository()
         logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", logger._state._gmtime()))
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
-        self.assertFalse(logger.hasWork(continuous=True))
+        self.assertFalse(logger.hasWork(continuousInterval=60))
         logger.startRepository()
-        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", gmtime(time() - 6*60 - 1)))
+        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", gmtime(time() - 60 - 1)))
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
-        self.assertTrue(logger.hasWork(continuous=True))
+        self.assertFalse(logger.hasWork(continuousInterval=65))
+        self.assertTrue(logger.hasWork(continuousInterval=60))
 
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"

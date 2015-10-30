@@ -118,7 +118,7 @@ class Harvester(Observable):
 
     def harvest(self):
         try:
-            if self.call.hasWork(self._repository.continuous):
+            if self.call.hasWork(continuousInterval=self._repository.continuous):
                 resumptionToken = self._harvest()
                 hasResumptionToken = bool(resumptionToken and str(resumptionToken) != 'None')
                 return HARVESTED, hasResumptionToken
