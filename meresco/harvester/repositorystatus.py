@@ -110,21 +110,23 @@ class RepositoryStatus(Observable):
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}
         eventsfile = join(self._logPath, domainId, "%s.events" % repositoryId)
-        count = 0
         if isfile(eventsfile):
-            for line in open(eventsfile):
-                count += 1
-                if count > 500:
-                    break
+            for i, line in enumerate(reversed(open(eventsfile).readlines())):
                 stateLine = line.strip().split('\t')
                 if len(stateLine) != 4:
                     continue
                 date, event, id, comments = stateLine
                 date = date[1:-1]
+                if not 'lastHarvestAttempt' in parseState:
+                    parseState['lastHarvestAttempt'] = _reformatDate(date)
                 if event == 'SUCCES':
                     _succes(parseState, date, comments)
+                    break
                 elif event == 'ERROR':
                     _error(parseState, date, comments)
+                    if len(parseState["errors"]) > 500:
+                        break
+
         recenterrors = parseState["errors"][-10:]
         recenterrors.reverse()
         stats = {}
@@ -136,15 +138,12 @@ class RepositoryStatus(Observable):
 
 def _succes(parseState, date, comments):
     parseState["lastHarvestDate"] = _reformatDate(date)
-    parseState["lastHarvestAttempt"] = _reformatDate(date)
-    parseState["errors"] = []
     match = NUMBERS_RE.match(comments)
     if match:
         parseState["harvested"], parseState["uploaded"], parseState["deleted"], parseState["total"] = match.groups()
 
 def _error(parseState, date, comments):
-    parseState["errors"].append((_reformatDate(date), comments))
-    parseState["lastHarvestAttempt"] = _reformatDate(date)
+    parseState["errors"].insert(0, (_reformatDate(date), comments))
 
 def _reformatDate(aDate):
     return aDate[0:len('YYYY-MM-DD')] + 'T' + aDate[len('YYYY-MM-DD '):len('YYYY-MM-DD HH:MM:SS')] + 'Z'
