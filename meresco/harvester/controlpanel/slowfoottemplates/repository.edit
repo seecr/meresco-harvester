@@ -90,6 +90,10 @@ for name,id in [('', '')] + targets:
         <td><input type="checkbox" name="use" value="true" <%='checked' if repository.get('use') else ''%>></td>
       </tr>
       <tr>
+        <td>Continuous:</td>
+        <td><input type="checkbox" name="continuous" value="true" <%='checked' if repository.get('continuous') else ''%>></td>
+      </tr>
+      <tr>
         <td>Complete in one attempt:</td>
         <td><input type="checkbox" name="complete" value="true" <%='checked' if repository.get('complete') else ''%>>Tells the harvester to complete harvesting in one attempt. Generally this option should not be required. Only for repositories with shortlived resumptionTokens.</td>
       </tr>

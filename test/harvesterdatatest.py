@@ -233,6 +233,7 @@ class HarvesterDataTest(SeecrTestCase):
                 maximumIgnore=0,
                 use=False,
                 complete=True,
+                continuous=True,
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
             )
@@ -246,6 +247,7 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEquals(0, repository['maximumIgnore'])
         self.assertEquals(False, repository['use'])
         self.assertEquals(True, repository['complete'])
+        self.assertEquals(True, repository['continuous'])
         self.assertEquals('action', repository['action'])
         self.assertEquals(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
 
@@ -261,6 +263,7 @@ class HarvesterDataTest(SeecrTestCase):
                 maximumIgnore=0,
                 use=False,
                 complete=True,
+                continuous=True,
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
             )

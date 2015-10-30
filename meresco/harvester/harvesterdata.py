@@ -149,7 +149,7 @@ class HarvesterData(object):
         self._delete("{}.{}.repository".format(domainId, identifier))
         self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
 
-    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, complete, action, shopclosed):
+    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed):
         repository = self.getRepository(identifier, domainId)
         repository['baseurl'] = baseurl
         repository['set'] = set
@@ -160,6 +160,7 @@ class HarvesterData(object):
         repository['maximumIgnore'] = maximumIgnore
         repository['use'] = use
         repository['complete'] = complete
+        repository['continuous'] = continuous
         repository['action'] = action
         repository['shopclosed'] = shopclosed
         self._save(repository, "{}.{}.repository".format(domainId, identifier))

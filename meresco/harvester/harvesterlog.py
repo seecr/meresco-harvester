@@ -32,15 +32,15 @@
 #
 ## end license ##
 
-import time, os, sys, re, string
 from eventlogger import EventLogger
 from ids import Ids
 import traceback
-from os.path import join, isdir, isfile, dirname, basename
+from os.path import join, isdir, isfile, dirname
 from os import makedirs, remove
 from shutil import rmtree
 from state import State
 from escaping import escapeFilename
+from seecr.zulutime import ZuluTime
 
 
 INVALID_DATA_MESSAGES_DIR = "invalid"
@@ -63,8 +63,8 @@ class HarvesterLog(object):
         self._eventlogger = EventLogger(logDir + '/' + name +'.events')
         self._resetCounts()
 
-    def isCurrentDay(self, yyyy_mm_dd):
-        return yyyy_mm_dd == self._state.getTime()[:10]
+    def isCurrentDay(self, date):
+        return date.split('T')[0] == self._state.getTime().split()[0]
 
     def startRepository(self):
         self._resetCounts()
@@ -135,8 +135,10 @@ class HarvesterLog(object):
                 self._invalidIds.remove(id)
         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
-    def hasWork(self):
-        return not self.isCurrentDay(self._state.from_) or self._state.token
+    def hasWork(self, continuous=False):
+        if continuous:
+            return self._state.from_ is None or ZuluTime().epoch - ZuluTime(self._state.from_).epoch > 5 * 60
+        return self._state.token or self._state.from_ is None or not self.isCurrentDay(self._state.from_)
 
     def state(self):
         return self._state

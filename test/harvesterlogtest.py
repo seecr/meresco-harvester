@@ -33,7 +33,7 @@
 ## end license ##
 
 from sys import exc_info
-from time import strftime, gmtime
+from time import strftime, gmtime, time
 from os import makedirs
 from os.path import isfile, join
 
@@ -77,6 +77,20 @@ class HarvesterLogTest(SeecrTestCase):
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork())
+
+    def testHasWorkBeforeAndAfterDoingWorkContinuous(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        self.assertTrue(logger.hasWork(continuous=True))
+        logger.startRepository()
+        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", logger._state._gmtime()))
+        logger.close()
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        self.assertFalse(logger.hasWork(continuous=True))
+        logger.startRepository()
+        logger.endRepository(None, strftime("%Y-%m-%dT%H:%M:%SZ", gmtime(time() - 6*60 - 1)))
+        logger.close()
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        self.assertTrue(logger.hasWork(continuous=True))
 
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"

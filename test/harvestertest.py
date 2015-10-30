@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2012-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -44,6 +44,7 @@ from lxml.etree import parse
 
 from seecr.test import CallTrace
 
+from meresco.components.json import JsonDict
 from meresco.harvester.harvester import Harvester
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.oairequest import OaiRequest
@@ -62,7 +63,7 @@ class DeletedRecordHeader(object):
         return 'mockid'
 
 class _MockRepository(object):
-    def __init__(self, id, baseurl, set, repositoryGroupId, outer):
+    def __init__(self, id, baseurl, set, repositoryGroupId, outer, continuous=False):
         self.repositoryGroupId=repositoryGroupId
         self.id = id
         self.baseurl = baseurl
@@ -70,6 +71,7 @@ class _MockRepository(object):
         self.metadataPrefix = 'oai_dc'
         self.targetId= outer.mockssetarget
         self.createUploader = outer.createUploader
+        self.continuous = continuous
 
     def mapping(self):
         m = Mapping('id')
@@ -206,7 +208,9 @@ class HarvesterTest(unittest.TestCase):
         self.mockRepository = MockOaiRequest('mocktud')
         f = open(self.stateDir + '/tud.stats', 'w')
         f.write(' Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 56/23/113, Done: 2004-12-31 16:39:15\n')
-        f.close();
+        f.close()
+        JsonDict({'resumptionToken': None, 'from': "1999-12-01T16:37:41Z"}).dump(open(self.stateDir + '/tud.next', 'w'))
+
         f = open(self.stateDir + '/tud.ids', 'w')
         for i in range(113): f.write('oai:tudfakeid:%05i\n'%i)
         f.close()
@@ -273,6 +277,23 @@ class HarvesterTest(unittest.TestCase):
         self.listRecordsToken = None
         h.harvest()
         self.assertEquals('ga+hier+verder', self.listRecordsToken)
+
+    def testContinuousHarvesting(self):
+        self.mockRepository = MockOaiRequest('mocktud')
+        f = open(self.stateDir + '/tud.stats', 'w')
+        f.write(' Started: 1999-12-01 16:37:41, Harvested/Uploaded/Total: 56/23/113, Done: 2004-12-31 16:39:15\n')
+        f.close()
+        JsonDict({'resumptionToken': None, 'from': "2015-01-01T00:12:13Z"}).dump(open(self.stateDir + '/tud.next', 'w'))
+        repository = self.MockRepository3('tud' ,'http://repository.tudelft.nl/oai', None, 'tud', continuous=True)
+        logger = self.createLogger()
+        h = Harvester(repository)
+        h.addObserver(self)
+        h.addObserver(logger)
+        h.addObserver(repository.createUploader(logger.eventLogger))
+        h.addObserver(repository.mapping())
+        self.listRecordsFrom = None
+        h.harvest()
+        self.assertEquals('2015-01-01T00:12:13Z', self.listRecordsFrom)
 
     def testHarvestSet(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -385,8 +406,8 @@ class HarvesterTest(unittest.TestCase):
     def MockRepository2 (self, nr):
         return _MockRepository('reponame'+nr, 'url'+nr, 'set'+nr, 'instname'+nr,self)
 
-    def MockRepository3(self, id, baseurl, set, repositoryGroupId):
-        return _MockRepository(id, baseurl, set, repositoryGroupId, self)
+    def MockRepository3(self, id, baseurl, set, repositoryGroupId, continuous=False):
+        return _MockRepository(id, baseurl, set, repositoryGroupId, self, continuous=continuous)
 
     def mockssetarget(self):
         return self

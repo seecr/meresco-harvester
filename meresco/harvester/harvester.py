@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -92,7 +92,10 @@ class Harvester(Observable):
         try:
             self.do.startRepository()
             state = self.call.state()
-            response = self.fetchRecords(state.from_, state.token)
+            from_ = state.from_
+            if from_ and not self._repository.continuous:
+                from_ = from_.split('T')[0]
+            response = self.fetchRecords(from_, state.token)
             self.do.endRepository(response.resumptionToken, response.responseDate)
             return response.resumptionToken
         except:

@@ -57,6 +57,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "collection": "the collection",
             "maximumIgnore": "23",
             "complete": "1",
+            "continuous": "1",
             "repositoryAction": "clear",
             "numberOfTimeslots": "0"
         }
@@ -72,6 +73,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.assertEquals("the collection", repository["collection"])
         self.assertEquals(23, repository["maximumIgnore"])
         self.assertEquals(True, repository["complete"])
+        self.assertEquals(True, repository["continuous"])
         self.assertEquals(False, repository["use"])
         self.assertEquals("clear", repository["action"])
         self.assertEquals([], repository['shopclosed'])
@@ -194,7 +196,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEquals(None, repository['action'])
 
-    def updateTheRepository(self, baseurl='', set='', metadataPrefix='', mappingId='', targetId='', collection='', maximumIgnore=0, use=False, complete=True, action='', shopclosed=None):
+    def updateTheRepository(self, baseurl='', set='', metadataPrefix='', mappingId='', targetId='', collection='', maximumIgnore=0, use=False, continuous=False, complete=True, action='', shopclosed=None):
         self.hd.updateRepository('repository', domainId='domain',
             baseurl=baseurl,
             set=set,
@@ -204,6 +206,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             collection=collection,
             maximumIgnore=maximumIgnore,
             use=use,
+            continuous=continuous,
             complete=complete,
             action=action,
             shopclosed=shopclosed or []

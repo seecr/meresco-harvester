@@ -53,7 +53,7 @@ class Repository(SaharaObject):
             'repositoryGroupId', 'baseurl', 'set',
             'collection', 'metadataPrefix', 'use',
             'targetId', 'mappingId', 'action',
-            'complete', 'maximumIgnore'], ['shopclosed'])
+            'complete', 'maximumIgnore', 'continuous'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
         self.mockUploader = None
