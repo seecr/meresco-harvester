@@ -1,40 +1,38 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+# Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 import time, os, sys, re, string
-if sys.version_info[:2] == (2,3):
-    from sets import Set as set
 from eventlogger import EventLogger
 from ids import Ids
 import traceback
@@ -66,8 +64,8 @@ class HarvesterLog(object):
         self._resetCounts()
 
     def isCurrentDay(self, yyyy_mm_dd):
-        return yyyy_mm_dd == self._state.getTime()[:10]    
-        
+        return yyyy_mm_dd == self._state.getTime()[:10]
+
     def startRepository(self):
         self._resetCounts()
         self._state.markStarted()
@@ -86,12 +84,12 @@ class HarvesterLog(object):
     def eventLogger(self):
         # Should be removed, but is still used in Harvester.
         return self._eventlogger
-            
+
     def markDeleted(self):
         self._ids.clear()
         self._state.markDeleted()
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.', id=self._name)
-    
+
     def endRepository(self, token, responseDate):
         self._state.markHarvested(self.countsSummary(), token, responseDate)
         self._eventlogger.logSuccess('Harvested/Uploaded/Deleted/Total: %s, ResumptionToken: %s' % (self.countsSummary(), token), id=self._name)
@@ -117,7 +115,7 @@ class HarvesterLog(object):
     def uploadIdentifier(self, uploadid):
         self._ids.add(uploadid)
         self._uploadedCount += 1
-        
+
     def deleteIdentifier(self, uploadid):
         self._ids.remove(uploadid)
         self._deletedCount += 1
@@ -130,7 +128,7 @@ class HarvesterLog(object):
 
     def logIgnoredIdentifierWarning(self, uploadid):
         self._eventlogger.logWarning('IGNORED', uploadid)
-    
+
     def clearInvalidData(self, repositoryId):
         for id in list(self._invalidIds):
             if id.startswith("%s:" % repositoryId):
@@ -139,7 +137,7 @@ class HarvesterLog(object):
 
     def hasWork(self):
         return not self.isCurrentDay(self._state.from_) or self._state.token
-    
+
     def state(self):
         return self._state
 
@@ -156,4 +154,4 @@ class HarvesterLog(object):
         repositoryId, recordId = uploadid.split(":", 1)
         return join(self._logDir, INVALID_DATA_MESSAGES_DIR, escapeFilename(repositoryId), escapeFilename(recordId))
 
-    
+

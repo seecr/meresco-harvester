@@ -1,59 +1,53 @@
 ## begin license ##
-# 
+#
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
 # a web-control panel.
-# "Meresco Harvester" is originally called "Sahara" and was developed for 
+# "Meresco Harvester" is originally called "Sahara" and was developed for
 # SURFnet by:
-# Seek You Too B.V. (CQ2) http://www.cq2.nl 
-# 
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
 # Copyright (C) 2006-2007 SURFnet B.V. http://www.surfnet.nl
 # Copyright (C) 2007-2008 SURF Foundation. http://www.surf.nl
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+# Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 # This file is part of "Meresco Harvester"
-# 
+#
 # "Meresco Harvester" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Meresco Harvester" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Meresco Harvester"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
-import unittest, os
 from sys import exc_info
 from time import strftime, gmtime
 from os import makedirs
-from os.path import isfile, isdir, join
-from shutil import rmtree
-from tempfile import mkdtemp
+from os.path import isfile, join
 
 from meresco.harvester.harvesterlog import HarvesterLog
-from meresco.harvester import harvesterlog
 from meresco.harvester.eventlogger import LOGLINE_RE
-from meresco.harvester.virtualuploader import UploaderException
+from seecr.test import SeecrTestCase
 
-
-class HarvesterLogTest(unittest.TestCase):
+class HarvesterLogTest(SeecrTestCase):
     def setUp(self):
-        self.stateDir = mkdtemp()
-        self.logDir = mkdtemp()
-
-    def tearDown(self):
-        rmtree(self.stateDir)
-        rmtree(self.logDir)
+        SeecrTestCase.setUp(self)
+        self.stateDir = join(self.tempdir, 'state')
+        makedirs(self.stateDir)
+        self.logDir = join(self.tempdir, 'log')
+        makedirs(self.logDir)
 
     def testSameDate(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
@@ -116,7 +110,7 @@ class HarvesterLogTest(unittest.TestCase):
         self.assertEquals('SUCCES', event.strip())
         self.assertEquals('name', id)
         self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
-        self.assertEquals('Test Exception', invalidUploadId2) 
+        self.assertEquals('Test Exception', invalidUploadId2)
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
@@ -189,7 +183,7 @@ class HarvesterLogTest(unittest.TestCase):
         logger.notifyHarvestedRecord('id:2')
         logger.logInvalidData('id:2', 'exception message')
         self.assertEquals(['id:1', 'id:2'], logger.invalidIds())
-        
+
     def testClearInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
