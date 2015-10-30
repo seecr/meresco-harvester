@@ -71,10 +71,10 @@ class Repository(SaharaObject):
         return reduce(lambda lhs, rhs: lhs or rhs, map(lambda x:x.areWeWithinTimeslot( dateTuple), self.closedSlots()), False)
 
     def target(self):
-        return self._saharaget.getTarget(self.domainId, self.targetId)
+        return self._proxy.getTargetObject(self.targetId)
 
     def mapping(self):
-        return self._saharaget.getMapping(self.domainId, self.mappingId)
+        return self._proxy.getMappingObject(self.mappingId)
 
     def maxIgnore(self):
         return int(self.maximumIgnore) if self.maximumIgnore else 0
@@ -100,7 +100,7 @@ class Repository(SaharaObject):
             actionIsDone, message, hasResumptionToken = action.do()
             if actionIsDone:
                 self.action = None
-                self._saharaget.repositoryActionDone(self.domainId, self.id)
+                self._proxy.repositoryActionDone(self.domainId, self.id)
             if message:
                 generalHarvestLog.logLine('END', message, id = self.id)
             completeHarvest = hasResumptionToken and self.complete == True

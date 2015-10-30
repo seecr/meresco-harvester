@@ -39,16 +39,16 @@ class SaharaObject(object):
         self._attr = attr
         self._listattr = listattr
         self._initAttributes()
-        self._saharaget = None
+        self._proxy = None
 
     def _initAttributes(self):
         for attr in self._attr + self._listattr:
             setattr(self, attr, None)
 
-    def fill(self, saharaget, jsonDict):
+    def fill(self, proxy, jsonDict):
         for attr in self._attr:
             setattr(self, attr, jsonDict.get(attr))
         for attr in self._listattr:
             setattr(self, attr, jsonDict.get(attr, []))
-        self._saharaget = saharaget
+        self._proxy = proxy
 

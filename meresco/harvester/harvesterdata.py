@@ -104,7 +104,7 @@ class HarvesterData(object):
 
     #repository
     def getRepositoryIds(self, domainId, repositoryGroupId=None):
-        result = []
+        result = JsonList()
         allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
         for repositoryGroupId in allIds:
             jsonData = JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))

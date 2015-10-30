@@ -33,7 +33,6 @@
 ## end license ##
 
 from eventlogger import CompositeLogger, StreamEventLogger
-from saharaget import SaharaGet
 from time import sleep
 from timedprocess import TimedProcess
 from urllib import urlopen
@@ -45,6 +44,7 @@ from os import read
 from signal import SIGINT
 from errno import EINTR, EAGAIN
 from meresco.components.json import JsonDict
+from meresco.harvester.internalserverproxy import InternalServerProxy
 
 AGAIN_EXITCODE = 42
 
@@ -67,10 +67,8 @@ class StartHarvester(object):
         if self._stateDir is None:
             self._stateDir = config['statePath']
 
-        self.saharaget = SaharaGet(self.internalurl, self.setActionDone)
-
-        self.repository = self.repositoryId and self.saharaget.getRepository(self.domainId, self.repositoryId)
-
+        self.proxy = InternalServerProxy(self.internalurl, self.setActionDone)
+        self.repository = self.repositoryId and self.proxy.getRepositoryObject(identifier=self.repositoryId, domainId=self.domainId)
 
     def parse_args(self):
         self.parser.add_option("-d", "--domain",
@@ -146,7 +144,7 @@ class StartHarvester(object):
         if self.repository:
             waiting = [self.repositoryId]
         else:
-            waiting = self.saharaget.getRepositoryIds(self.domainId)
+            waiting = self.proxy.getRepositoryIds(self.domainId)
         processes = {}
         try:
             while running or waiting:
@@ -213,7 +211,7 @@ class StartHarvester(object):
         return args
 
     def _updateWaiting(self, waiting, running):
-        repositoryIds = self.saharaget.getRepositoryIds(self.domainId)
+        repositoryIds = self.proxy.getRepositoryIds(self.domainId)
         for repoId in waiting[:]:
             if not repoId in repositoryIds:
                 waiting.remove(repoId)

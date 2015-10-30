@@ -58,11 +58,11 @@ from harvesterdataretrievetest import HarvesterDataRetrieveTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest
+from internalserverproxytest import InternalServerProxyTest
 from mappingtest import MappingTest
 from oairequesttest import OaiRequestTest
 from onlineharvesttest import OnlineHarvestTest
 from repositorytest import RepositoryTest
-from saharagettest import SaharaGetTest
 from smoothactiontest import SmoothActionTest
 from sruupdateuploadertest import SruUpdateUploaderTest
 from statetest import StateTest

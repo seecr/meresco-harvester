@@ -44,7 +44,7 @@ import unittest
 class RepositoryTest(unittest.TestCase):
     def setUp(self):
         self.repo = Repository('domainId','rep')
-        self.repo._saharaget = self
+        self.repo._proxy = self
         self.logAndStateDir = os.path.join(tempfile.gettempdir(),'repositorytest')
         os.path.isdir(self.logAndStateDir) or os.mkdir(self.logAndStateDir)
 

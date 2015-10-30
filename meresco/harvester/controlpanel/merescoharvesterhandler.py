@@ -39,7 +39,7 @@ from urllib2 import urlopen
 from os.path import dirname, join
 from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.namespaces import xpath, xpathFirst
-from internalserverproxy import InternalServerProxy
+from meresco.harvester.internalserverproxy import InternalServerProxy
 from urlparse import urlparse, parse_qs
 
 templatesPath = join(dirname(__file__), 'slowfoottemplates')
@@ -83,7 +83,7 @@ def handler(req):
                 parse_qs=parse_qs,
             )
         )
-    req.proxy = InternalServerProxy(req)
+    req.proxy = InternalServerProxy(req.get_options()['internalServer'])
 
     req.addPlugin('PREOPEN', dfp)
     req.go()
