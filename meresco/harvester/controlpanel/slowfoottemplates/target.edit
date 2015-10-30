@@ -11,9 +11,9 @@ targetId = target['identifier']
 <%=args.error and '<span class="error">' + args.error + '</span>'or ''%>
 
 <%
+targetType = target.get('targetType')
 if session.get('isAdmin',''):
   #
-  targetType = target.get('targetType')
 %>
  <form method="post" action="/actions/updateTarget">
   <input type="hidden" name="redirectUri" value="/page/target.edit/?referrerDomain=<%=args.referrerDomain%>">
@@ -136,7 +136,7 @@ else:
     <td>Targets:</td><td>&nbsp;</td>
   </tr>
 <%
-    for id in target.get('delegate', []):
+    for id in target.get('delegateIds', []):
       targetName = req.proxy.getTarget(id).get('name') or ''
 %>
   <tr>

@@ -16,7 +16,7 @@ if session.get('username',''):
 %>
   <tr>
     <td class="button">
-      <a href="/page/domain.edit/<%= session.get('domain','') %>.domain">My Domain</a>
+      <a href="/page/domain.edit/?identifier=<%= session.get('domain','') %>">My Domain</a>
     </td>
   </tr>
 <%
