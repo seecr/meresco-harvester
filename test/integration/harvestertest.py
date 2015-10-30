@@ -87,6 +87,7 @@ class HarvesterTest(IntegrationTestCase):
                 maximumIgnore=maximumIgnore,
                 use=True,
                 complete=complete,
+                continuous=False,
                 action=action,
                 shopclosed=[]
             )
