@@ -1,6 +1,7 @@
 <%
 from slowfoot.account import deleteAccount, AccountException
-username = str(args.user)
+f = asform(input)
+username = str(f.user)
 passwdFile = req.get_options()['usersfile']
 userNode = xpathFirst(lxml, '/users/%s' % username)
 
