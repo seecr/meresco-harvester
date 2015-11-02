@@ -31,14 +31,9 @@
 
 from os.path import join, abspath, dirname, isfile
 from os import listdir
-from sys import stdout
 
-from seecr.test.utils import getRequest, sleepWheel
+from seecr.test.utils import getRequest
 
-from time import sleep
-
-from subprocess import Popen
-from os import kill
 from urllib import urlopen, urlencode
 from urlparse import urlparse
 from cgi import parse_qs
@@ -81,8 +76,8 @@ class HarvesterIntegrationState(IntegrationState):
         args.update(kwargs)
         urlopen("http://localhost:%s/control?%s" % (self.helperServerPortNumber, urlencode(args,doseq=True)))
 
-    def startHarvester(self, repository=None, concurrency=None, runOnce=True, verbose=False, **kwargs):
-        arguments = dict(domain='adomain', logDir=self.harvesterLogDir, stateDir=self.harvesterStateDir, url="http://localhost:{}".format(self.harvesterInternalServerPortNumber))
+    def startHarvester(self, repository=None, concurrency=None, runOnce=True, sleepTime=0, verbose=False, timeoutInSeconds=6, **kwargs):
+        arguments = dict(domain='adomain', logDir=self.harvesterLogDir, stateDir=self.harvesterStateDir, url="http://localhost:{}".format(self.harvesterInternalServerPortNumber), sleepTime=sleepTime)
         arguments.update(kwargs)
         if repository is not None:
             arguments['repository'] = repository
@@ -92,6 +87,7 @@ class HarvesterIntegrationState(IntegrationState):
                 self.binPath('meresco-harvester'),
                 processName='harvester',
                 flagOptions=['runOnce'] if runOnce else [],
+                timeoutInSeconds=timeoutInSeconds,
                 **arguments
             )
 

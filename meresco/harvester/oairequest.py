@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011-2015 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -39,7 +39,6 @@ from cgi import parse_qsl
 from meresco.harvester.namespaces import xpathFirst, xpath
 from lxml.etree import parse
 from urllib import urlencode
-from meresco.components import lxmltostring
 
 from httpsconnection import HTTPSHandlerTLS
 install_opener(build_opener(HTTPSHandlerTLS()))

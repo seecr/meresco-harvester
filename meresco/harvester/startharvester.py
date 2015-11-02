@@ -129,6 +129,11 @@ class StartHarvester(object):
             dest="child",
             default=False,
             help=SUPPRESS_HELP)
+        self.parser.add_option("--sleepTime", "",
+            dest="sleepTime",
+            type='int',
+            default=1,
+            help=SUPPRESS_HELP)
 
         (options, args) = self.parser.parse_args()
         return options
@@ -152,7 +157,6 @@ class StartHarvester(object):
                     repositoryId = waiting.pop(0)
                     self._createProcess(processes, repositoryId)
                     running.add(repositoryId)
-
                 try:
                     readers, _, _ = select(processes.keys(), [], [])
                 except error, (errno, description):
@@ -192,6 +196,7 @@ class StartHarvester(object):
                             if not self.runOnce:
                                 waiting.append(repositoryId)
                         self._updateWaiting(waiting, running)
+
         except:
             for t in set([t for t,process,repositoryId in processes.values()]):
                 t.terminate()
@@ -211,12 +216,12 @@ class StartHarvester(object):
         return args
 
     def _updateWaiting(self, waiting, running):
+        if self.runOnce or self.repository:
+            return
         repositoryIds = self.proxy.getRepositoryIds(self.domainId)
         for repoId in waiting[:]:
             if not repoId in repositoryIds:
                 waiting.remove(repoId)
-        if self.runOnce or self.repository:
-            return
         for repoId in repositoryIds:
             if not repoId in waiting and not repoId in running:
                 waiting.append(repoId)
@@ -236,7 +241,7 @@ class StartHarvester(object):
             stateDir=join(self._stateDir, self.domainId),
             logDir=join(self._logDir, self.domainId),
             generalHarvestLog=self._generalHarvestLog)
-        sleep(1)
+        sleep(self.sleepTime)
         if again:
             exit(AGAIN_EXITCODE)
 

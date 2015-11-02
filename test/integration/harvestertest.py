@@ -149,7 +149,7 @@ class HarvesterTest(IntegrationTestCase):
         t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=False, repository=REPOSITORY))
         t.start()
         try:
-            sleepWheel(8)
+            sleepWheel(5)
             logs = self.getLogs()[len(oldlogs):]
             self.assertTrue(len(logs) > 2, logs)
             self.assertEqual({'path': '/oai', 'arguments': {'verb': ['ListRecords'], 'metadataPrefix': ['oai_dc']}}, logs[0])
@@ -421,7 +421,7 @@ class HarvesterTest(IntegrationTestCase):
 
         self.saveRepository(DOMAIN, 'xyz', REPOSITORYGROUP)
         stdoutfile = join(self.integrationTempdir, "stdouterr-meresco-harvester-harvester.log")
-        sleepWheel(9)
+        sleepWheel(5)
         log = open(stdoutfile).read()
         try:
             self.assertTrue('xyz' in log, log)
@@ -442,7 +442,7 @@ class HarvesterTest(IntegrationTestCase):
         xyzOccurrences = log.count('[xyz]')
 
         self.removeRepository(DOMAIN, 'xyz', REPOSITORYGROUP)
-        sleepWheel(8)
+        sleepWheel(5)
         log = open(stdoutfile).read()
         try:
             self.assertFalse('Traceback' in log, log)
