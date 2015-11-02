@@ -70,7 +70,7 @@ class HarvesterTest(IntegrationTestCase):
         self.removeRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
         IntegrationTestCase.tearDown(self)
 
-    def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False):
+    def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False, continuous=None):
         try:
             self.harvesterData.addRepository(identifier=repositoryId, domainId=domain, repositoryGroupId=repositoryGroupId)
         except ValueError:
@@ -87,7 +87,7 @@ class HarvesterTest(IntegrationTestCase):
                 maximumIgnore=maximumIgnore,
                 use=True,
                 complete=complete,
-                continuous=False,
+                continuous=continuous,
                 action=action,
                 shopclosed=[]
             )
@@ -109,7 +109,6 @@ class HarvesterTest(IntegrationTestCase):
             self.assertEquals({'verb':['ListRecords'], 'metadataPrefix':['not_existing']}, logs[1]['arguments'])
         finally:
             self.removeRepository(DOMAIN, 'repo_invalid_metadataPrefix', REPOSITORYGROUP)
-
 
     def testHarvestToSruUpdate(self):
         # initial harvest
@@ -143,6 +142,21 @@ class HarvesterTest(IntegrationTestCase):
         logs = self.getLogs()[len(oldlogs):]
         self.assertEquals(2, len(logs))
         self.assertEquals(None, getResumptionToken(open(statsFile).readlines()[-1]))
+
+    def testContinuousHarvest(self):
+        oldlogs = self.getLogs()
+        self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, continuous=1)
+        t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=False, repository=REPOSITORY))
+        t.start()
+        try:
+            sleepWheel(8)
+            logs = self.getLogs()[len(oldlogs):]
+            self.assertTrue(len(logs) > 2, logs)
+            self.assertEqual({'path': '/oai', 'arguments': {'verb': ['ListRecords'], 'metadataPrefix': ['oai_dc']}}, logs[0])
+            self.assertTrue('resumptionToken' in logs[1]['arguments'], logs[1])
+            self.assertTrue('from' in logs[2]['arguments'], logs[2])
+        finally:
+            t.join()
 
     def testIncrementalHarvesting(self):
         oldlogs = self.getLogs()
