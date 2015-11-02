@@ -8,6 +8,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -104,6 +105,8 @@ class Convert(object):
             metadataPrefix=xpathFirst(xml, '/repository/metadataPrefix/text()'),
             mappingId=xpathFirst(xml, '/repository/mappingId/text()'),
             maximumIgnore=int(xpathFirst(xml, '/repository/maximumIgnore/text()') or '0'),
+            shopclosed=xpath(xml, '/repository/shopclosed/text()'),
+            continuous=None
         )
 
     @staticmethod
@@ -114,7 +117,7 @@ class Convert(object):
             username=xpathFirst(xml, '/target/username/text()'),
             port=int(xpathFirst(xml, '/target/port/text()') or '0'),
             targetType=xpathFirst(xml, '/target/targetType/text()'),
-            delegates=xpath(xml, '/target/delegate/text()'),
+            delegateIds=xpath(xml, '/target/delegate/text()'),
             path=xpathFirst(xml, '/target/path/text()'),
             baseurl=xpathFirst(xml, '/target/baseurl/text()'),
             oaiEnvelope=xpathFirst(xml, '/target/oaiEnvelope/text()') == 'true',
