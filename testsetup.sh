@@ -28,7 +28,7 @@
 #
 ## end license ##
 
-source /usr/share/seecr-test/functions
+source /usr/share/seecr-tools/functions.d/test
 
 set -e
 mydir=$(cd $(dirname $0); pwd)

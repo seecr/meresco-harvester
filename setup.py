@@ -33,24 +33,30 @@
 ## end license ##
 
 from distutils.core import setup
+from os import walk
+from os.path import join
+
+packages = []
+for path, dirs, files in walk('meresco'):
+    if '__init__.py' in files and path != 'meresco':
+        packagename = path.replace('/', '.')
+        packages.append(packagename)
+scripts = []
+for path, dirs, files in walk('bin'):
+    scripts.extend(join(path, f) for f in files if f not in ['start-mockoai', 'sitecustomize.py'])
 
 setup(
     name='meresco-harvester',
     packages=[
         'meresco',                              #DO_NOT_DISTRIBUTE
-        'meresco.harvester',
-        'meresco.harvester.controlpanel',
-    ],
+    ] + packages,
     package_data={
         'meresco.harvester.controlpanel': [
             'slowfoottemplates/*',
             'html/dynamic/*.sf',
         ]
     },
-    scripts=[
-        'bin/meresco-harvester-internal-server',
-        'bin/meresco-harvester',
-    ],
+    scripts=scripts,
     version='%VERSION%',
     url='http://www.meresco.org',
     author='Seecr',
