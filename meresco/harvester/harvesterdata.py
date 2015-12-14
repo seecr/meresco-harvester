@@ -241,14 +241,14 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
     <metadataPrefix>%(metadataPrefix)s</metadataPrefix>
     <collection>%(collection)s</collection>
   </repository>
-</meta>""" % dict([(k,xmlEscape(v)) for k,v in {
+</meta>""" % dict([(k,xmlEscape(v) if v else '') for k,v in {
   'id': upload.id,
-  'set': upload.repository.set or '',
+  'set': upload.repository.set,
   'baseurl': upload.repository.baseurl,
   'repositoryGroupId':  upload.repository.repositoryGroupId,
   'repository': upload.repository.id,
   'metadataPrefix': upload.repository.metadataPrefix,
-  'collection': upload.repository.collection or '',
+  'collection': upload.repository.collection,
   'recordId': upload.recordIdentifier,
   'harvestDate': upload.oaiResponse.responseDate,
 }.items()])
