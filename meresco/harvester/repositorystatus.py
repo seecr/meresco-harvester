@@ -124,7 +124,7 @@ class RepositoryStatus(Observable):
                     break
                 elif event == 'ERROR':
                     _error(parseState, date, comments)
-                    if len(parseState["errors"]) > 500:
+                    if len(parseState["errors"]) > 100:
                         break
 
         recenterrors = parseState["errors"][-10:]
