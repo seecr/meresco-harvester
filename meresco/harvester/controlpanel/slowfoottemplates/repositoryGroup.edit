@@ -45,6 +45,7 @@ if not session.get('isAdmin','') and session.get('domain', '') != domainId:
 <%
 for repositoryId in sorted(group.get('repositoryIds', []), key=lambda x:str(x).lower()):
   #
+  deleteFormName = "deleteRepository_" + groupId.replace("-", "_")
 %>
   <tr class="table_row">
    <td><%= repositoryId %></id>
@@ -54,12 +55,12 @@ for repositoryId in sorted(group.get('repositoryIds', []), key=lambda x:str(x).l
     </a>
    </td>
    <td>
-    <form method='post' action='/actions/deleteRepository' name="deleteRepository_<%=repositoryId%>">
+    <form method='post' action='/actions/deleteRepository' name="<%=deleteFormName%>">
         <input type="hidden" name="redirectUri" value="/page/repositoryGroup.edit/?identifier=<%=groupId%>&amp;domainId=<%=domainId%>"/>
         <input type="hidden" name="domainId" value="<%=domainId%>"/>
         <input type="hidden" name="repositoryGroupId" value="<%=groupId%>"/>
         <input type="hidden" name="identifier" value="<%=repositoryId%>"/>
-     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteRepository_<%=repositoryId%>.submit();}; return false;">
+     <a onclick="if(confirm('Weet u het zeker?')) { document.<%=deleteFormName%>.submit();}; return false;">
         Delete
      </a>
      </form>

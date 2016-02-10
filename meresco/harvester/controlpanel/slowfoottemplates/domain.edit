@@ -47,6 +47,7 @@ for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).
   repositoryGroup = req.proxy.getRepositoryGroup(identifier=groupId, domainId=domainIdentifier)
 
   name = repositoryGroup.get('name', {}).get('nl', '')
+  deleteFormName = "deleteRepositoryGroup_" + groupId.replace("-", "_")
 %>
    <tr class="table_row">
     <td width="60%"><%=name%> (<%= groupId %>)</td>
@@ -56,11 +57,11 @@ for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).
      </a>
     </td>
     <td>
-     <form method='post' action='/actions/deleteRepositoryGroup' name="deleteRepositoryGroup_<%=groupId%>">
+     <form method='post' action='/actions/deleteRepositoryGroup' name="<%=deleteFormName%>">
         <input type="hidden" name="redirectUri" value="/page/domain.edit/?identifier=<%=domainIdentifier%>"/>
         <input type="hidden" name="domainId" value="<%=domainIdentifier%>"/>
         <input type="hidden" name="identifier" value="<%=groupId%>"/>
-     <a onclick="if(confirm('Weet u het zeker?')) { document.deleteRepositoryGroup_<%=groupId%>.submit();}; return false;">
+     <a onclick="if(confirm('Weet u het zeker?')) { document.<%=deleteFormName%>.submit();}; return false;">
         Delete
      </a>
      </form>
