@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -41,7 +41,7 @@ from select import select, error
 from sys import stderr, stdout, exit, argv
 from optparse import OptionParser, SUPPRESS_HELP
 from os import read
-from signal import SIGINT
+from signal import SIGTERM
 from errno import EINTR, EAGAIN
 from meresco.components.json import JsonDict
 from meresco.harvester.internalserverproxy import InternalServerProxy
@@ -203,8 +203,8 @@ class StartHarvester(object):
             raise
 
     def _createProcess(self, processes, repositoryId):
-        t = TimedProcess()
-        process = t.executeScript(self._createArgs(repositoryId), self.processTimeout, SIGINT)
+        t = TimedProcess(signal=SIGTERM)
+        process = t.executeScript(self._createArgs(repositoryId), self.processTimeout)
         processes[process.stdout.fileno()] = t, process, repositoryId
         processes[process.stderr.fileno()] = t, process, repositoryId
 

@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -37,13 +37,14 @@ from subprocess import Popen, PIPE
 from fcntl import fcntl, F_SETFL
 
 from threading import Timer
+from signal import SIGKILL
 
 class TimedProcess(object):
-    def __init__(self):
+    def __init__(self, signal=None):
         self._wasTimeout = False
         self._wasSuccess = False
         self._pid = -1
-        self._signal=9
+        self._signal = SIGKILL if signal is None else signal
 
     def wasSuccess(self):
         return self._wasSuccess
@@ -61,10 +62,10 @@ class TimedProcess(object):
         self._wasTimeout = True
         self.timer.cancel()
 
-    def executeScript(self, args, timeout, signal=9):
-        self._signal = signal
+    def executeScript(self, args, timeout):
         process = Popen(args, stdout=PIPE, stderr=PIPE, bufsize=0)
         fcntl(process.stdout.fileno(), F_SETFL, O_NONBLOCK)
+        fcntl(process.stderr.fileno(), F_SETFL, O_NONBLOCK)
         self._pid = process.pid
         self.timer = Timer(timeout, self.terminate)
         self.timer.start()
