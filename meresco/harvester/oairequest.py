@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -105,7 +105,7 @@ class OaiRequest(object):
         return OaiResponse(result)
 
     def _request(self, argslist):
-        return parse(urlopen(self._buildRequestUrl(argslist)))
+        return parse(urlopen(self._buildRequestUrl(argslist), timeout=5*60))
 
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.
