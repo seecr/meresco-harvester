@@ -45,7 +45,7 @@ if not session.get('isAdmin','') and session.get('domain', '') != domainId:
 <%
 for repositoryId in sorted(group.get('repositoryIds', []), key=lambda x:str(x).lower()):
   #
-  deleteFormName = "deleteRepository_" + groupId.replace("-", "_")
+  deleteFormName = "deleteRepository_" + repositoryId.replace("-", "_")
 %>
   <tr class="table_row">
    <td><%= repositoryId %></id>
