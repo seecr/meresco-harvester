@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -85,7 +85,7 @@ class HarvesterData(object):
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
-        if self._exists(filename):
+        if identifier.lower() in [g.lower() for g in domain.get('repositoryGroupIds', [])]:
             raise ValueError('The repositoryGroup already exists.')
         self._save(JsonDict(dict(identifier=identifier)), filename)
         domain.setdefault('repositoryGroupIds', []).append(identifier)
@@ -137,7 +137,7 @@ class HarvesterData(object):
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
-        if self._exists(filename):
+        if identifier.lower() in [r.lower() for r in group.get('repositoryIds', [])]:
             raise ValueError('The repository already exists.')
         self._save(JsonDict(dict(identifier=identifier, repositoryGroupId=repositoryGroupId)), filename)
         group.setdefault('repositoryIds', []).append(identifier)

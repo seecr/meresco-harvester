@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -29,7 +29,6 @@
 
 from os.path import join
 from seecr.test import SeecrTestCase
-from weightless.core import compose
 
 from meresco.harvester.harvesterdata import HarvesterData
 
@@ -174,6 +173,11 @@ class HarvesterDataTest(SeecrTestCase):
         except ValueError, e:
             self.assertEqual('The repositoryGroup already exists.', str(e))
         try:
+            self.hd.addRepositoryGroup(identifier="GROUP1", domainId='adomain')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('The repositoryGroup already exists.', str(e))
+        try:
             self.hd.addRepositoryGroup(identifier="group#with#invalid%characters", domainId='adomain')
             self.fail()
         except ValueError, e:
@@ -201,17 +205,22 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(['repository1', 'repository2', 'newrepo'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.assertEquals('Group1', self.hd.getRepository(identifier='newrepo', domainId='adomain')['repositoryGroupId'])
         try:
-            self.hd.addRepositoryGroup(identifier="Group1", domainId='adomain')
+            self.hd.addRepository(identifier="repository1", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
         except ValueError, e:
-            self.assertEqual('The repositoryGroup already exists.', str(e))
+            self.assertEqual('The repository already exists.', str(e))
         try:
-            self.hd.addRepositoryGroup(identifier="group#with#invalid%characters", domainId='adomain')
+            self.hd.addRepository(identifier="Repository1", domainId='adomain', repositoryGroupId='Group1')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('The repository already exists.', str(e))
+        try:
+            self.hd.addRepository(identifier="repository#with#invalid%characters", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
         except ValueError, e:
             self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
         try:
-            self.hd.addRepositoryGroup(identifier="", domainId='adomain')
+            self.hd.addRepository(identifier="", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
         except ValueError, e:
             self.assertEqual('No name given.', str(e))
