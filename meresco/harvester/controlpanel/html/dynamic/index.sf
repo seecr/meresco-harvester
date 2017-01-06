@@ -1,0 +1,93 @@
+import page
+
+
+def main(**kwargs):
+    yield page.header(**kwargs)
+    yield """
+<table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="10">
+  <tr>
+    <td align="left" valign="top">
+      <table width="100%" height="100%"  border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="left" valign="top">"""
+    yield sitemap(**kwargs)
+    yield """
+          </td>
+          <td align="left" valign="top" class="content">
+<h1>Meresco-Harvester Web Control Panel</h1>
+<p>
+Welkom bij Meresco-Harvester, de Open Source OAI Harvester, een onderdeel van de Meresco Suite.  Hier kunt u de u toegekende domeinen beheren.<p>
+
+<p>
+Voor vragen en meer informatie over Meresco Harvester kunt u terecht op de <a href="http://meresco.seecr.nl">Meresco pagina</a>. Meresco-Harvester is initieel ontwikkeld voor SURFnet onder de naam Sahara.
+</p>
+
+<p>
+Succes gewenst!!<br/>
+Het Meresco Harvester Team
+</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+     <td align="right" valign="bottom">
+     <span style="font-size:75%; color:light-gray;">Meresco Harvester ({version})</span>
+     </td>
+  </tr>
+</table>""".format(version=VERSION)
+    yield page.footer(**kwargs)
+
+def sitemap(session, **kwargs):
+    yield """
+        <table class="sitemap" width="160" border="0" cellspacing="10" cellpadding="0">
+            <tr class="sitemapheader">
+                <td>&nbsp;</td>
+            </tr>"""
+    
+    user = session.get("user")
+    if user:
+        yield """
+            <tr>
+                <td class="button">
+                    <a href="/">Home</a>
+                </td>
+            </tr>"""
+
+        domain = session.get("domain")
+        if domain:
+            yield """
+                <tr>
+                    <td class="button">
+                        <a href="/domain?{params}">My Domain</a>
+                    </td>
+                </tr>""".format(params=urlencode(dict(identifier=domain)))
+        elif user and user.isAdmin():
+            yield """
+                <tr>
+                    <td class="button">
+                      <a href="/domains">Domains</a>
+                    </td>
+                </tr>"""
+        else:
+            yield """
+                <tr>
+                    <td class="button" style="color:red;">No domain</td>
+                </tr>"""
+    yield """
+                <tr>
+                    <td class="button">
+                        <a href="http://meresco.sourceforge.net">About Meresco</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="button">"""
+    yield """<a href="/logout">Logout</a>""" if user else """<a href="/login">Login</a>"""
+    yield """
+                    </td>
+                </tr>
+            </table>"""

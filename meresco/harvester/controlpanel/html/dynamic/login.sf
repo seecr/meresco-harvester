@@ -1,0 +1,6 @@
+import page
+
+def main(**kwargs):
+    yield page.header(**kwargs)
+    yield observable.any.loginForm(**kwargs)
+    yield page.footer(**kwargs)

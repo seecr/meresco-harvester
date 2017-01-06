@@ -32,7 +32,6 @@ from os.path import join, abspath, dirname
 from sys import stdout
 import time
 from xml.sax.saxutils import escape as escapeXml
-from lxml.etree import XML
 
 from weightless.io import Reactor
 from weightless.core import compose, be
@@ -41,13 +40,13 @@ from meresco.components.json import JsonDict
 from meresco.core import Observable
 
 from meresco.html import DynamicHtml
+from meresco.html.login import BasicHtmlLoginForm, PasswordFile
 from seecr.weblib import seecrWebLibPath
 
-from meresco.components import readConfig
-from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename
+from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore
 from meresco.components.http.utils import ContentTypePlainText
 
-from __version__ import VERSION_STRING
+from __version__ import VERSION_STRING, VERSION
 from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
 from harvesterdataactions import HarvesterDataActions
@@ -56,59 +55,84 @@ from meresco.components.http.utils import ContentTypeJson
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
+staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
+
 
 def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignored):
+    passwordFilename = join(dataPath, 'users.txt')
     harvesterData = HarvesterData(dataPath)
-    repositoryStatus = be((RepositoryStatus(logPath, statePath),
-            (harvesterData,)
-        ))
-    configDict = JsonDict(
-            logPath=logPath,
-            statePath=statePath,
-            harvesterStatusUrl=harvesterStatusUrl,
-            dataPath=dataPath,
+    repositoryStatus = be(
+        (RepositoryStatus(logPath, statePath),
+            (harvesterData, )
         )
+    )
+    configDict = JsonDict(
+        logPath=logPath,
+        statePath=statePath,
+        harvesterStatusUrl=harvesterStatusUrl,
+        dataPath=dataPath,
+    )
+
+    basicHtmlLoginHelix = (BasicHtmlLoginForm(
+        action="/login.action",
+        loginPath="/login",
+        home="/index",
+        rememberMeCookie=False,
+        lang="nl"),
+
+        (PasswordFile(filename=passwordFilename), )
+    )
 
     return \
         (Observable(),
             (ObservableHttpServer(reactor, port),
                 (ApacheLogger(stdout),
-                    (PathFilter("/info/version"),
-                        (StringServer(VERSION_STRING, ContentTypePlainText), )
-                    ),
-                    (PathFilter("/info/config"),
-                        (StringServer(configDict.dumps(), ContentTypeJson), )
-                    ),
-                    (PathFilter("/static"),
-                        (PathRename(lambda name: name[len('/static/'):]),
-                            (FileServer(seecrWebLibPath),)
-                        )
-                    ),
-                    (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get']),
-                        (DynamicHtml(
-                                [dynamicHtmlPath],
-                                reactor=reactor,
-                                additionalGlobals = {
-                                    'time': time,
-                                    'harvesterStatusUrl': harvesterStatusUrl,
-                                    'escapeXml': escapeXml,
-                                    'compose': compose,
-                                },
-                                indexPage="/index.html",
+                    (BasicHttpHandler(),
+                        (SessionHandler(),
+                            (CookieMemoryStore(name="meresco-harvester", timeout=2*60*60), ),
+                            (PathFilter("/info/version"),
+                                (StringServer(VERSION_STRING, ContentTypePlainText), )
                             ),
-                            (harvesterData,),
-                            (repositoryStatus,),
-                        )
-                    ),
-                    (PathFilter('/action'),
-                        (HarvesterDataActions(),
-                            (harvesterData,)
-                        ),
-                    ),
-                    (PathFilter('/get'),
-                        (HarvesterDataRetrieve(),
-                            (harvesterData,),
-                            (repositoryStatus,),
+                            (PathFilter("/info/config"),
+                                (StringServer(configDict.dumps(), ContentTypeJson), )
+                            ),
+                            (PathFilter('/login.action'),
+                                basicHtmlLoginHelix
+                            ),
+                            (PathFilter("/static"),
+                                (PathRename(lambda name: name[len('/static/'):]),
+                                    (FileServer([seecrWebLibPath, staticHtmlPath]),)
+                                )
+                            ),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action']),
+                                (DynamicHtml(
+                                        [dynamicHtmlPath],
+                                        reactor=reactor,
+                                        additionalGlobals = {
+                                            'time': time,
+                                            'harvesterStatusUrl': harvesterStatusUrl,
+                                            'escapeXml': escapeXml,
+                                            'compose': compose,
+                                            'VERSION': VERSION,
+                                        },
+                                        indexPage="/index",
+                                    ),
+                                    basicHtmlLoginHelix,
+                                    (harvesterData,),
+                                    (repositoryStatus,),
+                                )
+                            ),
+                            (PathFilter('/action'),
+                                (HarvesterDataActions(),
+                                    (harvesterData,)
+                                ),
+                            ),
+                            (PathFilter('/get'),
+                                (HarvesterDataRetrieve(),
+                                    (harvesterData,),
+                                    (repositoryStatus,),
+                                )
+                            )
                         )
                     )
                 )

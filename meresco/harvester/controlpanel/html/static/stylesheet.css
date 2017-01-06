@@ -1,0 +1,262 @@
+/* begin license *
+ *
+ * "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+ * a web-control panel.
+ * "Meresco Harvester" is originally called "Sahara" and was developed for
+ * SURFnet by:
+ * Seek You Too B.V. (CQ2) http://www.cq2.nl
+ *
+ * Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+ * Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
+ *
+ * This file is part of "Meresco Harvester"
+ *
+ * "Meresco Harvester" is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * "Meresco Harvester" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with "Meresco Harvester"; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * end license */
+
+@font-face {
+  font-family: 'TitilliumText22LBold';
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp003-webfont.eot');
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp003-webfont.eot?#iefix') format('embedded-opentype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp003-webfont.woff') format('woff'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp003-webfont.ttf') format('truetype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp003-webfont.svg#TitilliumText41LP750wt') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'TitilliumText22LMedium';
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp002-webfont.eot');
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp002-webfont.eot?#iefix') format('embedded-opentype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp002-webfont.woff') format('woff'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp002-webfont.ttf') format('truetype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp002-webfont.svg#TitilliumText41LP500wt') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'TitilliumText22LRegular';
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp001-webfont.eot');
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp001-webfont.eot?#iefix') format('embedded-opentype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp001-webfont.woff') format('woff'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp001-webfont.ttf') format('truetype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp001-webfont.svg#TitilliumText41LP250wt') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'TitilliumText22LThin';
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp-webfont.eot');
+  src: url('@font-face {//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp-webfont.eot?#iefix') format('embedded-opentype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp-webfont.woff') format('woff'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp-webfont.ttf') format('truetype'), url('//cdn.seecr.nl/fonts/TitilliumText/titilliumtext41lp-webfont.svg#TitilliumText41LP1wt') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+*    {font-family: "TitilliumText22LRegular", fixed;}
+
+html {
+    background: url(data:image/gif;base64,R0lGODlhDQANAIAAADU3OTg5OyH5BAAAAAAALAAAAAANAA0AAAIejI8HCYvtYDOS1gDfVMylD26KJ0VVaWWYuJKeBcYFADs=);
+}
+
+body {
+    background-color: #FFFFFF;
+    color: #4C4D4F;
+    width: 50%;
+    min-width: 1000px;
+    margin: 40px auto;
+    padding: 10px;
+    font-size: 10pt;
+}
+
+
+a {
+    color: #f9a01b;
+    text-decoration: none;
+    cursor: pointer;
+}
+a:active, a:hover {
+    text-decoration: underline;
+}
+
+.table_row > td {
+    border-bottom: 1px solid #DDDDDD;
+    padding: 0.5em 0;
+}
+
+.error {
+    font-weight: bold;
+    color: red;
+}
+
+h3 {
+  clear: both;
+  text-transform: uppercase;
+  font-family: "TitilliumText22LThin";
+  font-size: 1em;
+  margin: 1em 0 .5em 0;
+  border-bottom: 1px solid #FCD498;
+  font-weight: normal;
+}
+
+td.button {
+    padding: 0px 6px 6px 10px;
+    /*background: #FFFFFF url(button.jpg) no-repeat 0% 100%;*/
+    font-weight: bold;
+    font-size: 12pt;
+    height: 26px;
+    align: left;
+    valign: top;
+    /*border-bottom: 1px dotted #CCCCCC;*/
+}
+.customer {
+    background-color: #FFFFFF;
+    background-image: url("edurep.jpg");
+    background-repeat: no-repeat;
+    background-position: left;
+    height:100px;
+}
+.logo {
+    background-color: #FFFFFF;
+    background-image: url("//cdn.seecr.nl/images/seecr_logo_transparant_bg.png");
+    background-repeat: no-repeat;
+    background-position: right;
+    background-size: 250px;
+    height:100px;
+}
+td.content {
+    /*background-color:#F5F4EE;*/
+    padding: 20px 20px 20px 20px;
+    width: 100%;
+}
+
+th {
+    text-align: center;
+}
+
+table.event{
+    border-spacing: 0px;
+}
+.event td {
+    padding: 3px;
+}
+.event a{
+    font-weight: bold;
+}
+input[type=text], input[type=password] {
+    border: 1px; border-style: solid;
+    border-color:#5B9EB9; width:200px;
+    height:18px;
+}
+.zkveld_klein {
+    border: 1px; border-style: solid;
+    border-color:#5B9EB9; width:60px;
+    height: 18px;
+}
+
+.sitemap {
+    margin-top: 40px;
+}
+
+input {
+    margin-top: 1px;
+}
+td {
+    padding-right: 4px;
+    padding-top:4px;
+}
+input[type=submit] {
+    color: white;
+    font-weight: bold;
+    border: 0;
+    height: 1.8em;
+    padding-left: 1em;
+    padding-right: 1em;
+    box-shadow: 1px 1px 5px #4c4d4f;
+    border-radius: 2px;
+    -webkit-appearance: none;
+    background-color: #4c4d4f;
+    cursor: pointer;
+}
+
+.eventerror .trace {
+  font-family: Courier;
+}
+
+.header-logo-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    height: 100px;
+}
+.header-logo-block-50 {
+    display: inline-block;
+    width: 50%;
+    height: 100%;
+    float: left;
+}
+.header-logo-seecr {
+    position: absolute;
+    width: 240px;
+    padding: 5px 5px 0px 0px;
+    top: 0;
+    right: 0;
+}
+
+
+/** LOGIN PAGE **/
+#loginpage h1::before, #loginpage h4::before, #login-form dd::before, #login-form p.error::before {
+    content: '';
+    width: 30%;
+    display: inline-block;
+    min-width: 110px;
+}
+
+#login-formpage h4 {
+    font-size: 0.8em;
+}
+#login-form dt {
+    width: 28%;
+    min-width: 100px;
+    text-align: right;
+}
+#login-form dd {
+    margin-left: 0;
+    margin-top: -3em;
+}
+#login-form dd.submit {
+    margin-top: 0.5em;
+}
+#login-form dt {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 0;
+}
+
+#login-form input {
+    position: relative;
+}
+#login-form input[type=text], #login-form input[type=password] {
+    border: 1px solid #4c4d4f;
+    border-radius: 2px;
+    height: 2em;
+    width: 16em;
+    padding-left: 0.5em;
+    font-size: 16px;
+}
+#login-form dd.submit input {
+    background-color: #4c4d4f;
+    color: white;
+    font-weight: bold;
+    border: 0;
+    width: 10em;
+    height: 3em;
+    box-shadow: 1px 1px 5px #4c4d4f;
+    border-radius: 2px;
+    -webkit-appearance: none;
+}
+/** / LOGIN PAGE **/
