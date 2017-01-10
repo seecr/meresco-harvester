@@ -1,0 +1,48 @@
+
+def main(**kwargs):
+    yield "Nothing to see here"
+
+
+def showStatusFor(domainId, scope, **kwargs):
+    def _arguments():
+        arguments = dict(domainId=domainId)
+        if kwargs:
+            arguments.update(kwargs)
+        return arguments
+
+    def _linkForPeriod(since):
+        arguments = _arguments()
+        arguments['since'] = since
+        return "/showHarvesterThroughput?{}".format(urlencode(arguments))
+
+    yield """
+<div>
+    <h3>Status</h3>
+    <ul>
+        <li><a href="{statusUrl}">Harvester status of this {scope}.</a> </li>
+        <li><a href="{past7DaysUrl}">Harvester throughput of this {scope} for the past 7 days.</a> </li>
+        <li><a href="{past31DaysUrl}">Harvester throughput of this {scope} for the past 31 days.</a> </li>
+    </ul>
+</div>""".format(
+        scope=scope,
+        statusUrl="/showHarvesterStatus?{}".format(urlencode(_arguments())),
+        past7DaysUrl=_linkForPeriod(since="lastweek"),
+        past31DaysUrl=_linkForPeriod(since="lastmonth"))
+
+
+def showErrorMessage(arguments):
+    error = arguments.get("error", [None])[0]
+    if error:
+        yield '<span class="error">{}</span>'.format(error)
+
+
+def dropdown(name, options, selected):
+    yield """
+    <select name="{name}">""".format(name=name)
+    for (key, value) in options:
+        isSelected = " selected" if key == selected else " "
+        yield """
+        <option value="{key}"{selected}>{value}</option>""".format(key=key, selected=isSelected, value=escapeHtml(str(value)))
+    yield """
+    </select>"""
+

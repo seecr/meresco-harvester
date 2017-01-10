@@ -51,7 +51,9 @@ from repositorystatus import RepositoryStatus
 from harvesterdata import HarvesterData
 from harvesterdataactions import HarvesterDataActions
 from harvesterdataretrieve import HarvesterDataRetrieve
+from timeslot import Timeslot
 from meresco.components.http.utils import ContentTypeJson
+
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
@@ -114,6 +116,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             'escapeXml': escapeXml,
                                             'compose': compose,
                                             'VERSION': VERSION,
+                                            'Timeslot': Timeslot,
                                         },
                                         indexPage="/index",
                                     ),

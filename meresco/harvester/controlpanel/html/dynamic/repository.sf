@@ -1,0 +1,201 @@
+import page, common
+
+# req.req.headers_out['Cache-Control'] = 'no-cache'
+
+# from meresco.harvester.timeslot import Timeslot
+
+def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    domain = kwargs.get('session', {}).get('domain')
+    domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
+    if not user or (not user.isAdmin() and domain != domainId):
+        yield http.redirect("/login")
+        return
+    yield page.layoutWithMenu(_contents, **kwargs)
+
+
+def _contents(arguments, **kwargs):
+    domainId = arguments.get("domainId", [None])[0]
+    domain = observable.call.getDomain(domainId)
+    repositoryId = arguments.get("identifier", [None])[0]
+    repository = observable.call.getRepository(identifier=repositoryId, domainId=domainId)
+
+    yield """<h1>Repository Administration</h1>"""
+    yield common.showErrorMessage(arguments)
+    yield _repository(domain, repository)
+
+
+def _repository(domain, repository):
+    domainId = domain.get('identifier')
+    mappings = [(mappingId, observable.call.getMapping(mappingId).get('name', '')) for mappingId in domain.get('mappingIds', [])]
+    targets = [(targetId, observable.call.getTarget(targetId).get('name', '')) for targetId in domain.get('targetIds', [])]
+
+    yield """
+    <div>
+        <h3>Repository: {repositoryId}</h3>
+        <form method="post" name="repositorySave" action="/actions/updateRepository">
+            <input type="hidden" name="redirectUri" value="{repositoryEditLink}"/>
+            <input type="hidden" name="identifier" value="{repositoryId}"/>
+            <input type="hidden" name="domainId" value="{domainId}"/>
+            <input type="hidden" name="repositoryGroupId" value="{repositoryGroupId}">
+            <table cellspacing="0" cellpadding="0">
+                <tr>
+                    <td>Id:</td>
+                    <td>{repositoryId}</td>
+                </tr>
+                <tr>
+                    <td>Baseurl:</td>
+                    <td><input size="50" type="text" name="baseurl" value="{baseurl}"></td>
+                </tr>
+                <tr>
+                    <td>Set:</td>
+                    <td><input size="50" type="text" name="set" value="{setName}"></td>
+                </tr>
+                <tr>
+                    <td>Metadata Prefix:</td>
+                    <td><input size="50" type="text" name="metadataPrefix" value="{metadataPrefix}"></td>
+                </tr>
+                <tr>
+                    <td>Mapping:</td>
+                    <td>""".format(
+                        repositoryId=repository.get('identifier'),
+                        repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId))),
+                        domainId=domainId,
+                        repositoryGroupId=repository['repositoryGroupId'],
+                        baseurl=repository.get('baseurl') or '',
+                        setName=repository.get('set') or '',
+                        metadataPrefix=repository.get('metadataPrefix') or '',
+                    )
+    yield common.dropdown(name="mappingId", options=[('', '')] + mappings, selected=repository.get('mappingId') or '')
+    yield """
+                    </td>
+                </tr>
+                <tr>
+                    <td>Target:</td>
+                    <td>"""
+    yield common.dropdown(name="targetId", options=[('', '')] + targets, selected=repository.get('targetId') or '')
+    yield """
+                    </td>
+                </tr>
+                <tr>
+                    <td>Target Collection:</td>
+                    <td><input size="50" type="text" name="collection" value="{collection}"></td>
+                </tr>
+                <tr>
+                    <td>Max. validation errors:</td>
+                    <td><input size="50" type="text" name="maximumIgnore" value="{maximumIgnore}"></td>
+                </tr>
+                <tr>
+                    <td>Harvest:</td>
+                    <td><input type="checkbox" name="use" value="true" {harvestCheck}></td>
+                </tr>
+                <tr>
+                    <td>Minimum continuous interval (in seconds):</td>
+                    <td><input type="text" name="continuous" value="{continuous}"></td>
+                </tr>
+               <tr>
+                    <td>Complete in one attempt:</td>
+                    <td><input type="checkbox" name="complete" value="true" {oneAttemptCheck}>Tells the harvester to complete harvesting in one attempt. Generally this option should not be required. Only for repositories with shortlived resumptionTokens.</td>
+                </tr>
+                <tr>
+                    <td>Next action:</td>
+                    <td>""".format(
+            collection=repository.get("collection") or '',
+            maximumIgnore=repository.get('maximumIgnore') or '0',
+            harvestCheck='checked' if repository.get('use') else '',
+            continuous=repository.get('continuous', '') or '',
+            oneAttemptCheck='checked' if repository.get('complete') else '')
+
+    yield common.dropdown(
+        name='repositoryAction',
+        options=[('', '-'), ('clear', 'Clear'), ('refresh', 'Refresh')],
+        selected=repository.get('action'))
+    yield """
+                    </td>
+                </tr>
+            </table>
+            <p><input type="submit" name="action" class="butt" value="Save" accesskey="s"></p>"""
+
+    yield """
+<div><h3>Closing hours</h3>
+<table cellpadding="0" cellspacing="0">
+    <tr>"""
+    yield "\n".join("<th>{}</th>".format(header) for header in ['Week', 'Day', 'Begin', 'End', ''])
+    yield """
+    </tr>"""
+
+    index = 0
+    for index, shopclosed in enumerate(repository.get('shopclosed', []), start=1):
+        closed = Timeslot(shopclosed)
+        yield """<tr>"""
+        yield renderTimeslot(index, closed)
+        yield """</tr>"""
+    yield """
+    <input type="hidden" name="numberOfTimeslots" value="{index}">
+    <tr>""".format(index=index)
+    yield renderTimeslot(0, Timeslot('*:*:0:0-*:*:0:0'))
+    yield """
+        <td><input type="submit" class="butt" value="Add" accesskey="a" name="addTimeslot"></td>
+    </tr>
+</table>
+</form>
+</div>"""
+
+    yield common.showStatusFor(domainId, "repository", repositoryId=repository.get("identifier"))
+    yield """
+<div>
+    <h3>Useful links</h3>
+    <ul>
+        <li><a target="_blank" href="{listMetadataFormatsUrl}">List all metadata formats.</a></li>
+        <li><a href="{testRepositoryLink}">Test mapping</a></li>
+    </ul>
+    <i>(You may need to save first.)</i>
+</div>
+<p><a href="{repositoryGroupEditLink}">Back to repositorygroup</a></p>""".format(
+        listMetadataFormatsUrl="{}?{}".format(repository.get('baseurl'), urlencode(dict(verb="ListMetadataFormats"))),
+        testRepositoryLink="/testrepository?{}".format(urlencode(
+            dict(domainId=domainId, repositoryId=repository.get('identifier')))),
+        repositoryGroupEditLink="/repositoryGroup?{}".format(urlencode(
+            dict(domainId=domainId, identifier=repository.get('repositoryGroupId')))))
+
+
+def _javascript():
+    yield """
+<script language="javascript">
+
+function submitForm(submitName) {
+    var submitButton = document.getElementById(submitName);
+    submitButton.click()
+}
+</script>"""
+
+
+def renderDropdown(index, selectName, options, selectedValue, wildcardName=''):
+    yield common.dropdown(
+        name='{}_{}'.format(selectName, index),
+        options=[("*", wildcardName)] + options if wildcardName != '' else options,
+        selected=selectedValue)
+
+
+def renderTimeslot(index, timeslot):
+    weeks = map(lambda x: (str(x), x), range(1, 54))
+    hours = map(lambda x: (str(x), x), range(25))
+    weekdays = list(enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']))
+
+    yield '<td>'
+    yield renderDropdown(index, 'shopclosedWeek', weeks, timeslot.beginweek, 'Any week')
+    yield '</td><td>'
+    yield renderDropdown(index, 'shopclosedWeekDay', weekdays, timeslot.beginday, 'Any day')
+    yield '</td><td>from'
+    yield renderDropdown(index, 'shopclosedBegin', hours, timeslot.beginhour)
+    yield ':00 hrs</td><td>until'
+    yield renderDropdown(index, 'shopclosedEnd', hours, timeslot.endhour)
+    yield ':00 hrs</td>'
+    if index != 0:
+        yield '''
+        <td align="right">
+            <input type="image" src="/static/delete.jpg" name="{name}" id="{name}">
+            <a href="javascript:submitForm('{name}')">delete</a>
+        </td>'''.format(name="deleteTimeslot_{}".format(index))
+        if not timeslot.valid():
+            yield '<td><p class="error">Invalid timeslot specification, will be ignored.</p></td>'

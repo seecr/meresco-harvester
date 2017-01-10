@@ -1,0 +1,116 @@
+import page, common
+
+#req.req.headers_out['Cache-control'] = 'no-cache'
+
+
+def main(**kwargs):
+    yield page.layoutWithMenu(_content, **kwargs)
+
+
+def _content(arguments, session, **kwargs):
+    user = session.get('user', None)
+    if not user.isAdmin() and session.get('domain', '') != domainId:
+        raise Exception('Illegal use')
+    identifier = arguments.get('identifier', [None])[0]
+    domainId = arguments.get('domainId', [None])[0]
+    group = observable.call.getRepositoryGroup(identifier=identifier, domainId=domainId)
+
+    yield """<h1>Repositorygroup Administration</h1>"""
+    error = arguments.get("error", [None])[0]
+    if error:
+        yield '<span class="error">{}</span>'.format(error)
+    yield _repositoryGroup(group, domainId)
+    yield _repositories(group, domainId)
+    yield _status(group, domainId)
+
+def _status(group, domainId):
+    yield common.showStatusFor(domainId, "repositorygroup", repositoryGroupId=group.get('identifier'))
+    yield """
+        <p><a href="{domainEditLink}">Back to domain</a></p>""".format(
+            domainEditLink="/domain?{}".format(urlencode(dict(identifier=domainId))))
+
+
+def _repositoryGroup(group, domainId):
+    groupId = group.get('identifier')
+    def _label(key, lang):
+        return unicode(group.get(key, {}).get(lang) or '')
+    yield """
+<div>
+<h3>Repository Group {groupId}</h3>
+<form method="post" action="/actions/updateRepositoryGroup">
+    <input type="hidden" name="redirectUri" value="{repositoryGroupEditLink}">
+    <input type="hidden" name="domainId" value="{domainId}"/>
+    <input type="hidden" name="identifier" value="{groupId}"/>
+    <table cellspacing="0" cellpadding="0">
+      <tr><td>Key:</td><td><input size="15"  type="hidden" name="id" value="{groupId}">{groupId}</td></tr>
+      <tr><td>Dutch Name:</td><td><input size="50"  type="text" name="nl_name" value="{nlName}"></td></tr>
+      <tr><td>English Name:</td><td><input size="50"  type="text" name="en_name" value="{enName}"></td></tr>
+    </table>
+    <p>
+     <input type="submit" name="action" class="butt" value="Save" accesskey="s">
+    </p>
+</form>
+</div>""".format(
+        repositoryGroupEditLink="/repositoryGroup?{}".format(urlencode(dict(identifier=groupId, domainId=domainId))),
+        domainId=domainId,
+        groupId=groupId,
+        enName=_label('name', 'en'),
+        nlName=_label('name', 'nl') )
+
+
+def _repositories(group, domainId):
+    groupId=group.get('identifier')
+
+    yield """
+<div>
+<h3>Repositories</h3>
+ <form action='/actions/addRepository' method='post'>
+     <input type="hidden" name="redirectUri" value="{repositoryEditLink}"/>
+     <input type="hidden" name="domainId" value="{domainId}"/>
+    <input type="hidden" name="repositoryGroupId" value="{domainId}"/>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Key:</td>
+     <td width="200"><input name="identifier" type="text" class="zkveld" value=""></td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Repository"></td>
+    </tr>
+   </table>
+ </form>
+ """.format(
+        domainId=domainId,
+        groupId=groupId,
+        repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId))))
+
+    yield """
+ <table width="100%" border="0" cellspacing="0" cellpadding="0">"""
+    for repositoryId in sorted(group.get('repositoryIds', []), key=lambda x: str(x).lower()):
+        yield """
+    <tr class="table_row">
+      <td>{repositoryId}</td>
+      <td>
+        <a href="{repositoryEditLink}">Edit / View</a>
+      </td>
+      <td>
+        <form method="post" action="/actions/deleteRepository" name="{deleteFormName}">
+          <input type="hidden" name="redirectUri" value="{repositoryGroupEditLink}"/>
+          <input type="hidden" name="domainId" value="{domainId}"/>
+          <input type="hidden" name="repositoryGroupId" value="{groupId}"/>
+          <input type="hidden" name="identifier" value="{repositoryId}"/>
+          <a onclick="if(confirm('Weet u het zeker?')) {{ document.{deleteFormName}.submit(); }}; return false;">Delete</a>
+        </form>
+      </td>
+      <td>
+        <a href="{testRepositoryLink}">Test mapping</a>
+      </td>
+    </tr>""".format(
+        repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId, identifier=repositoryId))),
+        repositoryGroupEditLink="/repositoryGroup?{}".format(urlencode(dict(identifier=groupId, domainId=domainId))),
+        testRepositoryLink="/testrepository?{}".format(urlencode(dict(domainId=domainId, repositoryId=repositoryId))),
+        deleteFormName="deleteRepository_" + repositoryId.replace("-", "_"),
+        groupId=groupId,
+        repositoryId=repositoryId,
+        domainId=domainId,
+    )
+    yield """
+ </table>
+</div>"""

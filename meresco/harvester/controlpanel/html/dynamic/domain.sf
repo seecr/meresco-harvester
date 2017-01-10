@@ -1,0 +1,214 @@
+import page, common
+
+# req.req.headers_out['Cache-control'] = 'no-cache'
+
+def main(**kwargs):
+    yield page.layoutWithMenu(_content, **kwargs)
+
+def _content(arguments, session, **kwargs):
+    domainIdentifier = arguments.get("identifier", [None])[0]
+    user = session['user']
+    domain = observable.call.getDomain(domainIdentifier)
+    domainIdentifier = domain['identifier']
+
+    isAdmin = user.isAdmin()
+    if not isAdmin and session.get('domain', '') != domainIdentifier:
+        raise Exception('Illegal use')
+
+    yield """
+<h1>Domain Administration</h1>"""
+    yield common.showErrorMessage(arguments)
+
+    yield """
+
+<div><h3>Domain: {domainIdentifier}</h3>
+<form method="post" action="/actions/updateDomain">
+   <input type="hidden" name="redirectUri" value="{domainEditLink}"/>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+   <tr><td>Id:</td><td><input size="15"  type="hidden" name="identifier" value="{domainIdentifier}">{domainIdentifier}</td></tr>
+   <tr>
+    <td>Description:</td><td><input size="60" type="text" name="description" value="{domainDescription}"></td>
+    <td><input type="submit" name="action" class="butt" value="Save" accesskey="s"></td>
+   </tr>
+  </table>
+</form>
+</div>
+
+
+
+<div><h3>Repository Groups</h3>
+ <form action='/actions/addRepositoryGroup' method='post'>
+   <input type="hidden" name="redirectUri" value="{repositoryGroupLink}"/>
+   <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="identifier" type="text" class="zkveld" value=""></td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Repository Group"></td>
+    </tr>
+   </table>
+ </form>
+
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">""".format(
+        domainIdentifier=domainIdentifier,
+        domainDescription=domain.get("description") or "",
+        domainEditLink="/domain?{}".format(urlencode(dict(domainId=domainIdentifier))),
+        repositoryGroupLink="/repositoryGroup?{}".format(urlencode(dict(domainId=domainIdentifier))))
+
+    for groupId in sorted(domain.get('repositoryGroupIds', []), key=lambda x:str(x).lower()):
+        repositoryGroup = observable.call.getRepositoryGroup(identifier=groupId, domainId=domainIdentifier)
+        name = repositoryGroup.get('name', {}).get('nl', '')
+
+        yield """
+   <tr class="table_row">
+    <td width="60%">{name} ({groupId})</td>
+    <td>
+     <a href="{repositoryGroupEditLink}">Edit / View</a>
+    </td>
+    <td>
+     <form method='post' action='/actions/deleteRepositoryGroup' name="{deleteFormName}">
+        <input type="hidden" name="redirectUri" value="{domainEditLink}"/>
+        <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+        <input type="hidden" name="identifier" value="{groupId}"/>
+     <a onclick="if(confirm('Weet u het zeker?')) {{ document.{deleteFormName}.submit();}}; return false;">
+        Delete
+     </a>
+     </form>
+    </td>
+   </tr>""".format(
+        name=name,
+        groupId=groupId,
+        domainEditLink="/domain?{}".format(urlencode(dict(domainId=domainIdentifier))),
+        repositoryGroupEditLink="/repositoryGroup?{}".format(urlencode(dict(domainId=domainIdentifier, identifier=groupId))),
+        deleteFormName="deleteRepositoryGroup_{}".format(groupId.replace("-", "_")),
+        domainIdentifier=domainIdentifier,
+        )
+
+    yield """
+  </table>
+</div>
+
+
+
+<div><h3>Targets</h3>"""
+    if isAdmin:
+        yield """
+ <form action='/actions/addTarget' method='post'>
+   <input type="hidden" name="redirectUri" value="{targetEditLink}"/>
+   <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="name" type="text" class="zkveld" value=""></td>
+     <td width="60">Type:&nbsp;</td>
+     <td>
+      <select name="targetType">
+       <option value="sruUpdate">SRU Update Target</option>
+       <option value="filesystem">File System</option>
+       <option value="composite">Multiple Targets</option>
+      </select>
+     </td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Target"></td>
+    </tr>
+   </table>
+ </form>""".format(
+         targetEditLink="/target?{}".format(urlencode(dict(referrerDomain=domainIdentifier))),
+         domainIdentifier=domainIdentifier,
+    )
+
+    yield """
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">"""
+   
+    for targetId in domain.get('targetIds', []):
+        target = observable.call.getTarget(targetId)
+        name = target.get('name','')
+        yield """
+   <tr class="table_row">
+    <td width="60%">{name}</td>
+    <td><a href="{targetEditLink}">{label}</a></td>""".format(
+            name=name,
+            targetEditLink="/target?{}".format(urlencode(dict(identifier=targetId, referrerDomain=domainIdentifier))),
+            label="Edit / View" if isAdmin else "View"
+        )
+
+
+        if isAdmin:
+            yield """
+    <td>
+     <form method='post' action='/actions/deleteTarget' name="{formName}">
+        <input type="hidden" name="redirectUri" value="{domainEditLink}"/>
+        <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+        <input type="hidden" name="identifier" value="{targetId}"/>
+     <a onclick="if(confirm('Weet u het zeker?')) {{ document.{formName}.submit(); }}; return false;">
+        Delete
+     </a>
+     </form>
+    </td>""".format(
+            formName="deleteTarget_{}".format(targetId.replace("-", "")),
+            domainEditLink="/domain?{}".format(urlencode(dict(identifier=domainIdentifier))),
+            domainIdentifier=domainIdentifier,
+            targetId=targetId,
+        )
+        yield """
+   </tr>"""
+    yield """
+  </table>
+</div>
+
+
+<div><h3>Mappings</h3>"""
+    if isAdmin:
+        yield """
+ <form action='/actions/addMapping' method='post'>
+   <input type="hidden" name="redirectUri" value="{mappingEditLink}"/>
+   <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+   <table width="320" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <td width="60">Name:&nbsp;</td>
+     <td width="200"><input name="name" type="text" class="zkveld" value=""></td>
+     <td width="40"><input name="submit" type="submit" class="butt" value="Create Mapping"></td>
+    </tr>
+   </table>
+ </form>""".format(
+         mappingEditLink="/mapping?{}".format(urlencode(dict(referrerDomain=domainIdentifier))),
+         domainIdentifier=domainIdentifier,
+         )
+    yield """
+  <table width="100%" border="0" cellspacing="4" cellpadding="0">"""
+
+    for mappingId in domain.get('mappingIds', []):
+        name = observable.call.getMapping(mappingId).get('name', '')
+        yield """
+   <tr class="table_row">
+    <td width="60%">{name}</td>
+    <td><a href="{mappingEditLink}">{label}</a></td>""".format(
+            name=name,
+            mappingEditLink="/mapping?{}".format(urlencode(dict(identifier=mappingId, referrerDomain=domainIdentifier))),
+            label="Edit / View" if isAdmin else "View",
+        )
+        if isAdmin:
+            yield """
+    <td>
+      <form method='post' action='/actions/deleteMapping' name="{formName}">
+        <input type="hidden" name="redirectUri" value="{domainEditLink}"/>
+        <input type="hidden" name="domainId" value="{domainIdentifier}"/>
+        <input type="hidden" name="identifier" value="{mappingId}"/>
+     <a onclick="if(confirm('Weet u het zeker?')) {{ document.{formName}.submit(); }}; return false;">Delete</a>
+     </form>
+    </td>""".format(
+            formName="deleteMapping_{}".format(mappingId.replace("-", "")),
+            domainEditLink="/domain?{}".format(urlencode(dict(identifier=domainIdentifier))),
+            domainIdentifier=domainIdentifier,
+            mappingId=mappingId
+        )
+        yield """
+    <td><a href="{mappingUrl}">Test</a></td>
+   </tr>""".format(mappingUrl="/testmapping?{}".format(urlencode(dict(mappingId=mappingId, referrerDomain=domainIdentifier))))
+    yield """
+  </table>
+</div>"""
+
+    yield common.showStatusFor(domainIdentifier, "domain")
+
+    if isAdmin:
+        yield """<p><a href="/domains">Back to Domains &amp; Users</a></p>"""
