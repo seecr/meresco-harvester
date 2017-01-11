@@ -33,7 +33,7 @@ def _contents(arguments, session, **kwargs):
     if user.isAdmin():
         yield _adminView(target, domainId)
     else:
-        yield _userView(target)
+        yield _userView(target, domainId)
     yield """
     </div>
     <p><a href="{domainEditLink}">Back to domain</a></p>""".format(
@@ -41,7 +41,6 @@ def _contents(arguments, session, **kwargs):
 
 
 def _adminView(target, domainId):
-
     def _target_sruUpdate(target, domainId):
         yield """
             <tr>
@@ -91,7 +90,7 @@ def _adminView(target, domainId):
         yield """
                 </td>
             </tr>"""
-    
+
     targetType = target.get('targetType')
     targetTypes = dict(
         sruUpdate=_target_sruUpdate,
@@ -128,69 +127,66 @@ def _adminView(target, domainId):
     </form>"""
 
 
-def _userView(target):
+def _userView(target, domainId):
+    def _target_sruUpdate(target, domainId):
+        for label, name in [("Base URL", 'baseurl'), ("Path", "path"), ("Port", "port")]:
+            yield """
+        <tr>
+            <td>{label}:</td>
+            <td>{value}</td>
+        </tr>""".format(label=label, value=target.get(name) or '')
+
+    def _target_filesystem(target, domainId):
+        yield """
+        <tr>
+            <td>Path:</td>
+            <td>{path}</td>
+        </tr>
+        <tr>
+            <td>Wrap in OAI-Envelope:</td>
+            <td>{oaiEnvelope}</td>
+        </tr>""".format(
+            path=target.get('path') or '',
+            oaiEnvelope="Yes" if target.get('oaiEnvelope') else "No")
+
+    def _target_composite(target, domainId):
+        yield """
+        <tr>
+            <td>Targets:</td>
+            <td></td>
+        </tr>"""
+        for id in target.get('delegateIds', []):
+            targetName = observable.call.getTarget(id).get('name') or ''
+            yield """
+        <tr>
+            <td>{targetName}</td>
+            <td><a href="{targetEditLink}">View</a></td>
+        </tr>""".format(
+                targetName=escapeHtml(targetName),
+                targetEditLink="/target?{}".format(urlencode(dict(identifier=id, referrerDomain=domainId))))
+
+    targetType = target.get('targetType')
+    targetTypes = dict(
+        sruUpdate=_target_sruUpdate,
+        filesystem=_target_filesystem,
+        composite=_target_composite)
+
     yield """
- <table>
-  <tr>
-    <td>Name:</td>
-    <td><%=target.get('name') or ''%></td>
-  </tr>
+    <table>
+        <tr>
+            <td>Name:</td>
+            <td>{name}</td>
+        </tr>
+        <tr>
+            <td>Type:</td>
+            <td>{targetTypeName}</td>
+        </tr>""".format(
+        name=target.get('name') or '',
+        targetTypeName=TYPES.get(targetType, ''))
 
-  <tr>
-    <td>Type:</td>
-    <td><%=targetType%></td>
-  </tr>
+    targetTypeRender = targetTypes.get(targetType)
+    if targetTypeRender:
+        yield targetTypeRender(target, domainId)
 
-<%
-  if targetType == 'sruUpdate':
-%>
-  <tr>
-    <td>Base URL:</td>
-    <td><%=target.get('baseurl') or ''%></td>
-  </tr>
-
-  <tr>
-    <td>Path:</td>
-    <td><%=target.get('path') or ''%></td>
-  </tr>
-
-  <tr>
-    <td>Port:</td>
-    <td><%=target.get('port') or ''%></td>
-  </tr>
-<%
-  elif targetType == 'filesystem':
-%>
-  <tr>
-    <td>Path:</td>
-    <td><%=target.get('path') or ''%></td>
-  </tr>
-  <tr>
-    <td>Wrap in OAI-Envelope:</td>
-    <td><%='true' if target.get('oaiEnvelope') else 'false'%></td>
-  </tr>
-<%
-  elif targetType == 'composite':
-    #
-%>
-  <tr>
-    <td>Targets:</td><td>&nbsp;</td>
-  </tr>
-<%
-    for id in target.get('delegateIds', []):
-      targetName = req.proxy.getTarget(id).get('name') or ''
-%>
-  <tr>
-    <td><%escape_html(targetName)%></td>
-    <td>
-      <a href="/page/target.edit/?identifier=<%=id%>&amp;referrerDomain=<%= args.referrerDomain %>">
-      View
-      </a>
-    </td>
-  </tr>
-<%
-    #
-  #
-%>
-
- </table>"""
+    yield """
+    </table>"""

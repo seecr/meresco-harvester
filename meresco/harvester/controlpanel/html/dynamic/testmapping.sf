@@ -1,0 +1,69 @@
+import page
+import common
+
+def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    domain = kwargs.get('session', {}).get('domain')
+    domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
+    if not user or (not user.isAdmin() and domain != domainId):
+        yield http.redirect("/login")
+        return
+    yield page.layoutWithMenu(_content, **kwargs)
+
+
+def _content(arguments, **kwargs):
+    mappingId = arguments.get('mappingId', [None])[0]
+    domainId = arguments.get('referrerDomain', [None])[0]
+
+    yield """
+<h2>Test mapping</h2>
+<p> The mappings can be tested using an <i>online harvester</i>. It will harvest a certain repository and uses the mapping to provide a result which is directly shown on screen. This may help in testing the mapping.</p>
+<p>The mapping can be tested in two ways.<p>
+<p>First by giving it a url which provides a OAI ListRecords answer. Something like: http://repository.example.org/oai?verb=ListRecords&metadataPrefix=oai_dc</p>
+
+<form action="/onlinemapping" method="get">
+    <input type="hidden" name="mappingId" value="{mappingId}">
+    <input type="hidden" name="domainId" value="{domainId}">
+    <table>
+        <tr>
+            <td>Test URL</td>
+            <td><input type="text" name="inputurl" value="" size="30"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" class="butt" value="TEST"></td>
+        </tr>
+    </table>
+</form>
+
+<p>Secondly you can use one of the repositories known by Meresco Harvester.</p>
+<form action="/onlinemapping" method="get">
+    <input type="hidden" name="mappingId" value="{mappingId}">
+    <input type="hidden" name="domainId" value="{domainId}">
+    <table>
+        <tr>
+            <td>Test Repository</td>
+            <td>""".format(
+        mappingId=mappingId,
+        domainId=domainId)
+
+    repositories = observable.call.getRepositories(domainId=domainId)
+    options = []
+    for repository in repositories:
+        arguments = dict(verb="ListRecords", metadataPrefix=repository.get('metadataPrefix'))
+        setName = repository.get('set')
+        if setName:
+            arguments['set'] = setName
+        options.append(("{}?{}".format(
+            repository.get('baseurl'),
+            urlencode(dict(arguments))), repository.get('identifier')))
+    yield common.dropdown("inputurl", sorted(options, key=lambda (_, identifier): identifier.lower()), selected=None)
+    yield """
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" class="butt" value="TEST"></td>
+        </tr>
+    </table>
+</form>"""

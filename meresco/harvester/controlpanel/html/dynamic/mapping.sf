@@ -1,0 +1,85 @@
+import page
+import common
+
+#req.req.headers_out['Cache-control'] = 'no-cache'
+
+
+def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    domain = kwargs.get('session', {}).get('domain')
+    domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
+    if not user or (not user.isAdmin() and domain != domainId):
+        yield http.redirect("/login")
+        return
+    yield page.layoutWithMenu(_contents, **kwargs)
+
+
+def _contents(arguments, session, **kwargs):
+    mappingId = arguments.get('identifier', [None])[0]
+    domainId = arguments.get('referrerDomain', [None])[0]
+
+    mapping = observable.call.getMapping(mappingId)
+    mappingName = mapping.get('name', '')
+    user = session.get('user')
+
+    yield """<h1>Mapping Administration</h1>"""
+    yield common.showErrorMessage(arguments)
+    yield """
+    <div>
+        <h4>Mapping ({})</h4>""".format(escapeHtml(mappingName or '<No Name>'))
+
+    if user.isAdmin():
+        yield _adminView(mapping, domainId)
+    else:
+        yield _userView(mapping, domainId)
+    yield """
+        <p><a href="{domainEditLink}">Back to domain</a></p>
+    </div>""".format(domainEditLink="/domain?{}".format(urlencode(dict(identifier=domainId))))
+
+def _adminView(mapping, domainId):
+    yield """
+            <form method="post" action="/actions/updateMapping">
+                <input type="hidden" name="redirectUri" value="{mappingEditLink}">
+                <input type="hidden" name="identifier" value="{mappingId}">
+                <table>
+                    <tr>
+                        <td>Name:</td>
+                        <td><input type="text" name="name" value="{name}"></td>
+                    </tr>
+                    <tr>
+                        <td valign="top">Description:</td>
+                        <td><textarea rows="5" cols="80" name="description">{description}</textarea></td>
+                    </tr>
+                    <tr>
+                        <td valign="top">Script:</td>
+                        <td><textarea rows="30" cols="100" name="code">{code}</textarea></td>
+                    </tr>
+                </table>
+                <p><input type="submit" name="action" class="butt" value="Validate and Save" accesskey="s"></p>
+            </form>""".format(
+        mappingEditLink="/mapping?{}".format(urlencode(dict(identifier=mapping.get('identifier'), referrerDomain=domainId))),
+        mappingId=mapping.get('identifier'),
+        name=escapeHtml(mapping.get('name') or ''),
+        description=escapeHtml(mapping.get('description') or ''),
+        code=escapeHtml(mapping.get("code") or ""))
+
+
+def _userView(mapping, domainId):
+    yield """
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td>{name}</td>
+                </tr>
+                <tr>
+                    <td valign="top">Description:</td>
+                    <td><pre>{description}</pre></td>
+                </tr>
+                <tr>
+                    <td valign="top">Script:</td>
+                    <td><pre>{code}</pre></td>
+                </tr>
+            </table>""".format(
+        name=escapeHtml(mapping.get('name') or ''),
+        description=escapeHtml(mapping.get('description') or ''),
+        code=escapeHtml(mapping.get('code') or ''))
