@@ -30,7 +30,6 @@
 
 from os.path import join, abspath, dirname
 from sys import stdout
-import time
 from xml.sax.saxutils import escape as escapeXml
 
 from weightless.io import Reactor
@@ -53,12 +52,17 @@ from harvesterdataactions import HarvesterDataActions
 from harvesterdataretrieve import HarvesterDataRetrieve
 from timeslot import Timeslot
 from meresco.components.http.utils import ContentTypeJson
+from throughputanalyser import ThroughputAnalyser
+from time import localtime, strftime, time
 
 
 myPath = dirname(abspath(__file__))
 dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
 staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
 
+
+def dateSince(days):
+    return strftime("%Y-%m-%d", localtime(time() - days * 3600 * 24))
 
 def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
@@ -111,12 +115,14 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                         [dynamicHtmlPath],
                                         reactor=reactor,
                                         additionalGlobals = {
-                                            'time': time,
                                             'harvesterStatusUrl': harvesterStatusUrl,
                                             'escapeXml': escapeXml,
                                             'compose': compose,
                                             'VERSION': VERSION,
+                                            'CONFIG': configDict,
                                             'Timeslot': Timeslot,
+                                            'ThroughputAnalyser': ThroughputAnalyser,
+                                            'dateSince': dateSince,
                                         },
                                         indexPage="/index",
                                     ),

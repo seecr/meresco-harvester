@@ -1,0 +1,68 @@
+import page
+
+DAYS = dict(
+    lastweek=7,
+    lastmonth=31)
+
+
+def main(**kwargs):
+    yield page.layoutWithMenu(_contents, **kwargs)
+
+def _contents(arguments, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
+    repositoryGroupId = arguments.get('repositoryGroupId')
+    repositoryId = arguments.get('repositoryId')
+
+    caption = domainId
+    objectType = "domain"
+    if 'repositoryId' in arguments:
+        caption = arguments.get('repositoryId')[0]
+        objectType = 'repository'
+    elif 'repositoryGroupId' in arguments:
+        caption = arguments.get('repositoryGroupId')[0]
+        objectType = 'repository group'
+
+    days = DAYS.get(arguments.get("since", ["lastweek"])[0])
+
+    repositories = observable.call.getRepositories(domainId=domainId)
+    repositoryNames = []
+
+    for repository in repositories:
+        if not repositoryGroupId or repositoryGroupId == repository.get('repositoryGroupId'):
+            if not repositoryId or repositoryId == repository.get('identifier'):
+                repositoryNames.append(repository.get('identifier'))
+    analyser = ThroughputAnalyser("{}/{}".format(CONFIG['logPath'], domainId))
+    report = analyser.analyse(repositoryNames, dateSince(days))
+    yield """
+<p>
+<h2>Harvester throughput for the '{caption}' {objectType} for the past {days} days.</h2>
+</p>
+<table>
+    <tr>
+        <td>Timespan (hh:mm:ss):</td>
+        <td align="right">{hmsString}</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Number of records:</td>
+        <td align="right">{records}</td>
+        <td>processed</td>
+    </tr>
+    <tr>
+        <td>Throughput (record/sec):</td>
+        <td align="right">{recordsPerSecond}</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Extrapolated for 24 hours:</td>
+        <td align="right">{recordsPerDay}</td>
+        <td></td>
+    </tr>
+</table>""".format(
+        caption=caption, 
+        objectType=objectType, 
+        days=days,
+        hmsString = report.hmsString(),
+        records=report.records,
+        recordsPerSecond=report.recordsPerSecond(),
+        recordsPerDay=report.recordsPerDay())

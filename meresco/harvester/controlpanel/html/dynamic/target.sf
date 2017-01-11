@@ -1,0 +1,184 @@
+import page, common
+
+def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    domain = kwargs.get('session', {}).get('domain')
+    domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
+    if not user or (not user.isAdmin() and domain != domainId):
+        yield http.redirect("/login")
+        return
+    yield page.layoutWithMenu(_contents, **kwargs)
+
+
+def _contents(arguments, session, **kwargs):
+    identifier = arguments.get('identifier', [None])[0]
+    domainId = arguments.get('referrerDomain', [None])[0]
+
+    user = session.get('user')
+    target = observable.call.getTarget(identifier)
+
+    yield """<h1>Target Administration</h1>"""
+    yield common.showErrorMessage(arguments)
+    yield """
+    <div>
+        <h4>Target ({})</h4>""".format(escapeHtml(target.get('name') or '<No Name>'))
+    if user.isAdmin():
+        yield _adminView(target, domainId)
+    else:
+        yield _userView(target)
+    yield """
+    </div>
+    <p><a href="/page/domain.edit/?identifier=<%=args.referrerDomain%>">Back to domain</a></p>"""
+
+
+def _adminView(target, domainId):
+    targetType = target.get('targetType')
+
+    def _target_sruUpdate(target, domainId):
+        yield """
+            <tr>
+                <td>Base URL: (without &quot;http://&quot;)</td>
+                <td><input type="text" name="baseurl" value="<%=target.get('baseurl') or ''%>" size="30"></td>
+            </tr>
+            <tr>
+                <td>Path:</td>
+                <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
+            </tr>
+            <tr>
+                <td>Port:</td>
+                <td><input type="text" name="port" value="<%=target.get('port') or ''%>" size="6"></td>
+            </tr>"""
+
+    def _target_filesystem(target, domainId):
+        yield """
+       <tr>
+        <td>Path:</td>
+        <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
+       </tr>
+       <tr>
+        <td>Wrap in OAI-Envelope:</td>
+        <td><input type="checkbox" name="oaiEnvelope" value="true" <%= target.get('oaiEnvelope') and 'checked'%>></td>
+       </tr>"""
+
+    def _target_composite(target, domainId):
+        yield """
+        targetIds = req.proxy.getDomain(args.referrerDomain).get('targetIds', [])
+        targetIds = filter(lambda t: t != targetId, targetIds)
+        targetName = lambda id: req.proxy.getTarget(id).get('name') or ''
+        selected = lambda id: id in target.get('delegateIds', []) and 'selected' or ''
+    %>
+       <tr>
+        <td style="vertical-align:top">Targets (hold CTRL/CMD to select multiple targets):</td>
+        <td>
+          <select name="delegate" multiple size="3">
+    <%
+        for targetId in targetIds:
+    %>
+         <option value="<%=targetId%>" <%=selected(targetId)%>><% escape_html(targetName(targetId)) %></option>
+    <%
+        #
+    %>
+          </select>
+        </td>
+       </tr>"""
+
+    targetTypes = dict(
+        sruUpdate=_target_sruUpdate,
+        filesyatem=_target_filesystem,
+        composite=_target_composite)
+
+    yield """
+    <form method="post" action="/actions/updateTarget">
+        <input type="hidden" name="redirectUri" value="{targetEditLink}">
+        <table>
+            <input type="hidden" name="identifier" value="{identifier}">
+            <input type="hidden" name="targetType" value="{targetType}">
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" name="name" value="{name}"></td>
+            </tr>
+            <tr>
+                <td>Type:</td>
+                <td>{targetType}</td>
+            </tr>""".format(
+        targetEditLink="/target?{}".format(urlencode(dict(referrerDomain=domainId))),
+        identifier=target.get('identifier'),
+        targetType=targetType or '',
+        name=target.get('name') or '')
+
+    targetTypeRender = targetTypes.get(targetType)
+    if targetTypeRender:
+        yield targetTypeRender(target, domainId)
+
+    yield """
+        </table>
+        <p><input type="submit" name="action" class="butt" value="Save" accesskey="s"></p>
+    </form>"""
+
+
+def _userView(target):
+    yield """
+ <table>
+  <tr>
+    <td>Name:</td>
+    <td><%=target.get('name') or ''%></td>
+  </tr>
+
+  <tr>
+    <td>Type:</td>
+    <td><%=targetType%></td>
+  </tr>
+
+<%
+  if targetType == 'sruUpdate':
+%>
+  <tr>
+    <td>Base URL:</td>
+    <td><%=target.get('baseurl') or ''%></td>
+  </tr>
+
+  <tr>
+    <td>Path:</td>
+    <td><%=target.get('path') or ''%></td>
+  </tr>
+
+  <tr>
+    <td>Port:</td>
+    <td><%=target.get('port') or ''%></td>
+  </tr>
+<%
+  elif targetType == 'filesystem':
+%>
+  <tr>
+    <td>Path:</td>
+    <td><%=target.get('path') or ''%></td>
+  </tr>
+  <tr>
+    <td>Wrap in OAI-Envelope:</td>
+    <td><%='true' if target.get('oaiEnvelope') else 'false'%></td>
+  </tr>
+<%
+  elif targetType == 'composite':
+    #
+%>
+  <tr>
+    <td>Targets:</td><td>&nbsp;</td>
+  </tr>
+<%
+    for id in target.get('delegateIds', []):
+      targetName = req.proxy.getTarget(id).get('name') or ''
+%>
+  <tr>
+    <td><%escape_html(targetName)%></td>
+    <td>
+      <a href="/page/target.edit/?identifier=<%=id%>&amp;referrerDomain=<%= args.referrerDomain %>">
+      View
+      </a>
+    </td>
+  </tr>
+<%
+    #
+  #
+%>
+
+ </table>"""
