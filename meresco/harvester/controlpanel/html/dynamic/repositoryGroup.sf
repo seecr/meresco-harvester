@@ -67,7 +67,7 @@ def _repositories(group, domainId):
  <form action='/actions/addRepository' method='post'>
      <input type="hidden" name="redirectUri" value="{repositoryEditLink}"/>
      <input type="hidden" name="domainId" value="{domainId}"/>
-    <input type="hidden" name="repositoryGroupId" value="{domainId}"/>
+    <input type="hidden" name="repositoryGroupId" value="{groupId}"/>
    <table width="320" border="0" cellspacing="0" cellpadding="0">
     <tr>
      <td width="60">Key:</td>

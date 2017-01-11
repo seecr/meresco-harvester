@@ -48,7 +48,7 @@ def dropdown(name, options, selected, selectAttrs=None):
     for (key, value) in options:
         yield """
         <option value="{key}"{selected}>{value}</option>""".format(
-            key=escapeHtml(key),
+            key=escapeHtml(str(key)),
             selected=" selected" if selectedCheck(key) else " ",
             value=escapeHtml(str(value)))
     yield """
