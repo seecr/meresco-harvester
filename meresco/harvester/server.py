@@ -114,7 +114,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                 (DynamicHtml(
                                         [dynamicHtmlPath],
                                         reactor=reactor,
-                                        additionalGlobals = {
+                                        additionalGlobals={
                                             'harvesterStatusUrl': harvesterStatusUrl,
                                             'escapeXml': escapeXml,
                                             'compose': compose,
@@ -123,6 +123,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             'Timeslot': Timeslot,
                                             'ThroughputAnalyser': ThroughputAnalyser,
                                             'dateSince': dateSince,
+                                            'callable': callable,
                                         },
                                         indexPage="/index",
                                     ),

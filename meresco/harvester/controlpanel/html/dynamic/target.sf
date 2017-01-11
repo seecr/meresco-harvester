@@ -1,4 +1,12 @@
-import page, common
+import page
+import common
+
+TYPES = dict(
+   sruUpdate="SRU Update Target",
+   filesystem="File System",
+   composite="Multiple Targets",
+)
+
 
 def main(**kwargs):
     user = kwargs.get('session', {}).get('user')
@@ -28,63 +36,66 @@ def _contents(arguments, session, **kwargs):
         yield _userView(target)
     yield """
     </div>
-    <p><a href="/page/domain.edit/?identifier=<%=args.referrerDomain%>">Back to domain</a></p>"""
+    <p><a href="{domainEditLink}">Back to domain</a></p>""".format(
+        domainEditLink="/domain?{}".format(urlencode(dict(identifier=domainId))))
 
 
 def _adminView(target, domainId):
-    targetType = target.get('targetType')
 
     def _target_sruUpdate(target, domainId):
         yield """
             <tr>
                 <td>Base URL: (without &quot;http://&quot;)</td>
-                <td><input type="text" name="baseurl" value="<%=target.get('baseurl') or ''%>" size="30"></td>
+                <td><input type="text" name="baseurl" value="{baseurl}" size="30"></td>
             </tr>
             <tr>
                 <td>Path:</td>
-                <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
+                <td><input type="text" name="path" value="{path}" size="30"></td>
             </tr>
             <tr>
                 <td>Port:</td>
-                <td><input type="text" name="port" value="<%=target.get('port') or ''%>" size="6"></td>
-            </tr>"""
+                <td><input type="text" name="port" value="{port}" size="6"></td>
+            </tr>""".format(
+            baseurl=target.get('baseurl') or '',
+            path=target.get('path') or '',
+            port=target.get('port') or '')
 
     def _target_filesystem(target, domainId):
         yield """
-       <tr>
-        <td>Path:</td>
-        <td><input type="text" name="path" value="<%=target.get('path') or ''%>" size="30"></td>
-       </tr>
-       <tr>
-        <td>Wrap in OAI-Envelope:</td>
-        <td><input type="checkbox" name="oaiEnvelope" value="true" <%= target.get('oaiEnvelope') and 'checked'%>></td>
-       </tr>"""
+           <tr>
+               <td>Path:</td>
+               <td><input type="text" name="path" value="{path}'" size="30"></td>
+           </tr>
+           <tr>
+               <td>Wrap in OAI-Envelope:</td>
+               <td><input type="checkbox" name="oaiEnvelope" value="true" {checked}></td>
+           </tr>""".format(
+            path=target.get('path') or '',
+            checked='checked' if target.get('oaiEnvelope') else '')
 
     def _target_composite(target, domainId):
-        yield """
-        targetIds = req.proxy.getDomain(args.referrerDomain).get('targetIds', [])
-        targetIds = filter(lambda t: t != targetId, targetIds)
-        targetName = lambda id: req.proxy.getTarget(id).get('name') or ''
-        selected = lambda id: id in target.get('delegateIds', []) and 'selected' or ''
-    %>
-       <tr>
-        <td style="vertical-align:top">Targets (hold CTRL/CMD to select multiple targets):</td>
-        <td>
-          <select name="delegate" multiple size="3">
-    <%
-        for targetId in targetIds:
-    %>
-         <option value="<%=targetId%>" <%=selected(targetId)%>><% escape_html(targetName(targetId)) %></option>
-    <%
-        #
-    %>
-          </select>
-        </td>
-       </tr>"""
+        targetId = target.get('identifier')
+        delegateIds = target.get('delegateIds', [])
+        targetIds = [each for each in observable.call.getDomain(domainId).get('targetIds', []) if each != targetId]
+        options = [(each, observable.call.getTarget(each).get('name') or '') for each in targetIds]
 
+        yield """
+            <tr>
+                <td style="vertical-align:top">Targets (hold CTRL/CMD to select multiple targets):</td>
+                <td>"""
+        yield common.dropdown(
+            name="delegate",
+            options=options,
+            selected=lambda key: key in delegateIds,
+            selectAttrs=dict(multiple="multiple", size=3))
+        yield """
+                </td>
+            </tr>"""
+    
+    targetType = target.get('targetType')
     targetTypes = dict(
         sruUpdate=_target_sruUpdate,
-        filesyatem=_target_filesystem,
+        filesystem=_target_filesystem,
         composite=_target_composite)
 
     yield """
@@ -99,11 +110,12 @@ def _adminView(target, domainId):
             </tr>
             <tr>
                 <td>Type:</td>
-                <td>{targetType}</td>
+                <td>{targetTypeName}</td>
             </tr>""".format(
         targetEditLink="/target?{}".format(urlencode(dict(referrerDomain=domainId))),
         identifier=target.get('identifier'),
-        targetType=targetType or '',
+        targetType=targetType,
+        targetTypeName=TYPES.get(targetType, ''),
         name=target.get('name') or '')
 
     targetTypeRender = targetTypes.get(targetType)

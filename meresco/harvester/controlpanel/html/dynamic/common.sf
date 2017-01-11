@@ -36,13 +36,21 @@ def showErrorMessage(arguments):
         yield '<span class="error">{}</span>'.format(error)
 
 
-def dropdown(name, options, selected):
+def dropdown(name, options, selected, selectAttrs=None):
+    selectedCheck = (lambda value: value == selected) if not callable(selected) else selected
+
+    attributes = dict(name=name)
+    if selectAttrs:
+        attributes.update(selectAttrs)
+
     yield """
-    <select name="{name}">""".format(name=name)
+    <select {}>""".format(' '.join(['{}="{}"'.format(*item) for item in attributes.items()]))
     for (key, value) in options:
-        isSelected = " selected" if key == selected else " "
         yield """
-        <option value="{key}"{selected}>{value}</option>""".format(key=key, selected=isSelected, value=escapeHtml(str(value)))
+        <option value="{key}"{selected}>{value}</option>""".format(
+            key=key, 
+            selected=" selected" if selectedCheck(key) else " ", 
+            value=escapeHtml(str(value)))
     yield """
     </select>"""
 
