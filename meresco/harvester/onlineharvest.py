@@ -32,17 +32,18 @@
 #
 ## end license ##
 
-from mapping import TestRepository,DataMapAssertionException
+from mapping import Mapping, TestRepository, DataMapAssertionException
 from eventlogger import StreamEventLogger
 from meresco.harvester.oairequest import OaiRequest
 
-class OnlineHarvest(object):
-    def __init__(self, outputstream, proxy):
-        self._output = outputstream
-        self._proxy = proxy
 
-    def performMapping(self, domainId, mappingId, urlString):
-        mapping = self._proxy.getMappingObject(mappingId)
+class OnlineHarvest(object):
+    def __init__(self, outputstream):
+        self._output = outputstream
+
+    def performMapping(self, mappingData, urlString):
+        mapping = Mapping(mappingData.get('identifier'))
+        mapping.fill(None, mappingData)
         mapping.addObserver(StreamEventLogger(self._output))
         self._output.write(mapping.mappingInfo())
         self._output.write('\n')

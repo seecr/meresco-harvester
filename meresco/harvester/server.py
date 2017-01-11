@@ -31,6 +31,7 @@
 from os.path import join, abspath, dirname
 from sys import stdout
 from xml.sax.saxutils import escape as escapeXml
+from StringIO import StringIO
 
 from weightless.io import Reactor
 from weightless.core import compose, be
@@ -43,7 +44,7 @@ from meresco.html.login import BasicHtmlLoginForm, PasswordFile
 from seecr.weblib import seecrWebLibPath
 
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore
-from meresco.components.http.utils import ContentTypePlainText
+from meresco.components.http.utils import ContentTypePlainText, okPlainText
 
 from __version__ import VERSION_STRING, VERSION
 from repositorystatus import RepositoryStatus
@@ -53,6 +54,8 @@ from harvesterdataretrieve import HarvesterDataRetrieve
 from timeslot import Timeslot
 from meresco.components.http.utils import ContentTypeJson
 from throughputanalyser import ThroughputAnalyser
+from onlineharvest import OnlineHarvest
+
 from time import localtime, strftime, time
 
 
@@ -124,6 +127,9 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             'ThroughputAnalyser': ThroughputAnalyser,
                                             'dateSince': dateSince,
                                             'callable': callable,
+                                            'OnlineHarvest': OnlineHarvest,
+                                            'StringIO': StringIO,
+                                            'okPlainText': okPlainText,
                                         },
                                         indexPage="/index",
                                     ),

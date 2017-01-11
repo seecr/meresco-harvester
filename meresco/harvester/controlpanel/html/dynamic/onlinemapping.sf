@@ -1,0 +1,18 @@
+def main(arguments, **kwargs):
+    inputurl = arguments.get('inputurl', [None])[0]
+
+    mappingId = arguments.get('mappingId', [None])[0]
+    mapping = observable.call.getMapping(mappingId)
+
+    strm = StringIO()
+    onlineHarvest = OnlineHarvest(strm)
+    onlineHarvest.performMapping(mapping, urlString=inputurl)
+
+    def split(data, size):
+        return data[:size], data[size:]
+
+    yield okPlainText
+    result = strm.getvalue()
+    while len(result) > 0:
+        part, result = split(result, 1024)
+        yield part
