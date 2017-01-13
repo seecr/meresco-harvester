@@ -1,0 +1,13 @@
+def main(arguments, **kwargs):
+    repository = observable.call.getRepository(
+        identifier=arguments.get('repositoryId', [None])[0],
+        domainId=arguments.get('domainId', [None])[0])
+    queryArguments = dict(
+        verb="ListRecords",
+        metadataPrefix=repository.get('metadataPrefix'))
+    setName = repository.get('set')
+    if setName:
+        queryArguments['set'] = setName
+    yield http.redirect("{}?{}".format("/onlinemapping", urlencode(dict(
+        mappingId=repository.get('mappingId'),
+        inputurl="{}?{}".format(repository.get('baseurl'), urlencode(queryArguments))))))

@@ -42,6 +42,7 @@ from meresco.core import Observable
 from meresco.html import DynamicHtml
 from meresco.html.login import BasicHtmlLoginForm, PasswordFile
 from seecr.weblib import seecrWebLibPath
+from seecr.zulutime import ZuluTime
 
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
@@ -130,6 +131,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             'OnlineHarvest': OnlineHarvest,
                                             'StringIO': StringIO,
                                             'okPlainText': okPlainText,
+                                            'ZuluTime': ZuluTime,
                                         },
                                         indexPage="/index",
                                     ),

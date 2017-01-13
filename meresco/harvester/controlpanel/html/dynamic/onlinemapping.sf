@@ -4,14 +4,25 @@ def main(arguments, **kwargs):
     mappingId = arguments.get('mappingId', [None])[0]
     mapping = observable.call.getMapping(mappingId)
 
+    yield okPlainText
     strm = StringIO()
     onlineHarvest = OnlineHarvest(strm)
-    onlineHarvest.performMapping(mapping, urlString=inputurl)
+    try:
+        onlineHarvest.performMapping(mapping, urlString=inputurl)
+    except Exception, e:
+        yield """There was an exception testing the mapping.
+
+{}""".format(str(e))
+        return
 
     def split(data, size):
         return data[:size], data[size:]
 
-    yield okPlainText
+    yield """Gebruikte url:
+{}
+
+Gebruikte Mapping:
+""".format(inputurl)
     result = strm.getvalue()
     while len(result) > 0:
         part, result = split(result, 1024)
