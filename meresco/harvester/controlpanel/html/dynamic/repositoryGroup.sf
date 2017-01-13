@@ -8,11 +8,11 @@ def main(**kwargs):
 
 
 def _content(arguments, session, **kwargs):
+    domainId = arguments.get('domainId', [None])[0]
     user = session.get('user', None)
     if not user.isAdmin() and session.get('domain', '') != domainId:
         raise Exception('Illegal use')
     identifier = arguments.get('identifier', [None])[0]
-    domainId = arguments.get('domainId', [None])[0]
     group = observable.call.getRepositoryGroup(identifier=identifier, domainId=domainId)
 
     yield """<h1>Repositorygroup Administration</h1>"""

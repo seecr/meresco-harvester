@@ -35,6 +35,16 @@ def showErrorMessage(arguments):
     if error:
         yield '<span class="error">{}</span>'.format(error)
 
+def showSessionError(session, key):
+    expandedKey = "error_{}".format(key)
+    if expandedKey in session:
+        yield '<span class="error">{}</span>'.format(session[expandedKey])
+        del session[expandedKey]
+
+def valueFromSession(session, key):
+    if 'saved_form_values' in session and key in session['saved_form_values']:
+        return session['saved_form_values'][key]
+    return ''
 
 def dropdown(name, options, selected, selectAttrs=None):
     selectedCheck = (lambda value: value == selected) if not callable(selected) else selected

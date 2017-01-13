@@ -58,6 +58,7 @@ from timeslot import Timeslot
 from meresco.components.http.utils import ContentTypeJson
 from throughputanalyser import ThroughputAnalyser
 from onlineharvest import OnlineHarvest
+from useractions import UserActions
 
 from time import localtime, strftime, time
 
@@ -87,6 +88,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
         dataPath=dataPath,
     )
 
+    passwordFile = PasswordFile(filename=passwordFilename)
     basicHtmlLoginHelix = (BasicHtmlLoginForm(
         action="/login.action",
         loginPath="/login",
@@ -94,7 +96,11 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
         rememberMeCookie=False,
         lang="nl"),
 
-        (PasswordFile(filename=passwordFilename), )
+        (passwordFile, )
+    )
+
+    userActionsHelix = (UserActions(dataDir=dataPath), 
+        (passwordFile, )
     )
 
     return \
@@ -113,12 +119,15 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                             (PathFilter('/login.action'),
                                 basicHtmlLoginHelix
                             ),
+                            (PathFilter('/user.action'),
+                                userActionsHelix
+                            ),
                             (PathFilter("/static"),
                                 (PathRename(lambda name: name[len('/static/'):]),
                                     (FileServer([seecrWebLibPath, staticHtmlPath]),)
                                 )
                             ),
-                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action']),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action']),
                                 (DynamicHtml(
                                         [dynamicHtmlPath],
                                         reactor=reactor,
@@ -144,6 +153,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                     basicHtmlLoginHelix,
                                     (harvesterData,),
                                     (repositoryStatus,),
+                                    userActionsHelix,
                                 )
                             ),
                             (PathFilter('/action'),

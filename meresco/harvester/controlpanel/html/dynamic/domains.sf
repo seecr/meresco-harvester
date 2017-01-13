@@ -3,10 +3,14 @@ import common
 
 
 def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    if not user or not user.isAdmin():
+        yield http.redirect("/login")
+        return
     yield page.layoutWithMenu(_contents, **kwargs)
 
 
-def _contents(arguments, **kwargs):
+def _contents(arguments, session, **kwargs):
     yield """<h1>Domains Administration</h1>"""
     error = arguments.get("error", [None])[0]
     if error:
@@ -14,7 +18,7 @@ def _contents(arguments, **kwargs):
 
     yield _domainAdministration()
     yield "<br/>"
-    yield _userAdministration()
+    yield _userAdministration(session)
 
 
 def _domainAdministration():
@@ -22,7 +26,7 @@ def _domainAdministration():
     yield """
   <div><h3>Domains</h3>
   <form action='/actions/addDomain' method='post'>
-    <input type="hidden" name="redirectUri" value="/page/domain.edit/"/>
+    <input type="hidden" name="redirectUri" value="/domain"/>
     <table width="320" border="0" cellspacing="0" cellpadding="0">
      <tr>
       <td width="60">Name:&nbsp;</td>
@@ -53,15 +57,13 @@ def _domainAdministration():
   </div>"""
 
 
-def _userAdministration():
+def _userAdministration(session):
     users = getUsersInformation()
     yield """
 <h1>Users Administration</h1>
 <div>
     <table width="100%" border="0" cellspacing="4" cellpadding="0">"""
-    for user in users.xpath("/users/child::*"):
-        user_localname = user.tag.split('}')[-1]
-        user_fullname = xpathFirst(user, 'name/text()') or ''
+    for user in observable.call.listUsers():
         yield """
         <tr>
             <td>
@@ -93,51 +95,58 @@ def _userAdministration():
                 <p>
                     <a href="{userEditLink}">Edit / View</a>
 &nbsp;
-                    <form method='post' action='/user.delete/users.xml' name="{deleteFormName}">
-                        <input type="hidden" name="user" value="{user_localname_raw}"/>
+                    <form method='post' action='/user.action/delete' name="{deleteFormName}">
+                        <input type="hidden" name="redirectUri" value="/domains"/>
+                        <input type="hidden" name="username" value="{user_localname_raw}"/>
                         <a onclick="if(confirm('Weet u het zeker?')) {{ document.{deleteFormName}.submit(); }}; return false;">Delete</a>
                     </form>
                 </p>""".format(
-            user_fullname=escapeHtml(user_fullname),
-            organization=escapeHtml(xpathFirst(user, 'organization/text()') or ''),
-            user_localname=escapeHtml(user_localname),
-            user_localname_raw=user_localname,
-            telephone=escapeHtml(xpathFirst(user, 'telephone/text()') or ''),
-            domain=escapeHtml(xpathFirst(user, 'domain/text()') or ''),
-            email=escapeHtml(xpathFirst(user, 'email/text()') or ''),
-            notes=escapeHtml(xpathFirst(user, 'notes/text()') or ''),
-            userEditLink="/user?{}".format(urlencode(dict(user=user_localname))),
-            deleteFormName="deleteUser_{}".format(user_localname))
+            user_fullname=escapeHtml(user.name),
+            organization=escapeHtml(user.organization),
+            user_localname=escapeHtml(user.username),
+            user_localname_raw=user.username,
+            telephone=escapeHtml(user.telephone),
+            domain=escapeHtml(user.domain),
+            email=escapeHtml(user.email),
+            notes=escapeHtml(user.notes),
+            userEditLink="/user?{}".format(urlencode(dict(identifier=user.username))),
+            deleteFormName="deleteUser_{}".format(user.username))
     yield """
-   </table>
-  <div><h3>Create new user</h3>
-     <form action='/user.new/users.xml' method='post'>
-    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-     <tr>
-      <td width="60">Username:&nbsp;</td>
-      <td width="200"><input name="username" type="text" class="zkveld" value=""></td>
-     </tr>
-     <tr>
-      <td width="60">Domain:&nbsp;</td>
-      <td width="200">"""
-    yield common.dropdown("domain", [(each, each) for each in observable.call.getDomainIds()], selected=None)
-
-    yield """
-      </td>
-     </tr>
-     <tr>
-      <td width="60">Password:&nbsp;</td>
-      <td width="200"><input name="password1" type="password" class="zkveld" value=""></td>
-     </tr>
-     <tr>
-      <td width="60">Password(repeat):&nbsp;</td>
-      <td width="200"><input name="password2" type="password" class="zkveld" value=""></td>
-     </tr>
-     <tr>
-      <td></td>
-      <td><input name="submit" type="submit" class="butt" value="Create"></td>
-     </tr>
     </table>
-  </form>
+    <div>
+        <a name="newUser"></a>
+        <h3>Create new user</h3>"""
+    yield common.showSessionError(session, "newUser")
+    yield """
+        <form action='/user.action/create' method='post'>
+            <input type="hidden" name="redirectUri" value="/user"/>
+            <input type="hidden" name="errorUri" value="/domains#newUser"/>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="60">Username:&nbsp;</td>
+                  <td width="200"><input name="username" type="text" class="zkveld" value="{username}"></td>
+                </tr>
+                <tr>
+                    <td width="60">Domain:&nbsp;</td>
+                    <td width="200">""".format(
+        username=common.valueFromSession(session, 'username'))
+    yield common.dropdown("domain", [(each, each) for each in observable.call.getDomainIds()], selected=common.valueFromSession(session, 'domain'))
 
+    yield """
+                    </td>
+                </tr>
+                <tr>
+                    <td width="60">Password:</td>
+                    <td width="200"><input name="password1" type="password" class="zkveld" value=""></td>
+                </tr>
+                <tr>
+                    <td width="60">Password(repeat):</td>
+                    <td width="200"><input name="password2" type="password" class="zkveld" value=""></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input name="submit" type="submit" class="butt" value="Create"></td>
+                </tr>
+            </table>
+        </form>
   </div>"""

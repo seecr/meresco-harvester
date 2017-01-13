@@ -8,7 +8,7 @@ import target
 def main(**kwargs):
     user = kwargs.get('session', {}).get('user')
     domain = kwargs.get('session', {}).get('domain')
-    domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
+    domainId = kwargs.get('arguments', {}).get('identifier', [None])[0]
     if not user or (not user.isAdmin() and domain != domainId):
         yield http.redirect("/login")
         return
@@ -121,7 +121,9 @@ def _content(arguments, session, **kwargs):
      <td width="40"><input name="submit" type="submit" class="butt" value="Create Target"></td>
     </tr>
    </table>
- </form>
+ </form>"""
+
+    yield """
   <table width="100%" border="0" cellspacing="0" cellpadding="0">"""
 
     for targetId in domain.get('targetIds', []):

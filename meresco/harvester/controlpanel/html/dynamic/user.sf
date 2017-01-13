@@ -1,0 +1,72 @@
+import page
+import common
+
+def main(arguments, **kwargs):
+    username = arguments.get('identifier', [None])[0]
+    if username is None:
+        yield http.redirect('/domains?{}'.format(urlencode(dict(error='No username specified'))))
+        return
+
+    user = observable.call.getUserInfo(username)
+    if user is None:
+        yield http.redirect('/domains?{}'.format(urlencode(dict(error='User {} does not exist'.format(username)))))
+        return
+    yield page.layoutWithMenu(_contents, user=user, **kwargs)
+
+def _contents(user, **kwargs):
+
+    yield """
+<h1>User Administration</h1>
+<div>
+    <h4>User: {name}</h4>
+    <form method="post" action="/user.action/update">
+	<input type="hidden" name="username" value="{identifier}"/>
+        <input type="hidden" name="redirectUri" value="/user"/>
+        <table>
+            <tr>
+                <td>Full name:</td>
+                <td><input type="text" name="name" value="{name}"></td>
+            </tr>
+            <tr>
+                <td>Username:</td>
+                <td>{username}</td>
+            </tr>
+            <tr>
+                <td>Organization:</td>
+                <td><input type="text" name="organization" value="{organization}"></td>
+            </tr>
+            <tr>
+                <td>E-mail:</td>
+                <td><input type="text" name="email" value="{email}"></td>
+            </tr>
+            <tr>
+                <td>Telephone:</td>
+                <td><input type="text" name="telephone" value="{telephone}"></td>
+            </tr>
+            <tr>
+                <td>Domain:</td>
+                <td>""".format(
+        identifier=user.username,
+        username=escapeHtml(user.username),
+        name=escapeHtml(user.name),
+        organization=escapeHtml(user.organization),
+        telephone=escapeHtml(user.telephone),
+        email=escapeHtml(user.email))
+
+    yield common.dropdown("domain", [(each, each) for each in observable.call.getDomainIds()], selected=user.domain)
+
+    yield """
+                </td>
+            </tr>
+            <tr>
+                <td>Notes:</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2"><textarea name="notes" rows="5" cols="60">{notes}</textarea></td>
+            </tr>
+        </table>
+        <p><input type="submit" name="action" class="butt" value="Save" accesskey="s"></p>
+     </form>
+</div>
+<a href="/domains">Back to Domains & Users</a>""".format(notes=escapeHtml(user.notes))
