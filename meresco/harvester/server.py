@@ -32,6 +32,8 @@ from os.path import join, abspath, dirname
 from sys import stdout
 from xml.sax.saxutils import escape as escapeXml
 from StringIO import StringIO
+from lxml.etree import parse
+from meresco.xml import xpathFirst
 
 from weightless.io import Reactor
 from weightless.core import compose, be
@@ -70,6 +72,8 @@ def dateSince(days):
 
 def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
+    def getUsersInformation():
+        return parse(open(join(dataPath, 'users.xml')))
     harvesterData = HarvesterData(dataPath)
     repositoryStatus = be(
         (RepositoryStatus(logPath, statePath),
@@ -132,6 +136,8 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             'StringIO': StringIO,
                                             'okPlainText': okPlainText,
                                             'ZuluTime': ZuluTime,
+                                            'getUsersInformation': getUsersInformation,
+                                            'xpathFirst': xpathFirst,
                                         },
                                         indexPage="/index",
                                     ),

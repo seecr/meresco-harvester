@@ -44,14 +44,14 @@ class OnlineHarvestTest(SeecrTestCase):
         self.mock_createUpload_exception = ''
         self._testpath = os.path.realpath(os.path.curdir)
         self.output = StringIO()
+        self.mappingData = dict(identifier="mappingId", code=DEFAULT_DC_CODE)
         self.mapping = Mapping('mappingId')
         self.mapping.code = DEFAULT_DC_CODE
-        self.proxy = CallTrace(returnValues=dict(getMappingObject=self.mapping))
-        self.harvest = OnlineHarvest(self.output, self.proxy)
+        self.harvest = OnlineHarvest(self.output)
 
     def testRealMapping(self):
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping('domainId', 'mapping', data)
+        self.harvest.performMapping(self.mappingData, data)
         self.assertEquals(3,self.output.getvalue().count('upload.id='))
 
     def testMapping(self):
@@ -60,25 +60,21 @@ class OnlineHarvestTest(SeecrTestCase):
         upload.isDeleted = True
         mapping = CallTrace()
         mapping.returnValues['createUpload'] = upload
-        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
-        self.harvest = OnlineHarvest(self.output, self.proxy)
+        self.harvest = OnlineHarvest(self.output)
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping('domainId', 'mapping', data)
+        self.harvest.performMapping(None, data, mapping)
         self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
         for createUploadMethod in mapping.calledMethods[2:]:
             self.assertTrue(createUploadMethod.kwargs['doAsserts'])
 
     def testMappingWithDeletedRecord(self):
-        self.mapping.code = DEFAULT_DC_CODE
-        self.mapping.name = 'My Mapping'
         data = 'file://%s/mocktud/00003.xml' % self._testpath
-        self.harvest.performMapping('domainId', 'mapping', data)
+        self.harvest.performMapping(dict(identifier='mappingId', code=DEFAULT_DC_CODE, name="My Mapping"), data)
         self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
 
     def testMappingRaisesDataMapAssertionException(self):
         mapping = CallTrace()
-        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
-        self.harvest = OnlineHarvest(self.output, self.proxy)
+        self.harvest = OnlineHarvest(self.output)
 
         calls = []
         def createUpload(*args, **kwargs):
@@ -91,18 +87,17 @@ class OnlineHarvestTest(SeecrTestCase):
             return upload
         mapping.methods['createUpload'] = createUpload
         data = 'file://%s/mocktud/00002.xml' % self._testpath
-        self.harvest.performMapping('domainId', 'mappingId', data)
-        self.assertEquals(2,self.output.getvalue().count('upload.id='))
+        self.harvest.performMapping(None, data, mappingObject=mapping)
+        self.assertEquals(2, self.output.getvalue().count('upload.id='))
 
     def testMappingRaisesException(self):
         mapping = CallTrace()
-        self.proxy = CallTrace(returnValues=dict(getMappingObject=mapping))
-        self.harvest = OnlineHarvest(self.output, self.proxy)
+        self.harvest = OnlineHarvest(self.output)
 
         mapping.exceptions['createUpload'] = Exception('Mushroom, mushroom')
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         try:
-            self.harvest.performMapping('domainId', mapping, data)
+            self.harvest.performMapping(None, data, mappingObject=mapping)
             self.fail()
         except Exception, ex:
             self.assertEquals('Mushroom, mushroom', str(ex))

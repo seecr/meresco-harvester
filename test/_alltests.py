@@ -36,14 +36,9 @@
 from os import getuid
 assert getuid() != 0, "Do not run tests as 'root'"
 
-from os import system                             #DO_NOT_DISTRIBUTE
-from sys import path as sysPath                   #DO_NOT_DISTRIBUTE
-system('find .. -name "*.pyc" | xargs rm -f')     #DO_NOT_DISTRIBUTE
-                                                  #DO_NOT_DISTRIBUTE
-from glob import glob                             #DO_NOT_DISTRIBUTE
-for path in glob('../deps.d/*'):                  #DO_NOT_DISTRIBUTE
-    sysPath.insert(0, path)                       #DO_NOT_DISTRIBUTE
-sysPath.insert(0,'..')                            #DO_NOT_DISTRIBUTE
+from seecrdeps import includeParentAndDeps, cleanup     #DO_NOT_DISTRIBUTE
+includeParentAndDeps(__file__)                          #DO_NOT_DISTRIBUTE
+cleanup(__file__)                                       #DO_NOT_DISTRIBUTE
 
 import unittest
 
@@ -52,9 +47,9 @@ from disallowfileplugintest import DisallowFilePluginTest
 from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
-from harvesterdatatest import HarvesterDataTest
 from harvesterdataactionstest import HarvesterDataActionsTest
 from harvesterdataretrievetest import HarvesterDataRetrieveTest
+from harvesterdatatest import HarvesterDataTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest
@@ -62,15 +57,16 @@ from internalserverproxytest import InternalServerProxyTest
 from mappingtest import MappingTest
 from oairequesttest import OaiRequestTest
 from onlineharvesttest import OnlineHarvestTest
+from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest
 from smoothactiontest import SmoothActionTest
 from sruupdateuploadertest import SruUpdateUploaderTest
 from statetest import StateTest
-from repositorystatustest import RepositoryStatusTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest
 from toolstest import ToolsTest
+from useractionstest import UserActionsTest
 
 if __name__ == '__main__':
         unittest.main()

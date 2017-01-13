@@ -1,4 +1,5 @@
 import page
+import common
 
 
 def main(**kwargs):
@@ -10,6 +11,13 @@ def _contents(arguments, **kwargs):
     error = arguments.get("error", [None])[0]
     if error:
         yield '<span class="error">{}</span>'.format(error)
+
+    yield _domainAdministration()
+    yield "<br/>"
+    yield _userAdministration()
+
+
+def _domainAdministration():
 
     yield """
   <div><h3>Domains</h3>
@@ -24,8 +32,6 @@ def _contents(arguments, **kwargs):
     </table>
   </form>
   </div>
-
-
 
   <div>
    <table border="0" cellspacing="0" cellpadding="0" width="50%">"""
@@ -44,59 +50,65 @@ def _contents(arguments, **kwargs):
 
     yield """
    </table>
-  </div>
+  </div>"""
 
-<br />
+
+def _userAdministration():
+    users = getUsersInformation()
+    yield """
 <h1>Users Administration</h1>
-  <div>
-   <table width="100%" border="0" cellspacing="4" cellpadding="0">
-<%
-for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
-  user_localname = user.tag.split('}')[-1]
-  user_fullname = xpathFirst(user, 'name/text()') or ''
-%>
-    <tr>
-     <td>
-       <h3><% escape_html(user_fullname) %></h3>
-       <table width="100%" cellspacing="0" cellpadding="0">
+<div>
+    <table width="100%" border="0" cellspacing="4" cellpadding="0">"""
+    for user in users.xpath("/users/child::*"):
+        user_localname = user.tag.split('}')[-1]
+        user_fullname = xpathFirst(user, 'name/text()') or ''
+        yield """
         <tr>
-         <td width="15%"><b>Full name:</b></td>
-         <td width="35%"><b><% escape_html(user_fullname) %></b></td>
-         <td width="15%">Organization:</td>
-         <td width="35%"><% escape_html(xpathFirst(user, 'organization/text()') or '') %></td>
-        </tr>
-        <tr>
-         <td><b>Username:</b></td>
-         <td><b><% escape_html(user_localname) %></b></td>
-         <td>Telephone:</td>
-         <td><% escape_html(xpathFirst(user, 'telephone/text()') or '')%></td>
-        </tr>
-        <tr>
-         <td><b>Domain:</b></td>
-         <td><b><% escape_html(xpathFirst(user, 'domain/text()') or '') %></b></td>
-         <td>E-mail:</td>
-         <td><% escape_html(xpathFirst(user, 'email/text()') or '') %></td>
-        </tr>
-        <tr>
-         <td valign="top">Notes:</td>
-         <td colspan="3" ><pre><% escape_html(xpathFirst(user, 'notes/text()') or '') %></pre></td>
-        </tr>
-       </table>
-       <p>
-       <a href="/page/user.edit/users.xml?user=<%= user_localname %>">
-        Edit / View
-       </a>
-       &nbsp;
-       <form method='post' action='/user.delete/users.xml' name="deleteUser_<%=user_localname%>">
-        <input type="hidden" name="user" value="<%=user_localname%>"/>
-        <a onclick="if(confirm('Weet u het zeker?')) { document.deleteUser_<%=user_localname%>.submit();}; return false;">
-        Delete
-        </a>
-       </form>
-       </p>
-<%
-#
-%>
+            <td>
+                <h3>{user_fullname}</h3>
+                <table width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td width="15%"><b>Full name:</b></td>
+                        <td width="35%"><b>{user_fullname}</b></td>
+                        <td width="15%">Organization:</td>
+                        <td width="35%">{organization}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Username:</b></td>
+                        <td><b>{user_localname}</b></td>
+                        <td>Telephone:</td>
+                        <td>{telephone}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Domain:</b></td>
+                        <td><b>{domain}</b></td>
+                        <td>E-mail:</td>
+                        <td>{email}</td>
+                    </tr>
+                    <tr>
+                        <td valign="top">Notes:</td>
+                        <td colspan="3" ><pre>{notes}</pre></td>
+                    </tr>
+                </table>
+                <p>
+                    <a href="{userEditLink}">Edit / View</a>
+&nbsp;
+                    <form method='post' action='/user.delete/users.xml' name="{deleteFormName}">
+                        <input type="hidden" name="user" value="{user_localname_raw}"/>
+                        <a onclick="if(confirm('Weet u het zeker?')) {{ document.{deleteFormName}.submit(); }}; return false;">Delete</a>
+                    </form>
+                </p>""".format(
+            user_fullname=escapeHtml(user_fullname),
+            organization=escapeHtml(xpathFirst(user, 'organization/text()') or ''),
+            user_localname=escapeHtml(user_localname),
+            user_localname_raw=user_localname,
+            telephone=escapeHtml(xpathFirst(user, 'telephone/text()') or ''),
+            domain=escapeHtml(xpathFirst(user, 'domain/text()') or ''),
+            email=escapeHtml(xpathFirst(user, 'email/text()') or ''),
+            notes=escapeHtml(xpathFirst(user, 'notes/text()') or ''),
+            userEditLink="/user?{}".format(urlencode(dict(user=user_localname))),
+            deleteFormName="deleteUser_{}".format(user_localname))
+    yield """
    </table>
   <div><h3>Create new user</h3>
      <form action='/user.new/users.xml' method='post'>
@@ -107,16 +119,10 @@ for user in xpath(aslxml(url('/users.xml')), '/users/child::*'):
      </tr>
      <tr>
       <td width="60">Domain:&nbsp;</td>
-      <td width="200">
-        <select name="domain">
-<%
-for id in req.proxy.getDomainIds():
-%>
-          <option value="<%=id%>"><%=id%></option>
-<%
-#
-%>
-        </select>
+      <td width="200">"""
+    yield common.dropdown("domain", [(each, each) for each in observable.call.getDomainIds()], selected=None)
+
+    yield """
       </td>
      </tr>
      <tr>

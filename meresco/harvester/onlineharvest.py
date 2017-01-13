@@ -41,9 +41,12 @@ class OnlineHarvest(object):
     def __init__(self, outputstream):
         self._output = outputstream
 
-    def performMapping(self, mappingData, urlString):
-        mapping = Mapping(mappingData.get('identifier'))
-        mapping.fill(None, mappingData)
+    def performMapping(self, mappingData, urlString, mappingObject=None):
+        if mappingObject:
+            mapping = mappingObject
+        else:
+            mapping = Mapping(mappingData.get('identifier'))
+            mapping.fill(None, mappingData)
         mapping.addObserver(StreamEventLogger(self._output))
         self._output.write(mapping.mappingInfo())
         self._output.write('\n')
