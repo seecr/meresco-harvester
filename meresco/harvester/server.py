@@ -42,7 +42,7 @@ from meresco.components.json import JsonDict
 from meresco.core import Observable
 
 from meresco.html import DynamicHtml
-from meresco.html.login import BasicHtmlLoginForm, PasswordFile
+from meresco.html.login import BasicHtmlLoginForm, PasswordFile, SecureZone
 from seecr.weblib import seecrWebLibPath
 from seecr.zulutime import ZuluTime
 
@@ -128,32 +128,34 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                 )
                             ),
                             (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action']),
-                                (DynamicHtml(
-                                        [dynamicHtmlPath],
-                                        reactor=reactor,
-                                        additionalGlobals={
-                                            'harvesterStatusUrl': harvesterStatusUrl,
-                                            'escapeXml': escapeXml,
-                                            'compose': compose,
-                                            'VERSION': VERSION,
-                                            'CONFIG': configDict,
-                                            'Timeslot': Timeslot,
-                                            'ThroughputAnalyser': ThroughputAnalyser,
-                                            'dateSince': dateSince,
-                                            'callable': callable,
-                                            'OnlineHarvest': OnlineHarvest,
-                                            'StringIO': StringIO,
-                                            'okPlainText': okPlainText,
-                                            'ZuluTime': ZuluTime,
-                                            'getUsersInformation': getUsersInformation,
-                                            'xpathFirst': xpathFirst,
-                                        },
-                                        indexPage="/index",
-                                    ),
-                                    basicHtmlLoginHelix,
-                                    (harvesterData,),
-                                    (repositoryStatus,),
-                                    userActionsHelix,
+                                (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
+                                    (DynamicHtml(
+                                            [dynamicHtmlPath],
+                                            reactor=reactor,
+                                            additionalGlobals={
+                                                'harvesterStatusUrl': harvesterStatusUrl,
+                                                'escapeXml': escapeXml,
+                                                'compose': compose,
+                                                'VERSION': VERSION,
+                                                'CONFIG': configDict,
+                                                'Timeslot': Timeslot,
+                                                'ThroughputAnalyser': ThroughputAnalyser,
+                                                'dateSince': dateSince,
+                                                'callable': callable,
+                                                'OnlineHarvest': OnlineHarvest,
+                                                'StringIO': StringIO,
+                                                'okPlainText': okPlainText,
+                                                'ZuluTime': ZuluTime,
+                                                'getUsersInformation': getUsersInformation,
+                                                'xpathFirst': xpathFirst,
+                                            },
+                                            indexPage="/index",
+                                        ),
+                                        basicHtmlLoginHelix,
+                                        (harvesterData,),
+                                        (repositoryStatus,),
+                                        userActionsHelix,
+                                    )
                                 )
                             ),
                             (PathFilter('/action'),
