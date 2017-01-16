@@ -36,7 +36,7 @@ def toZuluTime(timestamp):
 def main(path, arguments, **kwargs):
     domainId = arguments.get('domainId', [None])[0]
 
-    linkToStatusPage = "%s?%s" % (harvesterStatusUrl, urlencode(dict(domainId=domainId)))
+    linkToStatusPage = "{}/showHarvesterStatus?{}".format(externalUrl, urlencode(dict(domainId=domainId)))
 
     yield "HTTP/1.0 200 OK\r\n"
     yield "Content-Type: application/rss+xml\r\n"
@@ -56,7 +56,7 @@ def main(path, arguments, **kwargs):
         yield RSS_TEMPLATE % {
             'title': '%(repositoryId)s: %(status)s' % runningState,
             'description': escapeXml(description),
-            'link': escapeXml(linkToStatusPage + '&' + urlencode(dict(repositoryId=runningState['repositoryId']))),
+            'link': escapeXml("{}&{}".format(linkToStatusPage, urlencode(dict(repositoryId=runningState['repositoryId'])))),
             'guid': '%(repositoryId)s:%(changedate)s' % runningState,
         }
 

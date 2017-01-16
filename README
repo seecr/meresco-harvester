@@ -19,32 +19,11 @@ Installation can be done with python distutils.
 2. Configuration
 ----------------
 Furthermore you will need to configure:
-    - apache2
     - sitecustomize.py !!
     - webcontrolpanel administrator (admin)
     - harvesting (user)
 
-2.1 Apache Configuration
-------------------------
-    An example apache configuration is given in the example directory. Please
-    change it to your needs. (see 'examples/meresco-harvester.apache.conf)
-
-2.1.1 Apache Worker (Threaded Model)
-------------------------------------
-    Meresco Harvester depends on Slowfoot (see deps.txt), which on its turn depends
-    on mod_python (an apache module). For correct working of Meresco Harvester you will
-    need the apache2-mpm-worker, which is the high speed threaded model of Apache2.
-
-2.1.2 Accessible directories.
-----------------------------
-    The DocumentRoot of your apache configuration should be writable for the
-    web user, e.g. www-data
-    The directories specified in the PythonOption logDir and stateDir should
-    be readable for the www-data user.
-    The file specified in the PythonOption usersfile should be writable by the
-    web user. (See 2.2)
-
-2.1.3 SSL Certificate creation
+2.1 SSL Certificate creation
 ------------------------------
     If you don't have an SSL Certificate for your server you can create your
     own self-signed certificate.
@@ -55,32 +34,8 @@ Furthermore you will need to configure:
         $ openssl req -new -key server.pem -out server.csr
       Now create a self-signed certificate.
         $ openssl x509 -req -days 60 -in server.csr -signkey server.pem -out server.crt
+    In order to enable HTTPS, the usage of Nginx is highly suggested. 
 
-2.1.4 Module configuration
---------------------------
-    Take care that the correct modules are enabled in apache.
-    For the apache example configuration you should enable:
-        - python.load
-        - rewrite.load
-        - ssl.load
-        - ssl.conf
-        - proxy.load
-        - cgid.conf
-        - cgid.load
-        - authz_host.load
-        - mime.load
-        - alias.load
-        - proxy_http.load
-
-    Disable the following modules:
-        - cache.load (and other cache modules) 
-        - deflate.conf
-        - deflate.load
-
-2.1.5 Ports confguration
-------------------------
-    The example configuration acts on ports 80 and 443, make sure
-    apache listens to these ports.
 
 2.2 Sitecustomize.py !!
 -----------------------
@@ -92,50 +47,26 @@ Furthermore you will need to configure:
         sys.setdefaultencoding('utf-8')
 
     The webcontrolpanel does not work if the encoding is different.
-    Please set the correct settings for Apache2.
-
-2.2.1 Debian Apache2 Envionrment
---------------------------------
-    Please also add the following to the '/etc/apache2/envvars':
-    export LANG=en_US.UTF-8
-    export LC_ALL=en_US.UTF-8
-
-2.2.2 RedHat/Centos Apache2 Envionrment
---------------------------------
-    Please change the HTTPD_LANG environment in /etc/sysconfig/httpd
-
-    HTTPD_LANG=en_US.UTF-8
-
 
 2.3 Webcontrolpanel Configuration
 ---------------------------------
-    The webcontrolpanel consists of two http services working together. The
-    first is configured with the apache configuration mentioned earlier. It 
-    makes use of the second internalserver. This internalserver must be
-    configured separately.
-
     To access the webcontrolpanel users will need a name and password. 
     The special user 'admin' can create these. An initial password for this
     user must also be created.
 
-2.3.1 Internalserver
---------------------
-    The internal server is needed by the webcontrolpanel to include new 
-    (dynamicHtml) pages. An example configuration file is given in the
-    examples directory, see 'harvester.config'
-    This server is independent of Apache. Take care that the options in
-    the configuration file are equal to the Apache configuration.
+2.3.1 Meresco Harvester Server
+------------------------------
+    An example configuration file is given in the examples directory, 
+    see 'harvester.config'.
     We recommend using daemontools (http://cr.yp.to/daemontools.html) for
     running this service.
-    The service is then started using the script 
-    'meresco-harvester-internal-server' 
+    The service is then started using the script 'meresco-harvester-server'.
 
 2.3.2 User administration
 -------------------------
     The webcontrolpanel has one special user called 'admin', with extra privileges.
     Amongst these privileges is the right to create users. This is all done
-    in the webcontrolpanel. The created users are stored in the file specified
-    in the apache configuration (PythonOption usersfile)
+    in the webcontrolpanel. 
 
     Each user has it's own line in this file in the format:
         <username>:<md5sum of password>
@@ -155,6 +86,6 @@ Furthermore you will need to configure:
     Harvesting is done with the 'meresco-harvester' script.
     The user that will run the 'meresco-harvester' script will need to have
     read/write permissions in the stateDir and logDir specified in the
-    apache configuration.
+    configuration.
     
 

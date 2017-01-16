@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser.addOption('', '--dataPath', help='Meresco harvester data directory', mandatory=True)
     parser.addOption('', '--logPath', help='Meresco harvester log directory', mandatory=True)
     parser.addOption('', '--statePath', help='Meresco harvester state directory', mandatory=True)
-    parser.addOption('', '--harvesterStatusUrl', help='Meresco harvester status url', mandatory=True)
+    parser.addOption('', '--externalUrl', help='Url this harvester can be reached at', mandatory=True)
 
     options, arguments = parser.parse()
 

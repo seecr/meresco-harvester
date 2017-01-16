@@ -71,7 +71,7 @@ staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
 def dateSince(days):
     return strftime("%Y-%m-%d", localtime(time() - days * 3600 * 24))
 
-def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignored):
+def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
     def getUsersInformation():
         return parse(open(join(dataPath, 'users.xml')))
@@ -84,7 +84,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
     configDict = JsonDict(
         logPath=logPath,
         statePath=statePath,
-        harvesterStatusUrl=harvesterStatusUrl,
+        externaUrl=externalUrl,
         dataPath=dataPath,
     )
 
@@ -133,7 +133,7 @@ def dna(reactor, port, dataPath, logPath, statePath, harvesterStatusUrl, **ignor
                                             [dynamicHtmlPath],
                                             reactor=reactor,
                                             additionalGlobals={
-                                                'harvesterStatusUrl': harvesterStatusUrl,
+                                                'externalUrl': externalUrl,
                                                 'escapeXml': escapeXml,
                                                 'compose': compose,
                                                 'VERSION': VERSION,

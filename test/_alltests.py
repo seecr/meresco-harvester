@@ -43,7 +43,6 @@ cleanup(__file__)                                       #DO_NOT_DISTRIBUTE
 import unittest
 
 from deleteidstest import DeleteIdsTest
-from disallowfileplugintest import DisallowFilePluginTest
 from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
@@ -65,7 +64,6 @@ from statetest import StateTest
 from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest
-from toolstest import ToolsTest
 from useractionstest import UserActionsTest
 
 if __name__ == '__main__':

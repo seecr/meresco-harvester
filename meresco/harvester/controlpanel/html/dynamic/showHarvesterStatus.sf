@@ -163,15 +163,15 @@ $("table").tablesorter({
                 repositoryId=repositoryId,
                 errorsnr=errorsnr,
                 )
-    for error in status.get('recenterrors', []):
-        yield """
-        <tr class="eventerror">
-            <td nowrap="nowrap" valign="top">{date}</td>
-            <td class="trace">{error}</td>
-        </tr>""".format(
-            date=error.get('date'),
-            error=escapeHtml(error.get('error').split('|')[-1]),
-        )
+        for error in status.get('recenterrors', []):
+            yield """
+            <tr class="eventerror">
+                <td nowrap="nowrap" valign="top">{date}</td>
+                <td class="trace">{error}</td>
+            </tr>""".format(
+                date=error.get('date'),
+                error=escapeHtml(error.get('error').split('|')[-1]),
+            )
     yield """
     </table>
 </div>"""
