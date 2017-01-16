@@ -1,1 +1,0 @@
-<%type('text/xml; charset=utf-8')%><%=lxmltostring(lxml, pretty_print=True, xml_declaration=True)%>

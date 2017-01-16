@@ -1,5 +1,0 @@
-<%type('text/plain')%>
-# SAHARA
-User-agent: *
-Disallow: /
-

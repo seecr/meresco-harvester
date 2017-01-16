@@ -1,6 +1,0 @@
-<%
-type('text/html')
-for f in files():
-%><a href="/edit/<%=f%>"><%=f%></a><br>
-<%
-#%>

@@ -1,3 +1,0 @@
-<%
-include(req.get_options()['internalServer'] + '/invalid?' + urlencode(args))
-%>

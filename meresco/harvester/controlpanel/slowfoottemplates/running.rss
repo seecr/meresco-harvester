@@ -1,5 +1,0 @@
-<%
-type("application/rss+xml")
-include(req.get_options()['internalServer'] + '/running.rss?' + urlencode(args))
-%>
-
