@@ -129,7 +129,7 @@ class InternalServerTest(IntegrationTestCase):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
         self.assertEquals("Harvester status voor integrationtest", xpath(result, "/rss/channel/title/text()")[0])
         self.assertEquals("Recente repository harvest status voor integrationtest in adomain", xpath(result, "/rss/channel/description/text()")[0])
-        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/link/text()")[0])
+        self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/link/text()")[0])
         self.assertEquals(str(60 * 6), xpath(result, "/rss/channel/ttl/text()")[0])
 
         self.assertEquals("Harvester status voor integrationtest", xpath(result, "/rss/channel/item[1]/title/text()")[0])
@@ -141,7 +141,7 @@ class InternalServerTest(IntegrationTestCase):
         self.assertTrue("Deleted records: 2" in description, description)
         self.assertTrue("Validation errors: 0" in description, description)
         self.assertTrue("Errors: 0" in description, description)
-        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/item[1]/link/text()")[0])
+        self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(result, "/rss/channel/item[1]/link/text()")[0])
 
     def testRssForNeverHarvestedRepository(self):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/rss', {'domainId': 'adomain', 'repositoryId': 'repository2'}, parse='lxml')
@@ -153,7 +153,7 @@ class InternalServerTest(IntegrationTestCase):
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/running.rss', {'domainId': 'adomain'}, parse='lxml')
         self.assertEquals("Harvest status changes for domain 'adomain'", xpath(result, "/rss/channel/title/text()")[0])
         self.assertEquals("Status changes per repository for domain 'adomain'", xpath(result, "/rss/channel/description/text()")[0])
-        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain", xpath(result, "/rss/channel/link/text()")[0])
+        self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain", xpath(result, "/rss/channel/link/text()")[0])
         self.assertEquals(str(60 * 6), xpath(result, "/rss/channel/ttl/text()")[0])
         TODAY = strftime("%Y-%m-%d", gmtime())
         items = xpath(result, "/rss/channel/item")
@@ -162,7 +162,7 @@ class InternalServerTest(IntegrationTestCase):
         description = ''.join(xpath(items[0], "description/text()"))
         self.assertTrue(description.startswith("Harvest time: %s" % TODAY), description)
         self.assertEquals('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split('T')[0])
-        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
+        self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
 
     def testRssForStatusChangesError(self):
         self.controlHelper(action="raiseExceptionOnIds", id=['%s:oai:record:01' % REPOSITORY] )
@@ -176,7 +176,7 @@ class InternalServerTest(IntegrationTestCase):
         self.assertTrue(description.startswith("Harvest time: %s" % TODAY), description)
         self.assertTrue("Exception: ERROR" in description, description)
         self.assertEquals('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split('T')[0])
-        self.assertEquals("http://localhost:9999/harvesterStatus.page?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
+        self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
 
 
 

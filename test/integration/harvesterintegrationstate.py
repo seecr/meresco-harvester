@@ -93,24 +93,24 @@ class HarvesterIntegrationState(IntegrationState):
 
     def startHelperServer(self):
         self._startServer(
-                serviceName='TestHelper',
-                executable=join(mydir, 'helperserver.py'),
-                serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber,
-                port=self.helperServerPortNumber,
-                directory=self.helperDir
-            )
+            serviceName='TestHelper',
+            executable=join(mydir, 'helperserver.py'),
+            serviceReadyUrl='http://localhost:%s/ready' % self.helperServerPortNumber,
+            port=self.helperServerPortNumber,
+            directory=self.helperDir
+        )
 
     def startHarvesterInternalServer(self):
         self._startServer(
-                serviceName='Harvester-Internal-Server',
-                executable=self.binPath('meresco-harvester-internal-server'),
-                serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber,
-                port=self.harvesterInternalServerPortNumber,
-                dataPath=join(self.integrationTempdir, 'data'),
-                logPath=self.harvesterLogDir,
-                statePath=self.harvesterStateDir,
-                harvesterStatusUrl="http://localhost:9999/harvesterStatus.page"
-            )
+            serviceName='Harvester-Internal-Server',
+            executable=self.binPath('meresco-harvester-server'),
+            serviceReadyUrl='http://localhost:%s/info/version' % self.harvesterInternalServerPortNumber,
+            port=self.harvesterInternalServerPortNumber,
+            dataPath=join(self.integrationTempdir, 'data'),
+            logPath=self.harvesterLogDir,
+            statePath=self.harvesterStateDir,
+            externalUrl="http://localhost:9999"
+        )
 
     def getLogs(self):
         header, result = getRequest(self.helperServerPortNumber, '/log', {}, parse=False)

@@ -61,13 +61,13 @@ class StartHarvester(object):
         if self._concurrency < 1:
             self.parser.error("Concurrency must be at least 1.")
 
-        config = JsonDict.load(urlopen(self.internalurl + '/info/config'))
+        config = JsonDict.load(urlopen(self.serverUrl + '/info/config'))
         if self._logDir is None:
             self._logDir = config['logPath']
         if self._stateDir is None:
             self._stateDir = config['statePath']
 
-        self.proxy = InternalServerProxy(self.internalurl, self.setActionDone)
+        self.proxy = InternalServerProxy(self.serverUrl, self.setActionDone)
         self.repository = self.repositoryId and self.proxy.getRepositoryObject(identifier=self.repositoryId, domainId=self.domainId)
 
     def parse_args(self):
@@ -76,8 +76,8 @@ class StartHarvester(object):
             help="Mandatory argument denoting the domain.",
             metavar="DOMAIN")
         self.parser.add_option("-u", "--url",
-            dest="internalurl",
-            help="The url of the Meresco Harvester Internal Server",
+            dest="serverUrl",
+            help="The url of the Meresco Harvester Server",
             default="http://localhost:8888")
         self.parser.add_option("-r", "--repository",
             dest="repositoryId",
