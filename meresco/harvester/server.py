@@ -73,8 +73,6 @@ def dateSince(days):
 
 def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
-    def getUsersInformation():
-        return parse(open(join(dataPath, 'users.xml')))
     harvesterData = HarvesterData(dataPath)
     repositoryStatus = be(
         (RepositoryStatus(logPath, statePath),
@@ -99,7 +97,8 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
         (passwordFile, )
     )
 
-    userActionsHelix = (UserActions(dataDir=dataPath), 
+    userActions = UserActions(dataDir=dataPath)
+    userActionsHelix = (userActions,
         (passwordFile, )
     )
 
@@ -146,7 +145,6 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
                                                 'StringIO': StringIO,
                                                 'okPlainText': okPlainText,
                                                 'ZuluTime': ZuluTime,
-                                                'getUsersInformation': getUsersInformation,
                                                 'xpathFirst': xpathFirst,
                                             },
                                             indexPage="/index",

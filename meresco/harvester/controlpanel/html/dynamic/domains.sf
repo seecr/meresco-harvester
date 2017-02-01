@@ -86,7 +86,6 @@ def _domainAdministration():
 
 
 def _userAdministration(session):
-    users = getUsersInformation()
     yield """
 <h1>Users Administration</h1>
 <div>
