@@ -77,6 +77,8 @@ class HarvesterData(object):
 
     def getRepositoryGroup(self, identifier, domainId):
         return JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))))
+    def getRepositoryGroups(self, domainId):
+        return [self.getRepositoryGroup(repositoryGroupId, domainId) for repositoryGroupId in self.getRepositoryGroupIds(domainId)]
 
     def addRepositoryGroup(self, identifier, domainId):
         domain = self.getDomain(domainId)

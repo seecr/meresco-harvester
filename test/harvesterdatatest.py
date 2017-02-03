@@ -85,10 +85,21 @@ class HarvesterDataTest(SeecrTestCase):
 
     def testGetRepositoryGroup(self):
         self.assertEqual({
-                'identifier': 'Group1',
+            'identifier': 'Group1',
+            'name': {'en': 'Group1', 'nl': 'Groep1'},
+            'repositoryIds': ['repository1', 'repository2']
+        }, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
+    
+    def testGetRepositoryGroups(self):
+        self.assertEqual([
+            {   'identifier': 'Group1',
                 'name': {'en': 'Group1', 'nl': 'Groep1'},
-                'repositoryIds': ['repository1', 'repository2']
-            }, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
+                'repositoryIds': ['repository1', 'repository2']},
+            {   'identifier': 'Group2',
+                'name': {'en': 'Group2', 'nl': 'Groep2'},
+                'repositoryIds': ['repository2_1', 'repository2_2']},
+
+        ], self.hd.getRepositoryGroups(domainId='adomain'))
 
     def testGetRepositories(self):
         result = self.hd.getRepositories(domainId='adomain')
