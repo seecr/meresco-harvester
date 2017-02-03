@@ -85,10 +85,10 @@ def _contents(arguments, session, **kwargs):
             repositoryEditLink='<a href="{repositoryEditLink}">{caption}</a>'.format(
                 repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId, identifier=repositoryId))),
                 caption=escapeHtml(repositoryId)) if loggedIn else escapeHtml(repositoryId),
-            total=escapeHtml(status.get('total', 0) or ''),
-            harvested=escapeHtml(status.get('harvested') or ''),
-            uploaded=escapeHtml(status.get('uploaded') or ''),
-            deleted=escapeHtml(status.get('deleted') or ''),
+            total=escapeHtml(str(status.get('total', 0) or '')),
+            harvested=escapeHtml(str(status.get('harvested') or '')),
+            uploaded=escapeHtml(str(status.get('uploaded') or '')),
+            deleted=escapeHtml(str(status.get('deleted') or '')),
             lastHarvestDate=escapeHtml(lastHarvestDate),
             )
       
@@ -102,7 +102,7 @@ def _contents(arguments, session, **kwargs):
             </td>
             <td class="error">"""
         if errorsnr:
-            yield """<a name="{name}" href="{repositoryId}">{errorText}</a>""".format(
+            yield """<a name="{name}" href="{href}">{errorText}</a>""".format(
                 name="top_{}".format(repositoryId), 
                 href="#{}".format(repositoryId),
                 errorText="{} error{}".format(errorsnr, "s" if errorsnr != 1 else ""))
