@@ -1,18 +1,42 @@
+## begin license ##
+#
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+#
+# This file is part of "Meresco Harvester"
+#
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
+
 from meresco.html import PostActions
 from meresco.xml import xpathFirst
 from meresco.components.http.utils import redirectHttp
 
 from seecr.tools import atomic_write
 
-from os.path import join
-from lxml.etree import parse
+from os.path import join, isfile
+from lxml.etree import parse, XML
 from cgi import parse_qs
 from xml.sax.saxutils import escape as escapeXml
 from urllib import urlencode
-
-
-def _parseBody(Body, fieldList):
-    return dict((key, value[0]) for key, value in parse_qs(Body, keep_blank_values=1).items() if key in fieldList)
 
 
 class User(object):
@@ -38,7 +62,7 @@ class User(object):
         return """<{username}>{xml}</{username}>""".format(
             username=self.username,
             xml=''.join("<{tag}>{value}</{tag}>".format(
-                tag=tag, 
+                tag=tag,
                 value=escapeXml(getattr(self, tag, ''))) for tag in self.ATTRIBUTES))
 
 
@@ -52,14 +76,19 @@ class UserActions(PostActions):
         self.registerAction("update", self._update)
 
     def listUsers(self):
-        xml = parse(open(self._filename))
+        xml = self._parseUsersXml()
         return sorted([User(xmlNode=node) for node in xml.xpath("/users/child::*")], key=lambda user: user.username)
 
     def getUser(self, username):
-        xml = parse(open(self._filename))
+        xml = self._parseUsersXml()
         xmlNode = xpathFirst(xml, "/users/{}".format(username))
 
         return User(xmlNode=xmlNode) if xmlNode is not None else None
+
+    def _parseUsersXml(self):
+        if isfile(self._filename):
+            return parse(open(self._filename))
+        return XML("<users/>")
 
     def saveUsers(self, users):
         with atomic_write(self._filename) as fp:
@@ -128,3 +157,6 @@ class UserActions(PostActions):
     # Bit of a hack, getUser is also implemented in PasswordFile and responds
     getUserInfo = getUser
 
+
+def _parseBody(Body, fieldList):
+    return dict((key, value[0]) for key, value in parse_qs(Body, keep_blank_values=1).items() if key in fieldList)
