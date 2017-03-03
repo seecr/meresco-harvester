@@ -46,7 +46,7 @@ class HarvesterData(object):
     #domain
     def getDomainIds(self):
         return JsonList(
-                [d.split('.domain',1)[0] for d in listdir(self._dataPath) if d.endswith('.domain')]
+                sorted([d.split('.domain',1)[0] for d in listdir(self._dataPath) if d.endswith('.domain')])
             )
 
     def getDomain(self, identifier):
@@ -77,7 +77,8 @@ class HarvesterData(object):
 
     def getRepositoryGroup(self, identifier, domainId):
         return JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))))
-
+    def getRepositoryGroups(self, domainId):
+        return [self.getRepositoryGroup(repositoryGroupId, domainId) for repositoryGroupId in self.getRepositoryGroupIds(domainId)]
     def addRepositoryGroup(self, identifier, domainId):
         domain = self.getDomain(domainId)
         filename = "{}.{}.repositoryGroup".format(domainId, identifier)
