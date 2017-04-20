@@ -91,11 +91,11 @@ def _contents(arguments, session, **kwargs):
             deleted=escapeHtml(str(status.get('deleted') or '')),
             lastHarvestDate=escapeHtml(lastHarvestDate),
             )
-      
+
         nrOfValidationErrors = int(invalid[repositoryId].get('invalid') or '0') if repositoryId in invalid else 0
         if nrOfValidationErrors > 0:
             yield """<a href="/invalid?{}">{}</a>""".format(
-                urlencode(dict(domainId=domainId, repositoryId=repositoryId)), 
+                urlencode(dict(domainId=domainId, repositoryId=repositoryId)),
                 "{} error{}".format(nrOfValidationErrors, 's' if nrOfValidationErrors != 1 else ''))
 
         yield """
@@ -103,7 +103,7 @@ def _contents(arguments, session, **kwargs):
             <td class="error">"""
         if errorsnr:
             yield """<a name="{name}" href="{href}">{errorText}</a>""".format(
-                name="top_{}".format(repositoryId), 
+                name="top_{}".format(repositoryId),
                 href="#{}".format(repositoryId),
                 errorText="{} error{}".format(errorsnr, "s" if errorsnr != 1 else ""))
         yield """
@@ -201,9 +201,9 @@ $("table").tablesorter({
                 recordId = invalidId.split(":", 1)[-1]
                 yield """
         <tr>
-            <td class="link"><a href="/page/invalidRecord/?<%= urlencode(newArgs)%>"><%= recordId%></a></td>
+            <td class="link"><a href="{invalidRecordLink}">{recordId}</a></td>
         </tr>""".format(invalidRecordLink="/invalidRecord?{}".format(
-            urlencode(dict(recordId=recordId, repositoryId=repositoryId, domainId=domainId))))
+            urlencode(dict(recordId=recordId, repositoryId=repositoryId, domainId=domainId))), recordId=recordId)
     yield """
 </table>
 </div>"""
