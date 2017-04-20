@@ -66,13 +66,16 @@ html {
 body {
     background-color: #FFFFFF;
     color: #4C4D4F;
-    width: 50%;
+    width: 80%;
     min-width: 1000px;
     margin: 40px auto;
     padding: 10px;
     font-size: 10pt;
 }
 
+body table {
+    background-color: #FFFFFF;
+}
 
 a {
     color: #f9a01b;
