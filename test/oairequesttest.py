@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2014, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -33,10 +33,13 @@
 ## end license ##
 
 import unittest
-from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
-from mockoairequest import MockOaiRequest
+
 from lxml.etree import parse, XML
+
 from meresco.harvester.namespaces import xpathFirst, namespaces
+from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
+
+from mockoairequest import MockOaiRequest
 
 
 class OaiRequestTest(unittest.TestCase):
@@ -98,6 +101,16 @@ class OaiRequestTest(unittest.TestCase):
 
         oaiRequest = OaiRequest("http://x.y.z/oai?apikey=xyz123")
         self.assertEquals("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
+
+    def testShouldUseOwnClockTimeAsResponseDateIfNonePresent(self):
+        originalZuluMethod = OaiResponse._zulu
+        OaiResponse._zulu = staticmethod(lambda: '2020-12-12T12:12:12Z')
+        try:
+            response = oaiResponse(responseDate='')
+            self.assertEquals('2020-12-12T12:12:12Z', response.responseDate)
+        finally:
+            OaiResponse._zulu = originalZuluMethod
+
 
 def oaiResponse(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
     about = '<about/>' if about is None else about
