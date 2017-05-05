@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -36,40 +36,19 @@ from urllib import urlencode
 from urllib2 import urlopen, install_opener, build_opener, Request
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
-
-from meresco.harvester.namespaces import xpathFirst, xpath
 from lxml.etree import parse
-from urllib import urlencode
 
 from __version__ import VERSION
 from httpsconnection import HTTPSHandlerTLS
 buildOpener = build_opener(HTTPSHandlerTLS()) 
 install_opener(buildOpener)
 
-class OaiRequestException(Exception):
-    def __init__(self, url, message):
-        Exception.__init__(self, 'occurred with repository at "%s", message: "%s"' % (url, message))
-        self.url = url
+from seecr.zulutime import ZuluTime
+from meresco.harvester.namespaces import xpathFirst, xpath
 
 
-class OAIError(OaiRequestException):
-    def __init__(self, url, error, errorCode, response):
-        OaiRequestException.__init__(self, url, error)
-        self.errorMessage = lambda: error
-        self.errorCode = lambda: errorCode
-        self.response = response
+install_opener(build_opener(HTTPSHandlerTLS()))
 
-    @classmethod
-    def create(cls, url, response):
-        error = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/text()')
-        errorCode = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/@code')
-        return cls(url=url,
-                error='Unknown error' if error is None else str(error),
-                errorCode='' if errorCode is None else str(errorCode),
-                response=response
-            )
-
-QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
 
 class OaiRequest(object):
     def __init__(self, url, userAgent=None, _urlopen=None):
@@ -124,13 +103,48 @@ class OaiRequest(object):
         urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT] = urlencode(self._argslist + argslist)
         return urlunparse(urlElements)
 
+
 class OaiResponse(object):
     def __init__(self, response):
         self.response = response
         self.records = xpath(response, '/oai:OAI-PMH/oai:ListRecords/oai:record')
         self.resumptionToken = xpathFirst(response, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()') or ''
-        self.responseDate = xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()').strip()
+        self.responseDate = xpathFirst(response, '/oai:OAI-PMH/oai:responseDate/text()')
+        if not self.responseDate is None:  # should be there, happens to be absent for some repositories
+            self.responseDate = self.responseDate.strip()
+        if not self.responseDate:
+            self.responseDate = self._zulu()
         self.selectRecord(xpathFirst(response, '/oai:OAI-PMH/oai:*/oai:record'))
 
     def selectRecord(self, record):
         self.record = record
+
+    @staticmethod
+    def _zulu():
+        return ZuluTime().zulu()
+
+
+class OaiRequestException(Exception):
+    def __init__(self, url, message):
+        Exception.__init__(self, 'occurred with repository at "%s", message: "%s"' % (url, message))
+        self.url = url
+
+
+class OAIError(OaiRequestException):
+    def __init__(self, url, error, errorCode, response):
+        OaiRequestException.__init__(self, url, error)
+        self.errorMessage = lambda: error
+        self.errorCode = lambda: errorCode
+        self.response = response
+
+    @classmethod
+    def create(cls, url, response):
+        error = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/text()')
+        errorCode = xpathFirst(response.response, '/oai:OAI-PMH/oai:error/@code')
+        return cls(url=url,
+            error='Unknown error' if error is None else str(error),
+            errorCode='' if errorCode is None else str(errorCode),
+            response=response
+        )
+
+QUERY_POSITION_WITHIN_URLPARSE_RESULT=4

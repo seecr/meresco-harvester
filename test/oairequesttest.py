@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2014, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011-2012 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -39,9 +39,9 @@ from lxml.etree import parse, XML
 from meresco.harvester.namespaces import xpathFirst, namespaces
 from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
 from mockoairequest import MockOaiRequest
-from lxml.etree import parse, XML
-from meresco.harvester.namespaces import xpathFirst, namespaces
+
 from StringIO import StringIO
+
 
 class OaiRequestTest(SeecrTestCase):
     def setUp(self):
@@ -125,10 +125,15 @@ class OaiRequestTest(SeecrTestCase):
         finally:
             OaiResponse._zulu = originalZuluMethod
 
+<<<<<<< HEAD
 def oaiResponse(**kwargs):
     return OaiResponse(XML(oaiResponseXML(**kwargs)))
 
 def oaiResponseXML(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
+=======
+
+def oaiResponse(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
+>>>>>>> ce9869c... JPM: fallback to own clock time in case oai:responseDate is missing in OAI-PMH ListRecords response
     about = '<about/>' if about is None else about
     return """<OAI-PMH xmlns="{namespaces.oai}"><responseDate>{responseDate}</responseDate><{verb}><record><header{statusDeleted}><identifier>{identifier}</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>{metadata}{about}</record></{verb}></OAI-PMH>""".format(
         namespaces=namespaces,
