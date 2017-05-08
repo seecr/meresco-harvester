@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -29,17 +29,16 @@
 
 from os import listdir, remove
 from os.path import join, isfile
-
 from re import compile as compileRe
-from meresco.components.json import JsonList, JsonDict
-from meresco.harvester.controlpanel.tools import checkName
-from meresco.harvester.mapping import Mapping
 from uuid import uuid4
 
-XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')
+from meresco.components.json import JsonList, JsonDict
+
+from meresco.harvester.controlpanel.tools import checkName
+from meresco.harvester.mapping import Mapping
+
 
 class HarvesterData(object):
-
     def __init__(self, dataPath):
         self._dataPath = dataPath
 
@@ -293,3 +292,5 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
     def _exists(self, filename):
         return isfile(join(self._dataPath, filename))
 
+
+XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')

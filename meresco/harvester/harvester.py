@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -34,8 +34,10 @@
 
 import sys
 from meresco.core import Observable
+
 from virtualuploader import InvalidDataException, TooMuchInvalidDataException
 from meresco.harvester.namespaces import xpathFirst
+
 
 NOTHING_TO_DO = 'Nothing to do!'
 HARVESTED = 'Harvested.'

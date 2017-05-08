@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -27,15 +27,17 @@
 #
 ## end license ##
 
-from meresco.components.http.utils import redirectHttp, badRequestHtml, Ok
-from meresco.harvester.timeslot import Timeslot
-from meresco.html import PostActions
 from urllib import urlencode
 from urlparse import parse_qs, urlparse
 from functools import partial
 
-class HarvesterDataActions(PostActions):
+from meresco.components.http.utils import redirectHttp, badRequestHtml, Ok
+from meresco.html import PostActions
 
+from meresco.harvester.timeslot import Timeslot
+
+
+class HarvesterDataActions(PostActions):
     def __init__(self, **kwargs):
         PostActions.__init__(self, **kwargs)
         self._registerFormAction('addDomain', self._addDomain)

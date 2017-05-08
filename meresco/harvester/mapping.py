@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013-2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -110,9 +110,11 @@ def doAssert(aBoolean, message="Assertion failed"):
 def doNotAssert(aBoolean, message="This should not happen"):
     pass
 
+
 class UploadDict(dict):
     def __setitem__(self, key, value):
         return dict.__setitem__(self, key, str(value))
+
 
 class Upload(object):
     def __init__(self, repository, oaiResponse=None):
@@ -134,6 +136,7 @@ class Upload(object):
     def ensureStrings(self):
         if self.id:
             self.id = str(self.id)
+
 
 class Mapping(SaharaObject, Observable):
     def __init__(self, mappingId):
@@ -198,4 +201,3 @@ class Mapping(SaharaObject, Observable):
     def validate(self):
         response = XML("""<OAI-PMH xmlns="%(oai)s"><responseDate>2000-01-02T03:04:05Z</responseDate><ListRecords><record><header><identifier>oai:id:12345</identifier><datestamp>1999-09-09T20:21:22Z</datestamp></header><metadata><dc><identifier>test:identifier</identifier></dc></metadata><about/></record></ListRecords></OAI-PMH>""" % namespaces)
         self.createUpload(TestRepository(), OaiResponse(response))
-

@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -26,15 +26,14 @@
 #
 ## end license ##
 
+from weightless.core import NoneOfTheObserversRespond
+from meresco.core import Observable
 from meresco.components.http.utils import okJson
 from meresco.components.json import JsonDict
-from meresco.core import Observable
-from weightless.core import NoneOfTheObserversRespond
+
 
 class HarvesterDataRetrieve(Observable):
-
     def handleRequest(self, arguments, **kwargs):
-
         yield okJson
         verb = arguments.get('verb', [None])[0]
         messageKwargs = dict((k,values[0]) for k,values in arguments.items() if k != 'verb')

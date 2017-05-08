@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013, 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -34,7 +34,6 @@
 
 
 class SaharaObject(object):
-
     def __init__(self, attr, listattr = []):
         self._attr = attr
         self._listattr = listattr
@@ -51,4 +50,3 @@ class SaharaObject(object):
         for attr in self._listattr:
             setattr(self, attr, jsonDict.get(attr, []))
         self._proxy = proxy
-

@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -32,20 +32,20 @@
 #
 ## end license ##
 
-from oairequest import OAIError, OaiRequest
-from saharaobject import SaharaObject
-from eventlogger import NilEventLogger
-from virtualuploader import UploaderFactory
-from timeslot import Timeslot
 from sys import exc_info
 from traceback import format_exception
 from time import localtime
+
 from action import Action
+from eventlogger import NilEventLogger
+from oairequest import OAIError, OaiRequest
+from saharaobject import SaharaObject
+from timeslot import Timeslot
+from virtualuploader import UploaderFactory
+
 
 nillogger = NilEventLogger()
 
-class RepositoryException(Exception):
-    pass
 
 class Repository(SaharaObject):
     def __init__(self, domainId, repositoryId):
@@ -119,6 +119,11 @@ class Repository(SaharaObject):
             generalHarvestLog.logError(errorMessage, id=self.id)
             return errorMessage, False
 
+
+class RepositoryException(Exception):
+    pass
+
+
 def _errorMessage():
-    xtype,xval,xtb = exc_info()
-    return '|'.join(line.strip() for line in format_exception(xtype,xval,xtb))
+    xtype, xval, xtb = exc_info()
+    return '|'.join(line.strip() for line in format_exception(xtype, xval, xtb))

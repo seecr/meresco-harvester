@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -32,13 +32,64 @@
 #
 ## end license ##
 
-from harvesterlog import idfilename
 import sys
-from mapping import Upload
 from traceback import format_exception
-from escaping import escapeFilename,unescapeFilename
+
+from escaping import escapeFilename, unescapeFilename
 
 from meresco.core import Observable
+
+from mapping import Upload
+from harvesterlog import idfilename
+
+
+class DeleteIds(Observable):
+    def __init__(self, repository, stateDir):
+        Observable.__init__(self)
+        self._stateDir = stateDir
+        self._repository = repository
+        self._filename = idfilename(self._stateDir, self._repository.id)
+
+    def ids(self):
+        return readIds(self._filename)
+
+    def delete(self):
+        self.do.start()
+        try:
+            self._delete()
+        finally:
+            self.do.stop()
+
+    def deleteFile(self, filename):
+        self._filename = filename
+        self.delete()
+
+    def _delete(self):
+        ids = self.ids()
+        done = []
+        try:
+            for id in ids:
+                try:
+                    anUpload = Upload(repository=self._repository)
+                    anUpload.id = id
+                    self.do.notifyHarvestedRecord(anUpload.id)
+                    self.do.delete(anUpload)
+                    done.append(id)
+                except:
+                    xtype, xval, xtb = sys.exc_info()
+                    errorMessage = '|'.join(map(str.strip,format_exception(xtype, xval, xtb)))
+                    self.do.logError(errorMessage, id=id)
+                    raise
+            return ids[len(done):]
+        finally:
+            self._finish(ids[len(done):])
+
+    def _finish(self, remainingIDs):
+        writeIds(self._filename, remainingIDs)
+
+    def markDeleted(self):
+        self.do.markDeleted()
+
 
 def readIds(filename):
     ids = []
@@ -60,51 +111,3 @@ def writeIds(filename, ids):
             f.write('\n')
     finally:
         f.close()
-
-
-class DeleteIds(Observable):
-    def __init__(self, repository, stateDir):
-        Observable.__init__(self)
-        self._stateDir = stateDir
-        self._repository = repository
-        self._filename = idfilename(self._stateDir, self._repository.id)
-                    
-    def ids(self):
-        return readIds(self._filename)
-        
-    def delete(self):
-        self.do.start()
-        try:
-            self._delete()
-        finally:
-            self.do.stop()
-    
-    def deleteFile(self, filename):
-        self._filename = filename
-        self.delete()
-        
-    def _delete(self):
-        ids = self.ids()
-        done = []
-        try:
-            for id in ids:
-                try:
-                    anUpload = Upload(repository=self._repository)
-                    anUpload.id = id
-                    self.do.notifyHarvestedRecord(anUpload.id)
-                    self.do.delete(anUpload)
-                    done.append(id)
-                except:
-                    xtype,xval,xtb = sys.exc_info()
-                    errorMessage = '|'.join(map(str.strip,format_exception(xtype,xval,xtb)))
-                    self.do.logError(errorMessage, id=id)
-                    raise
-            return ids[len(done):]
-        finally:
-            self._finish(ids[len(done):])
-            
-    def _finish(self, remainingIDs):
-        writeIds(self._filename, remainingIDs)
-
-    def markDeleted(self):
-        self.do.markDeleted()

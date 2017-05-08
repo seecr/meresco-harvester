@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -44,11 +44,6 @@ from harvesterlog import HarvesterLog
 from state import State
 
 
-DONE = 'Done.'
-
-class ActionException(Exception):
-    pass
-
 class Action(object):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
         self._repository = repository
@@ -73,7 +68,7 @@ class Action(object):
     def do(self):
         """
         perform action and return
-        (if the action is finished/done, a Message about what happened.)
+            (if the action is finished/done, a Message about what happened, hasResumptionToken)
         """
         raise NotImplementedError
 
@@ -109,7 +104,7 @@ class Action(object):
             (['ERROR', 'INFO', 'WARN'], self._generalHarvestLog),
         ])
         uploader = self._repository.createUploader(eventlogger)
-        helix =\
+        helix = \
             (DeleteIds(self._repository, self._stateDir),
                 (harvesterLog,),
                 (eventlogger,),
@@ -123,6 +118,7 @@ class NoneAction(Action):
         return False, '', False
     def info(self):
         return ''
+
 
 class HarvestAction(Action):
     def do(self):
@@ -140,6 +136,7 @@ class HarvestAction(Action):
         finally:
             s.close()
 
+
 class DeleteIdsAction(Action):
     def do(self):
         if self._repository.shopClosed():
@@ -152,6 +149,7 @@ class DeleteIdsAction(Action):
         d.deleteFile(self.invalidIdsFilename)
         d.markDeleted()
         return True, 'Deleted', False
+
 
 class SmoothAction(Action):
     def __init__(self, repository, stateDir, logDir, generalHarvestLog):
@@ -205,4 +203,10 @@ class SmoothAction(Action):
     def _harvest(self):
         harvester = self._createHarvester()
         return harvester.harvest()
+
+
+DONE = 'Done.'
+
+class ActionException(Exception):
+    pass
 
