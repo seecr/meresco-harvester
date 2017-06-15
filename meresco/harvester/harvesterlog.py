@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -136,12 +136,13 @@ class HarvesterLog(object):
         rmtree(join(self._logDir, INVALID_DATA_MESSAGES_DIR, repositoryId))
 
     def hasWork(self, continuousInterval=None):
-        if continuousInterval is not None:
-            from_ = self._state.from_
+        def _hasWorkFrom(from_):
+            if continuousInterval is None:
+                return not self.isCurrentDay(from_)
             if from_ and 'T' not in from_:
                 from_ += "T00:00:00Z"
-            return from_ is None or ZuluTime().epoch - ZuluTime(from_).epoch > continuousInterval
-        return self._state.token or self._state.from_ is None or not self.isCurrentDay(self._state.from_)
+            return ZuluTime().epoch - ZuluTime(from_).epoch > continuousInterval
+        return self._state.token or self._state.from_ is None or _hasWorkFrom(self._state.from_)
 
     def state(self):
         return self._state

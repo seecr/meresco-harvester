@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -92,6 +92,18 @@ class HarvesterLogTest(SeecrTestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork(continuousInterval=65))
         self.assertTrue(logger.hasWork(continuousInterval=60))
+
+    def testHasWorkWithResumptionTokenContinuous(self):
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        self.assertTrue(logger.hasWork(continuousInterval=60))
+        logger.startRepository()
+        logger.endRepository('resumptionToken', strftime("%Y-%m-%dT%H:%M:%SZ", logger._state._gmtime()))
+        logger.close()
+        logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        self.assertTrue(logger.hasWork(continuousInterval=60))
+        logger.startRepository()
+        logger.endRepository('resumptionToken2', strftime("%Y-%m-%dT%H:%M:%SZ", gmtime(time() - 60 - 1)))
+        logger.close()
 
     def testLoggingAlwaysStartsNewline(self):
         "Tests an old situation that when a log was interrupted, it continued on the same line"
