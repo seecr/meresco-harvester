@@ -136,6 +136,9 @@ class StartHarvester(object):
             help=SUPPRESS_HELP)
 
         (options, args) = self.parser.parse_args()
+        for opt in ['serverUrl']:
+            if not getattr(options, opt, None):
+                raise ValueError('Missing option: %s' % repr(opt))
         return options
 
     def start(self):
