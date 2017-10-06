@@ -11,7 +11,7 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011, 2015-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -39,6 +39,7 @@ from fcntl import fcntl, F_SETFL
 from threading import Timer
 from signal import SIGKILL
 
+
 class TimedProcess(object):
     def __init__(self, signal=None):
         self._wasTimeout = False
@@ -59,15 +60,22 @@ class TimedProcess(object):
     def terminate(self):
         if self._pid != -1:
             kill(self._pid, self._signal)
-        self._wasTimeout = True
         self.timer.cancel()
 
+    def timedOut(self):
+        print 'Process %s with args "%s" timed out after %s seconds and will be terminated.' % (self._pid, self._args, self._timeout)
+        import sys; sys.stdout.flush()
+        self._wasTimeout = True
+        self.terminate()
+
     def executeScript(self, args, timeout):
+        self._args = args
+        self._timeout = timeout
         process = Popen(args, stdout=PIPE, stderr=PIPE, bufsize=0)
         fcntl(process.stdout.fileno(), F_SETFL, O_NONBLOCK)
         fcntl(process.stderr.fileno(), F_SETFL, O_NONBLOCK)
         self._pid = process.pid
-        self.timer = Timer(timeout, self.terminate)
+        self.timer = Timer(timeout, self.timedOut)
         self.timer.start()
         return process
 
