@@ -93,7 +93,7 @@ class BasicEventLogger(object):
 
 class EventLogger(BasicEventLogger):
     def __init__(self, logfile, maxLogLines=20000):
-        BasicEventLogger.__init__(self, logfile, maxLogLines=maxLogLines)
+        super(EventLogger, self).__init__(logfile, maxLogLines=maxLogLines)
 
     def _openlogfile(self, logfile):
         self._numberOfLogLines = 0

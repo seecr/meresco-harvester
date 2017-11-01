@@ -43,6 +43,7 @@ from saharaobject import SaharaObject
 from timeslot import Timeslot
 from virtualuploader import UploaderFactory
 
+from gustos.common.units import COUNT
 
 nillogger = NilEventLogger()
 
@@ -90,7 +91,7 @@ class Repository(SaharaObject):
     def _createAction(self, stateDir, logDir, generalHarvestLog):
         return Action.create(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
 
-    def do(self, stateDir, logDir, generalHarvestLog=nillogger):
+    def do(self, stateDir, logDir, generalHarvestLog=nillogger, gustosClient=None):
         try:
             if not (stateDir or logDir):
                 raise RepositoryException('Missing stateDir and/or logDir')
@@ -108,6 +109,7 @@ class Repository(SaharaObject):
                 generalHarvestLog.logInfo('Repository will be completed in one attempt', id=self.id)
             return message, completeHarvest
         except OAIError, e:
+            gustosClient and gustosClient.report(values={ "Harvester": { "Events": { "errors": { COUNT: 1 } } } })
             errorMessage = _errorMessage()
             generalHarvestLog.logError(errorMessage, id=self.id)
             if e.errorCode() == 'badResumptionToken':
@@ -115,6 +117,7 @@ class Repository(SaharaObject):
                 return errorMessage, self.complete == True
             return errorMessage, False
         except:
+            gustosClient and gustosClient.report(values={ "Harvester": { "Events": { "errors": { COUNT: 1 } } } })
             errorMessage = _errorMessage()
             generalHarvestLog.logError(errorMessage, id=self.id)
             return errorMessage, False

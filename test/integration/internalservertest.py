@@ -177,6 +177,3 @@ class InternalServerTest(IntegrationTestCase):
         self.assertTrue("Exception: ERROR" in description, description)
         self.assertEquals('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split('T')[0])
         self.assertEquals("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
-
-
-

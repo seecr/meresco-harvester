@@ -17,3 +17,5 @@ python-seecr-zulutime (<< 0.3)
 python-seecr-web-lib (>= 0.1.0.2)
 python-seecr-web-lib (<< 0.2)
 python-simplejson
+gustos-common
+gustos-client

@@ -32,23 +32,27 @@
 # 
 ## end license ##
 
-import unittest,os,re
+import re
+from os.path import join
 from meresco.harvester.eventlogger import StreamEventLogger, EventLogger, LOGLINE_RE, CompositeLogger
 from StringIO import StringIO
 
-EVENTLOGFILE = '/tmp/EventLoggerTestFile'
+from seecr.test import SeecrTestCase
+
 DATELENGTH = 26
 
-class EventLoggerTest(unittest.TestCase):
+
+class EventLoggerTest(SeecrTestCase):
     def setUp(self):
-        os.path.isfile(EVENTLOGFILE) and os.remove(EVENTLOGFILE)
-        self.logger = EventLogger(EVENTLOGFILE)
-        self.logfile = open(EVENTLOGFILE,'r+')
+        super(EventLoggerTest, self).setUp()
+        self._eventLogFile = join(self.tempdir, 'EventLoggerTestFile')
+        self.logger = EventLogger(self._eventLogFile)
+        self.logfile = open(self._eventLogFile, 'r+')
 
     def tearDown(self):
+        super(EventLoggerTest, self).tearDown()
         self.logfile.close()
         self.logger.close()
-        os.path.isfile(EVENTLOGFILE) and os.remove(EVENTLOGFILE)
 
     def readLogLine(self):
         line = self.logfile.readline().strip()
@@ -147,18 +151,17 @@ class EventLoggerTest(unittest.TestCase):
     def testClearLogfile(self):
         self.logger.logLine('SUCCES','Some logline 1')
         self.logger.close()
-        self.logger = EventLogger(EVENTLOGFILE, maxLogLines=4)
+        self.logger = EventLogger(self._eventLogFile, maxLogLines=4)
         self.logger.logLine('SUCCES','Some logline 2')
         self.logger.logLine('SUCCES','Some logline 3')
         self.logger.logLine('SUCCES','Some logline 4')
-        logfile = open(EVENTLOGFILE,'r+')
+        logfile = open(self._eventLogFile,'r+')
         self.assertEquals('SUCCES\t[]\tSome logline 3', logfile.readline().strip()[DATELENGTH:])
 
         self.logger.logLine('SUCCES','Some logline 5')
-        logfile = open(EVENTLOGFILE,'r+')
+        logfile = open(self._eventLogFile,'r+')
         self.assertEquals('SUCCES\t[]\tSome logline 3', logfile.readline().strip()[DATELENGTH:])
 
         self.logger.logLine('SUCCES','Some logline 6')
-        logfile = open(EVENTLOGFILE,'r+')
+        logfile = open(self._eventLogFile,'r+')
         self.assertEquals('SUCCES\t[]\tSome logline 5', logfile.readline().strip()[DATELENGTH:])
-

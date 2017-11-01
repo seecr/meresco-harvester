@@ -41,7 +41,7 @@ from shutil import copytree
 
 from seecr.test.integrationtestcase import IntegrationState
 from seecr.test.portnumbergenerator import PortNumberGenerator
-
+from seecr.test.udplistenandlog import UdpListenAndLog
 
 mydir = dirname(abspath(__file__))
 projectDir = dirname(dirname(mydir))
@@ -52,6 +52,7 @@ class HarvesterIntegrationState(IntegrationState):
         IntegrationState.__init__(self, "harvester-"+stateName, tests=tests, fastMode=fastMode)
         self.helperServerPortNumber = PortNumberGenerator.next()
         self.harvesterInternalServerPortNumber = PortNumberGenerator.next()
+        self.gustosPort = PortNumberGenerator.next()
 
         self.helperDir = join(self.integrationTempdir, 'helper')
         self.dumpDir = join(self.helperDir, 'dump')
@@ -68,6 +69,7 @@ class HarvesterIntegrationState(IntegrationState):
         return join(projectDir, 'bin')
 
     def setUp(self):
+        self.startGustosUdpListener()
         self.startHelperServer()
         self.startHarvesterInternalServer()
 
@@ -77,7 +79,7 @@ class HarvesterIntegrationState(IntegrationState):
         urlopen("http://localhost:%s/control?%s" % (self.helperServerPortNumber, urlencode(args,doseq=True)))
 
     def startHarvester(self, repository=None, concurrency=None, runOnce=True, sleepTime=0, verbose=False, timeoutInSeconds=6, **kwargs):
-        arguments = dict(domain='adomain', logDir=self.harvesterLogDir, stateDir=self.harvesterStateDir, url="http://localhost:{}".format(self.harvesterInternalServerPortNumber), sleepTime=sleepTime)
+        arguments = dict(domain='adomain', logDir=self.harvesterLogDir, stateDir=self.harvesterStateDir, url="http://localhost:{}".format(self.harvesterInternalServerPortNumber), sleepTime=sleepTime, gustosId="harvester", gustosHost="localhost", gustosPort=self.gustosPort)
         arguments.update(kwargs)
         if repository is not None:
             arguments['repository'] = repository
@@ -99,6 +101,9 @@ class HarvesterIntegrationState(IntegrationState):
             port=self.helperServerPortNumber,
             directory=self.helperDir
         )
+
+    def startGustosUdpListener(self):
+        self.gustosUdpListener = UdpListenAndLog(self.gustosPort)
 
     def startHarvesterInternalServer(self):
         self._startServer(

@@ -70,7 +70,8 @@ class HarvesterTest(IntegrationTestCase):
         self.removeRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
         IntegrationTestCase.tearDown(self)
 
-    def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False, continuous=None):
+    def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False, continuous=None, baseUrl=None):
+        baseUrl = baseUrl if baseUrl else 'http://localhost:%s/oai' % self.helperServerPortNumber
         try:
             self.harvesterData.addRepository(identifier=repositoryId, domainId=domain, repositoryGroupId=repositoryGroupId)
         except ValueError:
@@ -78,7 +79,7 @@ class HarvesterTest(IntegrationTestCase):
         self.harvesterData.updateRepository(
                 identifier=repositoryId,
                 domainId=domain,
-                baseurl='http://localhost:%s/oai' % self.helperServerPortNumber,
+                baseurl=baseUrl,
                 set=None,
                 metadataPrefix=metadataPrefix,
                 mappingId=mappingId,
@@ -450,6 +451,23 @@ class HarvesterTest(IntegrationTestCase):
             self.assertEquals(xyzOccurrences, newXyzOccurrences, "%s!=%s\n%s" % (xyzOccurrences, newXyzOccurrences, log))
         finally:
             t.join()
+
+    def testErrorReportedToGustos(self):
+        baseUrl = join(self.integrationTempdir, "choppy_oai.xml")
+        filename = "{}?verb=ListRecords&metadataPrefix=oai_dc".format(baseUrl)
+        with open(filename, "w") as fp:
+            fp.write("""<?xml version="1.0" encoding="UTF-8"?>
+            <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2017-10-31T15:12:52Z</responseDate><request from="2017-10-04T11:52:57Z" metadataPrefix="didl_mods" verb="ListRecords">https://surfsharekit.nl/oai/hhs/</request><ListRecords><record><header><identifier>oai:surfsharekit.nl:b6ea6503-e2fc-4974-8941-2a4a405dc72f</identifier><datestamp>2017-10-04T14:16:22Z</datestamp></header><metadata><didl:DIDL xmlns:didl="urn:mpeg:mpeg21:2002:02-DIDL-NS" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+              <didl:Item> <didl:Descriptor> <didl:Statement mimeType="application/xml"> <dii:Identifier xmlns:dii="urn:mpeg:mpeg21:2002:01-DII-NS">urn:nbn:nl:hs:18-b6ea6503-e2fc-4974-8941-2a4a405dc72f</dii:Identifier>
+                                      </didl:Statement> </didl:Descrip""")
+        
+        errorCount = len(self.gustosUdpListener.log())
+        self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, baseUrl="file://{}".format(baseUrl))
+        t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=True))
+        t.start()
+
+        sleepWheel(4)
+        self.assertEqual(errorCount + 1, len(self.gustosUdpListener.log()))
 
     def testConcurrencyAtLeastOne(self):
         stdouterrlog = self.startHarvester(concurrency=0, expectedReturnCode=2)

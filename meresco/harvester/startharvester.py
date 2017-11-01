@@ -46,6 +46,8 @@ from errno import EINTR, EAGAIN
 from meresco.components.json import JsonDict
 from meresco.harvester.internalserverproxy import InternalServerProxy
 
+from gustos.client import Client as GustosClient
+
 AGAIN_EXITCODE = 42
 
 class StartHarvester(object):
@@ -70,6 +72,7 @@ class StartHarvester(object):
         self.proxy = InternalServerProxy(self.serverUrl, self.setActionDone)
         self.repository = self.repositoryId and self.proxy.getRepositoryObject(identifier=self.repositoryId, domainId=self.domainId)
 
+
     def parse_args(self):
         self.parser.add_option("-d", "--domain",
             dest="domainId",
@@ -83,6 +86,17 @@ class StartHarvester(object):
             dest="repositoryId",
             help="Process a single repository within the given domain. Defaults to all repositories from the domain.",
             metavar="REPOSITORY")
+        self.parser.add_option("", "--gustosId",
+            dest="gustosId",
+            help="Name this harvester sends to Gustos")
+        self.parser.add_option("", "--gustosHost",
+            dest="gustosHost",
+            help="Hostname for the gustos server")
+        self.parser.add_option("", "--gustosPort",
+            dest="gustosPort",
+            help="Portnumber of gustos on the gustos server",
+            default=8001,
+            type=int),
         self.parser.add_option("-t", "--set-process-timeout",
             dest="processTimeout",
             type="int",
@@ -240,11 +254,17 @@ class StartHarvester(object):
             (['ERROR', 'WARN'], StreamEventLogger(stderr)),
         ])
 
+        gustosClient = GustosClient(
+            id=self.gustosId,
+            gustosHost=self.gustosHost,
+            gustosPort=self.gustosPort,
+            threaded=False) if self.gustosId else None
+
         messageIgnored, again = self.repository.do(
             stateDir=join(self._stateDir, self.domainId),
             logDir=join(self._logDir, self.domainId),
-            generalHarvestLog=self._generalHarvestLog)
+            generalHarvestLog=self._generalHarvestLog,
+            gustosClient=gustosClient)
         sleep(self.sleepTime)
         if again:
             exit(AGAIN_EXITCODE)
-
