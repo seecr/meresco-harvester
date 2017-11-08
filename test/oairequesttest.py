@@ -43,6 +43,10 @@ class OaiRequestTest(unittest.TestCase):
     def setUp(self):
         self.request = MockOaiRequest('mocktud')
 
+    def testUserAgent(self):
+        import urllib2
+        self.assertEqual([('User-Agent', 'Meresco Harvester trunk')], [h for h in urllib2._opener.handlers if 'HTTPSHandlerTLS' in str(h)][0].parent.addheaders)
+
     def testMockOaiRequest(self):
         response = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
         self.assertEquals('2004-12-29T13:19:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))

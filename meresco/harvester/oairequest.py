@@ -40,8 +40,11 @@ from meresco.harvester.namespaces import xpathFirst, xpath
 from lxml.etree import parse
 from urllib import urlencode
 
+from __version__ import VERSION
 from httpsconnection import HTTPSHandlerTLS
-install_opener(build_opener(HTTPSHandlerTLS()))
+buildOpener = build_opener(HTTPSHandlerTLS()) 
+buildOpener.addheaders = [('User-Agent', 'Meresco Harvester {}'.format(VERSION))]
+install_opener(buildOpener)
 
 class OaiRequestException(Exception):
     def __init__(self, url, message):
