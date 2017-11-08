@@ -41,12 +41,13 @@ from httpsconnection import HTTPSHandlerTLS
 from lxml.etree import parse
 
 from seecr.zulutime import ZuluTime
+from __version__ import VERSION
+from httpsconnection import HTTPSHandlerTLS
+buildOpener = build_opener(HTTPSHandlerTLS()) 
+buildOpener.addheaders = [('User-Agent', 'Meresco Harvester {}'.format(VERSION))]
+install_opener(buildOpener)
 
 from meresco.harvester.namespaces import xpathFirst, xpath
-
-
-install_opener(build_opener(HTTPSHandlerTLS()))
-
 
 class OaiRequest(object):
     def __init__(self, url):
