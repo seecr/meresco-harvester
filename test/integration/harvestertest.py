@@ -89,7 +89,8 @@ class HarvesterTest(IntegrationTestCase):
                 complete=complete,
                 continuous=continuous,
                 action=action,
-                shopclosed=[]
+                shopclosed=[],
+                userAgent=None,
             )
 
     def removeRepository(self, domain, repositoryId, repositoryGroupId):
