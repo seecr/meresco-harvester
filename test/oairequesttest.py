@@ -32,7 +32,7 @@
 #
 ## end license ##
 
-import unittest
+from seecr.test import SeecrTestCase
 
 from lxml.etree import parse, XML
 
@@ -40,15 +40,24 @@ from meresco.harvester.namespaces import xpathFirst, namespaces
 from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
 
 from mockoairequest import MockOaiRequest
+from StringIO import StringIO
 
-
-class OaiRequestTest(unittest.TestCase):
+class OaiRequestTest(SeecrTestCase):
     def setUp(self):
+        super(OaiRequestTest, self).setUp()
         self.request = MockOaiRequest('mocktud')
 
-    def testUserAgent(self):
-        import urllib2
-        self.assertEqual([('User-Agent', 'Meresco Harvester trunk')], [h for h in urllib2._opener.handlers if 'HTTPSHandlerTLS' in str(h)][0].parent.addheaders)
+    def testUserAgentDefault(self):
+        args = {}
+        def myOwnUrlOpen(*fArgs, **fKwargs):
+            args['args'] = fArgs
+            args['kwargs'] = fKwargs
+            return StringIO(oaiResponseXML())
+
+        request = OaiRequest("http://harvest.me", _urlopen=myOwnUrlOpen)
+        request.identify()
+        
+        self.assertEquals("Meresco Harvester trunk", args['args'][0].headers['User-agent'])
 
     def testMockOaiRequest(self):
         response = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
@@ -115,16 +124,17 @@ class OaiRequestTest(unittest.TestCase):
         finally:
             OaiResponse._zulu = originalZuluMethod
 
+def oaiResponse(**kwargs):
+    return OaiResponse(XML(oaiResponseXML(**kwargs)))
 
-def oaiResponse(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
+def oaiResponseXML(responseDate='2000-01-02T03:04:05Z', verb='ListRecords', identifier='oai:ident:321', deleted=False, about=None):
     about = '<about/>' if about is None else about
-    return OaiResponse(XML("""<OAI-PMH xmlns="{namespaces.oai}"><responseDate>{responseDate}</responseDate><{verb}><record><header{statusDeleted}><identifier>{identifier}</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>{metadata}{about}</record></{verb}></OAI-PMH>""".format(
-                namespaces=namespaces,
-                verb=verb,
-                responseDate=responseDate,
-                identifier=identifier,
-                statusDeleted=' status="deleted"' if deleted else '',
-                metadata='<metadata></metadata>' if not deleted else '',
-                about=about if not deleted else '',
-            )
-        ))
+    return """<OAI-PMH xmlns="{namespaces.oai}"><responseDate>{responseDate}</responseDate><{verb}><record><header{statusDeleted}><identifier>{identifier}</identifier><datestamp>2005-08-29T07:08:09Z</datestamp></header>{metadata}{about}</record></{verb}></OAI-PMH>""".format(
+        namespaces=namespaces,
+        verb=verb,
+        responseDate=responseDate,
+        identifier=identifier,
+        statusDeleted=' status="deleted"' if deleted else '',
+        metadata='<metadata></metadata>' if not deleted else '',
+        about=about if not deleted else '',
+    )

@@ -210,7 +210,8 @@ class HarvesterDataActionsTest(SeecrTestCase):
             continuous=continuous,
             complete=complete,
             action=action,
-            shopclosed=shopclosed or []
+            shopclosed=shopclosed or [],
+            userAgent='',
         )
 
 

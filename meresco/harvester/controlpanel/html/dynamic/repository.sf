@@ -84,6 +84,10 @@ def _repository(domain, repository):
                     <td><input size="50" type="text" name="metadataPrefix" value="{metadataPrefix}"></td>
                 </tr>
                 <tr>
+                    <td>User-Agent:</td>
+                    <td><input size="50" type="text" name="userAgent" value="{userAgent}"></td>
+                </tr>
+                <tr>
                     <td>Mapping:</td>
                     <td>""".format(
                         repositoryId=repository.get('identifier'),
@@ -91,6 +95,7 @@ def _repository(domain, repository):
                         domainId=domainId,
                         repositoryGroupId=repository['repositoryGroupId'],
                         baseurl=repository.get('baseurl') or '',
+                        userAgent=repository.get('userAgent') or '',
                         setName=repository.get('set') or '',
                         metadataPrefix=repository.get('metadataPrefix') or '',
                     )

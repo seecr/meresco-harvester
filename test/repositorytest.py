@@ -32,24 +32,31 @@
 #
 ## end license ##
 
+from seecr.test import SeecrTestCase, CallTrace
+
 from meresco.harvester.eventlogger import NilEventLogger
 from meresco.harvester.repository import Repository
 from meresco.harvester.action import Action, DONE, ActionException
 from meresco.harvester.oairequest import OAIError
 from meresco.harvester.timeslot import Wildcard
-from seecr.test import CallTrace
-import tempfile, os, shutil
-import unittest
+from os.path import join
 
-class RepositoryTest(unittest.TestCase):
+class RepositoryTest(SeecrTestCase):
     def setUp(self):
-        self.repo = Repository('domainId','rep')
-        self.repo._proxy = self
-        self.logAndStateDir = os.path.join(tempfile.gettempdir(),'repositorytest')
-        os.path.isdir(self.logAndStateDir) or os.mkdir(self.logAndStateDir)
+        super(RepositoryTest, self).setUp()
 
-    def tearDown(self):
-        shutil.rmtree(self.logAndStateDir)
+        self.oaiRequestMock = None
+        self.oaiRequestArgsKwargs = None
+        def mockOaiRequest(*args, **kwargs):
+            self.oaiRequestArgsKwargs = args, kwargs
+            self.oaiRequestMock = CallTrace()
+            return self.oaiRequestMock
+        
+        self.repo = Repository('domainId','rep', oaiRequestClass=mockOaiRequest)
+        self.repo._proxy = self
+        self.logAndStateDir = join(self.tempdir, 'repositorytest')
+        
+
 
     def testNoTimeslots(self):
         slots = self.repo.shopclosed
@@ -194,6 +201,17 @@ class RepositoryTest(unittest.TestCase):
     def repositoryActionDone(self, domainId, repositoryId):
         self.mock_repositoryActionDone_domainId = domainId
         self.mock_repositoryActionDone_repositoryId = repositoryId
+
+    def testPassOnUserAgent(self):
+        self.repo.userAgent = "This is the User agent"
+        self.repo.oairequest()
+        self.assertEquals(((None,), {'userAgent': 'This is the User agent'}), self.oaiRequestArgsKwargs)
+
+    def testNoneUserAgentIfEmpty(self):
+        self.repo.userAgent = ''
+        self.repo.oairequest()
+        self.assertEquals(((None,), {'userAgent': None}), self.oaiRequestArgsKwargs)
+
 
 
 class MockAction(Action):

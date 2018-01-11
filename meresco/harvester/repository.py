@@ -49,16 +49,18 @@ nillogger = NilEventLogger()
 
 
 class Repository(SaharaObject):
-    def __init__(self, domainId, repositoryId):
+    def __init__(self, domainId, repositoryId, oaiRequestClass=None):
         SaharaObject.__init__(self, [
             'repositoryGroupId', 'baseurl', 'set',
             'collection', 'metadataPrefix', 'use',
             'targetId', 'mappingId', 'action',
+            'userAgent',
             'complete', 'maximumIgnore', 'continuous'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
         self.mockUploader = None
         self.uploadfulltext = True
+        self._oaiRequestClass = oaiRequestClass or OaiRequest
 
     def closedSlots(self):
         if not hasattr(self, '_closedslots'):
@@ -86,7 +88,7 @@ class Repository(SaharaObject):
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
     def oairequest(self):
-        return OaiRequest(self.baseurl)
+        return self._oaiRequestClass(self.baseurl, userAgent=self.userAgent or None)
 
     def _createAction(self, stateDir, logDir, generalHarvestLog):
         return Action.create(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)
