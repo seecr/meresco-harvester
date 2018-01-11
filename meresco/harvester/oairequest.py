@@ -32,7 +32,8 @@
 #
 ## end license ##
 
-from urllib2 import urlopen, install_opener, build_opener
+from urllib import urlencode
+from urllib2 import urlopen, install_opener, build_opener, Request
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
@@ -43,7 +44,6 @@ from urllib import urlencode
 from __version__ import VERSION
 from httpsconnection import HTTPSHandlerTLS
 buildOpener = build_opener(HTTPSHandlerTLS()) 
-buildOpener.addheaders = [('User-Agent', 'Meresco Harvester {}'.format(VERSION))]
 install_opener(buildOpener)
 
 class OaiRequestException(Exception):
@@ -72,10 +72,12 @@ class OAIError(OaiRequestException):
 QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
 
 class OaiRequest(object):
-    def __init__(self, url):
+    def __init__(self, url, userAgent=None, _urlopen=None):
         self._url = url
         self._urlElements = urlparse(url)
         self._argslist = parse_qsl(self._urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT])
+        self._userAgent = userAgent
+        self._urlopen = _urlopen or urlopen
 
     def listRecords(self, **kwargs):
         if kwargs.has_key('from_'):
@@ -108,7 +110,10 @@ class OaiRequest(object):
         return OaiResponse(result)
 
     def _request(self, argslist):
-        return parse(urlopen(self._buildRequestUrl(argslist), timeout=5*60))
+        userAgent = self._userAgent or "Meresco Harvester {}".format(VERSION)
+        return parse(self._urlopen(
+            Request(self._buildRequestUrl(argslist), None, {'User-Agent': userAgent}),
+            timeout=5*60))
 
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.

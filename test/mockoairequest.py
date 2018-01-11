@@ -39,7 +39,7 @@ class MockOaiRequest(OaiRequest):
         OaiRequest.__init__(self,url)
         self._createMapping()
         
-    def _request(self, argslist):
+    def _request(self, argslist, **kwargs):
         filename = self.findFile(argslist)
         return parse(open(filename))
 

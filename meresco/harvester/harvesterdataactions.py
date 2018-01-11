@@ -121,6 +121,7 @@ class HarvesterDataActions(PostActions):
                 continuous=int(arguments.get('continuous', ['0'])[0]) or None,
                 complete='complete' in arguments,
                 action=arguments.get('repositoryAction', [None])[0],
+                userAgent=arguments.get('userAgent', [None])[0],
                 shopclosed=shopclosed,
             )
 

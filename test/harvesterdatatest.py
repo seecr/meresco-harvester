@@ -257,6 +257,7 @@ class HarvesterDataTest(SeecrTestCase):
                 continuous=True,
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
+                userAgent='',
             )
         repository = self.hd.getRepository('repository1', 'adomain')
         self.assertEquals('baseurl', repository['baseurl'])
@@ -287,6 +288,7 @@ class HarvesterDataTest(SeecrTestCase):
                 continuous=True,
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
+                userAgent='',
             )
         self.hd.repositoryDone(identifier='repository1', domainId='adomain')
         repository = self.hd.getRepository('repository1', 'adomain')
