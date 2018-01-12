@@ -32,7 +32,9 @@
 #
 ## end license ##
 
-from urllib2 import urlopen, install_opener, build_opener
+from urllib import urlencode
+from urllib2 import urlopen, install_opener, build_opener, Request, URLError
+from ssl import SSLError
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
@@ -41,7 +43,8 @@ from lxml.etree import parse
 from urllib import urlencode
 
 from httpsconnection import HTTPSHandlerTLS
-install_opener(build_opener(HTTPSHandlerTLS()))
+buildOpener = build_opener(HTTPSHandlerTLS())
+install_opener(buildOpener)
 
 class OaiRequestException(Exception):
     def __init__(self, url, message):
@@ -105,7 +108,22 @@ class OaiRequest(object):
         return OaiResponse(result)
 
     def _request(self, argslist):
-        return parse(urlopen(self._buildRequestUrl(argslist), timeout=5*60))
+        def doUrlopen():
+            return self._urlopen(
+                Request(self._buildRequestUrl(argslist), None, {'User-Agent': "Meresco Harvester {}".format(VERSION)}),
+                timeout=5*60)
+        try:
+            result = doUrlopen()
+        except (SSLError, URLError), e:
+            if 'HANDSHAKE_FAILURE' not in str(e):
+                raise
+            try:
+                install_opener(None)
+                result = doUrlopen()
+            finally:
+                install_opener(buildOpener)
+
+        return parse(result)
 
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.
