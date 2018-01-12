@@ -33,22 +33,20 @@
 ## end license ##
 
 from urllib import urlencode
-from urllib2 import urlopen, install_opener, build_opener, Request
+from urllib2 import urlopen, install_opener, build_opener, Request, URLError
+from ssl import SSLError
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
+
 from lxml.etree import parse
 
 from __version__ import VERSION
 from httpsconnection import HTTPSHandlerTLS
-buildOpener = build_opener(HTTPSHandlerTLS()) 
+buildOpener = build_opener(HTTPSHandlerTLS())
 install_opener(buildOpener)
 
 from seecr.zulutime import ZuluTime
 from meresco.harvester.namespaces import xpathFirst, xpath
-
-
-install_opener(build_opener(HTTPSHandlerTLS()))
-
 
 class OaiRequest(object):
     def __init__(self, url, userAgent=None, _urlopen=None):
@@ -90,9 +88,22 @@ class OaiRequest(object):
 
     def _request(self, argslist):
         userAgent = self._userAgent or "Meresco Harvester {}".format(VERSION)
-        return parse(self._urlopen(
-            Request(self._buildRequestUrl(argslist), None, {'User-Agent': userAgent}),
-            timeout=5*60))
+        def doUrlopen():
+            return self._urlopen(
+                Request(self._buildRequestUrl(argslist), None, {'User-Agent': userAgent}),
+                timeout=5*60)
+        try:
+            result = doUrlopen()
+        except (SSLError, URLError), e:
+            if 'HANDSHAKE_FAILURE' not in str(e):
+                raise
+            try:
+                install_opener(None)
+                result = doUrlopen()
+            finally:
+                install_opener(buildOpener)
+
+        return parse(result)
 
     def _buildRequestUrl(self, argslist):
         """Builds the url from the repository's base url + query parameters.
