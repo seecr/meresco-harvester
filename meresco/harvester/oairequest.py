@@ -41,6 +41,7 @@ from cgi import parse_qsl
 from meresco.harvester.namespaces import xpathFirst, xpath
 from lxml.etree import parse
 from urllib import urlencode
+from __version__ import VERSION
 
 from httpsconnection import HTTPSHandlerTLS
 buildOpener = build_opener(HTTPSHandlerTLS())
@@ -72,10 +73,11 @@ class OAIError(OaiRequestException):
 QUERY_POSITION_WITHIN_URLPARSE_RESULT=4
 
 class OaiRequest(object):
-    def __init__(self, url):
+    def __init__(self, url, _urlopen=None):
         self._url = url
         self._urlElements = urlparse(url)
         self._argslist = parse_qsl(self._urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT])
+        self._urlopen = _urlopen or urlopen
 
     def listRecords(self, **kwargs):
         if kwargs.has_key('from_'):
