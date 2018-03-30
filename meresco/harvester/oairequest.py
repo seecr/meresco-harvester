@@ -95,7 +95,7 @@ class OaiRequest(object):
         try:
             result = doUrlopen()
         except (SSLError, URLError), e:
-            if 'HANDSHAKE_FAILURE' not in str(e):
+            if 'HANDSHAKE_FAILURE' not in str(e) and 'TLSV1_ALERT_PROTOCOL_VERSION' not in str(e):
                 raise
             try:
                 install_opener(None)
