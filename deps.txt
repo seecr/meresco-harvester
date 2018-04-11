@@ -1,5 +1,5 @@
 python-lxml (>= 3.4.0)
-python-lxml (<< 3.5)
+python-lxml (<< 4.0)
 python-escaping (>= 0.1.3)
 python-escaping (<< 0.2)
 python-weightless-core (>= 0.10.9)
