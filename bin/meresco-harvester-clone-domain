@@ -71,9 +71,9 @@ def main(oldDomainId, newDomainId):
             repository = load(open(oldRepositoryFile))
             repository['mappingId'] = domain['mappingIds'][0]
             repository['targetId'] = domain['targetIds'][0]
-            dump(repository, open(newRepositoryFile, "w"))
+            dump(repository, open(newRepositoryFile, "w"), ident=4)
         repositoryGroup['repositoryIds'] = newRepositoryIds
-        dump(repositoryGroupId, open(newRepositoryGroupFile, "w"))
+        dump(repositoryGroup, open(newRepositoryGroupFile, "w"), indent=4)
 
     domain['repositoryGroupIds'] = newRepositoryGroupsIds
     dump(domain, open("{}.domain".format(newDomainId), "w"), indent=4)
