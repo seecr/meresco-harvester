@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+from simplejson import load, dump
+from sys import argv
+from os.path import join, isfile
+from uuid import uuid4
+
+def newUuid():
+    return str(uuid4())
+
+def main(oldDomainId, newDomainId):
+    if not isfile("{}.domain".format(oldDomainId)):
+        print "Domain not found"
+        return
+
+    domain = load(open("{}.domain".format(oldDomainId)))
+    domain['identifier'] = newDomainId
+
+    #
+    # Mappings
+    #
+    newMappingIds = []
+    for mappingId in domain['mappingIds']:
+        if not isfile('{}.mapping'.format(mappingId)):
+            print "Skipping {}, no mapping file found".format(targetId)
+            continue
+        mappingInfo = load(open("{}.mapping".format(mappingId)))
+        newMappingId = newUuid()
+        newMappingIds.append(newMappingId)
+        mappingInfo['identifier'] = newMappingId
+        dump(mappingInfo, open("{}.mapping".format(newMappingId), "w"), indent=4)
+    domain['mappingIds'] = newMappingIds
+
+    #
+    # Targets
+    #
+    newTargetIds = []
+    for targetId in domain['targetIds']:
+        if not isfile('{}.target'.format(targetId)):
+            print "Skipping {}, no target file found".format(targetId)
+            continue
+        targetInfo = load(open("{}.target".format(targetId)))
+        newTargetId = newUuid()
+        newTargetIds.append(newTargetId)
+        targetInfo['identifier'] = newTargetId
+        dump(targetInfo, open("{}.target".format(newTargetId), 'w'), indent=4)
+    domain['targetIds'] = newTargetIds
+
+    #
+    # RepositoryGroupIds
+    #
+    newRepositoryGroupsIds = []
+    for repositoryGroupId in domain['repositoryGroupIds']:
+        oldRepositoryGroupFile = "{}.{}.repositoryGroup".format(oldDomainId, repositoryGroupId)
+        newRepositoryGroupFile = "{}.{}.repositoryGroup".format(newDomainId, repositoryGroupId)
+        if not isfile(oldRepositoryGroupFile):
+            print "Skipping '{}', no repositoryGroup file found".format(repositoryGroupId)
+            continue
+        newRepositoryGroupsIds.append(repositoryGroupId)
+
+        repositoryGroup = load(open(oldRepositoryGroupFile))
+        newRepositoryIds = []
+        for repositoryId in repositoryGroup['repositoryIds']:
+            oldRepositoryFile = "{}.{}.repository".format(oldDomainId, repositoryId)
+            newRepositoryFile = "{}.{}.repository".format(newDomainId, repositoryId)
+            if not isfile(oldRepositoryFile):
+                print "Skipping '{}', no repository file found".format(repositoryId)
+                continue
+            newRepositoryIds.append(repositoryId)
+            
+            repository = load(open(oldRepositoryFile))
+            repository['mappingId'] = domain['mappingIds'][0]
+            repository['targetId'] = domain['targetIds'][0]
+            dump(repository, open(newRepositoryFile, "w"))
+        repositoryGroup['repositoryIds'] = newRepositoryIds
+        dump(repositoryGroupId, open(newRepositoryGroupFile, "w"))
+
+    domain['repositoryGroupIds'] = newRepositoryGroupsIds
+    dump(domain, open("{}.domain".format(newDomainId), "w"), indent=4)
+
+
+if __name__ == '__main__':
+    args = argv[1:]
+    if len(args) != 2:
+        print "Specify the old and new domainname"
+    else:
+        main(*args)
+
