@@ -30,7 +30,7 @@ from meresco.html import PostActions
 from meresco.xml import xpathFirst
 from meresco.components.http.utils import redirectHttp
 
-from seecr.tools import atomic_write
+from meresco.components import atomic_write
 
 from os.path import join, isfile
 from lxml.etree import parse, XML

@@ -41,8 +41,7 @@ removeDoNotDistribute tmp
 cp -r test tmp/test
 find tmp -type f -exec sed -r -e \
     "s,^binDir.*$,binDir='$SEECRTEST_USR_BIN',;
-    s,^examplesPath.*$,examplesPath='$mydir/examples',;
-    s/\\\$Version:[^\\\$]*\\\$/\\\$Version: ${VERSION}\\\$/" -i {} \;
+    s,^examplesPath.*$,examplesPath='$mydir/examples'," -i {} \;
 
 echo $PYTHONPATH
 runtests "$@"
