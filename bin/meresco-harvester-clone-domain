@@ -5,6 +5,9 @@ from sys import argv
 from os.path import join, isfile
 from uuid import uuid4
 
+
+DATADIR=[line.strip() for line in open('/etc/meresco-harvester/config').readlines() if line.startswith("DATADIR=")][0].split("=")[1] isfile('/etc/meresco-harvester/config') else '.'
+
 def newUuid():
     return str(uuid4())
 
@@ -13,7 +16,7 @@ def main(oldDomainId, newDomainId):
         print "Domain not found"
         return
 
-    domain = load(open("{}.domain".format(oldDomainId)))
+    domain = load(open(join(DATADIR, "{}.domain".format(oldDomainId))))
     domain['identifier'] = newDomainId
 
     #
@@ -24,11 +27,11 @@ def main(oldDomainId, newDomainId):
         if not isfile('{}.mapping'.format(mappingId)):
             print "Skipping {}, no mapping file found".format(targetId)
             continue
-        mappingInfo = load(open("{}.mapping".format(mappingId)))
+        mappingInfo = load(open(join(DATADIR, "{}.mapping".format(mappingId))))
         newMappingId = newUuid()
         newMappingIds.append(newMappingId)
         mappingInfo['identifier'] = newMappingId
-        dump(mappingInfo, open("{}.mapping".format(newMappingId), "w"), indent=4)
+        dump(mappingInfo, open(join(DATADIR, "{}.mapping".format(newMappingId)), "w"), indent=4)
     domain['mappingIds'] = newMappingIds
 
     #
@@ -39,11 +42,11 @@ def main(oldDomainId, newDomainId):
         if not isfile('{}.target'.format(targetId)):
             print "Skipping {}, no target file found".format(targetId)
             continue
-        targetInfo = load(open("{}.target".format(targetId)))
+        targetInfo = load(open(join(DATADIR, "{}.target".format(targetId))))
         newTargetId = newUuid()
         newTargetIds.append(newTargetId)
         targetInfo['identifier'] = newTargetId
-        dump(targetInfo, open("{}.target".format(newTargetId), 'w'), indent=4)
+        dump(targetInfo, open(join(DAATDIR, "{}.target".format(newTargetId)), 'w'), indent=4)
     domain['targetIds'] = newTargetIds
 
     #
@@ -51,8 +54,8 @@ def main(oldDomainId, newDomainId):
     #
     newRepositoryGroupsIds = []
     for repositoryGroupId in domain['repositoryGroupIds']:
-        oldRepositoryGroupFile = "{}.{}.repositoryGroup".format(oldDomainId, repositoryGroupId)
-        newRepositoryGroupFile = "{}.{}.repositoryGroup".format(newDomainId, repositoryGroupId)
+        oldRepositoryGroupFile = join(DATADIR, "{}.{}.repositoryGroup".format(oldDomainId, repositoryGroupId))
+        newRepositoryGroupFile = join(DATADIR, "{}.{}.repositoryGroup".format(newDomainId, repositoryGroupId))
         if not isfile(oldRepositoryGroupFile):
             print "Skipping '{}', no repositoryGroup file found".format(repositoryGroupId)
             continue
@@ -61,8 +64,8 @@ def main(oldDomainId, newDomainId):
         repositoryGroup = load(open(oldRepositoryGroupFile))
         newRepositoryIds = []
         for repositoryId in repositoryGroup['repositoryIds']:
-            oldRepositoryFile = "{}.{}.repository".format(oldDomainId, repositoryId)
-            newRepositoryFile = "{}.{}.repository".format(newDomainId, repositoryId)
+            oldRepositoryFile = join(DATADIR, "{}.{}.repository".format(oldDomainId, repositoryId))
+            newRepositoryFile = join(DATADIR, "{}.{}.repository".format(newDomainId, repositoryId))
             if not isfile(oldRepositoryFile):
                 print "Skipping '{}', no repository file found".format(repositoryId)
                 continue
@@ -76,7 +79,7 @@ def main(oldDomainId, newDomainId):
         dump(repositoryGroup, open(newRepositoryGroupFile, "w"), indent=4)
 
     domain['repositoryGroupIds'] = newRepositoryGroupsIds
-    dump(domain, open("{}.domain".format(newDomainId), "w"), indent=4)
+    dump(domain, open(join(DATADIR, "{}.domain".format(newDomainId)), "w"), indent=4)
 
 
 if __name__ == '__main__':
