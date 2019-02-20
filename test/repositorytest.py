@@ -51,12 +51,10 @@ class RepositoryTest(SeecrTestCase):
             self.oaiRequestArgsKwargs = args, kwargs
             self.oaiRequestMock = CallTrace()
             return self.oaiRequestMock
-        
+
         self.repo = Repository('domainId','rep', oaiRequestClass=mockOaiRequest)
         self.repo._proxy = self
         self.logAndStateDir = join(self.tempdir, 'repositorytest')
-        
-
 
     def testNoTimeslots(self):
         slots = self.repo.shopclosed
@@ -205,13 +203,12 @@ class RepositoryTest(SeecrTestCase):
     def testPassOnUserAgent(self):
         self.repo.userAgent = "This is the User agent"
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': 'This is the User agent', 'context': None}), self.oaiRequestArgsKwargs)
+        self.assertEquals(((None,), {'userAgent': 'This is the User agent'}), self.oaiRequestArgsKwargs)
 
     def testNoneUserAgentIfEmpty(self):
         self.repo.userAgent = ''
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': None, 'context': None}), self.oaiRequestArgsKwargs)
-
+        self.assertEquals(((None,), {'userAgent': None}), self.oaiRequestArgsKwargs)
 
 
 class MockAction(Action):
@@ -238,5 +235,3 @@ GETREPOSITORY = {
     "repositoryGroupId": "cq2Group2",
     "shopclosed": ["*:*:10:30-*:*:11:45", "*:5:5:59-*:5:23:00"]
 }
-
-
