@@ -32,7 +32,7 @@
 #
 ## end license ##
 
-from seecr.test import SeecrTestCase
+from seecr.test import SeecrTestCase, CallTrace
 
 from lxml.etree import parse, XML
 
@@ -58,6 +58,25 @@ class OaiRequestTest(SeecrTestCase):
         request.identify()
         
         self.assertEquals("Meresco Harvester trunk", args['args'][0].headers['User-agent'])
+
+    def testContextSetToTLS12(self):
+        from ssl import SSLError, PROTOCOL_TLSv1_2
+        calls = []
+        def loggingUrlOpen(*fArgs, **fKwargs):
+            calls.append(fKwargs)
+            raise SSLError("Some error")
+        request = OaiRequest("http://harvest.me", _urlopen=loggingUrlOpen)
+        try:
+            request.identify()
+            self.fail("Should have failed")
+        except:
+            pass
+        self.assertEqual(2, len(calls))
+        self.assertEqual(None, calls[0]['context'])
+        context=calls[1]['context']
+        self.assertEqual(PROTOCOL_TLSv1_2, context.protocol)
+
+
 
     def testMockOaiRequest(self):
         response = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
