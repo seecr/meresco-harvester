@@ -34,7 +34,7 @@
 
 from urllib import urlencode
 from urllib2 import urlopen, install_opener, build_opener, Request, URLError
-from ssl import SSLError
+from ssl import SSLError, SSLContext, PROTOCOL_TLSv1_2
 from urlparse import urlparse, urlunparse
 from cgi import parse_qsl
 
@@ -42,9 +42,6 @@ from lxml.etree import parse
 
 from seecr.zulutime import ZuluTime
 from __version__ import VERSION
-from httpsconnection import HTTPSHandlerTLS
-buildOpener = build_opener(HTTPSHandlerTLS())
-install_opener(buildOpener)
 
 from meresco.harvester.namespaces import xpathFirst, xpath
 
@@ -87,21 +84,18 @@ class OaiRequest(object):
         return OaiResponse(result)
 
     def _request(self, argslist):
-        userAgent = self._userAgent or "Meresco Harvester {}".format(VERSION)
-        def doUrlopen():
+        def doUrlopen(context=None):
             return self._urlopen(
-                Request(self._buildRequestUrl(argslist), None, {'User-Agent': userAgent}),
-                timeout=5*60)
+                Request(
+                    self._buildRequestUrl(argslist),
+                    None,
+                    {'User-Agent': self._userAgent or "Meresco Harvester {}".format(VERSION)}),
+                timeout=5*60,
+                context=context)
         try:
             result = doUrlopen()
         except (SSLError, URLError), e:
-            if 'HANDSHAKE_FAILURE' not in str(e) and 'TLSV1_ALERT_PROTOCOL_VERSION' not in str(e):
-                raise
-            try:
-                install_opener(None)
-                result = doUrlopen()
-            finally:
-                install_opener(buildOpener)
+            result = doUrlopen(context=SSLContext(PROTOCOL_TLSv1_2))
 
         return parse(result)
 

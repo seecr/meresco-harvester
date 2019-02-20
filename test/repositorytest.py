@@ -205,12 +205,12 @@ class RepositoryTest(SeecrTestCase):
     def testPassOnUserAgent(self):
         self.repo.userAgent = "This is the User agent"
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': 'This is the User agent'}), self.oaiRequestArgsKwargs)
+        self.assertEquals(((None,), {'userAgent': 'This is the User agent', 'context': None}), self.oaiRequestArgsKwargs)
 
     def testNoneUserAgentIfEmpty(self):
         self.repo.userAgent = ''
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': None}), self.oaiRequestArgsKwargs)
+        self.assertEquals(((None,), {'userAgent': None, 'context': None}), self.oaiRequestArgsKwargs)
 
 
 
