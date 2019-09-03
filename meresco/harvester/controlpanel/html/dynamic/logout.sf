@@ -27,6 +27,7 @@
 ## end license ##
 
 def main(session, **kwargs):
-    if 'user' in session:
-        del session['user']
+    for key in ['user', 'domain']:
+        if key in session:
+            del session[key]
     yield http.redirect("/index")
