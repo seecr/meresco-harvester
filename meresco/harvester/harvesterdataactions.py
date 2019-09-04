@@ -38,7 +38,7 @@ from meresco.harvester.timeslot import Timeslot
 
 
 class HarvesterDataActions(PostActions):
-    def __init__(self, **kwargs):
+    def __init__(self, fieldDefinitions, **kwargs):
         PostActions.__init__(self, **kwargs)
         self._registerFormAction('addDomain', self._addDomain)
         self._registerFormAction('updateDomain', self._updateDomain)
@@ -56,6 +56,7 @@ class HarvesterDataActions(PostActions):
         self._registerFormAction('deleteTarget', self._deleteTarget)
         self.registerAction('repositoryDone', self._repositoryDone)
         self.defaultAction(lambda path, **kwargs: badRequestHtml + "Invalid action: " + path)
+        self._fieldDefinitions = fieldDefinitions
 
     def _addDomain(self, identifier, arguments):
         self.call.addDomain(identifier=identifier)
@@ -109,6 +110,12 @@ class HarvesterDataActions(PostActions):
                     end=arguments.get('shopclosedEnd_%s' % i, ['*'])[0],
                 ))))
 
+        additionalFields = {}
+        for definition in self._fieldDefinitions:
+            fieldName = "extra_{}".format(definition['name'])
+            if fieldName in arguments:
+                additionalFields[fieldName] = arguments[fieldName][0]
+
         self.call.updateRepository(
                 identifier=identifier,
                 domainId=arguments['domainId'][0],
@@ -125,6 +132,7 @@ class HarvesterDataActions(PostActions):
                 action=arguments.get('repositoryAction', [None])[0],
                 userAgent=arguments.get('userAgent', [None])[0],
                 shopclosed=shopclosed,
+                **additionalFields
             )
 
     def _deleteRepository(self, identifier, arguments):

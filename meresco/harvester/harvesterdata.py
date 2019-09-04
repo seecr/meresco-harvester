@@ -150,7 +150,7 @@ class HarvesterData(object):
         self._delete("{}.{}.repository".format(domainId, identifier))
         self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
 
-    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed, userAgent):
+    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed, userAgent, **kwargs):
         repository = self.getRepository(identifier, domainId)
         repository['baseurl'] = baseurl
         repository['set'] = set
@@ -165,6 +165,7 @@ class HarvesterData(object):
         repository['action'] = action
         repository['userAgent'] = userAgent
         repository['shopclosed'] = shopclosed
+        repository.update(**kwargs)
         self._save(repository, "{}.{}.repository".format(domainId, identifier))
 
     def repositoryDone(self, identifier, domainId):

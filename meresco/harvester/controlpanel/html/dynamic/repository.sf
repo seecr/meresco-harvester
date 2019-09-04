@@ -42,18 +42,18 @@ def main(**kwargs):
     yield page.layoutWithMenu(_contents, **kwargs)
 
 
-def _contents(arguments, **kwargs):
+def _contents(tag, arguments, **kwargs):
     domainId = arguments.get("domainId", [None])[0]
     domain = observable.call.getDomain(domainId)
     repositoryId = arguments.get("identifier", [None])[0]
     repository = observable.call.getRepository(identifier=repositoryId, domainId=domainId)
-
-    yield """<h1>Repository Administration</h1>"""
+    with tag("h1"):
+        yield "Repository Administration"
     yield common.showErrorMessage(arguments)
-    yield _repository(domain, repository)
+    yield _repository(tag, domain, repository)
 
 
-def _repository(domain, repository):
+def _repository(tag, domain, repository):
     domainId = domain.get('identifier')
     mappings = [(mappingId, observable.call.getMapping(mappingId).get('name', '')) for mappingId in domain.get('mappingIds', [])]
     targets = [(targetId, observable.call.getTarget(targetId).get('name', '')) for targetId in domain.get('targetIds', [])]
@@ -145,7 +145,22 @@ def _repository(domain, repository):
         selected=repository.get('action'))
     yield """
                     </td>
-                </tr>
+                </tr>"""
+    for definition in fieldDefinitions:
+        with tag("tr"):
+            with tag("td"):
+                yield definition['label']
+            with tag("td"):
+                fieldName = 'extra_{}'.format(definition['name'])
+                if definition['type'] == "text":
+                    with tag("input", _type="text", name=fieldName, value=repository.get(fieldName, '')): pass
+                elif definition['type'] == "textarea":
+                    with tag("textarea", name=fieldName):
+                        yield repository.get(fieldName, '')
+                else:
+                    yield "File type '{}' not supported".format(definition['type'])
+
+    yield """
             </table>
             <p><input type="submit" name="action" class="butt" value="Save" accesskey="s"></p>"""
 

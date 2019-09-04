@@ -38,7 +38,7 @@ from meresco.xml import xpathFirst
 from weightless.io import Reactor
 from weightless.core import compose, be
 
-from meresco.components.json import JsonDict
+from meresco.components.json import JsonDict, JsonList
 from meresco.core import Observable
 
 from meresco.html import DynamicHtml
@@ -71,7 +71,7 @@ staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
 def dateSince(days):
     return strftime("%Y-%m-%d", localtime(time() - days * 3600 * 24))
 
-def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
+def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitionsFile, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
     harvesterData = HarvesterData(dataPath)
     repositoryStatus = be(
@@ -85,6 +85,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
         externaUrl=externalUrl,
         dataPath=dataPath,
     )
+    fieldDefinitions = JsonList.load(fieldDefinitionsFile) if fieldDefinitionsFile else JsonDict()
 
     passwordFile = PasswordFile(filename=passwordFilename)
     basicHtmlLoginHelix = (BasicHtmlLoginForm(
@@ -146,6 +147,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
                                                 'okPlainText': okPlainText,
                                                 'ZuluTime': ZuluTime,
                                                 'xpathFirst': xpathFirst,
+                                                'fieldDefinitions': fieldDefinitions,
                                             },
                                             indexPage="/index",
                                         ),
@@ -157,7 +159,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, **ignored):
                                 )
                             ),
                             (PathFilter('/action'),
-                                (HarvesterDataActions(),
+                                (HarvesterDataActions(fieldDefinitions=fieldDefinitions),
                                     (harvesterData,)
                                 ),
                             ),
