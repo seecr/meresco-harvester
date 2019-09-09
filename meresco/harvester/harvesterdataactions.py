@@ -6,8 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
-# Copyright (C) 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2015, 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2015, 2019 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -111,7 +111,7 @@ class HarvesterDataActions(PostActions):
                 ))))
 
         additionalFields = {}
-        for definition in self._fieldDefinitions:
+        for definition in self._fieldDefinitions.get('repository_fields', []):
             fieldName = "extra_{}".format(definition['name'])
             if fieldName in arguments:
                 additionalFields[fieldName] = arguments[fieldName][0]

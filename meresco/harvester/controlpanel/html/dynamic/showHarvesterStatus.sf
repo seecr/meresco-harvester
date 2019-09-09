@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2019 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -29,7 +30,40 @@
 import page
 
 def main(**kwargs):
-    yield page.layoutWithMenu(_contents, **kwargs)
+    if kwargs['path'].endswith('/js'):
+        yield js(**kwargs)
+        return
+    yield page.layoutWithMenu(_contents, additionalScripts=['/showHarvesterStatus/js'], **kwargs)
+
+def js(**kwargs):
+    yield 'HTTP/1.0 200 Ok\r\nContent-Type: text/javascript; charset=utf-8\r\n\r\n'
+    yield '''
+$.tablesorter.addParser({
+        // set a unique id
+        id: 'errors',
+        is: function(s) {
+            // return false so this parser is not auto detected
+            return false;
+        },
+        format: function(s) {
+            // format your data for normalization
+            return s.toLowerCase().replace(/errors/,'');
+        },
+        // set type, either numeric or text
+        type: 'numeric'
+    });
+
+$("table").tablesorter({
+            headers: {
+                3: {sorter: false},
+                4: {sorter: 'errors'},
+                5: {sorter: 'errors'},
+                6: {sorter: false}
+            },
+            sortList: [[0,0]],
+            sortInitialOrder: "desc"
+        });
+'''
 
 
 def _contents(arguments, session, **kwargs):
@@ -113,36 +147,6 @@ def _contents(arguments, session, **kwargs):
     yield """
     </tbody>
 </table>
-
-<script type="text/javascript">
-
-$.tablesorter.addParser({
-        // set a unique id
-        id: 'errors',
-        is: function(s) {
-            // return false so this parser is not auto detected
-            return false;
-        },
-        format: function(s) {
-            // format your data for normalization
-            return s.toLowerCase().replace(/errors/,'');
-        },
-        // set type, either numeric or text
-        type: 'numeric'
-    });
-
-$("table").tablesorter({
-            headers: {
-                3: {sorter: false},
-                4: {sorter: 'errors'},
-                5: {sorter: 'errors'},
-                6: {sorter: false}
-            },
-            sortList: [[0,0]],
-            sortInitialOrder: "desc"
-        });
-
-</script>
 </div>"""
 
     yield """

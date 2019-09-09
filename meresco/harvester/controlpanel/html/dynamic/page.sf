@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2019 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -45,9 +46,6 @@ def header(session, **kwargs):
   <link href="/static/stylesheet.css" rel="stylesheet" type="text/css"/>
   <link href="/static/tablesorter-2.0.5/style.css" rel="stylesheet" type="text/css"/>
   <link rel="shortcut icon" href="/static/favicon.ico" />
-  <script type="text/javascript" src="/scripts.js"></script>
-  <script type="text/javascript" src="/static/javascript/jquery-1.11.2.min.js"></script>
-  <script type="text/javascript" src="/static/tablesorter-2.0.5/jquery.tablesorter.min.js"></script>
 </head>
 <body>
     <div class="header-logo-container">
@@ -56,7 +54,16 @@ def header(session, **kwargs):
     </div>""".format(version=VERSION)
 
 
-def footer(**kwargs):
+def footer(tag, additionalScripts=None, **kwargs):
+    scripts = [
+        "/js/jquery/jquery.min.js",
+        "/js/jquery-tablesorter/jquery.tablesorter.min.js",
+        "/js/autosize/autosize.min.js",
+    ]
+    if additionalScripts:
+        scripts += additionalScripts
+    for src in scripts:
+        with tag('script', type_='text/javascript', src=src): pass
     yield """
     </body>
 </html>"""
@@ -68,7 +75,7 @@ def sitemap(session, **kwargs):
             <tr class="sitemapheader">
                 <td>&nbsp;</td>
             </tr>"""
-    
+
     user = session.get("user")
     if user:
         yield """

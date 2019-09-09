@@ -6,9 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015, 2019 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -38,15 +38,15 @@ from meresco.xml import xpathFirst
 from weightless.io import Reactor
 from weightless.core import compose, be
 
-from meresco.components.json import JsonDict, JsonList
-from meresco.core import Observable
+from meresco.components.json import JsonDict
+from meresco.core import Observable, Transparent
 
 from meresco.html import DynamicHtml
 from meresco.html.login import BasicHtmlLoginForm, PasswordFile, SecureZone
 from seecr.weblib import seecrWebLibPath
 from seecr.zulutime import ZuluTime
 
-from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore
+from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore, StaticFiles
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
 
 from __version__ import VERSION_STRING, VERSION
@@ -85,7 +85,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
         externaUrl=externalUrl,
         dataPath=dataPath,
     )
-    fieldDefinitions = JsonList.load(fieldDefinitionsFile) if fieldDefinitionsFile else JsonDict()
+    fieldDefinitions = JsonDict.load(fieldDefinitionsFile) if fieldDefinitionsFile else JsonDict()
 
     passwordFile = PasswordFile(filename=passwordFilename)
     basicHtmlLoginHelix = (BasicHtmlLoginForm(
@@ -97,6 +97,16 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
 
         (passwordFile, )
     )
+
+    staticFilePaths = []
+    staticFiles = Transparent()
+    for path, libdir in [
+            ('/js/jquery', '/usr/share/javascript/jquery'),
+            ('/js/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter'),
+            ('/js/autosize', '/usr/share/javascript/autosize'),
+            ]:
+        staticFiles.addObserver(StaticFiles(libdir=libdir, path=path))
+        staticFilePaths.append(path)
 
     userActions = UserActions(dataDir=dataPath)
     userActionsHelix = (userActions,
@@ -127,7 +137,8 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                     (FileServer([seecrWebLibPath, staticHtmlPath]),)
                                 )
                             ),
-                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action']),
+                            (staticFiles,),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action'] + staticFilePaths),
                                 (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],
