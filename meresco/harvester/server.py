@@ -60,6 +60,7 @@ from throughputanalyser import ThroughputAnalyser
 from onlineharvest import OnlineHarvest
 from useractions import UserActions
 from filterfields import FilterFields
+from fielddefinitions import loadDefinitions
 
 from time import localtime, strftime, time
 
@@ -86,7 +87,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
         externaUrl=externalUrl,
         dataPath=dataPath,
     )
-    fieldDefinitions = JsonDict.load(fieldDefinitionsFile) if fieldDefinitionsFile else JsonDict()
+    fieldDefinitions = loadDefinitions(fieldDefinitionsFile)
 
     passwordFile = PasswordFile(filename=passwordFilename)
     basicHtmlLoginHelix = (BasicHtmlLoginForm(
