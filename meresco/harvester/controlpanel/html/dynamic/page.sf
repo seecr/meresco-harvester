@@ -6,7 +6,7 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2017, 2019 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2019 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
@@ -69,12 +69,19 @@ def footer(tag, additionalScripts=None, **kwargs):
 </html>"""
 
 
-def sitemap(session, **kwargs):
+def sitemap(session, tag, **kwargs):
+    @tag.compose
+    def my_row(tag, **kwargs):
+        with tag('tr'):
+            with tag('td', **kwargs):
+                yield
+
     yield """
         <table class="sitemap" width="160" border="0" cellspacing="10" cellpadding="0">
             <tr class="sitemapheader">
                 <td>&nbsp;</td>
             </tr>"""
+
 
     user = session.get("user")
     if user:
@@ -113,14 +120,19 @@ def sitemap(session, **kwargs):
                 </tr>
                 <tr>
                     <td>&nbsp;</td>
-                </tr>
-                <tr>
-                    <td class="button">"""
-    yield """<a href="/logout">Logout</a>""" if user else """<a href="/login">Login</a>"""
-    yield """
-                    </td>
-                </tr>
-            </table>"""
+                </tr>"""
+    if user:
+        with my_row(tag, class_=['button']):
+            with tag('a', href='/account'):
+                yield 'My account'
+        with my_row(tag, class_=['button']):
+            with tag('a', href='/logout'):
+                yield 'Logout'
+    else:
+        with my_row(tag, class_=['button']):
+            with tag('a', href='/login'):
+                    yield 'Login'
+    yield '</table>'
 
 
 def layoutWithMenu(inner, **kwargs):
