@@ -40,7 +40,9 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.hd.addDomain('domain')
         self.hd.addRepositoryGroup('group', domainId='domain')
         self.hd.addRepository('repository', repositoryGroupId='group', domainId='domain')
-        self.hda = HarvesterDataActions(fieldDefinitions={})
+        self.hda = HarvesterDataActions(fieldDefinitions={'repository_fields':[
+                {'name': 'name', 'label':'Label', 'type':'text', 'export': False},
+            ]})
         self.hda.addObserver(self.hd)
 
     def testUpdateRepository(self):
@@ -59,7 +61,8 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "complete": "1",
             "continuous": "60",
             "repositoryAction": "clear",
-            "numberOfTimeslots": "0"
+            "numberOfTimeslots": "0",
+            "extra_name": "Name for this object",
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
@@ -77,6 +80,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.assertEquals(False, repository["use"])
         self.assertEquals("clear", repository["action"])
         self.assertEquals([], repository['shopclosed'])
+        self.assertEquals({"name": "Name for this object"}, repository['extra'])
 
     def testMinimalInfo(self):
         data = {

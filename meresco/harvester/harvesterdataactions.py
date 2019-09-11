@@ -110,11 +110,11 @@ class HarvesterDataActions(PostActions):
                     end=arguments.get('shopclosedEnd_%s' % i, ['*'])[0],
                 ))))
 
-        additionalFields = {}
+        extra = {}
         for definition in self._fieldDefinitions.get('repository_fields', []):
-            fieldName = "extra_{}".format(definition['name'])
-            if fieldName in arguments:
-                additionalFields[fieldName] = arguments[fieldName][0]
+            fieldname = "extra_{}".format(definition['name'])
+            if fieldname in arguments:
+                extra[definition['name']] = arguments[fieldname][0]
 
         self.call.updateRepository(
                 identifier=identifier,
@@ -132,7 +132,7 @@ class HarvesterDataActions(PostActions):
                 action=arguments.get('repositoryAction', [None])[0],
                 userAgent=arguments.get('userAgent', [None])[0],
                 shopclosed=shopclosed,
-                **additionalFields
+                extra=extra,
             )
 
     def _deleteRepository(self, identifier, arguments):

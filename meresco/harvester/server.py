@@ -59,6 +59,7 @@ from meresco.components.http.utils import ContentTypeJson
 from throughputanalyser import ThroughputAnalyser
 from onlineharvest import OnlineHarvest
 from useractions import UserActions
+from filterfields import FilterFields
 
 from time import localtime, strftime, time
 
@@ -176,7 +177,9 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                             ),
                             (PathFilter('/get'),
                                 (HarvesterDataRetrieve(),
-                                    (harvesterData,),
+                                    (FilterFields(fieldDefinitions),
+                                        (harvesterData,),
+                                    ),
                                     (repositoryStatus,),
                                 )
                             )

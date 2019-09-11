@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -150,17 +151,26 @@ def _repository(tag, domain, repository):
     yield """
                     </td>
                 </tr>"""
+    if fieldDefinitions.get('repository_fields'):
+        with tag('tr'):
+            with tag('td', colspan="2"):
+                with tag('hr'): pass
     for definition in fieldDefinitions.get('repository_fields', []):
+        export = definition.get('export', False)
         with tag("tr"):
             with tag("td"):
                 yield definition['label']
+                yield ' '
+                if not export:
+                    with tag('sup', title="Hidden in export"):
+                        yield u'\u24d8' # ⓘ
             with tag("td"):
                 fieldName = 'extra_{}'.format(definition['name'])
                 if definition['type'] == "text":
-                    with tag("input", type_="text", name=fieldName, value=repository.get(fieldName, '')): pass
+                    with tag("input", type_="text", name=fieldName, value=repository.get('extra', {}).get(definition['name'], '')): pass
                 elif definition['type'] == "textarea":
                     with tag("textarea", name=fieldName):
-                        yield repository.get(fieldName, '')
+                        yield repository.get('extra', {}).get(definition['name'], '')
                 else:
                     yield "File type '{}' not supported".format(definition['type'])
 
