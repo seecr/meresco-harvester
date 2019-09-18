@@ -236,6 +236,14 @@ class HarvesterDataTest(SeecrTestCase):
         except ValueError, e:
             self.assertEqual('No name given.', str(e))
 
+    def testAddRepositoryMultipleGroups(self):
+        try:
+            self.hd.addRepository(identifier="repository1", domainId='adomain', repositoryGroupId='Group2')
+            self.fail()
+        except ValueError, e:
+            self.assertEqual('Repository name already in use.', str(e))
+
+
     def testDeleteRepository(self):
         self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.hd.deleteRepository(identifier="repository2", domainId='adomain', repositoryGroupId='Group1')

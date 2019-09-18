@@ -140,6 +140,9 @@ class HarvesterData(object):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
         if identifier.lower() in [r.lower() for r in group.get('repositoryIds', [])]:
             raise ValueError('The repository already exists.')
+        if self._isfile(filename):
+            raise ValueError("Repository name already in use.")
+
         self._save(JsonDict(dict(identifier=identifier, repositoryGroupId=repositoryGroupId)), filename)
         group.setdefault('repositoryIds', []).append(identifier)
         self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
@@ -284,6 +287,9 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
         self._delete("{}.mapping".format(identifier))
 
     #
+    def _isfile(self, filename):
+        return isfile(join(self._dataPath, filename))
+
     def _save(self, data, filename):
         with open(join(self._dataPath, filename), 'w') as f:
             data.dump(f, indent=4, sort_keys=True)
