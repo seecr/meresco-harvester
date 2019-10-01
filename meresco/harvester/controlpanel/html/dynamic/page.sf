@@ -44,14 +44,19 @@ def header(session, **kwargs):
     <meta http-equiv="Cache-Control" content="no-cache"/>
     <meta http-equiv="Expires" content="-1"/>
   <link href="/static/stylesheet.css" rel="stylesheet" type="text/css"/>
-  <link href="/static/tablesorter-2.0.5/style.css" rel="stylesheet" type="text/css"/>
+  <link href="/css/jquery-tablesorter/theme.default.css" rel="stylesheet" type="text/css"/>
   <link rel="shortcut icon" href="/static/favicon.ico" />
 </head>
-<body>
+<body>""".format(version=VERSION)
+    yield """
     <div class="header-logo-container">
-        <div class="header-logo-block-50 customer"></div>
+        <div class="header-logo-block-50 customer">"""
+    if customerLogoUrl:
+        yield '<img src="{}"/>'.format(customerLogoUrl)
+    yield """
+        </div>
         <div class="header-logo-block-50"><img class="header-logo-seecr" src="//cdn.seecr.nl/images/seecr_logo_transparant_bg.png"></div>
-    </div>""".format(version=VERSION)
+    </div>"""
 
 
 def footer(tag, additionalScripts=None, **kwargs):

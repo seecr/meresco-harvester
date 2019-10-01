@@ -14,8 +14,6 @@ python-meresco-html (>= 1.5.31)
 python-meresco-html (<< 1.6)
 python-seecr-zulutime (>= 0.2.15)
 python-seecr-zulutime (<< 0.3)
-python-seecr-web-lib (>= 0.1.0.2)
-python-seecr-web-lib (<< 0.2)
 python-simplejson
 gustos-common
 gustos-client

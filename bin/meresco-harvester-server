@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.addOption('', '--statePath', help='Meresco harvester state directory', mandatory=True)
     parser.addOption('', '--externalUrl', help='Url this harvester can be reached at', mandatory=True)
     parser.addOption('', '--fieldDefinitionsFile', help='File containing additional fielddefinitions', mandatory=False)
+    parser.addOption('', '--customerLogoUrl', help='URL to logo of customer', mandatory=False)
 
     options, arguments = parser.parse()
 

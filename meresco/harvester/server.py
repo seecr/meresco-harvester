@@ -43,7 +43,6 @@ from meresco.core import Observable, Transparent
 
 from meresco.html import DynamicHtml
 from meresco.html.login import BasicHtmlLoginForm, PasswordFile, SecureZone
-from seecr.weblib import seecrWebLibPath
 from seecr.zulutime import ZuluTime
 
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore, StaticFiles
@@ -73,7 +72,7 @@ staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
 def dateSince(days):
     return strftime("%Y-%m-%d", localtime(time() - days * 3600 * 24))
 
-def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitionsFile, **ignored):
+def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitionsFile, customerLogoUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
     harvesterData = HarvesterData(dataPath)
     repositoryStatus = be(
@@ -105,6 +104,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
     for path, libdir in [
             ('/js/jquery', '/usr/share/javascript/jquery'),
             ('/js/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter'),
+            ('/css/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter/css'),
             ('/js/autosize', '/usr/share/javascript/autosize'),
             ]:
         staticFiles.addObserver(StaticFiles(libdir=libdir, path=path))
@@ -136,7 +136,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                             ),
                             (PathFilter("/static"),
                                 (PathRename(lambda name: name[len('/static/'):]),
-                                    (FileServer([seecrWebLibPath, staticHtmlPath]),)
+                                    (FileServer([staticHtmlPath]),)
                                 )
                             ),
                             (staticFiles,),
@@ -161,6 +161,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                                 'ZuluTime': ZuluTime,
                                                 'xpathFirst': xpathFirst,
                                                 'fieldDefinitions': fieldDefinitions,
+                                                'customerLogoUrl': customerLogoUrl,
                                             },
                                             indexPage="/index",
                                         ),

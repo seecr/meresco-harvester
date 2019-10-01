@@ -118,11 +118,14 @@ td.button {
 }
 .customer {
     background-color: #FFFFFF;
-    background-image: url("edurep.jpg");
     background-repeat: no-repeat;
     background-position: left;
     height:100px;
 }
+.customer img {
+    height: 100px;
+}
+
 .logo {
     background-color: #FFFFFF;
     background-image: url("//cdn.seecr.nl/images/seecr_logo_transparant_bg.png");
