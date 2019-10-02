@@ -17,9 +17,13 @@ python-seecr-zulutime (<< 0.3)
 python-simplejson
 gustos-common
 gustos-client
-libjs-jquery (>= 3.3)
+libjs-jquery (>= 3.1)
 libjs-jquery (<< 3.4)
-libjs-jquery-tablesorter (>= 2.31)
-libjs-jquery-tablesorter (<< 2.32)
+#stretch:libjs-jquery-tablesorter (>= 1:2.31)
+#debian:libjs-jquery-tablesorter (>= 2.31)
+#redhat:libjs-jquery-tablesorter (>= 2.31)
+#stretch:libjs-jquery-tablesorter (<< 2.32)
+#debian:libjs-jquery-tablesorter (<< 2.32)
+#redhat:libjs-jquery-tablesorter (<< 2.32)
 libjs-autosize (>= 3.0)
 libjs-autosize (<< 4.1)
