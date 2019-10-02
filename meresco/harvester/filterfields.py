@@ -32,7 +32,7 @@ from meresco.core import Transparent
 class FilterFields(Transparent):
     def __init__(self, fieldDefinitions):
         Transparent.__init__(self)
-        self._allowedRepositoryFields = {definition['name'] for definition in fieldDefinitions.get('repository_fields', []) if definition.get('export', False)}
+        self._allowedRepositoryFields = [definition['name'] for definition in fieldDefinitions.get('repository_fields', []) if definition.get('export', False)]
 
     def getRepositories(self, *args, **kwargs):
         return map(self._stripRepository, self.call.getRepositories(*args, **kwargs))
@@ -42,6 +42,8 @@ class FilterFields(Transparent):
 
     def _stripRepository(self, repository):
         result = dict(repository)
-        if 'extra' in repository:
+        if self._allowedRepositoryFields:
+            extra = repository.get('extra', {})
             result['extra'] = dict((k,v) for k,v in repository.get('extra', {}).items() if k in self._allowedRepositoryFields)
+            result['extra'] = dict((k, extra.get(k, "")) for k in self._allowedRepositoryFields)
         return result

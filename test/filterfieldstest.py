@@ -59,7 +59,7 @@ class FilterFieldsTest(TestCase):
         self.assertEqual([
                 {'identifier':'identA', 'extra':{'name':'Repo name A'}},
                 {'identifier':'identB', 'extra':{'name':'Repo name B'}},
-                {'identifier':'identC'}
+                {'identifier':'identC', 'extra':{'name':''}},
             ], result)
         self.assertEqual({'arg1':1, 'arg2':2}, self.observer.calledMethods[0].kwargs)
 
