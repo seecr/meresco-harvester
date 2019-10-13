@@ -28,7 +28,11 @@
 
 import page
 
+
 def main(**kwargs):
-    yield page.header(**kwargs)
-    yield observable.any.loginForm(**kwargs)
-    yield page.footer(**kwargs)
+    yield page.render(_contents, **kwargs)
+
+def _contents(tag, **kwargs):
+    with tag("div", class_=['container-fluid']):
+        yield page.introduction(tag, **kwargs)
+

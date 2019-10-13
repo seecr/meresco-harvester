@@ -27,6 +27,77 @@
 #
 ## end license ##
 
+
+def render(func, showMenu=True, **kwargs):
+    session = kwargs.get("session", {})
+    tag = kwargs.get("tag")
+    user = session.get('user')
+    domain = session.get('domain')
+    if user and not user.isAdmin() and domain is None:
+        userInfo = observable.call.getUserInfo(user.name)
+        if userInfo:
+            session['domain'] = userInfo.domain
+    scripts = [
+        "/js/jquery/jquery.min.js",
+        "/js/jquery-tablesorter/jquery.tablesorter.min.js",
+        "/js/autosize/autosize.min.js",
+        "/js/bootstrap/bootstrap.min.js",
+    ]
+    scripts.extend(kwargs.get('additionalScripts', []))
+
+    csss = [
+        "/css/jquery-tablesorter/theme.default.css",
+        "/css/bootstrap/bootstrap.min.css",
+    ]
+    csss.extend(kwargs.get("additionalCss", []))
+    bodyClasses = []
+    bodyClasses.extend(kwargs.get("bodyClasses", []))
+
+
+    yield """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">"""
+    with tag("html", xmlns="http://www.w3.org/1999/xhtml", lang="en", **{'xml:lang': 'en'}):
+        with tag("head"):
+            with tag("title"):
+                yield "Meresco Harvester ({version})".format(version=VERSION)
+            with tag("meta", content="text/html; charset=utf-8", **{"http-equiv": 'Content-Type'}): pass
+            with tag("meta", content="no-cache", **{'http-equiv': 'Pragma'}): pass
+            with tag("meta", content="no-cache", **{'http-equiv': 'Cache-Control'}): pass
+            with tag("meta", content="-1", **{'http-equiv': 'Expires'}): pass
+            for css in csss:
+                with tag("link", rel="stylesheet", type_="text/css", href=css): pass
+            with tag("link", rel="shortcut icon", href="/static/favicon.ico"): pass
+        with tag("body", class_=bodyClasses):
+            if showMenu:
+                with tag("div", class_=['d-flex', 'flex-column', 'flex-md-row', 'align-items-center', 'p-3', 'px-md-4', 'mb-3', 'bg-white', 'border-bottom', 'shadow-sm']):
+                    with tag("h5", class_=['my-0', 'mr-md-auto', 'font-weight-normal']):
+                        yield "Meresco-Harvester Web Control Panel"
+                    with tag("nav", class_=['my-2', 'my-md-0', 'mr-md-3']):
+                        with tag("a", class_=['p-2', 'text-dark'], href="/domains"): yield 'Domeinen'
+                        with tag("a", class_=['p-2', 'text-dark'], href="#"): yield 'Accounts'
+                        with tag("a", class_=['p-2', 'text-dark'], href="#"): yield 'Mijn Account'
+                    with tag("a", class_=['btn', 'btn-outline-primary'], href="/logout"): yield "Uitloggen"
+            yield func(**kwargs)
+
+            for src in scripts:
+                with tag('script', type_='text/javascript', src=src): pass
+
+def introduction(tag, **kwargs):
+    with tag("div", class_=['card']):
+        with tag("div", class_=['card-body']):
+            with tag('h1'):
+                yield "Meresco-Harvester Web Control Panel"
+            with tag("p"):
+                yield """Welkom bij Meresco-Harvester, de Open Source OAI Harvester, een onderdeel van de Meresco Suite.  Hier kunt u de aan u toegekende domeinen beheren."""
+            with tag("p"):
+                yield """Voor vragen en meer informatie over Meresco Harvester kunt u terecht op de """
+                with tag("a", href="http://meresco.seecr.nl"):
+                    yield "Meresco pagina"
+                yield """. Meresco-Harvester is initieel ontwikkeld voor SURFnet onder de naam Sahara."""
+            with tag("p"):
+                yield """Succes gewenst!!"""
+                with tag("br"): pass
+                yield """Het Meresco Harvester Team"""
+
 def header(session, **kwargs):
     user = session.get('user')
     domain = session.get('domain')

@@ -65,8 +65,8 @@ from time import localtime, strftime, time
 
 
 myPath = dirname(abspath(__file__))
-dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
-staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
+dynamicHtmlPath = join(myPath, 'controlpanel', 'dynamic')
+staticHtmlPath = join(myPath, 'controlpanel', 'static')
 
 
 def dateSince(days):
@@ -106,6 +106,8 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
             ('/js/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter'),
             ('/css/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter/css'),
             ('/js/autosize', '/usr/share/javascript/autosize'),
+            ('/js/bootstrap/', '/usr/share/javascript/bootstrap4/js'),
+            ('/css/bootstrap', '/usr/share/javascript/bootstrap4/css'),
             ]:
         staticFiles.addObserver(StaticFiles(libdir=libdir, path=path))
         staticFilePaths.append(path)
@@ -141,7 +143,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                             ),
                             (staticFiles,),
                             (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action'] + staticFilePaths),
-                                (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
+                                (SecureZone("/login", defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],
                                             reactor=reactor,

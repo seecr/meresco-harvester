@@ -1,0 +1,99 @@
+## begin license ##
+#
+# "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
+# a web-control panel.
+# "Meresco Harvester" is originally called "Sahara" and was developed for
+# SURFnet by:
+# Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+# Copyright (C) 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+#
+# This file is part of "Meresco Harvester"
+#
+# "Meresco Harvester" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# "Meresco Harvester" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Meresco Harvester"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
+
+import page
+import common
+
+
+def main(**kwargs):
+    user = kwargs.get('session', {}).get('user')
+    if not user or not user.isAdmin():
+        yield http.redirect("/login")
+        return
+    yield page.render(_contents, 
+        additionalCss=['/static/domains.css'],
+        additionalScripts=['/static/domains.js'], 
+        **kwargs)
+
+
+def _contents(tag, arguments, **kwargs):
+    with tag("div", class_=['container']):
+    #error = arguments.get("error", [None])[0]
+    #if error:
+    #    yield '<span class="error">{}</span>'.format(error)
+
+        with tag("div", class_=['card']):
+            with tag("div", class_=['card-header']):
+                with tag("h4"):
+                    yield "Domeinen"
+            with tag("div", class_=['card-body']):
+                with tag("div", class_=['row']):
+                    with tag("div", class_=['col', 'd-flex', 'justify-content-end']):
+                        with tag("form", method="post", action="/actions/addDomain", class_=['form-horizontal']):
+                            with tag("input", class_=['form-control'], type_="hidden", name="redirectUri", value="/domain"): pass
+                            with tag("div", class_=['form-group', 'form-inline']):
+                                with tag("input", id_='domainName', type_="text", name="identifier", placeholder="Naam"): pass
+                                with tag("button", class_=['btn', 'btn-primary', 'btn-sm', 'ml-2'], type_='submit'):
+                                    yield "Toevoegen"
+                with tag("div", class_=['row']):
+                    with tag("div", class_=['col']):
+                        with tag("table", class_=['table', 'table-hover']):
+                            with tag("thead"):
+                                with tag("tr"):
+                                    with tag("th", scope="col"):
+                                        yield "Naam"
+                            with tag("tbody"):
+                                for domainId in observable.call.getDomainIds():
+                                    with tag("tr", class_=['clickable-row'], role="button", **{'data-id': domainId}):
+                                        with tag("td"):
+                                            yield domainId
+
+    return
+
+    yield """
+
+  <div>
+   <table border="0" cellspacing="0" cellpadding="0" width="50%">"""
+
+    domainIds = observable.call.getDomainIds()
+    for identifier in domainIds:
+        yield """
+    <tr class="table_row">
+     <td>{identifier}</td>
+     <td>
+      <a href="/domain?{args}">
+       Edit / View
+      </a>
+     </td>
+    </tr>""".format(identifier=identifier, args=urlencode(dict(identifier=identifier)))
+
+    yield """
+   </table>
+  </div>"""
+
+
