@@ -9,7 +9,7 @@
 # Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
 # Copyright (C) 2011 Tilburg University http://www.uvt.nl
-# Copyright (C) 2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2015, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -33,8 +33,7 @@ from os.path import join, isfile
 from os import SEEK_END
 from time import strftime, gmtime
 import re
-from simplejson import load as jsonLoad, dump as jsonDump
-
+from meresco.components.json import JsonDict
 
 class State(object):
     def __init__(self, stateDir, name):
@@ -44,6 +43,7 @@ class State(object):
         self._runningFilename = join(stateDir, '%s.running' % name)
         self.from_ = None
         self.token = None
+        self.lastSuccessDate = None
         self._readState()
         self._statsfile = open(self._statsfilename, 'a')
 
@@ -72,9 +72,9 @@ class State(object):
         self._markRunningState("Error", str(exValue))
 
     def _markRunningState(self, status, message=""):
-        runningDict = jsonLoad(open(self._runningFilename)) if isfile(self._runningFilename) else {}
+        runningDict = JsonDict.load(self._runningFilename) if isfile(self._runningFilename) else {}
         if status != runningDict.get('status', None) or message != runningDict.get('message', None):
-            jsonDump({'changedate': self.getTime(),'status': status, 'message': message}, open(self._runningFilename, 'w'))
+            JsonDict({'changedate': self.getTime(),'status': status, 'message': message}).dump(self._runningFilename)
 
     def getTime(self):
         return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
@@ -86,9 +86,10 @@ class State(object):
 
     def _readState(self):
         if isfile(self._resumptionFilename):
-            values = jsonLoad(open(self._resumptionFilename))
+            values = JsonDict.load(self._resumptionFilename)
             self.token = values.get('resumptionToken', None) or None
             self.from_ = values.get('from', '') or None
+            self.lastSuccessDate = values.get('lastSuccessDate', '') or self.from_
             return
 
         # The mechanism below will only be carried out once in case the resumption file does not yet exist.
@@ -125,7 +126,8 @@ class State(object):
         newFrom = ''
         if responseDate:
             newFrom = self.from_ if self.token else responseDate
-        jsonDump({'resumptionToken': newToken, 'from': newFrom}, open(self._resumptionFilename, 'w'))
+        self.lastSuccessDate = self.getTime()
+        JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessDate': self.lastSuccessDate}).dump(self._resumptionFilename)
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):

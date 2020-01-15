@@ -12,7 +12,7 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2015, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -34,8 +34,7 @@
 
 from os.path import join
 from sys import exc_info
-from simplejson import load as jsonLoad
-
+from meresco.components.json import JsonDict
 from meresco.harvester.state import State, getResumptionToken, getStartDate
 from seecr.test import SeecrTestCase
 
@@ -147,8 +146,8 @@ Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: D
         state.close()
 
         self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessDate':'2012-08-13 12:15:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         self.assertEqual('2012-08-13T12:14:00', state.from_)
@@ -162,8 +161,8 @@ Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: D
         self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:17:00, ResumptionToken: newToken
 """, open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "newToken"}', open(join(self.tempdir, 'repo.next')).read())
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"from": "2012-08-13T12:14:00", "resumptionToken": "newToken", 'lastSuccessDate':'2012-08-13 12:17:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkDeleted(self):
         state = State(self.tempdir, 'repo')
@@ -173,9 +172,9 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
         state.close()
 
         self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessDate':'2012-08-13 12:15:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
 
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
@@ -185,8 +184,8 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
         self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
 """, open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"from": "", "resumptionToken": "", 'lastSuccessDate':'2012-08-13 12:17:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testSetToLastCleanState(self):
         state = State(self.tempdir, 'repo')
@@ -206,7 +205,7 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: D
 
         self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: \nStarted: 2012-08-14 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-14 12:17:00, ResumptionToken: resumptionToken
 Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: \n""", open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "2012-08-14T12:16:00", "resumptionToken": ""}', open(join(self.tempdir, 'repo.next')).read())
+        self.assertEquals({"from": "2012-08-14T12:16:00", "resumptionToken": "", 'lastSuccessDate':'2012-08-15 12:19:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
 
     def testMarkException(self):
         state = State(self.tempdir, 'repo')
@@ -216,8 +215,8 @@ Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: 
         state.close()
 
         self.assertEquals('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals('{"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken"}', open(join(self.tempdir, 'repo.next')).read())
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessDate':'2012-08-13 12:15:00'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
@@ -231,7 +230,7 @@ Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: 
         self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
 """, open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkHarvesterAfterExceptionChange(self):
         state = State(self.tempdir, 'repo')
@@ -243,14 +242,14 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
         state.markStarted()
         state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkDeletedAfterExceptionChange(self):
         state = State(self.tempdir, 'repo')
@@ -262,14 +261,14 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
         state.markStarted()
         state.markDeleted()
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkExceptionChange(self):
         state = State(self.tempdir, 'repo')
@@ -281,7 +280,7 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 17, 0, 0, 0, 0)
@@ -292,7 +291,7 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
         state = State(self.tempdir, 'repo')
         state._gmtime = lambda: (2012, 8, 13, 12, 19, 0, 0, 0, 0)
@@ -303,5 +302,9 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
             exType, exValue, exTraceback = exc_info()
             state.markException(exType, exValue, "9999/9999/9999/9999")
         state.close()
-        self.assertEquals({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, jsonLoad(open(join(self.tempdir, 'repo.running'))))
+        self.assertEquals({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
+    def testStateInitialWithoutLastSuccessDate(self):
+        JsonDict({'from':'2020-01-15T01:02:03Z', 'resumptionToken':''}).dump(join(self.tempdir, 'repo.next'))
+        state = State(self.tempdir, 'repo')
+        self.assertEqual('2020-01-15T01:02:03Z', state.lastSuccessDate)
