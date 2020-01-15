@@ -33,6 +33,7 @@
 ## end license ##
 
 from seecr.test import SeecrTestCase
+from seecr.test.io import stdout_replaced
 from meresco.harvester.timedprocess import TimedProcess
 from os.path import join
 from time import sleep
@@ -75,6 +76,7 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
         self.assertEquals('3', open(join(self.tempdir, 'output.txt')).read())
         self.assertEquals(0, exitstatus)
 
+    @stdout_replaced
     def testTimeout(self):
         fd = open(self.tempfile,'w')
         try:
