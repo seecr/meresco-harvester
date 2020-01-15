@@ -34,7 +34,7 @@
 
 from glob import glob
 from sys import path
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, isfile
 from lxml.etree import XML
 
 mydir = dirname(abspath(__file__))
@@ -63,6 +63,8 @@ from meresco.core import Observable
 from meresco.harvester.namespaces import xpathFirst
 from meresco.sequentialstore import MultiSequentialStorage
 
+mydir = dirname(abspath(__file__))
+testdataDir = join(dirname(mydir), 'data', 'helper')
 
 notWordCharRE = compile('\W+')
 
@@ -133,6 +135,26 @@ class Dump(object):
     def raiseExceptionOnIds(self, ids):
         self._raiseExceptionOnIds = set(ids)
 
+class BadOai(object):
+    def handleRequest(self, path, arguments, **kwargs):
+        fileargs = dict(case=path.split('/')[-1])
+        for k in ['verb', 'resumptionToken', 'metadataPrefix', 'set', 'from']:
+            fileargs[k] = arguments[k][0] if k in arguments else ''
+        if fileargs['resumptionToken']:
+            filename = '{case}-{verb}-{resumptionToken}.xml'.format(**fileargs)
+        else:
+            filename = '{case}-{verb}-{metadataPrefix}-{set}-{from}.xml'.format(**fileargs)
+        filepath = join(testdataDir, filename)
+        if isfile(filepath):
+            yield 'HTTP/1.0 200 Ok\r\nContent-Type: text/xml; charset=utf-8\r\n\r\n'
+            yield open(filepath).read()
+        else:
+            yield 'HTTP/1.0 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n'
+            l = 'Error: file {} not found.'.format(repr(filepath))
+            print l
+            yield l
+
+
 class Control(Observable):
     def handleRequest(self, arguments, **kwargs):
         action = arguments.get('action', [None])[0]
@@ -189,6 +211,11 @@ def main(reactor, port, directory):
                             (oaiStorage,),
                             (oaiJazz,),
                         )
+                    )
+                ),
+                (PathFilter('/badoai'),
+                    (Log(),
+                        (BadOai(), )
                     )
                 ),
                 (PathFilter("/log"),

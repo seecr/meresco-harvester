@@ -36,9 +36,11 @@ from threading import Thread
 from lxml.etree import parse
 
 from seecr.test import IntegrationTestCase
-from seecr.test.utils import getRequest, sleepWheel
+from seecr.test.utils import sleepWheel
+from seecr.test.utils2 import getRequest
 
 from meresco.components.json import JsonDict
+from meresco.components import lxmltostring
 from meresco.harvester.harvesterdata import HarvesterData
 from meresco.harvester.state import getResumptionToken
 from meresco.harvester.harvesterlog import HarvesterLog
@@ -177,8 +179,7 @@ class HarvesterTest(IntegrationTestCase):
         self.startHarvester(repository=REPOSITORY)
         self.assertEquals(BATCHSIZE, self.sizeDumpDir())
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse=False)
-        data = JsonDict.loads(result)
+        header, data = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY})
         self.assertEquals(8, data['response']['GetStatus'][0]['total'])
 
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, action='clear')
@@ -188,8 +189,8 @@ class HarvesterTest(IntegrationTestCase):
         for filename in sorted(listdir(self.dumpDir))[-8:]:
             self.assertTrue('_delete.updateRequest' in filename, filename)
 
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY}, parse=False)
-        self.assertEqual(0, JsonDict.loads(result)['response']['GetStatus'][0]['total'])
+        header, data = getRequest(self.harvesterInternalServerPortNumber, '/get', {'verb': 'GetStatus', 'domainId': DOMAIN, 'repositoryId': REPOSITORY})
+        self.assertEqual(0, data['response']['GetStatus'][0]['total'])
 
     def testRefresh(self):
         oldlogs = self.getLogs()
@@ -461,7 +462,7 @@ class HarvesterTest(IntegrationTestCase):
             <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2017-10-31T15:12:52Z</responseDate><request from="2017-10-04T11:52:57Z" metadataPrefix="didl_mods" verb="ListRecords">https://surfsharekit.nl/oai/hhs/</request><ListRecords><record><header><identifier>oai:surfsharekit.nl:b6ea6503-e2fc-4974-8941-2a4a405dc72f</identifier><datestamp>2017-10-04T14:16:22Z</datestamp></header><metadata><didl:DIDL xmlns:didl="urn:mpeg:mpeg21:2002:02-DIDL-NS" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
               <didl:Item> <didl:Descriptor> <didl:Statement mimeType="application/xml"> <dii:Identifier xmlns:dii="urn:mpeg:mpeg21:2002:01-DII-NS">urn:nbn:nl:hs:18-b6ea6503-e2fc-4974-8941-2a4a405dc72f</dii:Identifier>
                                       </didl:Statement> </didl:Descrip""")
-        
+
         errorCount = len(self.gustosUdpListener.log())
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, baseUrl="file://{}".format(baseUrl))
         t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=True))
@@ -489,6 +490,35 @@ class HarvesterTest(IntegrationTestCase):
         except SystemExit, e:
             self.assertTrue('took more than 5 seconds' in str(e), str(e))
         self.assertEquals(15, self.sizeDumpDir())
+
+    def testBadOai(self):
+        # raw_input(self.helperServerPortNumber)
+        header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', metadataPrefix='prefix'))
+        self.assertEqual('resume0', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
+        header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', resumptionToken='resume1'))
+        self.assertEqual('resume2', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
+
+    def testCompleteWithStrangeResponseDate(self):
+        def save(**kwargs):
+            self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, complete=True, baseUrl='http://localhost:{}/badoai/responsedate'.format(self.helperServerPortNumber), metadataPrefix='prefix', **kwargs)
+        def what_happened(output):
+            return [line.strip() for line in output.split('\n') if line.strip()][-1].split(']')[-1].strip()
+        save()
+        output = self.startHarvester(repository=REPOSITORY)
+        self.assertEqual('Harvested.', what_happened(output))
+        # self.assertEquals(3, self.sizeDumpDir())
+        # save(action='refresh')
+        output = self.startHarvester(repository=REPOSITORY)
+        self.assertEqual('Harvested.', what_happened(output))
+        output = self.startHarvester(repository=REPOSITORY)
+        self.assertEqual('Nothing to do!', what_happened(output))
+        # output = self.startHarvester(repository='responsedate')
+        # self.assertEqual('Harvested.', what_happened(output))
+        # output = self.startHarvester(repository='responsedate')
+        # self.assertEqual('Harvested.', what_happened(output))
+
+
+
 
     def emptyDumpDir(self):
         if listdir(self.dumpDir):
