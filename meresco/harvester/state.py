@@ -31,9 +31,9 @@
 
 from os.path import join, isfile
 from os import SEEK_END
-from time import strftime, gmtime
 import re
 from meresco.components.json import JsonDict
+from seecr.zulutime import ZuluTime
 
 class State(object):
     def __init__(self, stateDir, name):
@@ -43,7 +43,7 @@ class State(object):
         self._runningFilename = join(stateDir, '%s.running' % name)
         self.from_ = None
         self.token = None
-        self.lastSuccessDate = None
+        self.lastSuccessfulFromHarvest = None
         self._readState()
         self._statsfile = open(self._statsfilename, 'a')
 
@@ -77,7 +77,7 @@ class State(object):
             JsonDict({'changedate': self.getTime(),'status': status, 'message': message}).dump(self._runningFilename)
 
     def getTime(self):
-        return strftime('%Y-%m-%d %H:%M:%S', self._gmtime())
+        return self._ztime().display('%Y-%m-%d %H:%M:%S')
 
     def setToLastCleanState(self):
         self._write("Started: %s, Done: Reset to last clean state. ResumptionToken: \n" % self.getTime())
@@ -89,7 +89,7 @@ class State(object):
             values = JsonDict.load(self._resumptionFilename)
             self.token = values.get('resumptionToken', None) or None
             self.from_ = values.get('from', '') or None
-            self.lastSuccessDate = values.get('lastSuccessDate', '') or self.from_
+            self.lastSuccessfulFromHarvest = values.get('lastSuccessfulFromHarvest', '') or None
             return
 
         # The mechanism below will only be carried out once in case the resumption file does not yet exist.
@@ -122,12 +122,19 @@ class State(object):
         self._statsfile.flush()
 
     def _writeResumptionValues(self, token, responseDate):
+        print 'WRITE', token, responseDate
         newToken = str(token or '')
         newFrom = ''
+        lastSuccessfulFromHarvest = ''
         if responseDate:
+            print 'if responseDate', bool(self.token)
             newFrom = self.from_ if self.token else responseDate
-        self.lastSuccessDate = self.getTime()
-        JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessDate': self.lastSuccessDate}).dump(self._resumptionFilename)
+            print 'newFrom', newFrom
+        if self.from_ and self.token is None:
+            lastSuccessfulFromHarvest = self._ztime().zulu()
+        print JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulFromHarvest': lastSuccessfulFromHarvest})
+        print self._resumptionFilename
+        JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulFromHarvest': lastSuccessfulFromHarvest}).dump(self._resumptionFilename)
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):
@@ -139,8 +146,8 @@ class State(object):
                "Done: Deleted all id's" in logline
 
     @staticmethod
-    def _gmtime():
-        return gmtime()
+    def _ztime():
+        return ZuluTime()
 
 
 def getStartDate(logline):
