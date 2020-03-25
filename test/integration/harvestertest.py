@@ -8,7 +8,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2011-2012, 2015, 2020 Stichting Kennisnet https://www.kennisnet.nl
 # Copyright (C) 2012-2013, 2015, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Meresco Harvester"
@@ -59,6 +59,7 @@ class HarvesterTest(IntegrationTestCase):
         system("rm -rf %s" % self.harvesterStateDir)
         self.filesystemDir = join(self.integrationTempdir, 'filesystem')
         system("rm -rf %s" % self.filesystemDir)
+        self.controlHelper(action='reset')
         self.emptyDumpDir()
         system("mkdir -p %s" % join(self.harvesterStateDir, DOMAIN))
         self.harvesterData = HarvesterData(join(self.integrationTempdir, 'data'))
@@ -70,6 +71,7 @@ class HarvesterTest(IntegrationTestCase):
 
     def tearDown(self):
         self.removeRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
+        # print '\n'.join(repr(i) for i in self.getLogs())
         IntegrationTestCase.tearDown(self)
 
     def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False, continuous=None, baseUrl=None):
@@ -496,21 +498,46 @@ class HarvesterTest(IntegrationTestCase):
         # raw_input(self.helperServerPortNumber)
         header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', metadataPrefix='prefix'))
         self.assertEqual('resume0', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
-        header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', resumptionToken='resume1'))
-        self.assertEqual('resume2', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
+        header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', resumptionToken='resume0'))
+        self.assertEqual('resume1', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
+
+    def testNormalHarvesting(self):
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(10, self.sizeDumpDir())
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(15, self.sizeDumpDir())
+        self.assertEqual('Nothing to do!', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(15, self.sizeDumpDir())
+
+    def saveBadoai(self, **kwargs):
+        self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP,
+                baseUrl='http://localhost:{}/badoai/responsedate'.format(self.helperServerPortNumber),
+                metadataPrefix='prefix',
+                **kwargs)
+
+    def testWithStrangeResponseDate(self):
+        self.saveBadoai(complete=False)
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(1, self.sizeDumpDir())
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(2, self.sizeDumpDir())
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(3, self.sizeDumpDir())
+        self.assertEqual('Nothing to do!', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEqual(3, self.sizeDumpDir())
+        # Problem is that the harvester wants to continue because responsedate is in the past. It should
+        # use a separate date to determine if it has done enough for the day.
 
     def testCompleteWithStrangeResponseDate(self):
-        def save(**kwargs):
-            self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, complete=True, baseUrl='http://localhost:{}/badoai/responsedate'.format(self.helperServerPortNumber), metadataPrefix='prefix', **kwargs)
-        save()
-        output = self.startHarvester(repository=REPOSITORY)
-        self.assertEqual('Harvested.', what_happened(output))
-        # self.assertEquals(3, self.sizeDumpDir())
+        self.saveBadoai(complete=True)
+        self.assertEqual('Harvested.', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEquals(3, self.sizeDumpDir())
+        self.assertEqual('Nothing to do!', what_happened(self.startHarvester(repository=REPOSITORY)))
+        self.assertEquals(3, self.sizeDumpDir())
+
+
+        # Further testing
         # save(action='refresh')
-        output = self.startHarvester(repository=REPOSITORY)
-        self.assertEqual('Harvested.', what_happened(output))
-        output = self.startHarvester(repository=REPOSITORY)
-        self.assertEqual('Nothing to do!', what_happened(output))
         # output = self.startHarvester(repository='responsedate')
         # self.assertEqual('Harvested.', what_happened(output))
         # output = self.startHarvester(repository='responsedate')

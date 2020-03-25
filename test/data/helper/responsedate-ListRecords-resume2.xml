@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
-    <responseDate>2019-12-04T16:41:10Z</responseDate>
-    <request verb="ListRecords" metadataPrefix="responsedate">http://helperserver/badoai</request>
-    <ListRecords>
-        <resumptionToken></resumptionToken>
-    </ListRecords>
-</OAI-PMH>
