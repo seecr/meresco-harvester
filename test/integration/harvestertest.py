@@ -142,7 +142,8 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEquals({'verb':['ListRecords'], 'resumptionToken':[token]}, logs[-1]['arguments'])
 
         # Nothing
-        self.startHarvester(repository=REPOSITORY)
+        output = self.startHarvester(repository=REPOSITORY)
+        self.assertEqual('Nothing to do!', what_happened(output))
         logs = self.getLogs()[len(oldlogs):]
         self.assertEquals(2, len(logs))
         self.assertEquals(None, getResumptionToken(open(statsFile).readlines()[-1]))
@@ -501,8 +502,6 @@ class HarvesterTest(IntegrationTestCase):
     def testCompleteWithStrangeResponseDate(self):
         def save(**kwargs):
             self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, complete=True, baseUrl='http://localhost:{}/badoai/responsedate'.format(self.helperServerPortNumber), metadataPrefix='prefix', **kwargs)
-        def what_happened(output):
-            return [line.strip() for line in output.split('\n') if line.strip()][-1].split(']')[-1].strip()
         save()
         output = self.startHarvester(repository=REPOSITORY)
         self.assertEqual('Harvested.', what_happened(output))
@@ -526,3 +525,7 @@ class HarvesterTest(IntegrationTestCase):
 
     def sizeDumpDir(self):
         return len(listdir(self.dumpDir))
+
+def what_happened(output):
+    return [line.strip() for line in output.split('\n') if line.strip()][-1].split(']')[-1].strip()
+
