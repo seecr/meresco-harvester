@@ -7,7 +7,7 @@
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 # Copyright (C) 2010-2011 Seek You Too (CQ2) http://www.cq2.nl
-# Copyright (C) 2010-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2010-2012, 2015, 2020 Stichting Kennisnet https://www.kennisnet.nl
 # Copyright (C) 2011 Tilburg University http://www.uvt.nl
 # Copyright (C) 2012, 2015, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
@@ -122,18 +122,13 @@ class State(object):
         self._statsfile.flush()
 
     def _writeResumptionValues(self, token, responseDate):
-        print 'WRITE', token, responseDate
         newToken = str(token or '')
         newFrom = ''
         lastSuccessfulFromHarvest = ''
         if responseDate:
-            print 'if responseDate', bool(self.token)
             newFrom = self.from_ if self.token else responseDate
-            print 'newFrom', newFrom
         if self.from_ and self.token is None:
             lastSuccessfulFromHarvest = self._ztime().zulu()
-        print JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulFromHarvest': lastSuccessfulFromHarvest})
-        print self._resumptionFilename
         JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulFromHarvest': lastSuccessfulFromHarvest}).dump(self._resumptionFilename)
 
     @staticmethod
