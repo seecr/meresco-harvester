@@ -136,7 +136,9 @@ class State(object):
         lastSuccessfulHarvest = self.lastSuccessfulHarvest #keep value if not successful
         if responseDate:
             newFrom = self.from_ if self.token else responseDate
-        if not (token is None and responseDate is None):
+        if token is None and responseDate is None:
+            lastSuccessfulHarvest = None
+        else:
             lastSuccessfulHarvest = self.getZTime().zulu()
         JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulHarvest': lastSuccessfulHarvest}).dump(self._resumptionFilename)
 

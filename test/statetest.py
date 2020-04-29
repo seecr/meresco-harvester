@@ -197,7 +197,7 @@ Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9
         self.assertEquals("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
 """, open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEquals({"from": "", "resumptionToken": "", 'lastSuccessfulHarvest':'2012-08-13T12:15:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertEquals({"from": "", "resumptionToken": "", 'lastSuccessfulHarvest':None}, JsonDict.load(join(self.tempdir, 'repo.next')))
         self.assertEquals({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testSetToLastCleanState(self):

@@ -71,7 +71,6 @@ class HarvesterTest(IntegrationTestCase):
 
     def tearDown(self):
         self.removeRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP)
-        # print '\n'.join(repr(i) for i in self.getLogs())
         IntegrationTestCase.tearDown(self)
 
     def saveRepository(self, domain, repositoryId, repositoryGroupId, metadataPrefix="oai_dc", action=None, mappingId='MAPPING', targetId='SRUUPDATE', maximumIgnore=5, complete=False, continuous=None, baseUrl=None):
@@ -210,10 +209,8 @@ class HarvesterTest(IntegrationTestCase):
 
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, action='refresh')
 
-        self.startHarvester(repository=REPOSITORY)
         logs = self.getLogs()[len(oldlogs):]
         self.assertEquals(0, len(logs))
-        self.startHarvester(repository=REPOSITORY)
         logs = self.getLogs()
         self.assertEquals('/oai', logs[-1]["path"])
         self.assertEquals({'verb': ['ListRecords'], 'metadataPrefix': ['oai_dc']}, logs[-1]["arguments"])
