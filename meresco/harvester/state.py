@@ -76,8 +76,17 @@ class State(object):
         if status != runningDict.get('status', None) or message != runningDict.get('message', None):
             JsonDict({'changedate': self.getTime(),'status': status, 'message': message}).dump(self._runningFilename)
 
+    def getLastSuccessfulHarvestTime(self):
+        if self.lastSuccessfulHarvest:
+            return ZuluTime(self.lastSuccessfulHarvest)
+        if self.from_:
+            if 'T' not in self.from_:
+                return ZuluTime(self.from_ + "T00:00:00Z")
+            return ZuluTime(self.from_)
+        return None
+
     def getTime(self):
-        return self._ztime().display('%Y-%m-%d %H:%M:%S')
+        return self.getZTime().display('%Y-%m-%d %H:%M:%S')
 
     def setToLastCleanState(self):
         self._write("Started: %s, Done: Reset to last clean state. ResumptionToken: \n" % self.getTime())
@@ -128,7 +137,7 @@ class State(object):
         if responseDate:
             newFrom = self.from_ if self.token else responseDate
         if not (token is None and responseDate is None):
-            lastSuccessfulHarvest = self._ztime().zulu()
+            lastSuccessfulHarvest = self.getZTime().zulu()
         JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulHarvest': lastSuccessfulHarvest}).dump(self._resumptionFilename)
 
     @staticmethod
@@ -141,7 +150,7 @@ class State(object):
                "Done: Deleted all id's" in logline
 
     @staticmethod
-    def _ztime():
+    def getZTime():
         return ZuluTime()
 
 

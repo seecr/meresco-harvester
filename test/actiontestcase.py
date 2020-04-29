@@ -11,8 +11,8 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2010-2012 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2010-2012, 2020 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2012, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -64,13 +64,13 @@ Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: 
 
     def writeMarkDeleted(self, year, month, day):
         h = self.newHarvesterLog()
-        h._state._ztime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
+        h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
         h.markDeleted()
         h.close()
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
         h = self.newHarvesterLog()
-        h._state._ztime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
+        h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
 
         h.startRepository()
         h.notifyHarvestedRecord("repo:uploadId1")
@@ -82,6 +82,6 @@ Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: 
                 exType, exValue, exTb = exc_info()
                 h.endWithException(exType, exValue, exTb)
         else:
-            h.endRepository(token, h._state._ztime().display("%Y-%m-%dT%H:%M:%SZ"))
+            h.endRepository(token, h._state.getZTime().display("%Y-%m-%dT%H:%M:%SZ"))
         h.close()
 

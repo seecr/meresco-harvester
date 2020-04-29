@@ -39,6 +39,7 @@ from os.path import isfile, join
 
 from meresco.harvester.harvesterlog import HarvesterLog
 from meresco.harvester.eventlogger import LOGLINE_RE
+from seecr.zulutime import ZuluTime
 from seecr.test import SeecrTestCase
 
 class HarvesterLogTest(SeecrTestCase):
@@ -73,7 +74,7 @@ class HarvesterLogTest(SeecrTestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork())
         logger.startRepository()
-        logger.endRepository(None, logger._state._ztime().zulu())
+        logger.endRepository(None, logger._state.getZTime().zulu())
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork())
@@ -82,12 +83,14 @@ class HarvesterLogTest(SeecrTestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork(continuousInterval=60))
         logger.startRepository()
-        logger.endRepository(None, logger._state._ztime().zulu())
+        logger.endRepository(None, logger._state.getZTime().zulu())
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
+        # mock current Time
+        logger._state.getZTime = lambda: ZuluTime().add(seconds=-61)
         self.assertFalse(logger.hasWork(continuousInterval=60))
         logger.startRepository()
-        logger.endRepository(None, logger._state._ztime().add(seconds=-61).zulu())
+        logger.endRepository(None, "2000-01-02T03:04:05Z") # ignore what repository says as responseDate
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertFalse(logger.hasWork(continuousInterval=65))
@@ -97,12 +100,12 @@ class HarvesterLogTest(SeecrTestCase):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork(continuousInterval=60))
         logger.startRepository()
-        logger.endRepository('resumptionToken', logger._state._ztime().zulu())
+        logger.endRepository('resumptionToken', logger._state.getZTime().zulu())
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         self.assertTrue(logger.hasWork(continuousInterval=60))
         logger.startRepository()
-        logger.endRepository('resumptionToken2', logger._state._ztime().add(seconds=-61).zulu())
+        logger.endRepository('resumptionToken2', logger._state.getZTime().add(seconds=-61).zulu())
         logger.close()
 
     def testLoggingAlwaysStartsNewline(self):
