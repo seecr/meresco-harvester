@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2017, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -69,18 +70,18 @@ def _adminView(mapping, domainId):
             <form method="post" action="/actions/updateMapping">
                 <input type="hidden" name="redirectUri" value="{mappingEditLink}">
                 <input type="hidden" name="identifier" value="{mappingId}">
-                <table>
+                <table class="edit">
                     <tr>
                         <td>Name:</td>
-                        <td><input type="text" name="name" value="{name}"></td>
+                        <td style="width: 80%; min-width: 20em;"><input type="text" name="name" value="{name}"></td>
                     </tr>
                     <tr>
                         <td valign="top">Description:</td>
-                        <td><textarea rows="5" cols="80" name="description">{description}</textarea></td>
+                        <td><textarea class="autosize" name="description">{description}</textarea></td>
                     </tr>
                     <tr>
                         <td valign="top">Script:</td>
-                        <td><textarea rows="30" cols="100" name="code">{code}</textarea></td>
+                        <td><textarea class="autosize" name="code">{code}</textarea></td>
                     </tr>
                 </table>
                 <p><input type="submit" name="action" class="butt" value="Validate and Save" accesskey="s"></p>

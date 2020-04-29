@@ -7,8 +7,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
-# Copyright (C) 2019 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2017, 2019-2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2019-2020 Stichting Kennisnet https://www.kennisnet.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -35,16 +35,13 @@ import page, common
 # from meresco.harvester.timeslot import Timeslot
 
 def main(**kwargs):
-    if kwargs['path'].endswith('/js'):
-        yield js(**kwargs)
-        return
     user = kwargs.get('session', {}).get('user')
     domain = kwargs.get('session', {}).get('domain')
     domainId = kwargs.get('arguments', {}).get('domainId', [None])[0]
     if not user or (not user.isAdmin() and domain != domainId):
         yield http.redirect("/login")
         return
-    yield page.layoutWithMenu(_contents, additionalScripts=['/repository/js'], **kwargs)
+    yield page.layoutWithMenu(_contents, **kwargs)
 
 
 def _contents(tag, arguments, **kwargs):
@@ -169,7 +166,7 @@ def _repository(tag, domain, repository):
                 if definition['type'] == "text":
                     with tag("input", type_="text", name=fieldName, value=repository.get('extra', {}).get(definition['name'], '')): pass
                 elif definition['type'] == "textarea":
-                    with tag("textarea", name=fieldName):
+                    with tag("textarea", name=fieldName, class_=['autosize']):
                         yield repository.get('extra', {}).get(definition['name'], '')
                 else:
                     yield "File type '{}' not supported".format(definition['type'])
@@ -262,10 +259,3 @@ def renderTimeslot(index, timeslot):
         if not timeslot.valid():
             yield '<td><p class="error">Invalid timeslot specification, will be ignored.</p></td>'
 
-def js(**kwargs):
-    yield 'HTTP/1.0 200 Ok\r\nContent-Type: text/javascript\r\n\r\n'
-    yield '''
-$(function() {
-autosize($('textarea'));
-});
-'''
