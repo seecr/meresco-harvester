@@ -43,7 +43,7 @@ class State(object):
         self._runningFilename = join(stateDir, '%s.running' % name)
         self.from_ = None
         self.token = None
-        self.lastSuccessfulFromHarvest = None
+        self.lastSuccessfulHarvest = None
         self._readState()
         self._statsfile = open(self._statsfilename, 'a')
 
@@ -89,7 +89,7 @@ class State(object):
             values = JsonDict.load(self._resumptionFilename)
             self.token = values.get('resumptionToken', None) or None
             self.from_ = values.get('from', '') or None
-            self.lastSuccessfulFromHarvest = values.get('lastSuccessfulFromHarvest', '') or None
+            self.lastSuccessfulHarvest = values.get('lastSuccessfulHarvest', '') or None
             return
 
         # The mechanism below will only be carried out once in case the resumption file does not yet exist.
@@ -124,12 +124,12 @@ class State(object):
     def _writeResumptionValues(self, token, responseDate):
         newToken = str(token or '')
         newFrom = ''
-        lastSuccessfulFromHarvest = ''
+        lastSuccessfulHarvest = ''
         if responseDate:
             newFrom = self.from_ if self.token else responseDate
         if self.from_ and self.token is None:
-            lastSuccessfulFromHarvest = self._ztime().zulu()
-        JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulFromHarvest': lastSuccessfulFromHarvest}).dump(self._resumptionFilename)
+            lastSuccessfulHarvest = self._ztime().zulu()
+        JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulHarvest': lastSuccessfulHarvest}).dump(self._resumptionFilename)
 
     @staticmethod
     def _filterNonErrorLogLine(iterator):
