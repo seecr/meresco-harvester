@@ -124,10 +124,10 @@ class State(object):
     def _writeResumptionValues(self, token, responseDate):
         newToken = str(token or '')
         newFrom = ''
-        lastSuccessfulHarvest = ''
+        lastSuccessfulHarvest = self.lastSuccessfulHarvest #keep value if not successful
         if responseDate:
             newFrom = self.from_ if self.token else responseDate
-        if self.from_ and self.token is None:
+        if not (token is None and responseDate is None):
             lastSuccessfulHarvest = self._ztime().zulu()
         JsonDict({'resumptionToken': newToken, 'from': newFrom, 'lastSuccessfulHarvest': lastSuccessfulHarvest}).dump(self._resumptionFilename)
 
