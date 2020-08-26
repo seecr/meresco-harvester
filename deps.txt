@@ -19,11 +19,9 @@ gustos-common
 gustos-client
 libjs-jquery (>= 3.1)
 libjs-jquery (<< 3.4)
-#jessie:libjs-jquery-tablesorter (>= 1:2.31)
 #stretch:libjs-jquery-tablesorter (>= 1:2.31)
 #buster:libjs-jquery-tablesorter (>= 1:2.31)
 #redhat:libjs-jquery-tablesorter (>= 2.31)
-#jessie:libjs-jquery-tablesorter (<< 1:2.32)
 #stretch:libjs-jquery-tablesorter (<< 1:2.32)
 #buster:libjs-jquery-tablesorter (<< 1:2.32)
 #redhat:libjs-jquery-tablesorter (<< 2.32)

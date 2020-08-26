@@ -57,6 +57,7 @@ setup(
             'html/static/*.jpg',
             'html/static/*.css',
             'html/static/*.ico',
+            'html/static/*.js',
         ]
     },
     scripts=scripts,
