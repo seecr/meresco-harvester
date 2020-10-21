@@ -40,8 +40,8 @@ from escaping import escapeFilename, unescapeFilename
 
 from meresco.core import Observable
 
-from mapping import Upload
-from harvesterlog import idfilename
+from .mapping import Upload
+from .harvesterlog import idfilename
 
 
 class DeleteIds(Observable):
@@ -97,13 +97,14 @@ class DeleteIds(Observable):
 def readIds(filename):
     ids = []
     uniqueIds = set()
-    for id in (unescapeFilename(id) for id in open(filename)):
-        if id[-1] == '\n':
-            id = id[:-1]
-        if id in uniqueIds:
-            continue
-        ids.append(id)
-        uniqueIds.add(id)
+    with open(filename) as fp:
+        for id in (unescapeFilename(id) for id in fp):
+            if id[-1] == '\n':
+                id = id[:-1]
+            if id in uniqueIds:
+                continue
+            ids.append(id)
+            uniqueIds.add(id)
     return ids
 
 def writeIds(filename, ids):

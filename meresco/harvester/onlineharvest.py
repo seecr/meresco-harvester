@@ -32,8 +32,8 @@
 #
 ## end license ##
 
-from mapping import Mapping, TestRepository, DataMapAssertionException
-from eventlogger import StreamEventLogger
+from .mapping import Mapping, TestRepository, DataMapAssertionException
+from .eventlogger import StreamEventLogger
 from meresco.harvester.oairequest import OaiRequest
 
 
@@ -56,7 +56,7 @@ class OnlineHarvest(object):
             try:
                 upload = mapping.createUpload(TestRepository, response, doAsserts=True)
                 self.writeUpload(upload)
-            except DataMapAssertionException, ex:
+            except DataMapAssertionException as ex:
                 self.writeLine('AssertionError: '+str(ex))
 
     def _writeId(self, anUpload):
@@ -68,7 +68,7 @@ class OnlineHarvest(object):
         if anUpload.isDeleted:
             self.writeLine('DELETED')
             return
-        for partname, part in anUpload.parts.items():
+        for partname, part in list(anUpload.parts.items()):
             self.writeLine('-v- part %s -v-' % partname)
             self.writeLine(part)
             self.writeLine('-^- part -^-')

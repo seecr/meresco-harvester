@@ -75,14 +75,14 @@ class HarvesterDataTest(SeecrTestCase):
         self.hd = HarvesterData(self.tempdir)
 
     def testGetRepositoryGroupIds(self):
-        self.assertEquals(["Group1", "Group2"], self.hd.getRepositoryGroupIds(domainId="adomain"))
+        self.assertEqual(["Group1", "Group2"], self.hd.getRepositoryGroupIds(domainId="adomain"))
 
     def testGetRepositoryIds(self):
-        self.assertEquals(["repository1", "repository2"], self.hd.getRepositoryIds(domainId="adomain", repositoryGroupId="Group1"))
-        self.assertEquals(["repository1", "repository2", "repository2_1", "repository2_2"], self.hd.getRepositoryIds(domainId="adomain"))
+        self.assertEqual(["repository1", "repository2"], self.hd.getRepositoryIds(domainId="adomain", repositoryGroupId="Group1"))
+        self.assertEqual(["repository1", "repository2", "repository2_1", "repository2_2"], self.hd.getRepositoryIds(domainId="adomain"))
 
     def testGetRepositoryGroupId(self):
-        self.assertEquals("Group1", self.hd.getRepositoryGroupId(domainId="adomain", repositoryId="repository1"))
+        self.assertEqual("Group1", self.hd.getRepositoryGroupId(domainId="adomain", repositoryId="repository1"))
 
     def testGetRepositoryGroup(self):
         self.assertEqual({
@@ -127,18 +127,18 @@ class HarvesterDataTest(SeecrTestCase):
         try:
             self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('idDoesNotExist', str(e))
 
         try:
             self.hd.getRepositories(domainId='baddomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('idDoesNotExist', str(e))
 
     def testGetRepository(self):
         result = self.hd.getRepository(domainId='adomain', identifier='repository1')
-        self.assertEquals({
+        self.assertEqual({
     "identifier": "repository1",
     "repositoryGroupId": "Group1"
 }, result)
@@ -147,7 +147,7 @@ class HarvesterDataTest(SeecrTestCase):
         try:
             self.hd.getRepository(domainId='adomain', identifier='repository12')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('idDoesNotExist', str(e))
 
     def testAddDomain(self):
@@ -157,17 +157,17 @@ class HarvesterDataTest(SeecrTestCase):
         try:
             self.hd.addDomain(identifier="newdomain")
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('The domain already exists.', str(e))
         try:
             self.hd.addDomain(identifier="domain#with#invalid%characters")
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
         try:
             self.hd.addDomain(identifier="")
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('No name given.', str(e))
 
     def testUpdateDomain(self):
@@ -182,22 +182,22 @@ class HarvesterDataTest(SeecrTestCase):
         try:
             self.hd.addRepositoryGroup(identifier="Group1", domainId='adomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('The repositoryGroup already exists.', str(e))
         try:
             self.hd.addRepositoryGroup(identifier="GROUP1", domainId='adomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('The repositoryGroup already exists.', str(e))
         try:
             self.hd.addRepositoryGroup(identifier="group#with#invalid%characters", domainId='adomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
         try:
             self.hd.addRepositoryGroup(identifier="", domainId='adomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('No name given.', str(e))
 
     def testUpdateRepositoryGroup(self):
@@ -215,33 +215,33 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.hd.addRepository(identifier="newrepo", domainId='adomain', repositoryGroupId='Group1')
         self.assertEqual(['repository1', 'repository2', 'newrepo'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
-        self.assertEquals('Group1', self.hd.getRepository(identifier='newrepo', domainId='adomain')['repositoryGroupId'])
+        self.assertEqual('Group1', self.hd.getRepository(identifier='newrepo', domainId='adomain')['repositoryGroupId'])
         try:
             self.hd.addRepository(identifier="repository1", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('The repository already exists.', str(e))
         try:
             self.hd.addRepository(identifier="Repository1", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('The repository already exists.', str(e))
         try:
             self.hd.addRepository(identifier="repository#with#invalid%characters", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('Name is not valid. Only use alphanumeric characters.', str(e))
         try:
             self.hd.addRepository(identifier="", domainId='adomain', repositoryGroupId='Group1')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('No name given.', str(e))
 
     def testAddRepositoryMultipleGroups(self):
         try:
             self.hd.addRepository(identifier="repository1", domainId='adomain', repositoryGroupId='Group2')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('Repository name already in use.', str(e))
 
 
@@ -269,18 +269,18 @@ class HarvesterDataTest(SeecrTestCase):
                 authorizationKey='',
             )
         repository = self.hd.getRepository('repository1', 'adomain')
-        self.assertEquals('baseurl', repository['baseurl'])
-        self.assertEquals('set', repository['set'])
-        self.assertEquals('metadataPrefix', repository['metadataPrefix'])
-        self.assertEquals('mappingId', repository['mappingId'])
-        self.assertEquals('targetId', repository['targetId'])
-        self.assertEquals('collection', repository['collection'])
-        self.assertEquals(0, repository['maximumIgnore'])
-        self.assertEquals(False, repository['use'])
-        self.assertEquals(True, repository['complete'])
-        self.assertEquals(True, repository['continuous'])
-        self.assertEquals('action', repository['action'])
-        self.assertEquals(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
+        self.assertEqual('baseurl', repository['baseurl'])
+        self.assertEqual('set', repository['set'])
+        self.assertEqual('metadataPrefix', repository['metadataPrefix'])
+        self.assertEqual('mappingId', repository['mappingId'])
+        self.assertEqual('targetId', repository['targetId'])
+        self.assertEqual('collection', repository['collection'])
+        self.assertEqual(0, repository['maximumIgnore'])
+        self.assertEqual(False, repository['use'])
+        self.assertEqual(True, repository['complete'])
+        self.assertEqual(True, repository['continuous'])
+        self.assertEqual('action', repository['action'])
+        self.assertEqual(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
 
     def testRepositoryDone(self):
         self.hd.updateRepository('repository1',
@@ -309,9 +309,9 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(['ignored MAPPING'], domain['mappingIds'])
         mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
         mappingIds = self.hd.getDomain('adomain')['mappingIds']
-        self.assertEquals(2, len(mappingIds))
+        self.assertEqual(2, len(mappingIds))
         mapping = self.hd.getMapping(mappingId)
-        self.assertEquals(mappingId, mappingIds[-1])
+        self.assertEqual(mappingId, mappingIds[-1])
         self.assertEqual('newMapping', mapping['name'])
         self.assertEqual('This mapping is what has become the default mapping for most Meresco based projects.\n', mapping['description'])
         self.assertTrue(len(mapping['code']) > 100)
@@ -319,7 +319,7 @@ class HarvesterDataTest(SeecrTestCase):
         try:
             self.hd.addMapping(name="", domainId='adomain')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('No name given.', str(e))
 
     def testUpdateMapping(self):
@@ -337,18 +337,18 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(['ignored MAPPING'], self.hd.getDomain('adomain')['mappingIds'])
 
     def testAddTarget(self):
-        self.assertEquals(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
+        self.assertEqual(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
         targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
         targetIds = self.hd.getDomain('adomain')['targetIds']
-        self.assertEquals(2, len(targetIds))
+        self.assertEqual(2, len(targetIds))
         target = self.hd.getTarget(targetId)
-        self.assertEquals(targetId, targetIds[-1])
+        self.assertEqual(targetId, targetIds[-1])
         self.assertEqual('new target', target['name'])
         self.assertEqual(targetId, target['identifier'])
         try:
             self.hd.addTarget(name="", domainId='adomain', targetType='sruUpdate')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('No name given.', str(e))
 
     def testUpdateTarget(self):
@@ -364,19 +364,19 @@ class HarvesterDataTest(SeecrTestCase):
                 oaiEnvelope=False,
             )
         target = self.hd.getTarget(targetId)
-        self.assertEquals('updated target', target['name'])
-        self.assertEquals('username', target['username'])
-        self.assertEquals(1234, target['port'])
-        self.assertEquals('composite', target['targetType'])
-        self.assertEquals(['id1', 'id2'], target['delegateIds'])
-        self.assertEquals('path', target['path'])
-        self.assertEquals('baseurl', target['baseurl'])
-        self.assertEquals(False, target['oaiEnvelope'])
+        self.assertEqual('updated target', target['name'])
+        self.assertEqual('username', target['username'])
+        self.assertEqual(1234, target['port'])
+        self.assertEqual('composite', target['targetType'])
+        self.assertEqual(['id1', 'id2'], target['delegateIds'])
+        self.assertEqual('path', target['path'])
+        self.assertEqual('baseurl', target['baseurl'])
+        self.assertEqual(False, target['oaiEnvelope'])
 
     def testDeleteTarget(self):
         targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
-        self.assertEquals(['ignored TARGET', targetId], self.hd.getDomain('adomain')['targetIds'])
+        self.assertEqual(['ignored TARGET', targetId], self.hd.getDomain('adomain')['targetIds'])
         self.hd.deleteTarget(targetId, domainId='adomain')
-        self.assertEquals(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
+        self.assertEqual(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
 
 

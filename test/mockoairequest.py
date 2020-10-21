@@ -29,7 +29,7 @@
 ## end license ##
 
 from os.path import join
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from meresco.harvester.oairequest import OaiRequest
 from lxml.etree import parse

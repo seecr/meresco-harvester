@@ -43,11 +43,11 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetSomething'], argument=['value'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {
+        self.assertEqual({'request': {
             'verb': 'GetSomething', 'argument': 'value',
             }, 'response': {'GetSomething': 'get something result'}}, JsonDict.loads(body))
-        self.assertEquals(['getSomething'], observer.calledMethodNames())
-        self.assertEquals({'argument': 'value'}, observer.calledMethods[0].kwargs)
+        self.assertEqual(['getSomething'], observer.calledMethodNames())
+        self.assertEqual({'argument': 'value'}, observer.calledMethods[0].kwargs)
 
     def testGetUnexisting(self):
         dataRetrieve = HarvesterDataRetrieve()
@@ -57,9 +57,9 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetUnexisting'], argument=['value'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {'verb': 'GetUnexisting', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEquals(['getUnexisting'], observer.calledMethodNames())
-        self.assertEquals({'argument': 'value'}, observer.calledMethods[0].kwargs)
+        self.assertEqual({'request': {'verb': 'GetUnexisting', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
+        self.assertEqual(['getUnexisting'], observer.calledMethodNames())
+        self.assertEqual({'argument': 'value'}, observer.calledMethods[0].kwargs)
 
     def testNoVerb(self):
         dataRetrieve = HarvesterDataRetrieve()
@@ -68,8 +68,8 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(argument=['value'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEquals([], observer.calledMethodNames())
+        self.assertEqual({'request': {'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
+        self.assertEqual([], observer.calledMethodNames())
 
     def testErrorInCall(self):
         dataRetrieve = HarvesterDataRetrieve()
@@ -79,8 +79,8 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetError'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {'verb': 'GetError'}, 'error': {'message': "Exception('Bad Bad Bad',)", 'code': 'unknown'}}, JsonDict.loads(body))
-        self.assertEquals(['getError'], observer.calledMethodNames())
+        self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': "Exception('Bad Bad Bad',)", 'code': 'unknown'}}, JsonDict.loads(body))
+        self.assertEqual(['getError'], observer.calledMethodNames())
 
     def testKnownCodeException(self):
         dataRetrieve = HarvesterDataRetrieve()
@@ -90,8 +90,8 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetError'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {'verb': 'GetError'}, 'error': {'message': 'The value of an argument (id or key) is unknown or illegal.', 'code': 'idDoesNotExist'}}, JsonDict.loads(body))
-        self.assertEquals(['getError'], observer.calledMethodNames())
+        self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': 'The value of an argument (id or key) is unknown or illegal.', 'code': 'idDoesNotExist'}}, JsonDict.loads(body))
+        self.assertEqual(['getError'], observer.calledMethodNames())
 
     def testSomethingElseThanGetIsNotAllowed(self):
         dataRetrieve = HarvesterDataRetrieve()
@@ -100,6 +100,6 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(argument=['value'], verb=['AddObserver'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEquals({'request': {'verb': 'AddObserver', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEquals([], observer.calledMethodNames())
+        self.assertEqual({'request': {'verb': 'AddObserver', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
+        self.assertEqual([], observer.calledMethodNames())
 

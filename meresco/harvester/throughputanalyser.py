@@ -38,7 +38,7 @@ import re, sys, os
 from time import strptime
 from datetime import datetime
 NUMBERS_RE = re.compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
-from itertools import imap, ifilter
+
 from cgi import escape as escapeXml
 from os.path import isfile
 
@@ -96,11 +96,11 @@ class ThroughputAnalyser(object):
             return records, seconds
         events = open(reportfile)
         try:
-            split = lambda l:map(str.strip, l.split('\t'))
+            split = lambda l:list(map(str.strip, l.split('\t')))
             begintime = None
-            datefilter = lambda (date, x,y,z): date[1:-1] >= dateSince 
-            allevents = imap(split, ifilter(str.strip, events))
-            for date, event, anIdentifier, comments in ifilter(datefilter, allevents):
+            datefilter = lambda date_x_y_z: date_x_y_z[0][1:-1] >= dateSince 
+            allevents = map(split, filter(str.strip, events))
+            for date, event, anIdentifier, comments in filter(datefilter, allevents):
                 if event == "STARTHARVEST":
                     begintime = parseToTime(date[1:-1])
                     harvested = uploaded = deleted = total = -1

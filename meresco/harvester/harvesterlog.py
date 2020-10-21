@@ -32,13 +32,13 @@
 #
 ## end license ##
 
-from eventlogger import EventLogger
-from ids import Ids
+from .eventlogger import EventLogger
+from .ids import Ids
 import traceback
 from os.path import join, isdir, isfile, dirname
 from os import makedirs, remove
 from shutil import rmtree
-from state import State
+from .state import State
 from escaping import escapeFilename
 from seecr.zulutime import ZuluTime
 

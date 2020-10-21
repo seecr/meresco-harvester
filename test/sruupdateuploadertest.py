@@ -35,10 +35,10 @@
 
 from seecr.test import SeecrTestCase, CallTrace
 from lxml.etree import parse, XML
-from StringIO import StringIO
+from io import StringIO
 
 from meresco.harvester.sruupdateuploader import SruUpdateUploader, InvalidComponentException, InvalidDataException
-from httplib import SERVICE_UNAVAILABLE, OK as HTTP_OK
+from http.client import SERVICE_UNAVAILABLE, OK as HTTP_OK
 from meresco.harvester.namespaces import xpathFirst, xpath
 
 class SruUpdateUploaderTest(SeecrTestCase):
@@ -60,18 +60,18 @@ class SruUpdateUploaderTest(SeecrTestCase):
 
     def testOne(self):
         self.uploader.send(self.upload)
-        self.assertEquals(1, len(self.sentData))
+        self.assertEqual(1, len(self.sentData))
 
         updateRequest = XML(self.sentData[0])
-        self.assertEquals('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
-        self.assertEquals('info:srw/action/1/replace', xpathFirst(updateRequest, 'ucp:action/text()'))
+        self.assertEqual('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
+        self.assertEqual('info:srw/action/1/replace', xpathFirst(updateRequest, 'ucp:action/text()'))
         documentParts = xpath(updateRequest, 'srw:record/srw:recordData/document:document/document:part')
-        self.assertEquals(2, len(documentParts))
+        self.assertEqual(2, len(documentParts))
 
         self.uploader.delete(self.upload)
         updateRequest = XML(self.sentData[1])
-        self.assertEquals('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
-        self.assertEquals('info:srw/action/1/delete', xpathFirst(updateRequest, 'ucp:action/text()'))
+        self.assertEqual('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
+        self.assertEqual('info:srw/action/1/delete', xpathFirst(updateRequest, 'ucp:action/text()'))
 
     def testException(self):
         possibleSRUError="""<?xml version="1.0" encoding="UTF-8"?>
@@ -92,8 +92,8 @@ class SruUpdateUploaderTest(SeecrTestCase):
         try:
             uploader.send(self.upload)
             self.fail()
-        except InvalidComponentException, e:
-            self.assertEquals(self.upload.id, e.uploadId)
+        except InvalidComponentException as e:
+            self.assertEqual(self.upload.id, e.uploadId)
 
     def testInvalidDataException(self):
         possibleSRUValidationError="""<?xml version="1.0" encoding="UTF-8"?>
@@ -114,8 +114,8 @@ class SruUpdateUploaderTest(SeecrTestCase):
         try:
             uploader.send(self.upload)
             self.fail("Diagnostic code 12 should raise a validation exception")
-        except InvalidDataException, e:
-            self.assertEquals(self.upload.id, e.uploadId)
+        except InvalidDataException as e:
+            self.assertEqual(self.upload.id, e.uploadId)
 
     def testRetryOnServiceUnavailable(self):
         eventLogger = CallTrace('eventlogger')
@@ -131,17 +131,17 @@ class SruUpdateUploaderTest(SeecrTestCase):
         uploader._sendDataToRemote = sendDataToRemote
         uploader._sendData(1, "HOW IS EVERYTHING")
 
-        self.assertEquals(0, len(answers))
-        self.assertEquals(1, len(datas))
+        self.assertEqual(0, len(answers))
+        self.assertEqual(1, len(datas))
 
         answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
         uploader._sendData(1, "HOW IS EVERYTHING")
 
-        self.assertEquals(0, len(answers))
-        self.assertEquals(2, len(datas))
-        self.assertEquals(1, len(eventLogger.calledMethods))
-        self.assertEquals("Status 503, SERVICE_UNAVAILABLE received while trying to upload", eventLogger.calledMethods[0].args[0])
+        self.assertEqual(0, len(answers))
+        self.assertEqual(2, len(datas))
+        self.assertEqual(1, len(eventLogger.calledMethods))
+        self.assertEqual("Status 503, SERVICE_UNAVAILABLE received while trying to upload", eventLogger.calledMethods[0].args[0])
 
     def testRetryOnServiceUnavailableFailsAfter3Times(self):
         eventLogger = CallTrace('eventlogger')
@@ -159,14 +159,14 @@ class SruUpdateUploaderTest(SeecrTestCase):
         try:
             uploader._sendData(1, "HOW IS EVERYTHING")
             self.fail()
-        except Exception, e:
+        except Exception as e:
             exception = e
 
         self.assertFalse(exception == None)
-        self.assertEquals('uploadId: "1", message: "HTTP 503: "', str(e))
-        self.assertEquals(1, len(answers))
-        self.assertEquals(3, len(datas))
-        self.assertEquals(3, len(eventLogger.calledMethods))
+        self.assertEqual('uploadId: "1", message: "HTTP 503: "', str(e))
+        self.assertEqual(1, len(answers))
+        self.assertEqual(3, len(datas))
+        self.assertEqual(3, len(eventLogger.calledMethods))
 
     def testParseMessageWithDiagnostic(self):
         SRU_MESSAGE=parse(StringIO("""<?xml version="1.0" encoding="UTF-8"?>
@@ -185,9 +185,9 @@ class SruUpdateUploaderTest(SeecrTestCase):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
         version, operationStatus, diagnostics = uploader._parseMessage(SRU_MESSAGE)
-        self.assertEquals("1.0", version)
-        self.assertEquals("fail", operationStatus)
-        self.assertEquals(("info:srw/diagnostic/12/12", "Xsd Validation error", "Invalid component: record rejected"), diagnostics)
+        self.assertEqual("1.0", version)
+        self.assertEqual("fail", operationStatus)
+        self.assertEqual(("info:srw/diagnostic/12/12", "Xsd Validation error", "Invalid component: record rejected"), diagnostics)
 
     def testParseMessage(self):
         SRU_MESSAGE=parse(StringIO(SUCCES_RESPONSE))
@@ -195,9 +195,9 @@ class SruUpdateUploaderTest(SeecrTestCase):
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
         version, operationStatus, diagnostics = uploader._parseMessage(SRU_MESSAGE)
-        self.assertEquals("1.0", version)
-        self.assertEquals("success", operationStatus)
-        self.assertEquals(None, diagnostics)
+        self.assertEqual("1.0", version)
+        self.assertEqual("success", operationStatus)
+        self.assertEqual(None, diagnostics)
 
 SUCCES_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">

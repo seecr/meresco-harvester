@@ -59,25 +59,25 @@ class RepositoryTest(SeecrTestCase):
 
     def testNoTimeslots(self):
         slots = self.repo.shopclosed
-        self.assertEquals(None, slots)
+        self.assertEqual(None, slots)
         self.assertFalse(self.repo.shopClosed())
 
     def testInitHarvestExclusionInterval(self):
         self.repo.fill(self, GETREPOSITORY)
         slots = self.repo.shopclosed
-        self.assertEquals(2, len(slots))
-        self.assertEquals('*:*:10:30-*:*:11:45', slots[0])
-        self.assertEquals('*:5:5:59-*:5:23:00', slots[1])
+        self.assertEqual(2, len(slots))
+        self.assertEqual('*:*:10:30-*:*:11:45', slots[0])
+        self.assertEqual('*:5:5:59-*:5:23:00', slots[1])
 
     def testShopClosed(self):
         self.repo.fill(self, GETREPOSITORY)
         self.repo.closedSlots()
-        self.assertEquals(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
+        self.assertEqual(False, self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
 
     def testTimeslotInitialization(self):
         self.repo.fill(self, GETREPOSITORY)
         timeslots = self.repo.closedSlots()
-        self.assertEquals(2, len(timeslots))
+        self.assertEqual(2, len(timeslots))
         self.assertFalse(self.repo.shopClosed(dateTuple = (2006,1,1,11,50)))
         timeslots[1]._end = (Wildcard(), Wildcard(), Wildcard(), Wildcard())
 
@@ -97,10 +97,10 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction()
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals(('', False), result)
-        self.assert_(action.called)
-        self.assertEquals(False, self.repo.use)
-        self.assertEquals(None, self.repo.action)
+        self.assertEqual(('', False), result)
+        self.assertTrue(action.called)
+        self.assertEqual(False, self.repo.use)
+        self.assertEqual(None, self.repo.action)
 
     def testHarvestWithBadResumptionToken(self):
         self.repo.use = True
@@ -112,7 +112,7 @@ class RepositoryTest(SeecrTestCase):
         self.repo._createAction = lambda **kwargs: action
         message, again = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
         self.assertTrue('resumptionToken expired' in message)
-        self.assertEquals(['info', 'do', 'resetState'], [m.name for m in action.calledMethods])
+        self.assertEqual(['info', 'do', 'resetState'], [m.name for m in action.calledMethods])
         self.assertTrue(again)
 
     def testDoHarvest(self):
@@ -121,10 +121,10 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction(DONE)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals((DONE, False), result)
-        self.assert_(action.called)
-        self.assertEquals(True, self.repo.use)
-        self.assertEquals(None, self.repo.action)
+        self.assertEqual((DONE, False), result)
+        self.assertTrue(action.called)
+        self.assertEqual(True, self.repo.use)
+        self.assertEqual(None, self.repo.action)
 
     def testDoHarvestWithCompleteHarvestingEnabled(self):
         self.repo.use = True
@@ -133,7 +133,7 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction(DONE, hasResumptionToken=True)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals((DONE, True), result)
+        self.assertEqual((DONE, True), result)
 
     def testDoHarvestWithCompleteHarvestingDisabled(self):
         self.repo.use = True
@@ -142,7 +142,7 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction(DONE, hasResumptionToken=True)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals((DONE, False), result)
+        self.assertEqual((DONE, False), result)
 
     def testDoSomeAction(self):
         self.repo._saharaget = self
@@ -150,11 +150,11 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction(DONE)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals((DONE, False), result)
-        self.assert_(action.called)
-        self.assertEquals(None, self.repo.action)
-        self.assertEquals('domainId', self.mock_repositoryActionDone_domainId)
-        self.assertEquals('rep', self.mock_repositoryActionDone_repositoryId)
+        self.assertEqual((DONE, False), result)
+        self.assertTrue(action.called)
+        self.assertEqual(None, self.repo.action)
+        self.assertEqual('domainId', self.mock_repositoryActionDone_domainId)
+        self.assertEqual('rep', self.mock_repositoryActionDone_repositoryId)
 
     def testDoSomeActionThatMustBeRepeated(self):
         self.repo.use = True
@@ -162,16 +162,16 @@ class RepositoryTest(SeecrTestCase):
         action = MockAction('Not yet done!', False)
         self.repo._createAction=lambda stateDir,logDir,generalHarvestLog: action
         result, hasResumptionToken = self.repo.do(stateDir=self.logAndStateDir, logDir=self.logAndStateDir)
-        self.assertEquals('Not yet done!', result)
-        self.assert_(action.called)
-        self.assertEquals(True, self.repo.use)
-        self.assertEquals('someaction', self.repo.action)
+        self.assertEqual('Not yet done!', result)
+        self.assertTrue(action.called)
+        self.assertEqual(True, self.repo.use)
+        self.assertEqual('someaction', self.repo.action)
 
     def _testAction(self, use, action, expectedTypeName):
         self.repo.use = use
         self.repo.action = action
         createdAction = self.repo._createAction(stateDir=self.logAndStateDir, logDir=self.logAndStateDir, generalHarvestLog=NilEventLogger())
-        self.assertEquals(expectedTypeName, createdAction.__class__.__name__)
+        self.assertEqual(expectedTypeName, createdAction.__class__.__name__)
 
     def testCreateAction(self):
         self._testAction(False, None, 'NoneAction')
@@ -184,17 +184,17 @@ class RepositoryTest(SeecrTestCase):
         try:
             self._testAction(True, 'nonexisting', 'ignored')
             self.fail()
-        except ActionException, afe:
-            self.assertEquals("Action 'nonexisting' not supported.", str(afe))
+        except ActionException as afe:
+            self.assertEqual("Action 'nonexisting' not supported.", str(afe))
 
     def testDoWithoutLogpath(self):
         generalHarvestLog = CallTrace('Log')
         message, again = self.repo.do('','', generalHarvestLog=generalHarvestLog)
         self.assertFalse(again)
         self.assertTrue('RepositoryException: Missing stateDir and/or logDir' in message)
-        self.assertEquals((message,), generalHarvestLog.calledMethods[-1].args)
-        self.assertEquals({'id':self.repo.id}, generalHarvestLog.calledMethods[-1].kwargs)
-        self.assertEquals('logError', generalHarvestLog.calledMethods[-1].name)
+        self.assertEqual((message,), generalHarvestLog.calledMethods[-1].args)
+        self.assertEqual({'id':self.repo.id}, generalHarvestLog.calledMethods[-1].kwargs)
+        self.assertEqual('logError', generalHarvestLog.calledMethods[-1].name)
 
     # mock saharaget
     def repositoryActionDone(self, domainId, repositoryId):
@@ -205,12 +205,12 @@ class RepositoryTest(SeecrTestCase):
         self.repo.userAgent = "This is the User agent"
         self.repo.authorizationKey = "Let Me In"
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': 'This is the User agent', 'authorizationKey': 'Let Me In'}), self.oaiRequestArgsKwargs)
+        self.assertEqual(((None,), {'userAgent': 'This is the User agent', 'authorizationKey': 'Let Me In'}), self.oaiRequestArgsKwargs)
 
     def testNoneUserAgentIfEmpty(self):
         self.repo.userAgent = ''
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': None, 'authorizationKey': None}), self.oaiRequestArgsKwargs)
+        self.assertEqual(((None,), {'userAgent': None, 'authorizationKey': None}), self.oaiRequestArgsKwargs)
 
 
 class MockAction(Action):

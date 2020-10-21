@@ -30,7 +30,7 @@
 ## end license ##
 
 from os.path import join, isfile
-from os import SEEK_END
+from os import SEEK_END, SEEK_SET
 import re
 from meresco.components.json import JsonDict
 from seecr.zulutime import ZuluTime
@@ -120,7 +120,7 @@ class State(object):
             statsfile.seek(0, SEEK_END)
             if statsfile.tell() == 0:
                 return
-            statsfile.seek(-1, SEEK_END)
+            statsfile.seek(statsfile.tell()-1, SEEK_SET)
             lastchar = statsfile.read()
             if lastchar != '\n':
                 statsfile.write('\n')

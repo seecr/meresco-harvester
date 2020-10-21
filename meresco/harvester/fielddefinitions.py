@@ -31,7 +31,7 @@ from meresco.components.json import JsonDict
 
 def loadDefinitions(path):
     definitions = JsonDict.load(path) if path else JsonDict()
-    definitions['repository_fields'] = map(_fieldcheck, definitions.get('repository_fields', []))
+    definitions['repository_fields'] = list(map(_fieldcheck, definitions.get('repository_fields', [])))
     return definitions
 
 def _fieldcheck(definition):

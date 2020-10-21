@@ -28,8 +28,8 @@
 #
 ## end license ##
 
-from urllib import urlencode
-from urlparse import parse_qs, urlparse
+from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlparse
 from functools import partial
 
 from meresco.components.http.utils import redirectHttp, badRequestHtml, Ok
@@ -101,7 +101,7 @@ class HarvesterDataActions(PostActions):
         shopclosed = []
         shopStart = 0 if 'addTimeslot' in arguments else 1
         shopEnd = 1 + int(arguments.get('numberOfTimeslots', [''])[0] or '0')
-        for i in xrange(shopStart, shopEnd):
+        for i in range(shopStart, shopEnd):
             if arguments.get('deleteTimeslot_%s.x' % i, [None])[0]:
                 continue
             shopclosed.append(str(Timeslot('{week}:{weekday}:{begin}:00-{week}:{weekday}:{end}:00'.format(
@@ -207,7 +207,7 @@ class HarvesterDataActions(PostActions):
         redirectUri = arguments.pop('redirectUri', ['/'])[0]
         try:
             result = actionMethod(identifier=identifier, arguments=arguments)
-        except ValueError, e:
+        except ValueError as e:
             return redirectHttp % self._link(referer, error=str(e))
         return redirectHttp % self._link(redirectUri, identifier=identifier or result)
 

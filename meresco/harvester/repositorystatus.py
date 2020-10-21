@@ -31,13 +31,13 @@
 from os.path import join, isfile
 from lxml.etree import parse
 from re import compile
-from itertools import ifilter, islice
+from itertools import islice
 from meresco.components.json import JsonDict, JsonList
 from meresco.core import Observable
 from escaping import escapeFilename, unescapeFilename
 from simplejson import load as jsonLoad
 
-from harvesterlog import INVALID_DATA_MESSAGES_DIR
+from .harvesterlog import INVALID_DATA_MESSAGES_DIR
 from weightless.core import asList
 
 
@@ -130,7 +130,7 @@ class RepositoryStatus(Observable):
         recenterrors = parseState["errors"][-10:]
         recenterrors.reverse()
         stats = {}
-        for k,v in ifilter(lambda (k,v): k != 'errors', parseState.items()):
+        for k,v in filter(lambda k_v: k_v[0] != 'errors', list(parseState.items())):
             stats[k] = v
         stats["totalerrors"] = len(parseState["errors"])
         stats["recenterrors"] = recenterrors

@@ -92,9 +92,9 @@ class VirtualUploader(object):
 
 class UploaderFactory(object):
     def __init__(self):
-        from sruupdateuploader import SruUpdateUploader
-        from compositeuploader import CompositeUploader
-        from filesystemuploader import FileSystemUploader
+        from .sruupdateuploader import SruUpdateUploader
+        from .compositeuploader import CompositeUploader
+        from .filesystemuploader import FileSystemUploader
         self.mapping = {
                     'sruUpdate': SruUpdateUploader,
                     'composite': CompositeUploader,

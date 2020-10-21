@@ -32,10 +32,10 @@
 #
 ## end license ##
 
-from eventlogger import CompositeLogger, StreamEventLogger
+from .eventlogger import CompositeLogger, StreamEventLogger
 from time import sleep
-from timedprocess import TimedProcess
-from urllib import urlopen
+from .timedprocess import TimedProcess
+from urllib.request import urlopen
 from os.path import join
 from select import select, error
 from sys import stderr, stdout, exit, argv
@@ -175,8 +175,9 @@ class StartHarvester(object):
                     self._createProcess(processes, repositoryId)
                     running.add(repositoryId)
                 try:
-                    readers, _, _ = select(processes.keys(), [], [])
-                except error, (errno, description):
+                    readers, _, _ = select(list(processes.keys()), [], [])
+                except error as xxx_todo_changeme:
+                    (errno, description) = xxx_todo_changeme.args
                     if errno == EINTR:
                         pass
                     else:
@@ -188,7 +189,7 @@ class StartHarvester(object):
                     t, process, repositoryId = processes[reader]
                     try:
                         pipeContent = read(reader, 4096)
-                    except OSError, e:
+                    except OSError as e:
                         if e.errno == EAGAIN:
                             continue
                         raise
@@ -215,7 +216,7 @@ class StartHarvester(object):
                         self._updateWaiting(waiting, running)
 
         except:
-            for t in set([t for t,process,repositoryId in processes.values()]):
+            for t in set([t for t,process,repositoryId in list(processes.values())]):
                 t.terminate()
             raise
 

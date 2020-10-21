@@ -42,7 +42,7 @@ from meresco.harvester.namespaces import xpathFirst, namespaces
 from meresco.harvester.oairequest import OaiRequest, OAIError, OaiResponse
 
 from mockoairequest import MockOaiRequest
-from StringIO import StringIO
+from io import StringIO
 
 class OaiRequestTest(SeecrTestCase):
     def setUp(self):
@@ -59,7 +59,7 @@ class OaiRequestTest(SeecrTestCase):
         request = OaiRequest("http://harvest.me", _urlopen=myOwnUrlOpen)
         request.identify()
 
-        self.assertEquals("Meresco Harvester {}".format(VERSION), args['args'][0].headers['User-agent'])
+        self.assertEqual("Meresco Harvester {}".format(VERSION), args['args'][0].headers['User-agent'])
 
     def testHeaders(self):
         self.assertEqual({"User-Agent": "Meresco Harvester {}".format(VERSION)},
@@ -95,27 +95,27 @@ class OaiRequestTest(SeecrTestCase):
 
     def testMockOaiRequest(self):
         response = self.request.request({'verb': 'ListRecords', 'metadataPrefix': 'oai_dc'})
-        self.assertEquals('2004-12-29T13:19:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
+        self.assertEqual('2004-12-29T13:19:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
 
     def testOtherOaiRequest(self):
         response = self.request.request({'verb': 'GetRecord', 'metadataPrefix': 'oai_dc', 'identifier': 'oai:rep:12345'})
-        self.assertEquals('2005-04-28T12:16:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
+        self.assertEqual('2005-04-28T12:16:27Z', xpathFirst(response.response, '/oai:OAI-PMH/oai:responseDate/text()'))
 
     def testListRecordsError(self):
         try:
             self.request.listRecords(resumptionToken='BadResumptionToken')
             self.fail()
-        except OAIError, e:
-            self.assertEquals('The value of the resumptionToken argument is invalid or expired.',e.errorMessage())
-            self.assertEquals(u'badResumptionToken', e.errorCode())
+        except OAIError as e:
+            self.assertEqual('The value of the resumptionToken argument is invalid or expired.',e.errorMessage())
+            self.assertEqual('badResumptionToken', e.errorCode())
 
     def testListRecords(self):
         response = self.request.listRecords(metadataPrefix='oai_dc')
-        self.assertEquals("TestToken", response.resumptionToken)
-        self.assertEquals("2004-12-29T13:19:27Z", response.responseDate)
-        self.assertEquals(3, len(response.records))
-        self.assertEquals('oai:tudelft.nl:007087', xpathFirst(response.records[0], 'oai:header/oai:identifier/text()'))
-        self.assertEquals(None, xpathFirst(response.records[0], 'oai:header/@status'))
+        self.assertEqual("TestToken", response.resumptionToken)
+        self.assertEqual("2004-12-29T13:19:27Z", response.responseDate)
+        self.assertEqual(3, len(response.records))
+        self.assertEqual('oai:tudelft.nl:007087', xpathFirst(response.records[0], 'oai:header/oai:identifier/text()'))
+        self.assertEqual(None, xpathFirst(response.records[0], 'oai:header/@status'))
 
     def mockRequest(self, args):
         self.mockRequest_args = args
@@ -124,37 +124,37 @@ class OaiRequestTest(SeecrTestCase):
     def testListRecordArgs(self):
         self.request.request = self.mockRequest
         self.request.listRecords(metadataPrefix='kaas')
-        self.assertEquals('kaas', self.mockRequest_args['metadataPrefix'])
-        self.assert_(not self.mockRequest_args.has_key('resumptionToken'))
+        self.assertEqual('kaas', self.mockRequest_args['metadataPrefix'])
+        self.assertTrue('resumptionToken' not in self.mockRequest_args)
         self.request.listRecords(from_='from', until='until',set='set', metadataPrefix='prefix')
-        self.assertEquals('from', self.mockRequest_args['from'])
-        self.assertEquals('until', self.mockRequest_args['until'])
-        self.assertEquals('set', self.mockRequest_args['set'])
-        self.assertEquals('prefix', self.mockRequest_args['metadataPrefix'])
+        self.assertEqual('from', self.mockRequest_args['from'])
+        self.assertEqual('until', self.mockRequest_args['until'])
+        self.assertEqual('set', self.mockRequest_args['set'])
+        self.assertEqual('prefix', self.mockRequest_args['metadataPrefix'])
 
     def testGetRecord(self):
         response = self.request.getRecord(identifier='oai:rep:12345', metadataPrefix='oai_dc')
-        self.assertEquals('oai:rep:12345', xpathFirst(response.record, 'oai:header/oai:identifier/text()'))
+        self.assertEqual('oai:rep:12345', xpathFirst(response.record, 'oai:header/oai:identifier/text()'))
 
     def testListRecordsWithAnEmptyList(self):
         response = self.request.listRecords(resumptionToken='EmptyListToken')
-        self.assertEquals(0, len(response.records))
-        self.assertEquals("", response.resumptionToken)
-        self.assertEquals("2005-01-12T14:34:49Z", response.responseDate)
+        self.assertEqual(0, len(response.records))
+        self.assertEqual("", response.resumptionToken)
+        self.assertEqual("2005-01-12T14:34:49Z", response.responseDate)
 
     def testBuildRequestUrl(self):
         oaiRequest = OaiRequest("http://x.y.z/oai")
-        self.assertEquals("http://x.y.z/oai?verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
+        self.assertEqual("http://x.y.z/oai?verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
 
         oaiRequest = OaiRequest("http://x.y.z/oai?apikey=xyz123")
-        self.assertEquals("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
+        self.assertEqual("http://x.y.z/oai?apikey=xyz123&verb=ListRecords&metadataPrefix=oai_dc", oaiRequest._buildRequestUrl([('verb', 'ListRecords'), ('metadataPrefix', 'oai_dc')]))
 
     def testShouldUseOwnClockTimeAsResponseDateIfNonePresent(self):
         originalZuluMethod = OaiResponse._zulu
         OaiResponse._zulu = staticmethod(lambda: '2020-12-12T12:12:12Z')
         try:
             response = oaiResponse(responseDate='')
-            self.assertEquals('2020-12-12T12:12:12Z', response.responseDate)
+            self.assertEqual('2020-12-12T12:12:12Z', response.responseDate)
         finally:
             OaiResponse._zulu = originalZuluMethod
 

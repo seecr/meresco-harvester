@@ -70,7 +70,7 @@ class FileSystemUploaderTest(SeecrTestCase):
             upload.id = anId
             return self.uploader._filenameFor(upload)
 
-        self.assertEquals(self.tempdir + '/groupId/repositoryId/aa:bb_SLASH_cc.dd.record', getFilename('aa:bb/cc.dd'))
+        self.assertEqual(self.tempdir + '/groupId/repositoryId/aa:bb_SLASH_cc.dd.record', getFilename('aa:bb/cc.dd'))
         self.assertTrue(getFilename('.').startswith(self.tempdir + '/groupId/repositoryId/_malformed_id.'))
         self.assertTrue(getFilename('..').startswith(self.tempdir + '/groupId/repositoryId/_malformed_id.'))
         self.assertTrue(getFilename('').startswith(self.tempdir + '/groupId/repositoryId/_malformed_id.'))
@@ -96,12 +96,14 @@ class FileSystemUploaderTest(SeecrTestCase):
         DELETED_RECORDS = join(self.tempdir, 'deleted_records')
 
         self.assertTrue(isfile(DELETED_RECORDS))
-        self.assertEquals(['id\n'], open(DELETED_RECORDS).readlines())
+        with open(DELETED_RECORDS) as fp:
+            self.assertEqual(['id\n'], fp.readlines())
         self.assertFalse(isfile(recordFile))
 
         upload.id = 'second:id'
         self.uploader.delete(upload)
-        self.assertEquals(['id\n', 'second:id\n'], open(DELETED_RECORDS).readlines())
+        with open(DELETED_RECORDS) as fp:
+            self.assertEqual(['id\n', 'second:id\n'], fp.readlines())
 
     def testDeleteWithOaiEnvelope(self):
         RECORD_FILENAME = join(self.tempdir, 'id.record')
@@ -121,7 +123,8 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.delete(upload)
         self.assertTrue(isfile(RECORD_FILENAME))
 
-        self.assertEqualsWS("""<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+        with open(RECORD_FILENAME) as f:
+            self.assertEqualsWS("""<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
     <responseDate>VANDAAG_EN_NU</responseDate>
     <request verb="GetRecord" metadataPrefix="oai_dc" identifier="id.record">http://repository</request>
     <GetRecord>
@@ -132,7 +135,7 @@ class FileSystemUploaderTest(SeecrTestCase):
             </header>
         </record>
     </GetRecord>
-</OAI-PMH>""", open(RECORD_FILENAME).read())
+</OAI-PMH>""", f.read())
 
 
     def testSend(self):
@@ -143,7 +146,8 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEqualsLxml(oaiResponse().record, parse(open(recordFile)))
+        with open(recordFile) as fp:
+            self.assertEqualsLxml(oaiResponse().record, parse(fp))
 
     def testSendWithAbout(self):
         ABOUT = '<about xmlns="%(oai)s">abouttext</about>' % namespaces
@@ -154,7 +158,8 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEquals(ABOUT, lxmltostring(xpathFirst(parse(open(recordFile)), '//oai:about')))
+        with open(recordFile) as fp:
+            self.assertEqual(ABOUT, lxmltostring(xpathFirst(parse(fp), '//oai:about')))
 
     def testSendWithMultipleAbout(self):
         ABOUT = '<about xmlns="%(oai)s">about_1</about><about xmlns="%(oai)s">about_2</about>' % namespaces
@@ -166,7 +171,8 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        self.assertEquals(ABOUT, ''.join(lxmltostring(x) for x in xpath(parse(open(recordFile)), '//oai:about')))
+        with open(recordFile) as fp:
+            self.assertEqual(ABOUT, ''.join(lxmltostring(x) for x in xpath(parse(fp), '//oai:about')))
 
 
     def testSendRaisesError(self):
@@ -195,10 +201,11 @@ class FileSystemUploaderTest(SeecrTestCase):
         self.uploader.send(upload)
 
         self.assertTrue(isfile(recordFile))
-        xmlGetRecord = parse(open(recordFile))
-        self.assertEquals('oai:ident:321', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
-        self.assertEquals('http://www.example.com', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/text()'))
-        self.assertEquals('weird&strange', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/@metadataPrefix'))
+        with open(recordFile) as fp:
+            xmlGetRecord = parse(fp)
+            self.assertEqual('oai:ident:321', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:GetRecord/oai:record/oai:header/oai:identifier/text()'))
+            self.assertEqual('http://www.example.com', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/text()'))
+            self.assertEqual('weird&strange', xpathFirst(xmlGetRecord, '/oai:OAI-PMH/oai:request/@metadataPrefix'))
 
     def testSendTwice(self):
         self.testSend()

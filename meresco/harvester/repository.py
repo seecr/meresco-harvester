@@ -37,14 +37,15 @@ from sys import exc_info
 from traceback import format_exception
 from time import localtime
 
-from action import Action
-from eventlogger import NilEventLogger
-from oairequest import OAIError, OaiRequest
-from saharaobject import SaharaObject
-from timeslot import Timeslot
-from virtualuploader import UploaderFactory
+from .action import Action
+from .eventlogger import NilEventLogger
+from .oairequest import OAIError, OaiRequest
+from .saharaobject import SaharaObject
+from .timeslot import Timeslot
+from .virtualuploader import UploaderFactory
 
 from gustos.common.units import COUNT
+from functools import reduce
 
 nillogger = NilEventLogger()
 
@@ -66,13 +67,13 @@ class Repository(SaharaObject):
     def closedSlots(self):
         if not hasattr(self, '_closedslots'):
             if self.shopclosed:
-                self._closedslots = map(lambda txt: Timeslot(txt), self.shopclosed)
+                self._closedslots = [Timeslot(txt) for txt in self.shopclosed]
             else:
                 self._closedslots = []
         return self._closedslots
 
     def shopClosed(self, dateTuple = localtime()[:5]):
-        return reduce(lambda lhs, rhs: lhs or rhs, map(lambda x:x.areWeWithinTimeslot( dateTuple), self.closedSlots()), False)
+        return reduce(lambda lhs, rhs: lhs or rhs, [x.areWeWithinTimeslot( dateTuple) for x in self.closedSlots()], False)
 
     def target(self):
         return self._proxy.getTargetObject(self.targetId)
@@ -111,7 +112,7 @@ class Repository(SaharaObject):
             if completeHarvest:
                 generalHarvestLog.logInfo('Repository will be completed in one attempt', id=self.id)
             return message, completeHarvest
-        except OAIError, e:
+        except OAIError as e:
             gustosClient and gustosClient.report(values={ "Harvester": { "Events": { "errors": { COUNT: 1 } } } })
             errorMessage = _errorMessage()
             generalHarvestLog.logError(errorMessage, id=self.id)

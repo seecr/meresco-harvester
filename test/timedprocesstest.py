@@ -55,7 +55,7 @@ sys.exit(123)""")
         exitstatus = tp.stopScript(process)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
-        self.assertEquals(123, exitstatus)
+        self.assertEqual(123, exitstatus)
 
     def testSuccessParameters(self):
         fd = open(self.tempfile,'w')
@@ -73,8 +73,8 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
         exitstatus = tp.stopScript(process)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
-        self.assertEquals('3', open(join(self.tempdir, 'output.txt')).read())
-        self.assertEquals(0, exitstatus)
+        self.assertEqual('3', open(join(self.tempdir, 'output.txt')).read())
+        self.assertEqual(0, exitstatus)
 
     @stdout_replaced
     def testTimeout(self):
@@ -93,5 +93,5 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
         exitstatus = tp.stopScript(process)
         self.assertTrue(tp.wasTimeout())
         self.assertFalse(tp.wasSuccess())
-        self.assertEquals(-9, exitstatus)
+        self.assertEqual(-9, exitstatus)
 

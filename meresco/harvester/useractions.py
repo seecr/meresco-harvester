@@ -36,7 +36,7 @@ from os.path import join, isfile
 from lxml.etree import parse, XML
 from cgi import parse_qs
 from xml.sax.saxutils import escape as escapeXml
-from urllib import urlencode
+from urllib.parse import urlencode
 
 
 class User(object):
@@ -159,4 +159,4 @@ class UserActions(PostActions):
 
 
 def _parseBody(Body, fieldList):
-    return dict((key, value[0]) for key, value in parse_qs(Body, keep_blank_values=1).items() if key in fieldList)
+    return dict((key, value[0]) for key, value in list(parse_qs(Body, keep_blank_values=1).items()) if key in fieldList)

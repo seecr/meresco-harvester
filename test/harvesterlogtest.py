@@ -58,8 +58,8 @@ class HarvesterLogTest(SeecrTestCase):
 
     def testHasWork(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='someuni')
-        self.assertEquals(None, logger._state.from_)
-        self.assertEquals(None, logger._state.token)
+        self.assertEqual(None, logger._state.from_)
+        self.assertEqual(None, logger._state.token)
         self.assertTrue(logger.hasWork())
         logger._state.from_=strftime('%Y-%m-%d', gmtime())
         self.assertTrue(not logger.hasWork())
@@ -137,10 +137,10 @@ class HarvesterLogTest(SeecrTestCase):
         #Total is now counted based upon the id's
         self.assertTrue('3/1/1/0, Done:' in lines[0], lines[0])
         date, event, id, comments = LOGLINE_RE.match(eventline).groups()
-        self.assertEquals('SUCCES', event.strip())
-        self.assertEquals('name', id)
-        self.assertEquals('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
-        self.assertEquals('Test Exception', invalidUploadId2)
+        self.assertEqual('SUCCES', event.strip())
+        self.assertEqual('name', id)
+        self.assertEqual('Harvested/Uploaded/Deleted/Total: 3/1/1/0, ResumptionToken: None', comments)
+        self.assertEqual('Test Exception', invalidUploadId2)
 
     def testLogLineError(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
@@ -159,8 +159,8 @@ class HarvesterLogTest(SeecrTestCase):
         #Total is now counted based upon the id's
         self.assertTrue('2/1/0/1, Error: ' in lines[0], lines[0])
         date,event,id,comments = LOGLINE_RE.match(eventline).groups()
-        self.assertEquals('ERROR', event.strip())
-        self.assertEquals('name', id)
+        self.assertEqual('ERROR', event.strip())
+        self.assertEqual('name', id)
         self.assertTrue(comments.startswith('Traceback (most recent call last):|File "'))
         self.assertTrue('harvesterlogtest.py", line ' in comments)
         self.assertTrue(comments.endswith(', in testLogLineError raise Exception(\'FATAL\')|Exception: FATAL'))
@@ -171,38 +171,38 @@ class HarvesterLogTest(SeecrTestCase):
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name= 'name')
         logger.startRepository()
-        self.assertEquals(2,logger.totalIds())
+        self.assertEqual(2,logger.totalIds())
         logger.uploadIdentifier('id:3')
-        self.assertEquals(3,logger.totalIds())
+        self.assertEqual(3,logger.totalIds())
         logger.uploadIdentifier('id:3')
         logger.uploadIdentifier('id:2')
-        self.assertEquals(3,logger.totalIds())
+        self.assertEqual(3,logger.totalIds())
 
     def testLogIgnoredIdentifierWarning(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
         logger.logInvalidData('repoid:oai:bla/bla', 'bla/bla')
-        self.assertEquals('', open(self.logDir + '/name.events').read())
+        self.assertEqual('', open(self.logDir + '/name.events').read())
         logger.logIgnoredIdentifierWarning('repoid:oai:bla/bla')
         self.assertTrue(open(self.logDir + '/name.events').read().endswith("\tWARNING\t[repoid:oai:bla/bla]\tIGNORED\n"))
-        self.assertEquals(1, logger.totalInvalidIds())
+        self.assertEqual(1, logger.totalInvalidIds())
 
         logger.notifyHarvestedRecord('repoid:oai:bla/bla')
-        self.assertEquals(0, logger.totalInvalidIds())
+        self.assertEqual(0, logger.totalInvalidIds())
         logger.uploadIdentifier('repoid:oai:bla/bla')
-        self.assertEquals(1, logger.totalIds())
+        self.assertEqual(1, logger.totalIds())
 
     def testLogInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
         logger.startRepository()
         logger.notifyHarvestedRecord('repo/id:oai:bla/bla')
         logger.logInvalidData('repo/id:oai:bla/bla', "Error")
-        self.assertEquals(1, logger.totalInvalidIds())
+        self.assertEqual(1, logger.totalInvalidIds())
         expectedFile = self.logDir + '/invalid/repo%2Fid/oai:bla%2Fbla'
-        self.assertEquals("Error", open(expectedFile).read())
+        self.assertEqual("Error", open(expectedFile).read())
         logger.notifyHarvestedRecord('repo/id:oai:bla/bla')
-        self.assertEquals(0, logger.totalInvalidIds())
+        self.assertEqual(0, logger.totalInvalidIds())
         self.assertFalse(isfile(expectedFile))
 
     def testInvalidIDs(self):
@@ -212,7 +212,7 @@ class HarvesterLogTest(SeecrTestCase):
         logger.logInvalidData('id:1', 'exception message')
         logger.notifyHarvestedRecord('id:2')
         logger.logInvalidData('id:2', 'exception message')
-        self.assertEquals(['id:1', 'id:2'], logger.invalidIds())
+        self.assertEqual(['id:1', 'id:2'], logger.invalidIds())
 
     def testClearInvalidData(self):
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
@@ -226,9 +226,9 @@ class HarvesterLogTest(SeecrTestCase):
         logger.notifyHarvestedRecord('repo2:1')
         logger.logInvalidData('repo2:1', "Error")
         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
-        self.assertEquals(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.invalidIds())
+        self.assertEqual(['repoid:oai:bla/bla', 'repoid:recordid', 'repo2:1'], logger.invalidIds())
         logger.clearInvalidData('repoid')
-        self.assertEquals(['repo2:1'], logger.invalidIds())
+        self.assertEqual(['repo2:1'], logger.invalidIds())
         self.assertFalse(isfile(self.logDir + '/invalid/repoid/oai:bla%2Fbla'))
         self.assertFalse(isfile(self.logDir + '/invalid/repoid/recordid'))
         self.assertTrue(isfile(self.logDir + '/invalid/repo2/1'))
@@ -238,11 +238,11 @@ class HarvesterLogTest(SeecrTestCase):
         f.write('Started: 2005-01-02 16:12:56, Harvested/Uploaded/Total: 199/200/1650, Done: 2005-04-22 11:48:30, ResumptionToken: resumption')
         f.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals('resumption', logger._state.token)
+        self.assertEqual('resumption', logger._state.token)
         logger.markDeleted()
         logger.close()
         logger = HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='name')
-        self.assertEquals(None, logger._state.token)
-        self.assertEquals(None, logger._state.from_)
-        self.assertEquals(0, logger.totalIds())
+        self.assertEqual(None, logger._state.token)
+        self.assertEqual(None, logger._state.from_)
+        self.assertEqual(0, logger.totalIds())
 

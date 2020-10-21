@@ -34,16 +34,16 @@
 ## end license ##
 
 #
-from virtualuploader import VirtualUploader, UploaderException
+from .virtualuploader import VirtualUploader, UploaderException
 import os
 from xml.sax.saxutils import escape as xmlEscape
-from StringIO import StringIO
+from io import StringIO
 from lxml.etree import parse, tostring, XML, XMLParser
 from time import gmtime, strftime, time
 from escaping import escapeFilename
 from meresco.components import lxmltostring
 
-OAI_ENVELOPE = """<?xml version="1.0" encoding="UTF-8"?>
+OAI_ENVELOPE = """<?xml version="1.0"?>
 <OAI-PMH
     xmlns="http://www.openarchives.org/OAI/2.0/"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -78,12 +78,9 @@ class FileSystemUploader(VirtualUploader):
             dirname = os.path.dirname(filename)
             if not os.path.isdir(dirname):
                 os.makedirs(os.path.dirname(filename))
-            f = open(filename, 'w')
-            try:
-                f.write(tostring(self._createOutput(anUpload), encoding="UTF-8", xml_declaration=True))
-            finally:
-                f.close()
-        except Exception, e:
+            with open(filename, "wb") as f:
+                f.write(tostring(self._createOutput(anUpload), xml_declaration=True))
+        except Exception as e:
             raise UploaderException(uploadId=anUpload.id, message=str(e))
 
     def _createOutput(self, anUpload):
@@ -112,20 +109,12 @@ class FileSystemUploader(VirtualUploader):
         filename = self._filenameFor(anUpload)
         if not self._target.oaiEnvelope:
             os.path.isfile(filename) and os.remove(filename)
-            f = open(os.path.join(self._target.path,
-                'deleted_records'),'a')
-            try:
+            with open(os.path.join(self._target.path, 'deleted_records'),'a') as f:
                 f.write('%s\n' % escapeFilename(anUpload.id))
-            finally:
-                f.close()
         else:
             xmlResult = self._createOutput(anUpload)
-            fd = open(filename, 'w')
-            try:
+            with open(filename, 'w') as fd:
                 fd.write(lxmltostring(xmlResult))
-            finally:
-                fd.close()
-
         self._logDelete(anUpload.id)
 
     def info(self):

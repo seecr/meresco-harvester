@@ -279,7 +279,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
         mapping.setCode(code)
         try:
             mapping.validate()
-        except Exception, e:
+        except Exception as e:
             raise ValueError(e)
 
     def deleteMapping(self, identifier, domainId):

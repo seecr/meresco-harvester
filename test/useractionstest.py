@@ -30,7 +30,7 @@ from seecr.test import SeecrTestCase, CallTrace
 
 from os import remove
 from os.path import join
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from weightless.core import be, Observable, asString
 

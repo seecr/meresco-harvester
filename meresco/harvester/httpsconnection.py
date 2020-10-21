@@ -26,10 +26,10 @@
 #
 ## end license ##
 
-from httplib import HTTPSConnection
+from http.client import HTTPSConnection
 from ssl import wrap_socket, PROTOCOL_TLSv1
 from socket import create_connection
-from urllib2 import HTTPSHandler
+from urllib.request import HTTPSHandler
 
 
 class HTTPSConnectionTLS(HTTPSConnection):

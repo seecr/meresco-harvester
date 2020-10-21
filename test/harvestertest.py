@@ -39,7 +39,7 @@ import unittest
 from time import sleep, strftime
 from shutil import rmtree
 from tempfile import mkdtemp
-from StringIO import StringIO
+from io import StringIO
 from lxml.etree import parse
 
 from seecr.test import CallTrace
@@ -104,13 +104,13 @@ class HarvesterTest(unittest.TestCase):
 
     def testCreateHarvester(self):
         harvester = self.createHarvesterWithMockUploader('tud')
-        self.assertEquals((0,0),(self.startCalled,self.stopCalled))
+        self.assertEqual((0,0),(self.startCalled,self.stopCalled))
         harvester.harvest()
-        self.assertEquals((1,1),(self.startCalled,self.stopCalled))
+        self.assertEqual((1,1),(self.startCalled,self.stopCalled))
         harvester = self.createHarvesterWithMockUploader('eur')
-        self.assertEquals((1,1),(self.startCalled,self.stopCalled))
+        self.assertEqual((1,1),(self.startCalled,self.stopCalled))
         harvester.harvest()
-        self.assertEquals((2,2),(self.startCalled,self.stopCalled))
+        self.assertEqual((2,2),(self.startCalled,self.stopCalled))
 
     def testDoUpload(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -121,16 +121,16 @@ class HarvesterTest(unittest.TestCase):
         record = parse(StringIO(self.sendParts[2]['record']))
         subjects = record.xpath('/oai:record/oai:metadata/oai_dc:dc/dc:subject/text()', namespaces=namespaces)
         self.assertEqual(['quantitative electron microscopy', 'statistical experimental design', 'parameter estimation'], subjects)
-        self.assertEquals('ResumptionToken: TestToken', file(os.path.join(self.stateDir, 'tud.stats')).read()[-27:-1])
+        self.assertEqual('ResumptionToken: TestToken', file(os.path.join(self.stateDir, 'tud.stats')).read()[-27:-1])
 
     def testLogIDsForRemoval(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.harvest()
         idsfile = open(self.stateDir+'/tud.ids')
         try:
-            self.assertEquals('tud:oai:tudelft.nl:007087',idsfile.readline().strip())
-            self.assertEquals('tud:oai:tudelft.nl:007192',idsfile.readline().strip())
-            self.assertEquals('tud:oai:tudelft.nl:007193',idsfile.readline().strip())
+            self.assertEqual('tud:oai:tudelft.nl:007087',idsfile.readline().strip())
+            self.assertEqual('tud:oai:tudelft.nl:007192',idsfile.readline().strip())
+            self.assertEqual('tud:oai:tudelft.nl:007193',idsfile.readline().strip())
         finally:
             idsfile.close()
 
@@ -149,12 +149,12 @@ class HarvesterTest(unittest.TestCase):
     def testSimpleStat(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.harvest()
-        self.assert_(os.path.isfile(self.stateDir+'/tud.stats'))
+        self.assertTrue(os.path.isfile(self.stateDir+'/tud.stats'))
         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
         year = strftime('%Y')
-        self.assertEquals('Started: %s-'%year, stats[0][:14])
-        self.assertEquals(' Harvested/Uploaded/Deleted/Total: 3/3/0/3', stats[1])
-        self.assertEquals(' Done: %s-'%year, stats[2][:12])
+        self.assertEqual('Started: %s-'%year, stats[0][:14])
+        self.assertEqual(' Harvested/Uploaded/Deleted/Total: 3/3/0/3', stats[1])
+        self.assertEqual(' Done: %s-'%year, stats[2][:12])
 
     def testErrorStat(self):
         harvester = self.createHarvesterWithMockUploader('tud')
@@ -171,7 +171,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.harvest()
         stats = open(self.stateDir + '/tud.stats').readline().strip().split(',')
-        self.assertEquals(' ResumptionToken: TestToken', stats[3])
+        self.assertEqual(' ResumptionToken: TestToken', stats[3])
 
     def testOtherMetadataPrefix(self):
         self.logger=HarvesterLog(stateDir=self.stateDir, logDir=self.logDir, name='tud')
@@ -183,7 +183,7 @@ class HarvesterTest(unittest.TestCase):
         harvester.addObserver(repository.createUploader(self.logger.eventLogger))
         harvester.addObserver(repository.mapping())
         harvester.harvest()
-        self.assertEquals(['tud:oai:lorenet:147'],self.sendId)
+        self.assertEqual(['tud:oai:lorenet:147'],self.sendId)
 
     def testWriteAndSeek(self):
         f = open('test','w')
@@ -193,7 +193,7 @@ class HarvesterTest(unittest.TestCase):
         f.seek(pos)
         f.write('12345')
         f.close()
-        self.assertEquals('enige info: 12345', open('test','r').readline().strip())
+        self.assertEqual('enige info: 12345', open('test','r').readline().strip())
         os.remove('test')
 
     def testException(self):
@@ -201,8 +201,8 @@ class HarvesterTest(unittest.TestCase):
             raise Exception('aap')
             self.fail()
         except:
-            self.assertEquals('aap', str(sys.exc_value))
-            self.assertTrue('exceptions.Exception' in str(sys.exc_type), str(sys.exc_type))
+            self.assertEqual('aap', str(sys.exc_info()[1]))
+            self.assertTrue('exceptions.Exception' in str(sys.exc_info()[0]), str(sys.exc_info()[0]))
 
     def testIncrementalHarvest(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -223,10 +223,10 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
-        self.assertEquals('1999-12-01', self.listRecordsFrom)
+        self.assertEqual('1999-12-01', self.listRecordsFrom)
         lines = open(self.stateDir + '/tud.stats').readlines()
-        self.assertEquals(2, len(lines))
-        self.assertEquals(('3', '3', '0', '116'), getHarvestedUploadedRecords(lines[1]))
+        self.assertEqual(2, len(lines))
+        self.assertEqual(('3', '3', '0', '116'), getHarvestedUploadedRecords(lines[1]))
 
     def testNotIncrementalInCaseOfError(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -243,7 +243,7 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
-        self.assertEquals('1998-12-01', self.listRecordsFrom)
+        self.assertEqual('1998-12-01', self.listRecordsFrom)
 
     def testOnlyErrorInLogFile(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -260,7 +260,7 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
-        self.assertEquals('aap', self.listRecordsFrom)
+        self.assertEqual('aap', self.listRecordsFrom)
 
     def testResumptionToken(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -276,7 +276,7 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.mapping())
         self.listRecordsToken = None
         h.harvest()
-        self.assertEquals('ga+hier+verder', self.listRecordsToken)
+        self.assertEqual('ga+hier+verder', self.listRecordsToken)
 
     def testContinuousHarvesting(self):
         self.mockRepository = MockOaiRequest('mocktud')
@@ -293,13 +293,13 @@ class HarvesterTest(unittest.TestCase):
         h.addObserver(repository.mapping())
         self.listRecordsFrom = None
         h.harvest()
-        self.assertEquals('2015-01-01T00:12:13Z', self.listRecordsFrom)
+        self.assertEqual('2015-01-01T00:12:13Z', self.listRecordsFrom)
 
     def testHarvestSet(self):
         self.mockRepository = MockOaiRequest('mocktud')
         harvester = self.createHarvesterWithMockUploader('um', set='withfulltext:yes', mockRequest = self)
         harvester.harvest()
-        self.assertEquals('withfulltext:yes', self.listRecordsSet)
+        self.assertEqual('withfulltext:yes', self.listRecordsSet)
 
     def mockHarvest(self, repository, logger, uploader):
         if not hasattr(self, 'mockHarvestArgs'):
@@ -317,12 +317,12 @@ class HarvesterTest(unittest.TestCase):
         self.logger._state.token='EmptyListToken'
         harvester.harvest()
         lines = open(self.stateDir+'/tud.stats').readlines()
-        self.assert_('Harvested/Uploaded/Deleted/Total: 0/0/0/0' in lines[0])
+        self.assertTrue('Harvested/Uploaded/Deleted/Total: 0/0/0/0' in lines[0])
 
     def testUploadRecord(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.upload(oaiResponse(identifier='mockid'))
-        self.assertEquals(['tud:mockid'], self.sendId)
+        self.assertEqual(['tud:mockid'], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
 
     def testSkippedRecord(self):
@@ -334,14 +334,14 @@ class HarvesterTest(unittest.TestCase):
             return upload
         self.mapper.createUpload = createUpload
         harvester.upload(oaiResponse(identifier='mockid'))
-        self.assertEquals([], self.sendId)
+        self.assertEqual([], self.sendId)
         self.assertFalse(hasattr(self, 'delete_id'))
 
     def testDelete(self):
         harvester = self.createHarvesterWithMockUploader('tud')
         harvester.upload(oaiResponse(identifier='mockid', deleted=True))
-        self.assertEquals([], self.sendId)
-        self.assertEquals('tud:mockid', self.delete_id)
+        self.assertEqual([], self.sendId)
+        self.assertEqual('tud:mockid', self.delete_id)
 
     def testDcIdentifierTake2(self):
         self.sendFulltexturl=None
@@ -361,7 +361,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository)
         harvester.addObserver(observer)
         self.assertRaises(TooMuchInvalidDataException, lambda: harvester.upload(oaiResponse(identifier='mockid')))
-        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", "logInvalidData", "totalInvalidIds"], [m.name for m in observer.calledMethods])
+        self.assertEqual(['createUpload', "notifyHarvestedRecord", "send", "logInvalidData", "totalInvalidIds"], [m.name for m in observer.calledMethods])
 
     def testHarvesterIgnoringInvalidDataErrors(self):
         observer = CallTrace('observer')
@@ -374,7 +374,7 @@ class HarvesterTest(unittest.TestCase):
         harvester = Harvester(repository)
         harvester.addObserver(observer)
         harvester.upload(oaiResponse())
-        self.assertEquals(['createUpload', "notifyHarvestedRecord", "send", 'logInvalidData', "totalInvalidIds", 'logIgnoredIdentifierWarning'], [m.name for m in observer.calledMethods])
+        self.assertEqual(['createUpload', "notifyHarvestedRecord", "send", 'logInvalidData', "totalInvalidIds", 'logIgnoredIdentifierWarning'], [m.name for m in observer.calledMethods])
 
     #self shunt:
     def send(self, upload):

@@ -32,7 +32,7 @@
 # 
 ## end license ##
 
-from saharaobject import SaharaObject
+from .saharaobject import SaharaObject
 
 class Target(SaharaObject):
     def __init__(self, id):

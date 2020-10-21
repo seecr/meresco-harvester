@@ -39,6 +39,7 @@ from seecr.test import CallTrace, SeecrTestCase
 from meresco.harvester.harvesterlog import HarvesterLog
 from seecr.zulutime import ZuluTime
 
+from contextlib import contextmanager
 
 class ActionTestCase(SeecrTestCase):
     def setUp(self):
@@ -53,35 +54,38 @@ class ActionTestCase(SeecrTestCase):
         self.writeLogLine(2010, 3, 2, token='')
         self.writeLogLine(2010, 3, 3, exception='Exception')
 
-        h = self.newHarvesterLog()
-        self.assertEqualsWS("""Started: 2010-03-01 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-01 12:15:00, ResumptionToken: resumptionToken
-Started: 2010-03-02 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-02 12:15:00, ResumptionToken:
-Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: <type 'exceptions.Exception'>: Exception
-""", open(h._state._statsfilename).read())
+        with  self.newHarvesterLog() as h:
+            with open(h._state._statsfilename) as fp:
+                self.assertEqualsWS("""Started: 2010-03-01 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-01 12:15:00, ResumptionToken: resumptionToken
+    Started: 2010-03-02 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Done: 2010-03-02 12:15:00, ResumptionToken:
+    Started: 2010-03-03 12:15:00, Harvested/Uploaded/Deleted/Total: 1/1/0/1, Error: <class 'Exception'>: Exception
+    """, fp.read())
 
+    @contextmanager
     def newHarvesterLog(self):
-        return HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
+        harvesterLog =  HarvesterLog(stateDir=self.tempdir, logDir=self.tempdir, name=self.repository.id)
+        try:
+            yield harvesterLog
+        finally:
+            harvesterLog.close()
 
     def writeMarkDeleted(self, year, month, day):
-        h = self.newHarvesterLog()
-        h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
-        h.markDeleted()
-        h.close()
+        with self.newHarvesterLog() as h:
+            h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
+            h.markDeleted()
 
     def writeLogLine(self, year, month, day, token=None, exception=None):
-        h = self.newHarvesterLog()
-        h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
+        with self.newHarvesterLog() as h:
+            h._state.getZTime = lambda: ZuluTime('{}-{}-{}T12:15:00Z'.format(year, month, day))
 
-        h.startRepository()
-        h.notifyHarvestedRecord("repo:uploadId1")
-        h.uploadIdentifier("repo:uploadId1")
-        if exception != None:
-            try:
-                raise Exception(exception)
-            except:
-                exType, exValue, exTb = exc_info()
-                h.endWithException(exType, exValue, exTb)
-        else:
-            h.endRepository(token, h._state.getZTime().display("%Y-%m-%dT%H:%M:%SZ"))
-        h.close()
-
+            h.startRepository()
+            h.notifyHarvestedRecord("repo:uploadId1")
+            h.uploadIdentifier("repo:uploadId1")
+            if exception != None:
+                try:
+                    raise Exception(exception)
+                except:
+                    exType, exValue, exTb = exc_info()
+                    h.endWithException(exType, exValue, exTb)
+            else:
+                h.endRepository(token, h._state.getZTime().display("%Y-%m-%dT%H:%M:%SZ"))

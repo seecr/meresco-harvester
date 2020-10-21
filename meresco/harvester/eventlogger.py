@@ -99,6 +99,7 @@ class EventLogger(BasicEventLogger):
         self._numberOfLogLines = 0
         isdir(dirname(logfile)) or makedirs(dirname(logfile))
         f = open(logfile, 'a+')
+        f.seek(0)
         for line in f:
             self._numberOfLogLines += 1
         return f
@@ -108,7 +109,7 @@ class EventLogger(BasicEventLogger):
             self._logfile.seek(0)
             tmpFile = open(self._logfilePath + ".tmp", 'w')
             for i, line in enumerate(self._logfile):
-                if i >= self._maxLogLines / 2:
+                if i >= self._maxLogLines // 2:
                     tmpFile.write(line)
             tmpFile.close()
             self.close()

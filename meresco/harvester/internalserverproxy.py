@@ -31,8 +31,8 @@ from meresco.components.json import JsonDict
 from meresco.harvester.mapping import Mapping
 from meresco.harvester.target import Target
 from meresco.harvester.repository import Repository
-from urllib import urlencode
-from urllib2 import urlopen
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 class InternalServerProxy(object):
     def __init__(self, internalurl, doSetActionDone=True):
@@ -88,7 +88,7 @@ class InternalServerProxy(object):
             self._urlopen("{}/action/repositoryDone".format(self._internalurl), data=data).read()
 
     def urlJsonDict(self, **kwargs):
-        arguments = dict((k ,v) for k, v in kwargs.items() if v)
+        arguments = dict((k ,v) for k, v in list(kwargs.items()) if v)
         result = JsonDict.load(
                 self._urlopen("{}/get?{}".format(self._internalurl, urlencode(arguments)))
             )

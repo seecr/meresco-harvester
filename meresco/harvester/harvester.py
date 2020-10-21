@@ -35,7 +35,7 @@
 import sys
 from meresco.core import Observable
 
-from virtualuploader import InvalidDataException, TooMuchInvalidDataException
+from .virtualuploader import InvalidDataException, TooMuchInvalidDataException
 from meresco.harvester.namespaces import xpathFirst
 
 
@@ -83,7 +83,7 @@ class Harvester(Observable):
             try:
                 self.do.send(upload)
                 self.do.uploadIdentifier(upload.id)
-            except InvalidDataException, e:
+            except InvalidDataException as e:
                 self.do.logInvalidData(upload.id, e.originalMessage)
                 maxIgnore = self._repository.maxIgnore()
                 if self.call.totalInvalidIds() > maxIgnore:

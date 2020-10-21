@@ -51,18 +51,16 @@ class HarvestActionTest(ActionTestCase):
     def testHarvestAction(self):
         self.harvester.returnValues['harvest'] = ('', False)
         action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
-
         action.do()
 
-        self.assertEquals(['harvest'], [m.name for m in self.harvester.calledMethods])
+        self.assertEqual(['harvest'], [m.name for m in self.harvester.calledMethods])
 
     def testShopClosed(self):
         self.repository.returnValues['shopClosed'] = True
         action = HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
-
         action.do()
 
-        self.assertEquals([], [m.name for m in self.harvester.calledMethods])
+        self.assertEqual([], [m.name for m in self.harvester.calledMethods])
 
     def testResetState_LastStateIsAlreadyGood(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')
@@ -72,19 +70,18 @@ class HarvestActionTest(ActionTestCase):
 
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-01T12:15:00Z', None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual(('2010-03-01T12:15:00Z', None), (h._state.from_, h._state.token))
 
     def testResetState_ToStateBeforeResumptionToken(self):
         self.writeLogLine(2010, 3, 2, token='')
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
         self.writeLogLine(2010, 3, 4, exception='Exception')
         action = self.newHarvestAction()
-
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-03T12:15:00Z', None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual(('2010-03-03T12:15:00Z', None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -93,8 +90,8 @@ class HarvestActionTest(ActionTestCase):
 
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEquals(('2010-03-03T12:15:00Z', None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual(('2010-03-03T12:15:00Z', None), (h._state.from_, h._state.token))
 
     def newHarvestAction(self):
         return HarvestAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

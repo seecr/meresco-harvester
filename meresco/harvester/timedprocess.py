@@ -63,7 +63,7 @@ class TimedProcess(object):
         self.timer.cancel()
 
     def timedOut(self):
-        print 'Process %s with args "%s" timed out after %s seconds and will be terminated.' % (self._pid, self._args, self._timeout)
+        print('Process %s with args "%s" timed out after %s seconds and will be terminated.' % (self._pid, self._args, self._timeout))
         import sys; sys.stdout.flush()
         self._wasTimeout = True
         self.terminate()

@@ -35,7 +35,7 @@ class FilterFields(Transparent):
         self._allowedRepositoryFields = [definition['name'] for definition in fieldDefinitions.get('repository_fields', []) if definition.get('export', False)]
 
     def getRepositories(self, *args, **kwargs):
-        return map(self._stripRepository, self.call.getRepositories(*args, **kwargs))
+        return list(map(self._stripRepository, self.call.getRepositories(*args, **kwargs)))
 
     def getRepository(self, *args, **kwargs):
         return self._stripRepository(self.call.getRepository(*args, **kwargs))
@@ -44,6 +44,6 @@ class FilterFields(Transparent):
         result = dict(repository)
         if self._allowedRepositoryFields:
             extra = repository.get('extra', {})
-            result['extra'] = dict((k,v) for k,v in repository.get('extra', {}).items() if k in self._allowedRepositoryFields)
+            result['extra'] = dict((k,v) for k,v in list(repository.get('extra', {}).items()) if k in self._allowedRepositoryFields)
             result['extra'] = dict((k, extra.get(k, "")) for k in self._allowedRepositoryFields)
         return result

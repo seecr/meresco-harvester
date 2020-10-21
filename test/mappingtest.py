@@ -34,7 +34,7 @@
 
 from meresco.harvester.mapping import Mapping, TestRepository, DataMapException, DataMapAssertionException
 from meresco.harvester import mapping
-from StringIO import StringIO
+from io import StringIO
 from meresco.harvester.eventlogger import StreamEventLogger
 from seecr.test import SeecrTestCase
 from oairequesttest import oaiResponse
@@ -43,11 +43,11 @@ class MappingTest(SeecrTestCase):
     def testInValidMapping(self):
         datamap = Mapping('mappingId')
         datamap.code ="""upload.parts['unfinishpython"""
-        self.assert_(not datamap.isValid())
+        self.assertTrue(not datamap.isValid())
         try:
             datamap.validate()
             self.fail()
-        except Exception, e:
+        except Exception as e:
             self.assertTrue('EOL while scanning string literal (<string>, line 1)' in str(e), str(e))
 
     def testInValidWithImportMapping(self):
@@ -56,12 +56,12 @@ class MappingTest(SeecrTestCase):
 upload.parts['record']="<somexml/>"
 import os
 """
-        self.assert_(not datamap.isValid())
+        self.assertTrue(not datamap.isValid())
         try:
             datamap.validate()
             self.fail()
-        except DataMapException, e:
-            self.assertEquals('Import not allowed', str(e))
+        except DataMapException as e:
+            self.assertEqual('Import not allowed', str(e))
 
     def testLogging(self):
         datamap = Mapping('mappingId')
@@ -73,7 +73,7 @@ logger.logError('Iets om te zeuren')
         logger = StreamEventLogger(stream)
         datamap.addObserver(logger)
         datamap.createUpload(TestRepository(), oaiResponse=oaiResponse())
-        self.assertEquals('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
+        self.assertEqual('ERROR\t[]\tIets om te zeuren\n',stream.getvalue()[26:])
 
     def testNoLogging(self):
         datamap = Mapping('mappingId')
@@ -82,7 +82,7 @@ upload.parts['record']="<somexml/>"
 logger.logError('Iets om te zeuren')
 """
         upload = datamap.createUpload(TestRepository(), oaiResponse())
-        self.assertEquals('<somexml/>',upload.parts['record'])
+        self.assertEqual('<somexml/>',upload.parts['record'])
 
     def testAssertion(self):
         datamap = Mapping('mappingId')
@@ -98,26 +98,26 @@ upload.parts['record']="<somexml/>"
         try:
             datamap.createUpload(TestRepository(), oaiResponse(), doAsserts=True)
             self.fail()
-        except DataMapAssertionException, ex:
-            self.assertEquals('ERROR\t[repository.id:oai:ident:321]\tAssertion: 1 not equal 2\n',stream.getvalue()[26:])
-            self.assertEquals('1 not equal 2', str(ex))
+        except DataMapAssertionException as ex:
+            self.assertEqual('ERROR\t[repository.id:oai:ident:321]\tAssertion: 1 not equal 2\n',stream.getvalue()[26:])
+            self.assertEqual('1 not equal 2', str(ex))
 
         try:
             datamap.createUpload(TestRepository(), oaiResponse(), doAsserts=True)
             self.fail()
-        except DataMapAssertionException, ex:
-            self.assertEquals('1 not equal 2', str(ex))
+        except DataMapAssertionException as ex:
+            self.assertEqual('1 not equal 2', str(ex))
 
         stream = StringIO()
         logger = StreamEventLogger(stream)
         datamap.createUpload(TestRepository(), oaiResponse() , doAsserts=False)
-        self.assertEquals('',stream.getvalue())
+        self.assertEqual('',stream.getvalue())
 
     def assertPart(self, expected, partname, code):
         datamap = Mapping('mappingId')
         datamap.code = code
         upload = datamap.createUpload(TestRepository(), oaiResponse())
-        self.assertEquals(expected,upload.parts[partname])
+        self.assertEqual(expected,upload.parts[partname])
 
     def testUrlEncode(self):
         code = """upload.parts['url'] = 'http://some/one?'+urlencode({'id':'oai:id:3/2'})"""
@@ -137,16 +137,16 @@ skipRecord("Don't like it here.")
         datamap.addObserver(logger)
         upload = datamap.createUpload(TestRepository(), oaiResponse())
         self.assertTrue(upload.skip)
-        self.assertEquals("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n", stream.getvalue()[26:])
+        self.assertEqual("SKIP\t[repository.id:oai:ident:321]\tDon't like it here.\n", stream.getvalue()[26:])
 
     def testCreateUploadParts(self):
         upload = mapping.Upload(repository=None, oaiResponse=None)
-        self.assertEquals({}, upload.parts)
+        self.assertEqual({}, upload.parts)
 
         upload.parts['name'] = 'value'
         upload.parts['number'] = 1
 
-        self.assertEquals('value', upload.parts['name'])
-        self.assertEquals('1', upload.parts['number'])
+        self.assertEqual('value', upload.parts['name'])
+        self.assertEqual('1', upload.parts['number'])
 
 

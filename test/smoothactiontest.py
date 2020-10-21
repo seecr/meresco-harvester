@@ -68,10 +68,10 @@ class SmoothActionTest(ActionTestCase):
 
         self.assertTrue(os.path.isfile(self.old_idfilename))
         self.assertTrue(os.path.isfile(self.idfilename))
-        self.assertEquals('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
-        self.assertEquals('', readfile(self.idfilename))
+        self.assertEqual('rep:id:1\nrep:id:2\nrep:id:3\n', readfile(self.old_idfilename))
+        self.assertEqual('', readfile(self.idfilename))
         self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename), readfile(self.statsfilename))
-        self.assertEquals('Smooth reharvest: initialized.', message)
+        self.assertEqual('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
 
     def testSmooth_InitWithNothingHarvestedYetRepository(self):
@@ -85,11 +85,11 @@ class SmoothActionTest(ActionTestCase):
         self.assertTrue(os.path.isfile(self.old_idfilename))
         self.assertTrue(os.path.isfile(self.idfilename))
         self.assertTrue(os.path.isfile(self.invalidIdsFilename))
-        self.assertEquals('', readfile(self.old_idfilename))
-        self.assertEquals('', readfile(self.idfilename))
-        self.assertEquals('', readfile(self.invalidIdsFilename))
+        self.assertEqual('', readfile(self.old_idfilename))
+        self.assertEqual('', readfile(self.idfilename))
+        self.assertEqual('', readfile(self.invalidIdsFilename))
         self.assertTrue('Done: Deleted all ids' in  readfile(self.statsfilename))
-        self.assertEquals('Smooth reharvest: initialized.', message)
+        self.assertEqual('Smooth reharvest: initialized.', message)
         self.assertFalse(done)
 
 
@@ -102,7 +102,7 @@ class SmoothActionTest(ActionTestCase):
         self.smoothaction._harvest = lambda:(HARVESTED, False)
         done,message,hasResumptionToken = self.smoothaction.do()
 
-        self.assertEquals('Smooth reharvest: Harvested.', message)
+        self.assertEqual('Smooth reharvest: Harvested.', message)
         self.assertFalse(done)
 
     def testSmooth_HarvestAgain(self):
@@ -114,7 +114,7 @@ class SmoothActionTest(ActionTestCase):
         self.smoothaction._harvest = lambda:(HARVESTED, False)
         done, message, hasResumptionToken = self.smoothaction.do()
 
-        self.assertEquals('Smooth reharvest: Harvested.', message)
+        self.assertEqual('Smooth reharvest: Harvested.', message)
         self.assertFalse(done)
 
     def testSmooth_NothingToDo(self):
@@ -127,7 +127,7 @@ class SmoothActionTest(ActionTestCase):
         self.smoothaction._finish = lambda:DONE
         done, message, hasResumptionToken = self.smoothaction.do()
 
-        self.assertEquals('Smooth reharvest: ' + DONE, message)
+        self.assertEqual('Smooth reharvest: ' + DONE, message)
         self.assertTrue(done)
 
     def mockdelete(self, filename):
@@ -140,8 +140,8 @@ class SmoothActionTest(ActionTestCase):
         harvester.returnValues['harvest'] = ('result', True)
 
         result = self.smoothaction._harvest()
-        self.assertEquals(['harvest'], [m.name for m in harvester.calledMethods])
-        self.assertEquals(('result', True), result)
+        self.assertEqual(['harvest'], [m.name for m in harvester.calledMethods])
+        self.assertEqual(('result', True), result)
 
     def testResetState_WithoutPreviousCleanState(self):
         self.writeLogLine(2010, 3, 1, token='resumptionToken')
@@ -152,7 +152,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h._state.from_, h._state.token))
+        self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToPreviousCleanState(self):
         self.writeLogLine(2010, 3, 2, token='')
@@ -165,7 +165,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h._state.from_, h._state.token))
+        self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -175,7 +175,7 @@ class SmoothActionTest(ActionTestCase):
         action.resetState()
 
         h = self.newHarvesterLog()
-        self.assertEquals((None, None), (h._state.from_, h._state.token))
+        self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def newSmoothAction(self):
         action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())

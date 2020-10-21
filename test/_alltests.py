@@ -46,27 +46,26 @@ from deleteidstest import DeleteIdsTest
 from eventloggertest import EventLoggerTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
-from harvesterdataactionstest import HarvesterDataActionsTest
-from harvesterdataretrievetest import HarvesterDataRetrieveTest
-from harvesterdatatest import HarvesterDataTest
-from harvesterlogtest import HarvesterLogTest
-from harvestertest import HarvesterTest
-from idstest import IdsTest
-from internalserverproxytest import InternalServerProxyTest
-from mappingtest import MappingTest
-from oairequesttest import OaiRequestTest
-from onlineharvesttest import OnlineHarvestTest
-from repositorystatustest import RepositoryStatusTest
-from repositorytest import RepositoryTest
-from smoothactiontest import SmoothActionTest
-from sruupdateuploadertest import SruUpdateUploaderTest
-from statetest import StateTest
-from throughputanalysertest import ThroughputAnalyserTest
-from timedprocesstest import TimedProcessTest
-from timeslottest import TimeslotTest
-from useractionstest import UserActionsTest
-from filterfieldstest import FilterFieldsTest
+#from harvesterdataactionstest import HarvesterDataActionsTest
+#from harvesterdataretrievetest import HarvesterDataRetrieveTest
+#from harvesterdatatest import HarvesterDataTest
+#from harvesterlogtest import HarvesterLogTest
+#from harvestertest import HarvesterTest
+#from idstest import IdsTest
+#from internalserverproxytest import InternalServerProxyTest
+#from mappingtest import MappingTest
+#from oairequesttest import OaiRequestTest
+#from onlineharvesttest import OnlineHarvestTest
+#from repositorystatustest import RepositoryStatusTest
+#from repositorytest import RepositoryTest
+#from smoothactiontest import SmoothActionTest
+#from sruupdateuploadertest import SruUpdateUploaderTest
+#from statetest import StateTest
+#from throughputanalysertest import ThroughputAnalyserTest
+#from timedprocesstest import TimedProcessTest
+#from timeslottest import TimeslotTest
+#from useractionstest import UserActionsTest
+#from filterfieldstest import FilterFieldsTest
 
 if __name__ == '__main__':
         unittest.main()
-

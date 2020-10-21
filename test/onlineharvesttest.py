@@ -33,7 +33,7 @@
 ## end license ##
 
 from meresco.harvester.onlineharvest import OnlineHarvest
-from StringIO import StringIO
+from io import StringIO
 from meresco.harvester.mapping import Mapping, DataMapAssertionException, DEFAULT_DC_CODE
 import os
 from seecr.test import CallTrace, SeecrTestCase
@@ -52,7 +52,7 @@ class OnlineHarvestTest(SeecrTestCase):
     def testRealMapping(self):
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         self.harvest.performMapping(self.mappingData, data)
-        self.assertEquals(3,self.output.getvalue().count('upload.id='))
+        self.assertEqual(3,self.output.getvalue().count('upload.id='))
 
     def testMapping(self):
         upload = CallTrace('upload')
@@ -63,14 +63,14 @@ class OnlineHarvestTest(SeecrTestCase):
         self.harvest = OnlineHarvest(self.output)
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         self.harvest.performMapping(None, data, mapping)
-        self.assertEquals(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
+        self.assertEqual(['addObserver', 'mappingInfo', 'createUpload', 'createUpload', 'createUpload'], [m.name for m in mapping.calledMethods])
         for createUploadMethod in mapping.calledMethods[2:]:
             self.assertTrue(createUploadMethod.kwargs['doAsserts'])
 
     def testMappingWithDeletedRecord(self):
         data = 'file://%s/mocktud/00003.xml' % self._testpath
         self.harvest.performMapping(dict(identifier='mappingId', code=DEFAULT_DC_CODE, name="My Mapping"), data)
-        self.assertEquals("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
+        self.assertEqual("Mappingname 'My Mapping'\n\nupload.id=repository.id:oai:tudelft.nl:107087\nDELETED", self.output.getvalue().strip())
 
     def testMappingRaisesDataMapAssertionException(self):
         mapping = CallTrace()
@@ -88,7 +88,7 @@ class OnlineHarvestTest(SeecrTestCase):
         mapping.methods['createUpload'] = createUpload
         data = 'file://%s/mocktud/00002.xml' % self._testpath
         self.harvest.performMapping(None, data, mappingObject=mapping)
-        self.assertEquals(2, self.output.getvalue().count('upload.id='))
+        self.assertEqual(2, self.output.getvalue().count('upload.id='))
 
     def testMappingRaisesException(self):
         mapping = CallTrace()
@@ -99,8 +99,8 @@ class OnlineHarvestTest(SeecrTestCase):
         try:
             self.harvest.performMapping(None, data, mappingObject=mapping)
             self.fail()
-        except Exception, ex:
-            self.assertEquals('Mushroom, mushroom', str(ex))
-        self.assertEquals('\n',self.output.getvalue())
+        except Exception as ex:
+            self.assertEqual('Mushroom, mushroom', str(ex))
+        self.assertEqual('\n',self.output.getvalue())
 
 

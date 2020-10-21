@@ -49,16 +49,16 @@ class ThroughputAnalyserTest(unittest.TestCase):
     def testParseToTime(self):
         timeString = "1999-12-03 12:34:35.123"
         date = parseToTime(timeString)
-        self.assertEquals((1999,12,3,12,34,35,123000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
+        self.assertEqual((1999,12,3,12,34,35,123000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
         
         date = parseToTime("2006-08-04 10:40:50.644")
-        self.assertEquals((2006,8,4,10,40,50,644000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
+        self.assertEqual((2006,8,4,10,40,50,644000), (date.year,date.month,date.day, date.hour, date.minute, date.second, date.microsecond))
         
     def testParseToTimeDiff(self):
         date1 = parseToTime("1999-12-03 12:34:35.123")
         date2 = parseToTime("1999-12-03 12:34:36.423")
         delta = date2 - date1
-        self.assertEquals(1.3, delta.seconds + delta.microseconds/1000000.0)
+        self.assertEqual(1.3, delta.seconds + delta.microseconds/1000000.0)
         
         
     def testAnalyse(self):
@@ -67,9 +67,9 @@ class ThroughputAnalyserTest(unittest.TestCase):
         
         report = t.analyse(['repo1','repo2'], '2006-08-31')
         
-        self.assertEquals(1000, report.records)
-        self.assertEquals(2000.0, report.seconds)
-        self.assertEquals(['repo1', 'repo2'], self.mockAnalyseRepository_arguments)
+        self.assertEqual(1000, report.records)
+        self.assertEqual(2000.0, report.seconds)
+        self.assertEqual(['repo1', 'repo2'], self.mockAnalyseRepository_arguments)
         
     def testAnalyseNothing(self):
         t = ThroughputAnalyser(eventpath = self.testdir)
@@ -77,10 +77,10 @@ class ThroughputAnalyserTest(unittest.TestCase):
         
         report = t.analyse([], '2006-08-31')
         
-        self.assertEquals(0, report.records)
-        self.assertEquals(0.0, report.seconds)
-        self.assertEquals('-' , report.recordsPerSecond())
-        self.assertEquals('-' , report.recordsPerDay())
+        self.assertEqual(0, report.records)
+        self.assertEqual(0.0, report.seconds)
+        self.assertEqual('-' , report.recordsPerSecond())
+        self.assertEqual('-' , report.recordsPerDay())
 
         
     def testAnalyseRepository(self):
@@ -105,27 +105,27 @@ class ThroughputAnalyserTest(unittest.TestCase):
             r.close()
         t = ThroughputAnalyser(eventpath = self.testdir)
         records, seconds = t._analyseRepository('repo1', '2006-08-31')
-        self.assertEquals(600, records)
-        self.assertEquals(76.5, seconds)
+        self.assertEqual(600, records)
+        self.assertEqual(76.5, seconds)
         
     def testAnalyseNonExistingRepository(self):
         t = ThroughputAnalyser(eventpath = self.testdir)
         records, seconds = t._analyseRepository('repository', '2006-08-31')
-        self.assertEquals(0, records)
-        self.assertEquals(0.0, seconds)
+        self.assertEqual(0, records)
+        self.assertEqual(0.0, seconds)
             
     def testReportOnEmptyEventsFile(self):
         t = ThroughputAnalyser(eventpath = self.testdir)
         records, seconds = t._analyseRepository('repo1', '2006-08-31')
-        self.assertEquals(0, records)
-        self.assertEquals(0, seconds)
+        self.assertEqual(0, records)
+        self.assertEqual(0, seconds)
 
     def testReport(self):
         report = ThroughputReport()
         report.add(100000,10000.0)
-        self.assertEquals('10.00', report.recordsPerSecond())
-        self.assertEquals('864000', report.recordsPerDay())
-        self.assertEquals("02:46:40", report.hmsString())
+        self.assertEqual('10.00', report.recordsPerSecond())
+        self.assertEqual('864000', report.recordsPerDay())
+        self.assertEqual("02:46:40", report.hmsString())
         
     #Mock    self shunt
     def mockAnalyseRepository(self, repositoryName, dateSince):

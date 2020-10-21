@@ -98,14 +98,14 @@ class Dump(object):
             answer = RESPONSE_XML % {
                 "operationStatus": "success",
                 "diagnostics": ""}
-        except InvalidDataException, e:
+        except InvalidDataException as e:
             answer = RESPONSE_XML % {
                 "operationStatus": "fail",
                 "diagnostics": DIAGNOSTIC_XML % {
                     'uri': 'info:srw/diagnostic/12/12',
                     'details': escapeXml(str(e)),
                     'message': 'Invalid data:  record rejected'}}
-        except Exception, e:
+        except Exception as e:
             answer = RESPONSE_XML % {
                 "operationStatus": "fail",
                 "diagnostics": DIAGNOSTIC_XML % {
@@ -151,7 +151,7 @@ class BadOai(object):
         else:
             yield 'HTTP/1.0 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n'
             l = 'Error: file {} not found.'.format(repr(filepath))
-            print l
+            print(l)
             yield l
 
 
@@ -248,7 +248,7 @@ if __name__== '__main__':
 
     reactor = Reactor()
     main(reactor, **vars(options))
-    print 'Ready to rumble the dumpserver at', options.port
-    print '  - dumps are written to', join(options.directory, 'dump')
+    print('Ready to rumble the dumpserver at', options.port)
+    print('  - dumps are written to', join(options.directory, 'dump'))
     stdout.flush()
     reactor.loop()

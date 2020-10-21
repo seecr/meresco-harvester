@@ -32,5 +32,5 @@
 # 
 ## end license ##
 
-from namespaces import namespaces
-from __version__ import VERSION, VERSION_STRING
+from .namespaces import namespaces
+from .__version__ import VERSION, VERSION_STRING

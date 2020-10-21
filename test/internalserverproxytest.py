@@ -30,7 +30,7 @@
 from seecr.test import SeecrTestCase
 from meresco.components.json import JsonDict
 from meresco.harvester.internalserverproxy import InternalServerProxy
-from StringIO import StringIO
+from io import StringIO
 
 class InternalServerProxyTest(SeecrTestCase):
 
@@ -74,7 +74,7 @@ class InternalServerProxyTest(SeecrTestCase):
         try:
             self.proxy.getStatus(domainId='domainId')
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual('Bad verb', str(e))
 
     def testSetActionDone(self):

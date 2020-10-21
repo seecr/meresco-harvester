@@ -32,7 +32,7 @@ from seecr.test import SeecrTestCase
 from meresco.harvester.harvesterdataactions import HarvesterDataActions
 from meresco.harvester.harvesterdata import HarvesterData
 from weightless.core import consume
-from urllib import urlencode
+from urllib.parse import urlencode
 
 class HarvesterDataActionsTest(SeecrTestCase):
     def setUp(self):
@@ -67,21 +67,21 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals('group', repository["repositoryGroupId"])
-        self.assertEquals("repository", repository["identifier"])
-        self.assertEquals("http://example.org/oai", repository["baseurl"])
-        self.assertEquals("ASET", repository["set"])
-        self.assertEquals("oai_dc", repository["metadataPrefix"])
-        self.assertEquals("mapping_identifier", repository["mappingId"])
-        self.assertEquals(None, repository["targetId"])
-        self.assertEquals("the collection", repository["collection"])
-        self.assertEquals(23, repository["maximumIgnore"])
-        self.assertEquals(True, repository["complete"])
-        self.assertEquals(60, repository["continuous"])
-        self.assertEquals(False, repository["use"])
-        self.assertEquals("clear", repository["action"])
-        self.assertEquals([], repository['shopclosed'])
-        self.assertEquals({"name": "Name for this object"}, repository['extra'])
+        self.assertEqual('group', repository["repositoryGroupId"])
+        self.assertEqual("repository", repository["identifier"])
+        self.assertEqual("http://example.org/oai", repository["baseurl"])
+        self.assertEqual("ASET", repository["set"])
+        self.assertEqual("oai_dc", repository["metadataPrefix"])
+        self.assertEqual("mapping_identifier", repository["mappingId"])
+        self.assertEqual(None, repository["targetId"])
+        self.assertEqual("the collection", repository["collection"])
+        self.assertEqual(23, repository["maximumIgnore"])
+        self.assertEqual(True, repository["complete"])
+        self.assertEqual(60, repository["continuous"])
+        self.assertEqual(False, repository["use"])
+        self.assertEqual("clear", repository["action"])
+        self.assertEqual([], repository['shopclosed'])
+        self.assertEqual({"name": "Name for this object"}, repository['extra'])
 
     def testMinimalInfo(self):
         data = {
@@ -92,20 +92,20 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals('group', repository["repositoryGroupId"])
-        self.assertEquals("repository", repository["identifier"])
-        self.assertEquals(None, repository["baseurl"])
-        self.assertEquals(None, repository["set"])
-        self.assertEquals(None, repository["metadataPrefix"])
-        self.assertEquals(None, repository["mappingId"])
-        self.assertEquals(None, repository["targetId"])
-        self.assertEquals(None, repository["collection"])
-        self.assertEquals(0, repository["maximumIgnore"])
-        self.assertEquals(None, repository["continuous"])
-        self.assertEquals(False, repository["complete"])
-        self.assertEquals(False, repository["use"])
-        self.assertEquals(None, repository["action"])
-        self.assertEquals([], repository['shopclosed'])
+        self.assertEqual('group', repository["repositoryGroupId"])
+        self.assertEqual("repository", repository["identifier"])
+        self.assertEqual(None, repository["baseurl"])
+        self.assertEqual(None, repository["set"])
+        self.assertEqual(None, repository["metadataPrefix"])
+        self.assertEqual(None, repository["mappingId"])
+        self.assertEqual(None, repository["targetId"])
+        self.assertEqual(None, repository["collection"])
+        self.assertEqual(0, repository["maximumIgnore"])
+        self.assertEqual(None, repository["continuous"])
+        self.assertEqual(False, repository["complete"])
+        self.assertEqual(False, repository["use"])
+        self.assertEqual(None, repository["action"])
+        self.assertEqual([], repository['shopclosed'])
 
     def testShopClosedButNotAdded(self):
         data = {
@@ -121,7 +121,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals([], repository['shopclosed'])
+        self.assertEqual([], repository['shopclosed'])
 
     def testShopClosedAdded(self):
         data = {
@@ -138,7 +138,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals(['*:*:7:0-*:*:9:0'], repository['shopclosed'])
+        self.assertEqual(['*:*:7:0-*:*:9:0'], repository['shopclosed'])
 
     def testModifyShopClosed(self):
         self.updateTheRepository(shopclosed=['1:2:7:0-1:2:9:0', '2:*:7:0-2:*:9:0',])
@@ -163,7 +163,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals(['3:*:17:0-3:*:19:0', '4:5:9:0-4:5:10:0',], repository['shopclosed'])
+        self.assertEqual(['3:*:17:0-3:*:19:0', '4:5:9:0-4:5:10:0',], repository['shopclosed'])
 
     def testDeleteShopClosed(self):
         self.updateTheRepository(shopclosed=['1:2:7:0-1:2:9:0', '2:*:7:0-2:*:9:0',])
@@ -190,17 +190,17 @@ class HarvesterDataActionsTest(SeecrTestCase):
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals(['4:5:9:0-4:5:10:0',], repository['shopclosed'])
+        self.assertEqual(['4:5:9:0-4:5:10:0',], repository['shopclosed'])
 
     def testSetRepositoryDone(self):
         self.updateTheRepository(action='refresh')
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals('refresh', repository['action'])
+        self.assertEqual('refresh', repository['action'])
 
         data = dict(domainId='domain', identifier='repository')
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/repositoryDone', Body=urlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
-        self.assertEquals(None, repository['action'])
+        self.assertEqual(None, repository['action'])
 
     def updateTheRepository(self, baseurl='', set='', metadataPrefix='', mappingId='', targetId='', collection='', maximumIgnore=0, use=False, continuous=False, complete=True, action='', shopclosed=None):
         self.hd.updateRepository('repository', domainId='domain',

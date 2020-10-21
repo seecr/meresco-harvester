@@ -33,10 +33,10 @@
 ## end license ##
 
 from xml.sax.saxutils import escape as xmlEscape
-from virtualuploader import VirtualUploader, UploaderException, InvalidDataException, InvalidComponentException
-from httplib import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
+from .virtualuploader import VirtualUploader, UploaderException, InvalidDataException, InvalidComponentException
+from http.client import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
 from lxml.etree import parse
-from StringIO import StringIO
+from io import StringIO
 from meresco.harvester.namespaces import xpath
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
@@ -61,7 +61,7 @@ class SruUpdateUploader(VirtualUploader):
         self._logLine('UPLOAD.SEND', 'START', id = anId)
 
         recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
-                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in anUpload.parts.items()])
+                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in list(anUpload.parts.items())])
 
         action = "replace"
         recordIdentifier= xmlEscape(anId)

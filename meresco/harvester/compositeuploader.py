@@ -37,7 +37,7 @@
 #
 # $Id: virtualuploader.py 146 2006-03-27 12:50:57Z svn $
 
-from virtualuploader import VirtualUploader, UploaderFactory
+from .virtualuploader import VirtualUploader, UploaderFactory
 
 class CompositeUploader(VirtualUploader):
 

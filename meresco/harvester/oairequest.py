@@ -33,16 +33,17 @@
 #
 ## end license ##
 
-from urllib import urlencode
-from urllib2 import urlopen, install_opener, build_opener, Request, URLError
+from urllib.parse import urlencode
+from urllib.request import urlopen, install_opener, build_opener, Request
+from urllib.error import URLError
 from ssl import SSLError, SSLContext, PROTOCOL_TLSv1_2
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 from cgi import parse_qsl
 
 from lxml.etree import parse
 
 from seecr.zulutime import ZuluTime
-from __version__ import VERSION
+from .__version__ import VERSION
 
 from meresco.harvester.namespaces import xpathFirst, xpath
 
@@ -56,13 +57,13 @@ class OaiRequest(object):
         self._urlopen = _urlopen or urlopen
 
     def listRecords(self, **kwargs):
-        if kwargs.has_key('from_'):
+        if 'from_' in kwargs:
             kwargs['from'] = kwargs['from_']
             del kwargs['from_']
         kwargs['verb'] = 'ListRecords'
         try:
             return self.request(kwargs)
-        except OAIError, e:
+        except OAIError as e:
             if e.errorCode() != 'noRecordsMatch':
                 raise e
             return e.response
@@ -77,9 +78,9 @@ class OaiRequest(object):
     def request(self, args=None):
         args = {} if args is None else args
         try:
-            argslist = [(k,v) for k,v in args.items() if v]
+            argslist = [(k,v) for k,v in list(args.items()) if v]
             result = self._request(argslist)
-        except Exception, e:
+        except Exception as e:
             raise OaiRequestException(self._buildRequestUrl(argslist), message=repr(e))
         if xpathFirst(result, '/oai:OAI-PMH/oai:error') is not None:
             raise OAIError.create(self._buildRequestUrl(argslist), OaiResponse(result))
@@ -102,7 +103,7 @@ class OaiRequest(object):
                 context=context)
         try:
             result = doUrlopen()
-        except (SSLError, URLError), e:
+        except (SSLError, URLError) as e:
             result = doUrlopen(context=SSLContext(PROTOCOL_TLSv1_2))
 
         return parse(result)

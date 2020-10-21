@@ -33,15 +33,15 @@
 ## end license ##
 
 from xml.sax.saxutils import escape as xmlEscape
-from eventlogger import NilEventLogger
-from urlparse import urljoin
-from urllib import urlencode
-from saharaobject import SaharaObject
+from .eventlogger import NilEventLogger
+from urllib.parse import urljoin
+from urllib.parse import urlencode
+from .saharaobject import SaharaObject
 from meresco.core import Observable
 from lxml.etree import XML
 from meresco.harvester.namespaces import namespaces, xpathFirst, xpath
 from meresco.components import lxmltostring
-from oairequest import OaiResponse
+from .oairequest import OaiResponse
 
 
 nillogger = NilEventLogger()
@@ -177,10 +177,10 @@ class Mapping(SaharaObject, Observable):
                 '__builtins__': builtinscopy
             })
             upload.ensureStrings()
-        except DataMapAssertionException, ex:
+        except DataMapAssertionException as ex:
             self.do.logError(comments='Assertion: ' + str(ex), id=upload.id)
             raise ex
-        except DataMapSkip, e:
+        except DataMapSkip as e:
             self.do.logLine('SKIP', id=upload.id, comments=str(e))
             upload.skip = True
         return upload

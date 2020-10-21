@@ -38,7 +38,7 @@ import re
 
 class Timeslot(object):
 	def __init__(self, string):
-		self._begin, self._end = map(_parse, string.split('-'))
+		self._begin, self._end = list(map(_parse, string.split('-')))
 
 	beginweek = property(lambda self: str(self._begin[0]))
 	beginday = property(lambda self: str(self._begin[1]))

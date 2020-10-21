@@ -36,14 +36,16 @@ class DeleteIdsTest(SeecrTestCase):
 
     def testReadIds(self):
         filename = join(self.tempdir, "test.ids")
-        open(filename, 'w').write("uploadId1\n%0A  uploadId2\n   uploadId3")
+        with open(filename, "w") as fp:
+            fp.write("uploadId1\n%0A  uploadId2\n   uploadId3")
 
-        self.assertEquals(['uploadId1', '\n  uploadId2', '   uploadId3'], readIds(filename))
+        self.assertEqual(['uploadId1', '\n  uploadId2', '   uploadId3'], readIds(filename))
 
     def testWriteIds(self):
         filename = join(self.tempdir, "test.ids")
         writeIds(filename, ['uploadId1', '\n  uploadId2', '   uploadId3'])
-        self.assertEquals('uploadId1\n%0A  uploadId2\n   uploadId3\n', open(filename).read())
+        with open(filename) as fp:
+            self.assertEqual('uploadId1\n%0A  uploadId2\n   uploadId3\n', fp.read())
 
     def testDeleteWithError(self):
         writeIds(join(self.tempdir, "test.ids"), ['id:{}'.format(i) for i in xrange(10)])

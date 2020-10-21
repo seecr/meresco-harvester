@@ -36,7 +36,7 @@ class HarvesterDataRetrieve(Observable):
     def handleRequest(self, arguments, **kwargs):
         yield okJson
         verb = arguments.get('verb', [None])[0]
-        messageKwargs = dict((k,values[0]) for k,values in arguments.items() if k != 'verb')
+        messageKwargs = dict((k,values[0]) for k,values in list(arguments.items()) if k != 'verb')
         request = dict(**messageKwargs)
         message = None
         if verb is not None:
@@ -53,7 +53,7 @@ class HarvesterDataRetrieve(Observable):
                 }
         except NoneOfTheObserversRespond:
             response['error'] = error('badVerb')
-        except Exception, e:
+        except Exception as e:
             response['error'] = error(str(e), repr(e))
         yield response.dumps()
 

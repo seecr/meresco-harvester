@@ -29,4 +29,4 @@
 #
 ## end license ##
 
-from harvesterintegrationstate import HarvesterIntegrationState
+from .harvesterintegrationstate import HarvesterIntegrationState

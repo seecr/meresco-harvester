@@ -44,60 +44,60 @@ class IdsTest(SeecrTestCase):
     def testAddOne(self):
         self.ids = Ids(self.tempdir + '/doesnotexistyet/', 'idstest')
         self.ids.add('id:1')
-        self.assertEquals(1, len(self.ids))
+        self.assertEqual(1, len(self.ids))
         
     def testAddTwice(self):
         self.ids = Ids(self.tempdir, 'idstest')
         self.ids.add('id:1')
         self.ids.add('id:1')
-        self.assertEquals(1, len(self.ids))
-        self.assertEquals(1, len(open(self.tempdir + '/idstest.ids').readlines()))
+        self.assertEqual(1, len(self.ids))
+        self.assertEqual(1, len(open(self.tempdir + '/idstest.ids').readlines()))
         
     def testInit(self):
         self.writeTestIds('one',['id:1'])
         self.ids = Ids(self.tempdir, 'one')
-        self.assertEquals(1, len(self.ids))
+        self.assertEqual(1, len(self.ids))
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
-        self.assertEquals(3, len(self.ids))
+        self.assertEqual(3, len(self.ids))
         
     def testRemoveExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:1')
-        self.assertEquals(2, len(self.ids))
-        self.assertEquals(2, len(open(self.tempdir + '/three.ids').readlines()))
+        self.assertEqual(2, len(self.ids))
+        self.assertEqual(2, len(open(self.tempdir + '/three.ids').readlines()))
         self.ids.close()
         
     def testRemoveNonExistingId(self):
         self.writeTestIds('three',['id:1', 'id:2', 'id:3'])
         self.ids = Ids(self.tempdir, 'three')
         self.ids.remove('id:4')
-        self.assertEquals(3, len(self.ids))
+        self.assertEqual(3, len(self.ids))
         self.ids.close()
-        self.assertEquals(3, len(open(self.tempdir + '/three.ids').readlines()))
+        self.assertEqual(3, len(open(self.tempdir + '/three.ids').readlines()))
 
     def testAddStrangeIds(self):
         self.ids = Ids(self.tempdir, 'idstest')
         self.ids.add('id:1')
         self.ids.add('\n   id:1')
         self.ids.add('   id:2')
-        self.assertEquals(3, len(open(self.tempdir + '/idstest.ids').readlines()))
-        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+        self.assertEqual(3, len(open(self.tempdir + '/idstest.ids').readlines()))
+        self.assertEqual(['id:1', '\n   id:1', '   id:2'], list(self.ids))
 
         self.ids = Ids(self.tempdir, 'idstest')
-        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+        self.assertEqual(['id:1', '\n   id:1', '   id:2'], list(self.ids))
 
     def testRemoveStrangeId(self):
         self.ids = Ids(self.tempdir, 'idstest')
         self.ids.add('id:1')
         self.ids.add('\n   id:1')
         self.ids.add('   id:2')
-        self.assertEquals(['id:1', '\n   id:1', '   id:2'], list(self.ids))
+        self.assertEqual(['id:1', '\n   id:1', '   id:2'], list(self.ids))
         self.ids.remove('id:1')
         self.ids.remove('\n   id:1')
         self.ids.remove('   id:2')
-        self.assertEquals([], list(self.ids))
+        self.assertEqual([], list(self.ids))
         
         
     def writeTestIds(self, name, ids):

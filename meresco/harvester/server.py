@@ -31,7 +31,7 @@
 from os.path import join, abspath, dirname
 from sys import stdout
 from xml.sax.saxutils import escape as escapeXml
-from StringIO import StringIO
+from io import StringIO
 from lxml.etree import parse
 from meresco.xml import xpathFirst
 
@@ -48,18 +48,18 @@ from seecr.zulutime import ZuluTime
 from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore, StaticFiles
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
 
-from __version__ import VERSION_STRING, VERSION
-from repositorystatus import RepositoryStatus
-from harvesterdata import HarvesterData
-from harvesterdataactions import HarvesterDataActions
-from harvesterdataretrieve import HarvesterDataRetrieve
-from timeslot import Timeslot
+from .__version__ import VERSION_STRING, VERSION
+from .repositorystatus import RepositoryStatus
+from .harvesterdata import HarvesterData
+from .harvesterdataactions import HarvesterDataActions
+from .harvesterdataretrieve import HarvesterDataRetrieve
+from .timeslot import Timeslot
 from meresco.components.http.utils import ContentTypeJson
-from throughputanalyser import ThroughputAnalyser
-from onlineharvest import OnlineHarvest
-from useractions import UserActions
-from filterfields import FilterFields
-from fielddefinitions import loadDefinitions
+from .throughputanalyser import ThroughputAnalyser
+from .onlineharvest import OnlineHarvest
+from .useractions import UserActions
+from .filterfields import FilterFields
+from .fielddefinitions import loadDefinitions
 
 from time import localtime, strftime, time
 
@@ -196,7 +196,7 @@ def startServer(port, **kwargs):
     server = be(dna(reactor, port, **kwargs))
     list(compose(server.once.observer_init()))
 
-    print "Ready to rumble at", port
+    print("Ready to rumble at", port)
     stdout.flush()
     reactor.loop()
 

@@ -33,9 +33,9 @@ from os.path import join, abspath, dirname, isfile
 from os import listdir
 
 from seecr.test.utils import getRequest
-
-from urllib import urlopen, urlencode
-from urlparse import urlparse
+from urllib.request import urlopen
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 from cgi import parse_qs
 from shutil import copytree
 
@@ -50,9 +50,9 @@ examplesPath = join(dirname(dirname(mydir)), 'examples')
 class HarvesterIntegrationState(IntegrationState):
     def __init__(self, stateName, tests=None, fastMode=False):
         IntegrationState.__init__(self, "harvester-"+stateName, tests=tests, fastMode=fastMode)
-        self.helperServerPortNumber = PortNumberGenerator.next()
-        self.harvesterInternalServerPortNumber = PortNumberGenerator.next()
-        self.gustosPort = PortNumberGenerator.next()
+        self.helperServerPortNumber = next(PortNumberGenerator)
+        self.harvesterInternalServerPortNumber = next(PortNumberGenerator)
+        self.gustosPort = next(PortNumberGenerator)
 
         self.helperDir = join(self.integrationTempdir, 'helper')
         self.dumpDir = join(self.helperDir, 'dump')
@@ -129,6 +129,6 @@ class HarvesterIntegrationState(IntegrationState):
 
 def fileSubstVars(filepath, **kwargs):
     contents = open(filepath).read()
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         contents = contents.replace("${%s}" % k, str(v))
     open(filepath, "w").write(contents)
