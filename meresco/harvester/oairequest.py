@@ -33,12 +33,10 @@
 #
 ## end license ##
 
-from urllib.parse import urlencode
 from urllib.request import urlopen, install_opener, build_opener, Request
 from urllib.error import URLError
 from ssl import SSLError, SSLContext, PROTOCOL_TLSv1_2
-from urllib.parse import urlparse, urlunparse
-from cgi import parse_qsl
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 from lxml.etree import parse
 
