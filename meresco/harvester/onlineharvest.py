@@ -48,7 +48,7 @@ class OnlineHarvest(object):
             mapping = Mapping(mappingData.get('identifier'))
             mapping.fill(None, mappingData)
         mapping.addObserver(StreamEventLogger(self._output))
-        self._output.write(mapping.mappingInfo())
+        self._output.write(mapping.mappingInfo() or '')
         self._output.write('\n')
         response = OaiRequest(urlString).request()
         for record in response.records:
