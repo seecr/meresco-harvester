@@ -74,7 +74,8 @@ class HarvesterData(object):
 
     #repositorygroup
     def getRepositoryGroupIds(self, domainId):
-        return JsonDict.load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])
+        with open(join(self._dataPath, '%s.domain' % domainId)) as fp:
+            return JsonDict.load(fp).get('repositoryGroupIds',[])
 
     def getRepositoryGroup(self, identifier, domainId):
         with open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))) as fp:
@@ -112,22 +113,25 @@ class HarvesterData(object):
         result = JsonList()
         allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
         for repositoryGroupId in allIds:
-            jsonData = JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))))
+            with open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))) as fp:
+                jsonData = JsonDict.load(fp)
             result.extend(jsonData.get('repositoryIds', []))
         return result
 
     def getRepositoryGroupId(self, domainId, repositoryId):
-        return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))['repositoryGroupId']
+        with open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))) as fp:
+            return JsonDict.load(fp)['repositoryGroupId']
 
     def getRepositories(self, domainId, repositoryGroupId=None):
         try:
             repositoryIds = self.getRepositoryIds(domainId=domainId, repositoryGroupId=repositoryGroupId)
         except IOError:
             raise ValueError("idDoesNotExist")
-        return JsonList([
-                JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))))
-                for repositoryId in repositoryIds
-            ])
+
+        def _readRepository(repositoryId):
+            with open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))) as fp:
+                return JsonDict.load(fp)
+        return JsonList([_readRepository(repositoryId) for repositoryId in repositoryIds])
 
     def getRepository(self, identifier, domainId):
         try:
@@ -185,7 +189,8 @@ class HarvesterData(object):
     #target
     def getTarget(self, identifier):
         try:
-            return JsonDict.load(open(join(self._dataPath, '%s.target' % identifier)))
+            with open(join(self._dataPath, '%s.target' % identifier)) as fp:
+                return JsonDict.load(fp)
         except IOError:
             raise ValueError("idDoesNotExist")
 
@@ -225,7 +230,8 @@ class HarvesterData(object):
     #mapping
     def getMapping(self, identifier):
         try:
-            return JsonDict.load(open(join(self._dataPath, '%s.mapping' % identifier)))
+            with open(join(self._dataPath, '%s.mapping' % identifier)) as fp:
+                return JsonDict.load(fp)
         except IOError:
             raise ValueError("idDoesNotExist")
 

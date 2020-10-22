@@ -33,45 +33,50 @@ from seecr.test import SeecrTestCase
 
 from meresco.harvester.harvesterdata import HarvesterData
 
-class HarvesterDataTest(SeecrTestCase):
-    def setUp(self):
-        SeecrTestCase.setUp(self)
-        open(join(self.tempdir, 'adomain.domain'), 'w').write("""{
+DATA = {
+    'adomain.domain': """{
     "identifier": "adomain",
     "mappingIds": ["ignored MAPPING"],
     "targetIds": ["ignored TARGET"],
     "repositoryGroupIds": ["Group1", "Group2"]
-}""")
-        open(join(self.tempdir, 'adomain.Group1.repositoryGroup'), 'w').write("""{
+}""",
+    'adomain.Group1.repositoryGroup': """{
     "identifier": "Group1",
     "name": {"nl": "Groep1", "en": "Group1"},
     "repositoryIds": ["repository1", "repository2"]
-}""")
-        open(join(self.tempdir, 'adomain.Group2.repositoryGroup'), 'w').write("""{
+}""",
+    'adomain.Group2.repositoryGroup': """{
     "identifier": "Group2",
     "name": {"nl": "Groep2", "en": "Group2"},
     "repositoryIds": ["repository2_1", "repository2_2"]
-} """)
-        open(join(self.tempdir, 'adomain.repository1.repository'), 'w').write("""{
+} """,
+    'adomain.repository1.repository': """{
     "identifier": "repository1",
     "repositoryGroupId": "Group1"
-}""")
-        open(join(self.tempdir, 'adomain.repository2.repository'), 'w').write("""{
+}""",
+    'adomain.repository2.repository': """{
     "identifier": "repository2",
     "repositoryGroupId": "Group1"
-}""")
-        open(join(self.tempdir, 'adomain.repository2_1.repository'), 'w').write("""{
+}""",
+    'adomain.repository2_1.repository': """{
     "identifier": "repository2_1",
     "repositoryGroupId": "Group2"
-}""")
-        open(join(self.tempdir, 'adomain.repository2_2.repository'), 'w').write("""{
+}""",
+    'adomain.repository2_2.repository': """{
     "identifier": "repository2_2",
     "repositoryGroupId": "Group2"
-}""")
-        open(join(self.tempdir, 'adomain.remi.repository'), 'w').write("""{
+}""",
+'adomain.remi.repository': """{
     "identifier": "remi",
     "repositoryGroupId": "NoGroup"
-}""")
+}"""}
+
+class HarvesterDataTest(SeecrTestCase):
+    def setUp(self):
+        SeecrTestCase.setUp(self)
+        for fname, data in DATA.items():
+            with open(join(self.tempdir, fname), "w") as fp:
+                fp.write(data)
         self.hd = HarvesterData(self.tempdir)
 
     def testGetRepositoryGroupIds(self):
