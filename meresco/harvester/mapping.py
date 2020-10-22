@@ -74,13 +74,10 @@ upload.parts['record'] = lxmltostring(input.record)
 """
 
 def read(filename):
-    file = open(filename)
-    try:
-        return file.read()
-    finally:
-        file.close()
+    with open(filename) as f:
+        return f.read()
 
-def noimport(name, globals, locals, fromlist):
+def noimport(*args, **kwargs):
     raise DataMapException('Import not allowed')
 
 class DataMapException(Exception):
@@ -109,7 +106,6 @@ def doAssert(aBoolean, message="Assertion failed"):
 
 def doNotAssert(aBoolean, message="This should not happen"):
     pass
-
 
 class UploadDict(dict):
     def __setitem__(self, key, value):
