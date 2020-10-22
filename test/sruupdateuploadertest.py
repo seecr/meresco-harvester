@@ -34,12 +34,15 @@
 ## end license ##
 
 from seecr.test import SeecrTestCase, CallTrace
-from lxml.etree import parse, XML
-from io import StringIO
+from lxml.etree import parse
+from io import BytesIO
 
 from meresco.harvester.sruupdateuploader import SruUpdateUploader, InvalidComponentException, InvalidDataException
 from http.client import SERVICE_UNAVAILABLE, OK as HTTP_OK
 from meresco.harvester.namespaces import xpathFirst, xpath
+
+def _parse(text):
+    return parse(BytesIO(bytes(text, encoding="utf-8")))
 
 class SruUpdateUploaderTest(SeecrTestCase):
     def setUp(self):
@@ -62,14 +65,14 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.uploader.send(self.upload)
         self.assertEqual(1, len(self.sentData))
 
-        updateRequest = XML(self.sentData[0])
+        updateRequest = _parse(self.sentData[0])
         self.assertEqual('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
         self.assertEqual('info:srw/action/1/replace', xpathFirst(updateRequest, 'ucp:action/text()'))
         documentParts = xpath(updateRequest, 'srw:record/srw:recordData/document:document/document:part')
         self.assertEqual(2, len(documentParts))
 
         self.uploader.delete(self.upload)
-        updateRequest = XML(self.sentData[1])
+        updateRequest = _parse(self.sentData[1])
         self.assertEqual('some:id', xpathFirst(updateRequest, 'ucp:recordIdentifier/text()'))
         self.assertEqual('info:srw/action/1/delete', xpathFirst(updateRequest, 'ucp:action/text()'))
 
@@ -163,13 +166,13 @@ class SruUpdateUploaderTest(SeecrTestCase):
             exception = e
 
         self.assertFalse(exception == None)
-        self.assertEqual('uploadId: "1", message: "HTTP 503: "', str(e))
+        self.assertEqual('uploadId: "1", message: "HTTP 503: "', str(exception))
         self.assertEqual(1, len(answers))
         self.assertEqual(3, len(datas))
         self.assertEqual(3, len(eventLogger.calledMethods))
 
     def testParseMessageWithDiagnostic(self):
-        SRU_MESSAGE=parse(StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        SRU_MESSAGE=_parse("""<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:operationStatus>fail</ucp:operationStatus>
@@ -180,7 +183,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
             <diag:message>Invalid component: record rejected</diag:message>
         </diag:diagnostic>
     </srw:diagnostics>
-</srw:updateResponse>"""))
+</srw:updateResponse>""")
 
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)
@@ -190,7 +193,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.assertEqual(("info:srw/diagnostic/12/12", "Xsd Validation error", "Invalid component: record rejected"), diagnostics)
 
     def testParseMessage(self):
-        SRU_MESSAGE=parse(StringIO(SUCCES_RESPONSE))
+        SRU_MESSAGE=_parse(SUCCES_RESPONSE)
 
         eventLogger = CallTrace('eventlogger')
         uploader = SruUpdateUploader(self.target, eventLogger)

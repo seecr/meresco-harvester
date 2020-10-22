@@ -36,7 +36,7 @@ from xml.sax.saxutils import escape as xmlEscape
 from .virtualuploader import VirtualUploader, UploaderException, InvalidDataException, InvalidComponentException
 from http.client import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
 from lxml.etree import parse
-from io import StringIO
+from io import BytesIO
 from meresco.harvester.namespaces import xpath
 
 recordUpdate = """<?xml version="1.0" encoding="UTF-8"?>
@@ -60,12 +60,15 @@ class SruUpdateUploader(VirtualUploader):
         anId = anUpload.id
         self._logLine('UPLOAD.SEND', 'START', id = anId)
 
+        partsItems = list(anUpload.parts.items())
         recordData = '<document xmlns="http://meresco.org/namespace/harvester/document">%s</document>' % ''.join(
-                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in list(anUpload.parts.items())])
+                ['<part name="%s">%s</part>' % (xmlEscape(partName), xmlEscape(partValue)) for partName, partValue in partsItems])
 
         action = "replace"
         recordIdentifier= xmlEscape(anId)
         recordPacking = 'xml'
+
+        partName, _ = partsItems[-1]
         recordSchema = xmlEscape(partName)
         self._sendData(anId, recordUpdate % locals())
         self._logLine('UPLOAD.SEND', 'END', id = anId)
@@ -90,11 +93,11 @@ class SruUpdateUploader(VirtualUploader):
                 break
             self._logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
-                
-        if status != HTTP_OK:
-            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (str(status), message))
 
-        version, operationStatus, diagnostics = self._parseMessage(parse(StringIO(message)))
+        if status != HTTP_OK:
+            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (str(status.value), message))
+
+        version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(bytes(message, encoding="utf-8"))))
 
         if operationStatus == 'fail':
             if diagnostics[0] == 'info:srw/diagnostic/12/1':
@@ -114,7 +117,7 @@ class SruUpdateUploader(VirtualUploader):
         result = connection.getresponse()
         message = result.read()
         return result.status, message
-        
+
     def _parseMessage(self, message):
         version = xpath(message, "/srw:updateResponse/srw:version/text()")[0]
         operationStatus = xpath(message, "/srw:updateResponse/ucp:operationStatus/text()")[0]
