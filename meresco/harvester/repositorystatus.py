@@ -64,8 +64,12 @@ class RepositoryStatus(Observable):
                     yield self._getRepositoryStatus(domainId, groupId, repoId)
 
     def getRunningStatesForDomain(self, domainId):
+        def _jsonLoad(filename):
+            with open(filename) as fp:
+                return jsonLoad(fp)
+
         return sorted([
-            mergeDicts(jsonLoad(open(filepath)), {'repositoryId': repoId})
+            mergeDicts(_jsonLoad(filepath), {'repositoryId': repoId})
             for groupId in self.call.getRepositoryGroupIds(domainId=domainId)
             for repoId in self.call.getRepositoryIds(domainId=domainId, repositoryGroupId=groupId)
             for filepath in [join(self._statePath, domainId, escapeFilename("%s.running" % repoId))]
@@ -76,15 +80,17 @@ class RepositoryStatus(Observable):
         invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
         if not isfile(invalidFile):
             return []
-        return reversed(
-            [x[:-1] if x[-1] == '\n' else x for x in
-                (unescapeFilename(line) for line in open(invalidFile) if line.strip())
-            ]
-        )
+        with open(invalidFile) as fp:
+            return reversed(
+                [x[:-1] if x[-1] == '\n' else x for x in
+                    (unescapeFilename(line) for line in fp if line.strip())
+                ]
+            )
 
     def getInvalidRecord(self, domainId, repositoryId, recordId):
         invalidDir = join(self._logPath, domainId, INVALID_DATA_MESSAGES_DIR)
-        return parse(open(join(invalidDir, escapeFilename(repositoryId), escapeFilename(recordId))))
+        with open(join(invalidDir, escapeFilename(repositoryId), escapeFilename(recordId))) as fp:
+            return parse(fp)
 
     def _getRepositoryStatus(self, domainId, groupId, repoId):
         stats = self._parseEventsFile(domainId, repoId)
@@ -105,27 +111,32 @@ class RepositoryStatus(Observable):
 
     def _invalidCount(self, domainId, repositoryId):
         invalidFile = join(self._statePath, domainId, escapeFilename("%s_invalid.ids" % repositoryId))
-        return len(open(invalidFile).readlines()) if isfile(invalidFile) else 0
+        if not isfile(invalidFile):
+            return 0
+
+        with open(invalidFile) as fp:
+            return len(fp.readlines())
 
     def _parseEventsFile(self, domainId, repositoryId):
         parseState = {'errors': []}
         eventsfile = join(self._logPath, domainId, "%s.events" % repositoryId)
         if isfile(eventsfile):
-            for i, line in enumerate(reversed(open(eventsfile).readlines())):
-                stateLine = line.strip().split('\t')
-                if len(stateLine) != 4:
-                    continue
-                date, event, id, comments = stateLine
-                date = date[1:-1]
-                if not 'lastHarvestAttempt' in parseState:
-                    parseState['lastHarvestAttempt'] = _reformatDate(date)
-                if event == 'SUCCES':
-                    _succes(parseState, date, comments)
-                    break
-                elif event == 'ERROR':
-                    _error(parseState, date, comments)
-                    if len(parseState["errors"]) > 100:
+            with open(eventsfile) as fp:
+                for i, line in enumerate(reversed(fp.readlines())):
+                    stateLine = line.strip().split('\t')
+                    if len(stateLine) != 4:
+                        continue
+                    date, event, id, comments = stateLine
+                    date = date[1:-1]
+                    if not 'lastHarvestAttempt' in parseState:
+                        parseState['lastHarvestAttempt'] = _reformatDate(date)
+                    if event == 'SUCCES':
+                        _succes(parseState, date, comments)
                         break
+                    elif event == 'ERROR':
+                        _error(parseState, date, comments)
+                        if len(parseState["errors"]) > 100:
+                            break
 
         recenterrors = parseState["errors"][-10:]
         recenterrors.reverse()

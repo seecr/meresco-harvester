@@ -28,35 +28,36 @@
 #
 ## end license ##
 
-from os import makedirs
 from os.path import join
 
 from lxml.etree import tostring
 from simplejson import dump as jsonDump
 
 from seecr.test import SeecrTestCase, CallTrace
+from seecr.test.utils import mkdir
 
 from escaping import escapeFilename
 from meresco.harvester.repositorystatus import RepositoryStatus
 
+def _writeFile(*args, data=None):
+    with open(join(*args), 'w') as f:
+        f.write(data)
 
 class RepositoryStatusTest(SeecrTestCase):
     def setUp(self):
         SeecrTestCase.setUp(self)
-        self.stateDir = join(self.tempdir, "state")
-        self.logDir = join(self.tempdir, "log")
         self.domainId = "adomain"
-        makedirs(join(self.stateDir, self.domainId))
-        repoId1LogDir = join(self.logDir, self.domainId, "invalid", "repoId1")
-        repoId2LogDir = join(self.logDir, self.domainId, "invalid", escapeFilename("repoId/2"))
-        makedirs(repoId1LogDir)
-        makedirs(repoId2LogDir)
-        open(join(repoId1LogDir, "invalidId1"), 'w').write("<diagnostic>ERROR1</diagnostic>")
-        open(join(repoId1LogDir, "invalidId&2"), 'w').write("<diagnostic>ERROR2</diagnostic>")
-        open(join(repoId2LogDir, escapeFilename("invalidId/3")), 'w').write("<diagnostic>ERROR3</diagnostic>")
-        open(join(self.stateDir, self.domainId, "repoId1_invalid.ids"), 'w').write("invalidId1\ninvalidId&2")
-        open(join(self.stateDir, self.domainId, escapeFilename("repoId/2_invalid.ids")), 'w').write("invalidId/3")
-        open(join(self.stateDir, self.domainId, "repoId3_invalid.ids"), 'w').write("")
+        self.stateDir = mkdir(self.tempdir, "state")
+        mkdir(self.stateDir, self.domainId)
+        self.logDir = mkdir(self.tempdir, "log")
+        repoId1LogDir = mkdir(self.logDir, self.domainId, "invalid", "repoId1")
+        repoId2LogDir = mkdir(self.logDir, self.domainId, "invalid", escapeFilename("repoId/2"))
+        _writeFile(repoId1LogDir, "invalidId1", data="<diagnostic>ERROR1</diagnostic>")
+        _writeFile(repoId1LogDir, "invalidId&2", data="<diagnostic>ERROR2</diagnostic>")
+        _writeFile(repoId2LogDir, escapeFilename("invalidId/3"), data="<diagnostic>ERROR3</diagnostic>")
+        _writeFile(self.stateDir, self.domainId, "repoId1_invalid.ids", data="invalidId1\ninvalidId&2")
+        _writeFile(self.stateDir, self.domainId, escapeFilename("repoId/2_invalid.ids"), data="invalidId/3")
+        _writeFile(self.stateDir, self.domainId, "repoId3_invalid.ids", data="")
         self.status = RepositoryStatus(self.logDir, self.stateDir)
         observer = CallTrace("HarvesterData")
         observer.returnValues["getRepositoryGroupIds"] = ["repoGroupId1", "repoGroupId2"]
@@ -71,18 +72,12 @@ class RepositoryStatusTest(SeecrTestCase):
         self.status.addObserver(observer)
 
     def testGetRunningStatesForDomain(self):
-        jsonDump(
-                {'changedate': "2012-08-14 12:00:00",'status': "Ok", 'message': ""},
-                open(join(self.stateDir, self.domainId, "repoId1.running"), 'w')
-        )
-        jsonDump(
-                {'changedate': "2012-08-13 12:00:00",'status': "Error", 'message': "an error message"},
-                open(join(self.stateDir, self.domainId, "repoId3.running"), 'w')
-        )
-        jsonDump(
-                {'changedate': "2012-08-16 12:00:00",'status': "Ok", 'message': ""},
-                open(join(self.stateDir, self.domainId, "anotherRepoId.running"), 'w')
-        )
+        with open(join(self.stateDir, self.domainId, "repoId1.running"), 'w') as fp:
+            jsonDump({'changedate': "2012-08-14 12:00:00",'status': "Ok", 'message': ""}, fp)
+        with open(join(self.stateDir, self.domainId, "repoId3.running"), 'w') as fp:
+            jsonDump({'changedate': "2012-08-13 12:00:00",'status': "Error", 'message': "an error message"}, fp)
+        with open(join(self.stateDir, self.domainId, "anotherRepoId.running"), 'w') as fp:
+            jsonDump({'changedate': "2012-08-16 12:00:00",'status': "Ok", 'message': ""}, fp)
 
         expected = [
             {'repositoryId': 'anotherRepoId', 'changedate': "2012-08-16 12:00:00",'status': "Ok", 'message': ""},
@@ -225,7 +220,7 @@ class RepositoryStatusTest(SeecrTestCase):
 
     def testGetInvalidRecord(self):
         def getInvalidRecord(repoId, recordId):
-            return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId))
+            return tostring(self.status.getInvalidRecord(self.domainId, repoId, recordId), encoding=str)
         self.assertEqual("<diagnostic>ERROR1</diagnostic>", getInvalidRecord("repoId1", "invalidId1"))
         self.assertEqual("<diagnostic>ERROR2</diagnostic>", getInvalidRecord("repoId1", "invalidId&2"))
         self.assertEqual("<diagnostic>ERROR3</diagnostic>", getInvalidRecord("repoId/2", "invalidId/3"))
@@ -240,7 +235,7 @@ class RepositoryStatusTest(SeecrTestCase):
 
     def testSucces(self):
         logLine = '\t'.join(['[2006-03-13 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: None'])
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine)
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data=logLine)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertEqual('2006-03-13T12:13:14Z', state["lastHarvestDate"])
         self.assertEqual('200', state["harvested"])
@@ -252,7 +247,7 @@ class RepositoryStatusTest(SeecrTestCase):
 
     def testOnlyErrors(self):
         logLine = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'Sorry, but the VM has crashed.'])
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine)
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data=logLine)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertTrue("lastHarvestDate" not in state, list(state.keys()))
         self.assertTrue("harvested" not in state, list(state.keys()))
@@ -266,7 +261,7 @@ class RepositoryStatusTest(SeecrTestCase):
     def testTwoErrors(self):
         logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'Sorry, but the VM has crashed.'])
         logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data=logLine1 + "\n" + logLine2)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertEqual(2, state["totalerrors"])
         self.assertEqual("2006-03-11T12:14:14Z", state["lastHarvestAttempt"])
@@ -275,7 +270,7 @@ class RepositoryStatusTest(SeecrTestCase):
     def testErrorAfterSucces(self):
         logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: abcdef'])
         logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data=logLine1 + "\n" + logLine2)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertEqual("2006-03-11T12:13:14Z", state["lastHarvestDate"])
         self.assertEqual("200", state["harvested"])
@@ -289,7 +284,7 @@ class RepositoryStatusTest(SeecrTestCase):
     def testErrorBeforeSucces(self):
         logLine1 = '\t'.join(['[2006-03-11 12:13:14]', 'ERROR', 'repoId1', 'java.lang.NullPointerException.'])
         logLine2 = '\t'.join(['[2006-03-11 12:14:14]', 'SUCCES', 'repoId1', 'Harvested/Uploaded/Deleted/Total: 200/199/1/1542, ResumptionToken: abcdef'])
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write(logLine1 + "\n" + logLine2)
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data=logLine1 + "\n" + logLine2)
         state = self.status._parseEventsFile(domainId=self.domainId, repositoryId='repoId1')
         self.assertEqual("2006-03-11T12:14:14Z", state["lastHarvestDate"])
         self.assertEqual("200", state["harvested"])
@@ -311,7 +306,7 @@ class RepositoryStatusTest(SeecrTestCase):
         self.assertEqual([('2006-03-11T12:19:14Z', 'Error 19, Crash'), ('2006-03-11T12:18:14Z', 'Error 18, Crash'), ('2006-03-11T12:17:14Z', 'Error 17, Crash'), ('2006-03-11T12:16:14Z', 'Error 16, Crash'), ('2006-03-11T12:15:14Z', 'Error 15, Crash'), ('2006-03-11T12:14:14Z', 'Error 14, Crash'), ('2006-03-11T12:13:14Z', 'Error 13, Crash'), ('2006-03-11T12:12:14Z', 'Error 12, Crash'), ('2006-03-11T12:11:14Z', 'Error 11, Crash'), ('2006-03-11T12:10:14Z', 'Error 10, Crash')], state["recenterrors"])
 
     def testIntegration(self):
-        open(join(self.logDir, self.domainId, 'repoId1.events'), 'w').write("""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
+        _writeFile(self.logDir, self.domainId, 'repoId1.events', data="""[2005-08-20 20:00:00.456]\tERROR\t[repositoryId]\tError 1
 [2005-08-21 20:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 4/3/2/10
 [2005-08-22 00:00:00.456]\tSUCCES\t[repositoryId]\tHarvested/Uploaded/Deleted/Total: 8/4/3/16
 [2005-08-22 20:00:00.456]\tERROR\t[repositoryId]\tError 2
