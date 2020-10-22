@@ -79,7 +79,7 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetError'])))
         header, body = result.split(CRLF*2,1)
         self.assertEqual(okJson, header+CRLF*2)
-        self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': "Exception('Bad Bad Bad',)", 'code': 'unknown'}}, JsonDict.loads(body))
+        self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': "Exception('Bad Bad Bad')", 'code': 'unknown'}}, JsonDict.loads(body))
         self.assertEqual(['getError'], observer.calledMethodNames())
 
     def testKnownCodeException(self):
