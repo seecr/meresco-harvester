@@ -39,7 +39,21 @@ from meresco.harvester.state import State, getResumptionToken, getStartDate
 from seecr.test import SeecrTestCase
 from seecr.zulutime import ZuluTime
 
+from contextlib import contextmanager
+@contextmanager
+def _State(*args, **kwargs):
+    _state = State(*args, **kwargs)
+    try:
+        yield _state
+    finally:
+        _state.close()
+
+
 class StateTest(SeecrTestCase):
+    def assertRepoStats(self, expected):
+        with open(join(self.tempdir, 'repo.stats')) as fp:
+            self.assertEqual(expected,fp.read())
+
     def testReadStartDateFromLogLine(self):
         logline = ' Started: 2005-01-02 16:12:56, Harvested/Uploaded: 199/ 200, Done: 2005-01-02 16:13:45, ResumptionToken: ^^^oai_dc^45230'
         self.assertEqual('2005-01-02', getStartDate(logline))
@@ -61,57 +75,59 @@ class StateTest(SeecrTestCase):
         self.assertEqual('^^^oai_dc^452 30', getResumptionToken(logline))
 
     def testNoRepeatedNewlines(self):
-        s = State(self.tempdir, 'repository')
-        s.close()
-        data = open(join(self.tempdir, 'repository.stats')).read()
+        with _State(self.tempdir, 'repository'):
+            pass
+        with open(join(self.tempdir, 'repository.stats')) as fp:
+            data = fp.read()
         self.assertEqual('', data)
-        s = State(self.tempdir, 'repository')
-        s._write('line')
-        s.close()
-        data = open(join(self.tempdir, 'repository.stats')).read()
+
+        with _State(self.tempdir, 'repository') as s:
+            s._write('line')
+        with open(join(self.tempdir, 'repository.stats')) as fp:
+            data = fp.read()
         self.assertEqual('line\n', data)
-        s = State(self.tempdir, 'repository')
-        s.close()
-        data = open(join(self.tempdir, 'repository.stats')).read()
+
+        with _State(self.tempdir, 'repository'):
+            pass
+        with open(join(self.tempdir, 'repository.stats')) as fp:
+            data = fp.read()
         self.assertEqual('line\n', data)
 
     def testStartDateFromLastFirstBatch(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
+        with open(join(self.tempdir, 'repository.stats'), 'w') as f:
+            f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
 Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
 Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
 Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
 Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken:
 ''')
-        f.close()
-        s = State(self.tempdir, 'repository')
-        self.assertEqual('2005-01-04', s.from_)
+        with _State(self.tempdir, 'repository') as s:
+            self.assertEqual('2005-01-04', s.from_)
 
     def testStartDateFromLastFirstBatchWihoutResumptionToken(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
+        with open(join(self.tempdir, 'repository.stats'), 'w') as f:
+            f.write('''Started: 2005-01-02 16:08:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-02 16:09:45, ResumptionToken: ^^^oai_dc^45230
 Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
 Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
 Started: 2005-01-05 16:14:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-05 16:15:45, ResumptionToken: ^^^oai_dc^45232
 Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken:
 Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-07 16:19:45, ResumptionToken:
 ''')
-        f.close()
-        s = State(self.tempdir, 'repository')
-        self.assertEqual('2005-01-07', s.from_)
+        with _State(self.tempdir, 'repository') as s:
+            self.assertEqual('2005-01-07', s.from_)
 
     def testStartDateFromNewFromFile(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
+        with open(join(self.tempdir, 'repository.stats'), 'w') as f:
+            f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
 Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
 Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken:
 ''')
-        f.close()
 
-        open(join(self.tempdir, 'repository.next'), 'w').write('{"from": "2012-01-01T09:00:00Z"}')
+        with open(join(self.tempdir, 'repository.next'), 'w') as f:
+            f.write('{"from": "2012-01-01T09:00:00Z"}')
 
-        s = State(self.tempdir, 'repository')
-        self.assertEqual('2012-01-01T09:00:00Z', s.from_)
+        with _State(self.tempdir, 'repository') as s:
+            self.assertEqual('2012-01-01T09:00:00Z', s.from_)
 
     def testLastSuccessfulHarvestTime(self):
         with open(join(self.tempdir, 'repository.next'), 'w') as f:
@@ -120,217 +136,221 @@ Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2
         self.assertEqual(ZuluTime('2020-12-21T00:42:24Z').zulu(), s.getLastSuccessfulHarvestTime().zulu())
 
     def testNoStartDateIfLastLogLineIsDeletedIds(self):
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
+        with open(join(self.tempdir, 'repository.stats'), 'w') as f:
+            f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
 Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
 Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken:
 Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids
 ''')
-        f.close()
 
-        s = State(self.tempdir, 'repository')
-        self.assertEqual(None, s.from_)
-        self.assertEqual(None, s.token)
+        with _State(self.tempdir, 'repository') as s:
+            self.assertEqual(None, s.from_)
+            self.assertEqual(None, s.token)
 
         # and now with 'ids' misspelled as used to be the case
-        f = open(join(self.tempdir, 'repository.stats'), 'w')
-        f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
+        with open(join(self.tempdir, 'repository.stats'), 'w') as f:
+            f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:
 Started: 2005-01-04 16:12:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-04 16:13:45, ResumptionToken: ^^^oai_dc^45231
 Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-06 16:17:45, ResumptionToken:
 Started: 2005-01-07 16:18:56, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all id's
 ''')
-        f.close()
 
-        s = State(self.tempdir, 'repository')
-        self.assertEqual(None, s.from_)
-        self.assertEqual(None, s.token)
+        with _State(self.tempdir, 'repository') as s:
+            self.assertEqual(None, s.from_)
+            self.assertEqual(None, s.token)
 
     def testMarkHarvested(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
-        state.close()
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
 
-        self.assertEqual('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertRepoStats('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n')
         self.assertEqual({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessfulHarvest':'2012-08-13T12:15:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
         self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        self.assertEqual('2012-08-13T12:14:00', state.from_)
-        self.assertEqual('resumptionToken', state.token)
+        with _State(self.tempdir, 'repo') as state:
+            self.assertEqual('2012-08-13T12:14:00', state.from_)
+            self.assertEqual('resumptionToken', state.token)
 
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "newToken", "2012-08-13T12:16:00Z")
-        state.close()
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "newToken", "2012-08-13T12:16:00Z")
 
-        self.assertEqual("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+        self.assertRepoStats("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:17:00, ResumptionToken: newToken
-""", open(join(self.tempdir, 'repo.stats')).read())
+""")
         self.assertEqual({"from": "2012-08-13T12:14:00", "resumptionToken": "newToken", 'lastSuccessfulHarvest':'2012-08-13T12:17:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        self.assertEqual('2012-08-13T12:14:00', state.from_)
-        self.assertEqual('newToken', state.token)
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:20:00Z')
-        state.verbose = True
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", token=None, responseDate="2012-08-13T12:19:00Z")
-        state.close()
+        with _State(self.tempdir, 'repo') as state:
+            self.assertEqual('2012-08-13T12:14:00', state.from_)
+            self.assertEqual('newToken', state.token)
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:20:00Z')
+            state.verbose = True
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", token=None, responseDate="2012-08-13T12:19:00Z")
 
         self.assertEqual({"from": "2012-08-13T12:14:00", "resumptionToken": "", 'lastSuccessfulHarvest':'2012-08-13T12:20:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
         self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkDeleted(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
-        state.close()
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
 
-        self.assertEqual('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEqual({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessfulHarvest':'2012-08-13T12:15:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        self.assertRepoStats('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n')
+        self.assertEqual(
+            {"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessfulHarvest':'2012-08-13T12:15:00Z'},
+            JsonDict.load(join(self.tempdir, 'repo.next')))
 
         self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markDeleted()
-        state.close()
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markDeleted()
 
-        self.assertEqual("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+        self.assertRepoStats("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
 Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 0/0/0/0, Done: Deleted all ids.
-""", open(join(self.tempdir, 'repo.stats')).read())
+""")
         self.assertEqual({"from": "", "resumptionToken": "", 'lastSuccessfulHarvest':None}, JsonDict.load(join(self.tempdir, 'repo.next')))
         self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testSetToLastCleanState(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "", "2012-08-13T12:14:00")
-        state.close()
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-14T12:17:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-14T12:16:00")
-        state.close()
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-15T12:19:00Z')
-        state.setToLastCleanState()
-        state.close()
-
-        self.assertEqual("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: \nStarted: 2012-08-14 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-14 12:17:00, ResumptionToken: resumptionToken
-Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: \n""", open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEqual({"from": "2012-08-14T12:16:00", "resumptionToken": "", 'lastSuccessfulHarvest':'2012-08-15T12:19:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "", "2012-08-13T12:14:00")
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-14T12:17:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-14T12:16:00")
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-15T12:19:00Z')
+            state.setToLastCleanState()
+        self.assertRepoStats("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: \nStarted: 2012-08-14 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-14 12:17:00, ResumptionToken: resumptionToken
+Started: 2012-08-15 12:19:00, Done: Reset to last clean state. ResumptionToken: \n""")
+        self.assertEqual(
+            {"from": "2012-08-14T12:16:00", "resumptionToken": "", 'lastSuccessfulHarvest':'2012-08-15T12:19:00Z'},
+            JsonDict.load(join(self.tempdir, 'repo.next')))
 
     def testMarkException(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
-        state.close()
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
 
-        self.assertEqual('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n', open(join(self.tempdir, 'repo.stats')).read())
+        self.assertRepoStats('Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken\n')
         self.assertEqual({"from": "2012-08-13T12:14:00", "resumptionToken": "resumptionToken", 'lastSuccessfulHarvest':'2012-08-13T12:15:00Z'}, JsonDict.load(join(self.tempdir, 'repo.next')))
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Ok", "message": ""},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("whatever")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
-Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <type 'exceptions.ValueError'>: whatever
-""", open(join(self.tempdir, 'repo.stats')).read())
-        self.assertEqual({"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("whatever")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertRepoStats("""Started: 2012-08-13 12:15:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Done: 2012-08-13 12:15:00, ResumptionToken: resumptionToken
+Started: 2012-08-13 12:17:00, Harvested/Uploaded/Deleted/Total: 9999/9999/9999/9999, Error: <class 'ValueError'>: whatever
+""")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:17:00", "status": "Error", "message": "whatever"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkHarvesterAfterExceptionChange(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("whatever")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("whatever")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markStarted()
-        state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markStarted()
+            state.markHarvested("9999/9999/9999/9999", "resumptionToken", "2012-08-13T12:14:00")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkDeletedAfterExceptionChange(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("whatever")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("whatever")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "whatever"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markStarted()
-        state.markDeleted()
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markStarted()
+            state.markDeleted()
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:17:00", "status": "Ok", "message": ""},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testMarkExceptionChange(self):
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("the same exception")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:15:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("the same exception")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("the same exception")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:17:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("the same exception")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:15:00", "status": "Error", "message": "the same exception"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
-        state = State(self.tempdir, 'repo')
-        state.getZTime = lambda: ZuluTime('2012-08-13T12:19:00Z')
-        state.markStarted()
-        try:
-            raise ValueError("the other exception")
-        except:
-            exType, exValue, exTraceback = exc_info()
-            state.markException(exType, exValue, "9999/9999/9999/9999")
-        state.close()
-        self.assertEqual({"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"}, JsonDict.load(join(self.tempdir, 'repo.running')))
+        with _State(self.tempdir, 'repo') as state:
+            state.getZTime = lambda: ZuluTime('2012-08-13T12:19:00Z')
+            state.markStarted()
+            try:
+                raise ValueError("the other exception")
+            except:
+                exType, exValue, exTraceback = exc_info()
+                state.markException(exType, exValue, "9999/9999/9999/9999")
+        self.assertEqual(
+            {"changedate": "2012-08-13 12:19:00", "status": "Error", "message": "the other exception"},
+            JsonDict.load(join(self.tempdir, 'repo.running')))
 
     def testGetLastSuccessfulHarvestTime(self):
-        state = State(self.tempdir, 'repo')
-        self.assertEqual(None, state.from_)
-        self.assertEqual(None, state.lastSuccessfulHarvest)
+        with _State(self.tempdir, 'repo') as state:
+            self.assertEqual(None, state.from_)
+            self.assertEqual(None, state.lastSuccessfulHarvest)
 
-        self.assertEqual(None, state.getLastSuccessfulHarvestTime())
+            self.assertEqual(None, state.getLastSuccessfulHarvestTime())
 
-        state.from_ = "2019-01-01"
-        self.assertEqual(ZuluTime("2019-01-01T00:00:00Z"), state.getLastSuccessfulHarvestTime())
+            state.from_ = "2019-01-01"
+            self.assertEqual(ZuluTime("2019-01-01T00:00:00Z"), state.getLastSuccessfulHarvestTime())
 
 

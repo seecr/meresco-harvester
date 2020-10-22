@@ -60,7 +60,7 @@ from repositorystatustest import RepositoryStatusTest
 from repositorytest import RepositoryTest
 from smoothactiontest import SmoothActionTest
 from sruupdateuploadertest import SruUpdateUploaderTest
-#from statetest import StateTest
+from statetest import StateTest
 #from throughputanalysertest import ThroughputAnalyserTest
 #from timedprocesstest import TimedProcessTest
 #from timeslottest import TimeslotTest
