@@ -57,8 +57,8 @@ from mappingtest import MappingTest
 from oairequesttest import OaiRequestTest
 from onlineharvesttest import OnlineHarvestTest
 from repositorystatustest import RepositoryStatusTest
-#from repositorytest import RepositoryTest
-#from smoothactiontest import SmoothActionTest
+from repositorytest import RepositoryTest
+from smoothactiontest import SmoothActionTest
 #from sruupdateuploadertest import SruUpdateUploaderTest
 #from statetest import StateTest
 #from throughputanalysertest import ThroughputAnalyserTest

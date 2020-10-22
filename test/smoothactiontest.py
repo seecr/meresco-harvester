@@ -136,7 +136,7 @@ class SmoothActionTest(ActionTestCase):
 
     def testHarvest(self):
         harvester = CallTrace('harvester')
-        self.smoothaction._createHarvester = lambda: harvester
+        self.smoothaction._createHarvester = lambda: ([], harvester)
         harvester.returnValues['harvest'] = ('result', True)
 
         result = self.smoothaction._harvest()
@@ -151,8 +151,8 @@ class SmoothActionTest(ActionTestCase):
 
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEqual((None, None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToPreviousCleanState(self):
         self.writeLogLine(2010, 3, 2, token='')
@@ -164,8 +164,8 @@ class SmoothActionTest(ActionTestCase):
 
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEqual((None, None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def testResetState_ToStartAllOver(self):
         self.writeLogLine(2010, 3, 3, token='resumptionToken')
@@ -174,8 +174,8 @@ class SmoothActionTest(ActionTestCase):
 
         action.resetState()
 
-        h = self.newHarvesterLog()
-        self.assertEqual((None, None), (h._state.from_, h._state.token))
+        with self.newHarvesterLog() as h:
+            self.assertEqual((None, None), (h._state.from_, h._state.token))
 
     def newSmoothAction(self):
         action = SmoothAction(self.repository, stateDir=self.tempdir, logDir=self.tempdir, generalHarvestLog=NilEventLogger())
@@ -183,16 +183,9 @@ class SmoothActionTest(ActionTestCase):
         return action
 
 def writefile(filename, contents):
-    f = open(filename,'w')
-    try:
+    with open(filename,'w') as f:
         f.write(contents)
-    finally:
-        f.close()
 
 def readfile(filename):
-    f = open(filename)
-    try:
+    with open(filename) as f:
         return f.read()
-    finally:
-        f.close()
-

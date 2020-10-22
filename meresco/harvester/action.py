@@ -94,12 +94,13 @@ class Action(object):
                     (eventlogger,)
                 ),
             )
-        return be(helix)
+        return [harvesterLog], be(helix)
 
     def _createDeleteIds(self):
         harvesterLog = HarvesterLog(self._stateDir, self._logDir, self._repository.id)
+        deleteIdsLog = EventLogger(join(self._logDir, 'deleteids.log'))
         eventlogger = CompositeLogger([
-            (['*'], EventLogger(join(self._logDir, 'deleteids.log'))),
+            (['*'], deleteIdsLog),
             (['*'], harvesterLog.eventLogger()),
             (['ERROR', 'INFO', 'WARN'], self._generalHarvestLog),
         ])
@@ -110,7 +111,7 @@ class Action(object):
                 (eventlogger,),
                 (uploader,),
             )
-        return be(helix)
+        return [harvesterLog, deleteIdsLog], be(helix)
 
 
 class NoneAction(Action):
@@ -144,10 +145,14 @@ class DeleteIdsAction(Action):
 
         self.filename = join(self._stateDir, self._repository.id + '.ids')
 
-        d = self._createDeleteIds()
-        d.deleteFile(self.filename)
-        d.deleteFile(self.invalidIdsFilename)
-        d.markDeleted()
+        loggers, d = self._createDeleteIds()
+        try:
+            d.deleteFile(self.filename)
+            d.deleteFile(self.invalidIdsFilename)
+            d.markDeleted()
+        finally:
+            for each in loggers:
+                each.close()
         return True, 'Deleted', False
 
 
@@ -179,31 +184,42 @@ class SmoothAction(Action):
 
     def _smoothinit(self):
         if isfile(self.filename):
-            writeIds(self.oldfilename, set(readIds(self.filename) + readIds(self.invalidIdsFilename)))
+            writeIds(self.oldfilename, sorted(set(readIds(self.filename) + readIds(self.invalidIdsFilename))))
             writeIds(self.filename, set())
         else:
             open(self.oldfilename, 'w').close()
-        d = self._createDeleteIds()
-        d.markDeleted()
+        loggers, d = self._createDeleteIds()
+        try:
+            d.markDeleted()
+        finally:
+            for each in loggers:
+                each.close()
         return 'initialized.'
 
     def _finish(self):
         deletefilename = self.filename + '.delete'
         if not isfile(deletefilename):
-            writeIds(deletefilename, set(readIds(self.oldfilename)) - set(readIds(self.filename)))
+            writeIds(deletefilename, sorted(set(readIds(self.oldfilename)) - set(readIds(self.filename))))
         self._delete(deletefilename)
         remove(self.oldfilename)
         remove(deletefilename)
         return DONE
 
     def _delete(self, filename):
-        d = self._createDeleteIds()
-        d.deleteFile(filename)
+        loggers, d = self._createDeleteIds()
+        try:
+            d.deleteFile(filename)
+        finally:
+            for each in loggers:
+                each.close()
 
     def _harvest(self):
-        harvester = self._createHarvester()
-        return harvester.harvest()
-
+        loggers, harvester = self._createHarvester()
+        try:
+            return harvester.harvest()
+        finally:
+            for each in loggers:
+                each.close()
 
 DONE = 'Done.'
 

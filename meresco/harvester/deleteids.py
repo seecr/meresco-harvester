@@ -108,10 +108,6 @@ def readIds(filename):
     return ids
 
 def writeIds(filename, ids):
-    f = open(filename,'w')
-    try:
+    with open(filename,'w') as f:
         for id in ids:
-            f.write(escapeFilename(id))
-            f.write('\n')
-    finally:
-        f.close()
+            f.write("{}\n".format(escapeFilename(id)))
