@@ -51,7 +51,7 @@ from harvesterdataretrievetest import HarvesterDataRetrieveTest
 from harvesterdatatest import HarvesterDataTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
-#from idstest import IdsTest
+from idstest import IdsTest
 #from internalserverproxytest import InternalServerProxyTest
 #from mappingtest import MappingTest
 #from oairequesttest import OaiRequestTest
