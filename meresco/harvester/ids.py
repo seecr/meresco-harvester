@@ -33,9 +33,7 @@
 ## end license ##
 
 #
-import sys, os
-if sys.version_info[:2] == (2,3):
-    from sets import Set as set
+import os
 
 from os import makedirs
 from os.path import isdir, join
@@ -51,6 +49,7 @@ class Ids(object):
         self._ids = []
         uniqueIds = set()
         with open(self._filename, 'a+') as fp:
+            fp.seek(0)
             for id in (id for id in fp):
                 if id[-1] == '\n':
                     id = id[:-1]

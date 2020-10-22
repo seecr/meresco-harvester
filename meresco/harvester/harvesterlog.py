@@ -124,7 +124,8 @@ class HarvesterLog(object):
         self._invalidIds.add(uploadid)
         filePath = self._invalidDataMessageFilePath(uploadid)
         ensureDirectory(dirname(filePath))
-        open(filePath, 'w').write(message)
+        with open(filePath, 'w') as fp:
+            fp.write(message)
 
     def logIgnoredIdentifierWarning(self, uploadid):
         self._eventlogger.logWarning('IGNORED', uploadid)

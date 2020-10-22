@@ -49,7 +49,7 @@ from harvestactiontest import HarvestActionTest
 from harvesterdataactionstest import HarvesterDataActionsTest
 from harvesterdataretrievetest import HarvesterDataRetrieveTest
 from harvesterdatatest import HarvesterDataTest
-#from harvesterlogtest import HarvesterLogTest
+from harvesterlogtest import HarvesterLogTest
 #from harvestertest import HarvesterTest
 #from idstest import IdsTest
 #from internalserverproxytest import InternalServerProxyTest

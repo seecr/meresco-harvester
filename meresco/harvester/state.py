@@ -116,15 +116,14 @@ class State(object):
 
     def _forceFinalNewlineOnStatsFile(self):
         if isfile(self._statsfilename):
-            statsfile = open(self._statsfilename, 'r+')
-            statsfile.seek(0, SEEK_END)
-            if statsfile.tell() == 0:
-                return
-            statsfile.seek(statsfile.tell()-1, SEEK_SET)
-            lastchar = statsfile.read()
-            if lastchar != '\n':
-                statsfile.write('\n')
-            statsfile.close()
+            with open(self._statsfilename, 'r+') as statsfile:
+                statsfile.seek(0, SEEK_END)
+                if statsfile.tell() == 0:
+                    return
+                statsfile.seek(statsfile.tell()-1, SEEK_SET)
+                lastchar = statsfile.read()
+                if lastchar != '\n':
+                    statsfile.write('\n')
 
     def _write(self, *args):
         self._statsfile.write(*args)
