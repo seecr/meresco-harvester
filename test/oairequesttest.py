@@ -119,7 +119,8 @@ class OaiRequestTest(SeecrTestCase):
 
     def mockRequest(self, args):
         self.mockRequest_args = args
-        return parse(open('mocktud/00001.xml'))
+        with open('mocktud/00001.xml') as fp:
+            return parse(fp)
 
     def testListRecordArgs(self):
         self.request.request = self.mockRequest

@@ -54,7 +54,7 @@ from harvestertest import HarvesterTest
 from idstest import IdsTest
 from internalserverproxytest import InternalServerProxyTest
 from mappingtest import MappingTest
-#from oairequesttest import OaiRequestTest
+from oairequesttest import OaiRequestTest
 #from onlineharvesttest import OnlineHarvestTest
 #from repositorystatustest import RepositoryStatusTest
 #from repositorytest import RepositoryTest
