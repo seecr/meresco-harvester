@@ -52,7 +52,8 @@ class HarvesterData(object):
     def getDomain(self, identifier):
         domainFile = join(self._dataPath, '{0}.domain'.format(identifier))
         try:
-            return JsonDict.load(open(domainFile))
+            with open(domainFile) as fp:
+                return JsonDict.load(fp)
         except IOError:
             raise ValueError('idDoesNotExist')
 
@@ -76,7 +77,9 @@ class HarvesterData(object):
         return JsonDict.load(open(join(self._dataPath, '%s.domain' % domainId))).get('repositoryGroupIds',[])
 
     def getRepositoryGroup(self, identifier, domainId):
-        return JsonDict.load(open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))))
+        with open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))) as fp:
+            return JsonDict.load(fp)
+
     def getRepositoryGroups(self, domainId):
         return [self.getRepositoryGroup(repositoryGroupId, domainId) for repositoryGroupId in self.getRepositoryGroupIds(domainId)]
 
@@ -128,7 +131,8 @@ class HarvesterData(object):
 
     def getRepository(self, identifier, domainId):
         try:
-            return JsonDict.load(open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))))
+            with open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))) as fp:
+                return JsonDict.load(fp)
         except IOError:
             raise ValueError("idDoesNotExist")
 
