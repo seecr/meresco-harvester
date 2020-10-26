@@ -65,7 +65,7 @@ from throughputanalysertest import ThroughputAnalyserTest
 from timedprocesstest import TimedProcessTest
 from timeslottest import TimeslotTest
 from useractionstest import UserActionsTest
-#from filterfieldstest import FilterFieldsTest
+from filterfieldstest import FilterFieldsTest
 
 if __name__ == '__main__':
         unittest.main()
