@@ -34,9 +34,8 @@ from meresco.components import atomic_write
 
 from os.path import join, isfile
 from lxml.etree import parse, XML
-from cgi import parse_qs
 from xml.sax.saxutils import escape as escapeXml
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qs
 
 
 class User(object):
@@ -87,7 +86,8 @@ class UserActions(PostActions):
 
     def _parseUsersXml(self):
         if isfile(self._filename):
-            return parse(open(self._filename))
+            with open(self._filename) as fp:
+                return parse(fp)
         return XML("<users/>")
 
     def saveUsers(self, users):
