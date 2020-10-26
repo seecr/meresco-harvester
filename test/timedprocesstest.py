@@ -41,12 +41,9 @@ from time import sleep
 class TimedProcessTest(SeecrTestCase):
 
     def testSuccess(self):
-        fd = open(self.tempfile,'w')
-        try:
+        with open(self.tempfile,'w') as fd:
             fd.write("""import sys
 sys.exit(123)""")
-        finally:
-            fd.close()
 
         tp = TimedProcess()
         process = tp.executeScript(['python', self.tempfile], 10)
@@ -58,13 +55,10 @@ sys.exit(123)""")
         self.assertEqual(123, exitstatus)
 
     def testSuccessParameters(self):
-        fd = open(self.tempfile,'w')
-        try:
+        with open(self.tempfile,'w') as fd:
             fd.write("""import sys
-open('%s', 'w').write(str(len(sys.argv[1:])))
+with open('%s', 'w') as fp: fp.write(str(len(sys.argv[1:])))
 """ % join(self.tempdir, 'output.txt'))
-        finally:
-            fd.close()
 
         tp = TimedProcess()
         process = tp.executeScript(['python', self.tempfile, 'it','is','difficult'], 10)
@@ -73,18 +67,16 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
         exitstatus = tp.stopScript(process)
         self.assertFalse(tp.wasTimeout())
         self.assertTrue(tp.wasSuccess())
-        self.assertEqual('3', open(join(self.tempdir, 'output.txt')).read())
+        with open(join(self.tempdir, 'output.txt')) as fp:
+            self.assertEqual('3', fp.read())
         self.assertEqual(0, exitstatus)
 
     @stdout_replaced
     def testTimeout(self):
-        fd = open(self.tempfile,'w')
-        try:
+        with open(self.tempfile,'w') as fd:
             fd.write("""while True:
     pass
 """)
-        finally:
-            fd.close()
 
         tp = TimedProcess()
         process = tp.executeScript(['python', self.tempfile], 1)
@@ -94,4 +86,3 @@ open('%s', 'w').write(str(len(sys.argv[1:])))
         self.assertTrue(tp.wasTimeout())
         self.assertFalse(tp.wasSuccess())
         self.assertEqual(-9, exitstatus)
-
