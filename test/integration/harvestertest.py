@@ -448,7 +448,6 @@ class HarvesterTest(IntegrationTestCase):
         sleepWheel(5)
         log = open(stdoutfile).read()
         try:
-            self.assertFalse('Traceback' in log, log)
             newXyzOccurrences = log.count('[xyz]')
             self.assertEquals(xyzOccurrences, newXyzOccurrences, "%s!=%s\n%s" % (xyzOccurrences, newXyzOccurrences, log))
         finally:
