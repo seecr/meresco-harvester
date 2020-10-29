@@ -12,7 +12,8 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2015, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2015, 2017, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -54,7 +55,7 @@ class Repository(SaharaObject):
             'repositoryGroupId', 'baseurl', 'set',
             'collection', 'metadataPrefix', 'use',
             'targetId', 'mappingId', 'action',
-            'userAgent',
+            'userAgent', 'authorizationKey',
             'complete', 'maximumIgnore', 'continuous'], ['shopclosed'])
         self.domainId = domainId
         self.id = repositoryId
@@ -88,7 +89,7 @@ class Repository(SaharaObject):
         return UploaderFactory().createUploader(self.target(), logger, self.collection)
 
     def oairequest(self):
-        return self._oaiRequestClass(self.baseurl, userAgent=self.userAgent or None)
+        return self._oaiRequestClass(self.baseurl, userAgent=self.userAgent or None, authorizationKey=self.authorizationKey or None)
 
     def _createAction(self, stateDir, logDir, generalHarvestLog):
         return Action.create(self, stateDir=stateDir, logDir=logDir, generalHarvestLog=generalHarvestLog)

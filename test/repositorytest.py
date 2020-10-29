@@ -12,7 +12,8 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2010-2011, 2015 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013, 2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013, 2015, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -200,15 +201,16 @@ class RepositoryTest(SeecrTestCase):
         self.mock_repositoryActionDone_domainId = domainId
         self.mock_repositoryActionDone_repositoryId = repositoryId
 
-    def testPassOnUserAgent(self):
+    def testPassOnUserAgentAndAuthorizationKey(self):
         self.repo.userAgent = "This is the User agent"
+        self.repo.authorizationKey = "Let Me In"
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': 'This is the User agent'}), self.oaiRequestArgsKwargs)
+        self.assertEquals(((None,), {'userAgent': 'This is the User agent', 'authorizationKey': 'Let Me In'}), self.oaiRequestArgsKwargs)
 
     def testNoneUserAgentIfEmpty(self):
         self.repo.userAgent = ''
         self.repo.oairequest()
-        self.assertEquals(((None,), {'userAgent': None}), self.oaiRequestArgsKwargs)
+        self.assertEquals(((None,), {'userAgent': None, 'authorizationKey': None}), self.oaiRequestArgsKwargs)
 
 
 class MockAction(Action):

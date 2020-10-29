@@ -11,8 +11,9 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2017, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2011-2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -46,11 +47,12 @@ from __version__ import VERSION
 from meresco.harvester.namespaces import xpathFirst, xpath
 
 class OaiRequest(object):
-    def __init__(self, url, userAgent=None, _urlopen=None):
+    def __init__(self, url, userAgent=None, authorizationKey=None, _urlopen=None):
         self._url = url
         self._urlElements = urlparse(url)
         self._argslist = parse_qsl(self._urlElements[QUERY_POSITION_WITHIN_URLPARSE_RESULT])
-        self._userAgent = userAgent
+        self._userAgent = userAgent or ''
+        self._authorizationKey = authorizationKey or ''
         self._urlopen = _urlopen or urlopen
 
     def listRecords(self, **kwargs):
@@ -83,13 +85,19 @@ class OaiRequest(object):
             raise OAIError.create(self._buildRequestUrl(argslist), OaiResponse(result))
         return OaiResponse(result)
 
+    def _headers(self):
+        headers = {'User-Agent': self._userAgent.strip() or "Meresco Harvester {}".format(VERSION)}
+        if self._authorizationKey.strip():
+            headers['Authorization'] = "Bearer {}".format(self._authorizationKey)
+        return headers
+
     def _request(self, argslist):
         def doUrlopen(context=None):
             return self._urlopen(
                 Request(
                     self._buildRequestUrl(argslist),
                     None,
-                    {'User-Agent': self._userAgent or "Meresco Harvester {}".format(VERSION)}),
+                    self._headers()),
                 timeout=5*60,
                 context=context)
         try:

@@ -6,8 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2015, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2015, 2019-2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2015, 2019 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -216,6 +217,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             action=action,
             shopclosed=shopclosed or [],
             userAgent='',
+            authorizationKey='',
         )
 
 

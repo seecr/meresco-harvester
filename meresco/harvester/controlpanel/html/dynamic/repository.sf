@@ -9,6 +9,7 @@
 #
 # Copyright (C) 2017, 2019-2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2019-2020 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -54,6 +55,18 @@ def _contents(tag, arguments, **kwargs):
     yield common.showErrorMessage(arguments)
     yield _repository(tag, domain, repository)
 
+@tag_compose
+def tablerow(tag, label):
+    with tag('tr'):
+        with tag('td'):
+            yield label
+        with tag('td'):
+            yield
+def textinput(tag, name, value):
+    with tag('input', size='50', type_='text', name=name, value=value):
+        return
+        yield
+
 
 def _repository(tag, domain, repository):
     domainId = domain.get('identifier')
@@ -68,39 +81,25 @@ def _repository(tag, domain, repository):
             <input type="hidden" name="identifier" value="{repositoryId}"/>
             <input type="hidden" name="domainId" value="{domainId}"/>
             <input type="hidden" name="repositoryGroupId" value="{repositoryGroupId}">
-            <table class="edit" cellspacing="0" cellpadding="0">
-                <tr>
-                    <td>Id:</td>
-                    <td>{repositoryId}</td>
-                </tr>
-                <tr>
-                    <td>Baseurl:</td>
-                    <td><input size="50" type="text" name="baseurl" value="{baseurl}"></td>
-                </tr>
-                <tr>
-                    <td>Set:</td>
-                    <td><input size="50" type="text" name="set" value="{setName}"></td>
-                </tr>
-                <tr>
-                    <td>Metadata Prefix:</td>
-                    <td><input size="50" type="text" name="metadataPrefix" value="{metadataPrefix}"></td>
-                </tr>
-                <tr>
-                    <td>User-Agent:</td>
-                    <td><input size="50" type="text" name="userAgent" value="{userAgent}"></td>
-                </tr>
-                <tr>
-                    <td>Mapping:</td>
-                    <td>""".format(
-                        repositoryId=repository.get('identifier'),
-                        repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId))),
-                        domainId=domainId,
-                        repositoryGroupId=repository['repositoryGroupId'],
-                        baseurl=repository.get('baseurl') or '',
-                        userAgent=repository.get('userAgent') or '',
-                        setName=repository.get('set') or '',
-                        metadataPrefix=repository.get('metadataPrefix') or '',
-                    )
+            <table class="edit" cellspacing="0" cellpadding="0">""".format(
+        repositoryId=repository.get('identifier'),
+        repositoryEditLink="/repository?{}".format(urlencode(dict(domainId=domainId))),
+        domainId=domainId,
+        repositoryGroupId=repository['repositoryGroupId'],
+    )
+    with tablerow(tag, 'Id:'):
+        yield repository.get('identifier')
+    with tablerow(tag, 'Baseurl:'):
+        yield textinput(tag, "baseurl", repository.get('baseurl'))
+    with tablerow(tag, 'Set:'):
+        yield textinput(tag, "set", repository.get('set'))
+    with tablerow(tag, 'Metadata Prefix:'):
+        yield textinput(tag, "metadataPrefix", repository.get('metadataPrefix'))
+    with tablerow(tag, 'User-Agent:'):
+        yield textinput(tag, "userAgent", repository.get('userAgent'))
+    with tablerow(tag, 'Authorization Key:'):
+        yield textinput(tag, "authorizationKey", repository.get('authorizationKey'))
+    yield "<tr><td>Mapping:</td><td>"
     yield common.dropdown(name="mappingId", options=[('', '')] + mappings, selected=repository.get('mappingId') or '')
     yield """
                     </td>

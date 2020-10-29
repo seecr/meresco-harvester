@@ -6,8 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015-2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2011-2012, 2015-2017, 2019-2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2012, 2015, 2019 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -153,7 +154,7 @@ class HarvesterData(object):
         self._delete("{}.{}.repository".format(domainId, identifier))
         self._save(group, "{}.{}.repositoryGroup".format(domainId, repositoryGroupId))
 
-    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed, userAgent, **kwargs):
+    def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed, userAgent, authorizationKey, **kwargs):
         repository = self.getRepository(identifier, domainId)
         repository['baseurl'] = baseurl
         repository['set'] = set
@@ -167,6 +168,7 @@ class HarvesterData(object):
         repository['continuous'] = continuous
         repository['action'] = action
         repository['userAgent'] = userAgent
+        repository['authorizationKey'] = authorizationKey
         repository['shopclosed'] = shopclosed
         repository.update(**kwargs)
         self._save(repository, "{}.{}.repository".format(domainId, identifier))

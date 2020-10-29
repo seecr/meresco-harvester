@@ -11,8 +11,9 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011-2014, 2017, 2019 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2011-2014, 2017, 2019-2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2011-2012, 2019 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -59,6 +60,19 @@ class OaiRequestTest(SeecrTestCase):
         request.identify()
 
         self.assertEquals("Meresco Harvester {}".format(VERSION), args['args'][0].headers['User-agent'])
+
+    def testHeaders(self):
+        self.assertEqual({"User-Agent": "Meresco Harvester {}".format(VERSION)},
+                OaiRequest('http://example.com')._headers())
+        self.assertEqual({"User-Agent": "User Agent 3.0"},
+                OaiRequest('http://example.com', userAgent="User Agent 3.0")._headers())
+        self.assertEqual({"User-Agent": "Meresco Harvester {}".format(VERSION)},
+                OaiRequest('http://example.com', userAgent='')._headers())
+        self.assertEqual({"User-Agent": "Meresco Harvester {}".format(VERSION)},
+                OaiRequest('http://example.com', userAgent=' ')._headers())
+        self.assertEqual({"User-Agent": "Meresco Harvester {}".format(VERSION),
+                "Authorization": "Bearer GivenKey"},
+                OaiRequest('http://example.com', authorizationKey='GivenKey')._headers())
 
     def testContextSetToTLS12(self):
         from ssl import SSLError, PROTOCOL_TLSv1_2

@@ -6,8 +6,9 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2011-2012, 2015-2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2015-2016, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2012, 2015 Stichting Kennisnet http://www.kennisnet.nl
+# Copyright (C) 2020 SURF https://surf.nl
 #
 # This file is part of "Meresco Harvester"
 #
@@ -89,7 +90,7 @@ class HarvesterDataTest(SeecrTestCase):
             'name': {'en': 'Group1', 'nl': 'Groep1'},
             'repositoryIds': ['repository1', 'repository2']
         }, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
-    
+
     def testGetRepositoryGroups(self):
         self.assertEqual([
             {   'identifier': 'Group1',
@@ -265,6 +266,7 @@ class HarvesterDataTest(SeecrTestCase):
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
                 userAgent='',
+                authorizationKey='',
             )
         repository = self.hd.getRepository('repository1', 'adomain')
         self.assertEquals('baseurl', repository['baseurl'])
@@ -296,6 +298,7 @@ class HarvesterDataTest(SeecrTestCase):
                 action='action',
                 shopclosed=['40:1:09:55-40:1:10:00'],
                 userAgent='',
+                authorizationKey='',
             )
         self.hd.repositoryDone(identifier='repository1', domainId='adomain')
         repository = self.hd.getRepository('repository1', 'adomain')
