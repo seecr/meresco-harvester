@@ -209,8 +209,10 @@ class HarvesterTest(IntegrationTestCase):
 
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, action='refresh')
 
+        self.startHarvester(repository=REPOSITORY)
         logs = self.getLogs()[len(oldlogs):]
         self.assertEquals(0, len(logs))
+        self.startHarvester(repository=REPOSITORY)
         logs = self.getLogs()
         self.assertEquals('/oai', logs[-1]["path"])
         self.assertEquals({'verb': ['ListRecords'], 'metadataPrefix': ['oai_dc']}, logs[-1]["arguments"])
