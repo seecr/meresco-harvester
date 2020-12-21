@@ -12,7 +12,8 @@
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
 # Copyright (C) 2011 Stichting Kennisnet http://www.kennisnet.nl
-# Copyright (C) 2013, 2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013, 2017, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020 Netherlands Institute for Sound and Vision https://beeldengeluid.nl/
 #
 # This file is part of "Meresco Harvester"
 #
@@ -44,11 +45,12 @@ from harvesterlog import idfilename
 
 
 class DeleteIds(Observable):
-    def __init__(self, repository, stateDir):
+    def __init__(self, repository, stateDir, batchSize=1000):
         Observable.__init__(self)
         self._stateDir = stateDir
         self._repository = repository
         self._filename = idfilename(self._stateDir, self._repository.id)
+        self._batchSize = batchSize
 
     def ids(self):
         return readIds(self._filename)
@@ -66,7 +68,7 @@ class DeleteIds(Observable):
 
     def _delete(self):
         ids = self.ids()
-        done = []
+        processed = 0
         try:
             for id in ids:
                 try:
@@ -74,17 +76,18 @@ class DeleteIds(Observable):
                     anUpload.id = id
                     self.do.notifyHarvestedRecord(anUpload.id)
                     self.do.delete(anUpload)
-                    done.append(id)
+                    processed += 1
+                    if processed % self._batchSize == 0 and processed > 0:
+                        self._writeIds(ids[processed:])
                 except:
                     xtype, xval, xtb = sys.exc_info()
                     errorMessage = '|'.join(map(str.strip,format_exception(xtype, xval, xtb)))
                     self.do.logError(errorMessage, id=id)
                     raise
-            return ids[len(done):]
         finally:
-            self._finish(ids[len(done):])
+            self._writeIds(ids[processed:])
 
-    def _finish(self, remainingIDs):
+    def _writeIds(self, remainingIDs):
         writeIds(self._filename, remainingIDs)
 
     def markDeleted(self):

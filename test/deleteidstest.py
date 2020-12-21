@@ -6,7 +6,8 @@
 # SURFnet by:
 # Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
-# Copyright (C) 2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2013, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020 Netherlands Institute for Sound and Vision https://beeldengeluid.nl/
 #
 # This file is part of "Meresco Harvester"
 #
@@ -26,8 +27,9 @@
 #
 ## end license ##
 
-from seecr.test import SeecrTestCase
-from meresco.harvester.deleteids import readIds, writeIds
+from seecr.test import SeecrTestCase, CallTrace
+from meresco.components import Bucket
+from meresco.harvester.deleteids import readIds, writeIds, DeleteIds
 from os.path import join
 
 class DeleteIdsTest(SeecrTestCase):
@@ -42,4 +44,32 @@ class DeleteIdsTest(SeecrTestCase):
         filename = join(self.tempdir, "test.ids")
         writeIds(filename, ['uploadId1', '\n  uploadId2', '   uploadId3'])
         self.assertEquals('uploadId1\n%0A  uploadId2\n   uploadId3\n', open(filename).read())
+
+    def testDeleteWithError(self):
+        writeIds(join(self.tempdir, "test.ids"), ['id:{}'.format(i) for i in xrange(10)])
+        deleteIds = DeleteIds(Bucket(id='test'), self.tempdir)
+        def delete(anUpload):
+            if anUpload.id == 'id:7':
+                raise ValueError('fout')
+        observer = CallTrace(methods=dict(delete=delete))
+        deleteIds.addObserver(observer)
+        self.assertRaises(ValueError, lambda: deleteIds.delete())
+        self.assertEqual(['id:7', 'id:8','id:9'], readIds(join(self.tempdir, 'test.ids')))
+        self.assertEqual(8, len([m for m in observer.calledMethodNames() if m == 'delete']))
+
+    def testDeleteWithBatches(self):
+        writeIds(join(self.tempdir, "test.ids"), ['id:{}'.format(i) for i in xrange(10)])
+        deleteIds = DeleteIds(Bucket(id='test'), self.tempdir, batchSize=3)
+        origWriteIds = deleteIds._writeIds
+        idBatches = []
+        def myWriteIds(ids):
+            idBatches.append(ids)
+            origWriteIds(ids)
+        deleteIds._writeIds = myWriteIds
+        observer = CallTrace()
+        deleteIds.addObserver(observer)
+        deleteIds.delete()
+        self.assertEqual([], readIds(join(self.tempdir, 'test.ids')))
+        self.assertEqual(10, len([m for m in observer.calledMethodNames() if m == 'delete']))
+        self.assertEqual([7, 4, 1, 0], [len(b) for b in idBatches])
 
