@@ -113,6 +113,12 @@ Started: 2005-01-06 16:16:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2
         s = State(self.tempdir, 'repository')
         self.assertEquals('2012-01-01T09:00:00Z', s.from_)
 
+    def testLastSuccessfulHarvestTime(self):
+        with open(join(self.tempdir, 'repository.next'), 'w') as f:
+            f.write('{"from": "2020-12-21T01:42:24.403578+01:00"}')
+        s = State(self.tempdir, 'repository')
+        self.assertEqual(ZuluTime('2020-12-21T00:42:24Z').zulu(), s.getLastSuccessfulHarvestTime().zulu())
+
     def testNoStartDateIfLastLogLineIsDeletedIds(self):
         f = open(join(self.tempdir, 'repository.stats'), 'w')
         f.write('''Started: 2005-01-03 16:10:56, Harvested/Uploaded/Deleted/Total: 1/2/3/4, Done: 2005-01-03 16:11:45, ResumptionToken:

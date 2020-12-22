@@ -12,7 +12,7 @@ python-meresco-xml (>= 4.3.2)
 python-meresco-xml (<< 4.4)
 python-meresco-html (>= 1.5.32)
 python-meresco-html (<< 1.6)
-python-seecr-zulutime (>= 0.2.15)
+python-seecr-zulutime (>= 0.2.16)
 python-seecr-zulutime (<< 0.3)
 python-simplejson
 gustos-common
