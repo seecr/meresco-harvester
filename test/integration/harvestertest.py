@@ -37,8 +37,7 @@ from threading import Thread
 from lxml.etree import parse
 
 from seecr.test import IntegrationTestCase
-from seecr.test.utils import sleepWheel
-from seecr.test.utils2 import getRequest
+from seecr.test.utils import sleepWheel, getRequest
 
 from meresco.components.json import JsonDict
 from meresco.components import lxmltostring
@@ -198,7 +197,9 @@ class HarvesterTest(IntegrationTestCase):
 
     def testRefresh(self):
         oldlogs = self.getLogs()
-        log = HarvesterLog(stateDir=join(self.harvesterStateDir, DOMAIN), logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
+        log = HarvesterLog(
+            stateDir=join(self.harvesterStateDir, DOMAIN),
+            logDir=join(self.harvesterLogDir, DOMAIN), name=REPOSITORY)
         log.startRepository()
         for uploadId in ['%s:oai:record:%02d' % (REPOSITORY, i) for i in [1,7,120,121]]:
             log.notifyHarvestedRecord(uploadId)
@@ -313,7 +314,10 @@ class HarvesterTest(IntegrationTestCase):
 
         self.controlHelper(action='raiseExceptionOnIds', id=[])
         self.emptyDumpDir()
+        self.assertEqual(0, self.sizeDumpDir())
         self.startHarvester(repository=REPOSITORY)
+        from time import sleep
+        sleep(1)
         self.assertEqual(len(deletesTodo), self.sizeDumpDir())
 
     def testRefreshWithIgnoredRecords(self):
@@ -445,12 +449,14 @@ class HarvesterTest(IntegrationTestCase):
         while not listdir(self.dumpDir):
             sleep(0.1)
         sleepWheel(1)
-        log = open(stdoutfile).read()
+        def _readFile(name):
+            with open(name) as fp:
+                return fp.read()
+        log = _readFile(stdoutfile)
         xyzOccurrences = log.count('[xyz]')
 
         self.removeRepository(DOMAIN, 'xyz', REPOSITORYGROUP)
-        sleepWheel(5)
-        log = open(stdoutfile).read()
+        log = _readFile(stdoutfile)
         try:
             newXyzOccurrences = log.count('[xyz]')
             self.assertEqual(xyzOccurrences, newXyzOccurrences, "%s!=%s\n%s" % (xyzOccurrences, newXyzOccurrences, log))

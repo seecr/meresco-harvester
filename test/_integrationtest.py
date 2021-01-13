@@ -36,7 +36,7 @@ from seecrdeps import includeParentAndDeps       #DO_NOT_DISTRIBUTE
 includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
 
 from seecr.test.testrunner import TestRunner
-from .integration import HarvesterIntegrationState
+from integration import HarvesterIntegrationState
 
 if __name__ == '__main__':
     runner = TestRunner()

@@ -126,7 +126,7 @@ class HarvestAction(Action):
         if self._repository.shopClosed():
             return False, 'Not harvesting outside timeslots.', False
 
-        harvester = self._createHarvester()
+        _, harvester = self._createHarvester()
         message, hasResumptionToken = harvester.harvest()
         return False, message, hasResumptionToken
 

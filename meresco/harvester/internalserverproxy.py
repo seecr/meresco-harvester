@@ -85,7 +85,7 @@ class InternalServerProxy(object):
     def repositoryActionDone(self, domainId, repositoryId):
         if self._doSetActionDone:
             data = urlencode({'domainId': domainId, 'identifier': repositoryId})
-            self._urlopen("{}/action/repositoryDone".format(self._internalurl), data=data).read()
+            self._urlopen("{}/action/repositoryDone".format(self._internalurl), data=data.encode()).read()
 
     def urlJsonDict(self, **kwargs):
         arguments = dict((k ,v) for k, v in list(kwargs.items()) if v)

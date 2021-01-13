@@ -51,26 +51,31 @@ class InternalServerTest(IntegrationTestCase):
     def testListInvalidRecordsForOneRepository(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalid', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse='lxml')
-        self.assertEqual(['oai:record:08', 'oai:record:07', 'oai:record:05', 'oai:record:04', 'oai:record:02/&gkn', 'oai:record:01'], result.xpath("/div/table/tr/td[@class='link']/a/text()"))
-        self.assertEqual("/page/invalidRecord/?recordId=oai%3Arecord%3A08&domainId=adomain&repositoryId=integrationtest", result.xpath("/div/table/tr/td[@class='link']/a")[0].attrib['href'])
-        self.assertEqual("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalid', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse=True)
+        self.assertEqual([
+            'oai:record:08', 'oai:record:07',
+            'oai:record:05', 'oai:record:04',
+            'oai:record:02/&gkn', 'oai:record:01'],
+            result.xpath("/html/body/div/table/tr/td[@class='link']/a/text()"))
+
+        self.assertEqual("/page/invalidRecord/?recordId=oai%3Arecord%3A08&domainId=adomain&repositoryId=integrationtest", result.xpath("/html/body/div/table/tr/td[@class='link']/a")[0].attrib['href'])
+        self.assertEqual("/page/showHarvesterStatus/show?domainId=adomain&repositoryId=integrationtest", result.xpath("/html/body/div/p/a/@href")[0])
 
     def testViewInvalidRecordWithoutDetails(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:02/&gkn'}, parse='lxml')
         self.assertEqual("Repository integrationtest - Record oai:record:02/&gkn", result.xpath("//h3/text()")[0])
-        self.assertEqual("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
-        self.assertEqual(["No error message."], result.xpath("/div/pre/text()"))
+        self.assertEqual("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/html/body/div/p/a/@href")[0])
+        self.assertEqual(["No error message."], result.xpath("/html/body/div/pre/text()"))
 
     def testViewInvalidRecord(self):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
-        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:01'}, parse='lxml')
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalidRecord', {'domainId': 'adomain', 'repositoryId': 'integrationtest', 'recordId': 'oai:record:01'}, parse=True)
         self.assertEqual("Repository integrationtest - Record oai:record:01", result.xpath("//h3/text()")[0])
-        self.assertEqual("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/div/p/a/@href")[0])
-        self.assertEqual(["Invalid data"], result.xpath("/div/pre/text()"))
+        self.assertEqual("/page/invalid/?domainId=adomain&repositoryId=integrationtest", result.xpath("/html/body/div/p/a/@href")[0])
+        self.assertEqual(["Invalid data"], result.xpath("/html/body/div/pre/text()"))
 
     def testGetStatusForDomainAndRepositoryId(self):
         self.controlHelper(action='allInvalid')

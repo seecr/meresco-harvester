@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ## begin license ##
 #
 # "Meresco Harvester" consists of two subsystems, namely an OAI-harvester and
@@ -81,7 +81,7 @@ class Dump(object):
     def handleRequest(self, Body='', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml; charset=utf-8\r\n', ''])
         try:
-            updateRequest = XML(Body)
+            updateRequest = XML(bytes(Body, encoding='utf-8'))
             recordId = xpathFirst(updateRequest, 'ucp:recordIdentifier/text()')
             action = xpathFirst(updateRequest, 'ucp:action/text()')
             if self._allInvalid and action == "info:srw/action/1/replace":
@@ -172,6 +172,7 @@ class Control(Observable):
 logLines = []
 class Log(Observable):
     def handleRequest(self, RequestURI, **kwargs):
+        print("LOG HandleRequest", RequestURI)
         logLines.append(RequestURI)
         yield self.all.handleRequest(RequestURI=RequestURI, **kwargs)
 
@@ -230,13 +231,14 @@ def main(reactor, port, directory):
         )
     )
     list(compose(server.once.observer_init()))
+    oaiJazz.updateMetadataFormat(prefix="oai_dc", schema="http://www.openarchives.org/OAI/2.0/oai_dc.xsd", namespace="http://www.openarchives.org/OAI/2.0/oai_dc/")
     for i in range(1,16):
         if i == 2:
             identifier = 'oai:record:02/&gkn'
         else:
             identifier = 'oai:record:%02d' % i
         oaiStorage.addData(identifier=identifier, name='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % escapeXml(identifier))
-        oaiJazz.addOaiRecord(identifier=identifier, metadataFormats=[('oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd', 'http://www.openarchives.org/OAI/2.0/oai_dc/')])
+        oaiJazz.addOaiRecord(identifier=identifier, metadataPrefixes=['oai_dc'])
         if i in [3,6]:
             list(compose(oaiJazz.delete(identifier=identifier)))
 

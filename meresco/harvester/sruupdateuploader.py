@@ -93,11 +93,12 @@ class SruUpdateUploader(VirtualUploader):
                 break
             self._logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
-
         if status != HTTP_OK:
             raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (str(status.value), message))
 
-        version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(bytes(message, encoding="utf-8"))))
+        #version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(bytes(message, encoding="utf-8"))))
+        version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(message)))
+        message = message.decode()
 
         if operationStatus == 'fail':
             if diagnostics[0] == 'info:srw/diagnostic/12/1':
@@ -112,7 +113,7 @@ class SruUpdateUploader(VirtualUploader):
         connection.putheader("Content-Type", "text/xml; charset=\"utf-8\"")
         connection.putheader("Content-Length", str(len(data)))
         connection.endheaders()
-        connection.send(data)
+        connection.send(data.encode())
 
         result = connection.getresponse()
         message = result.read()

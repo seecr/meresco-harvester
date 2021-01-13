@@ -176,8 +176,8 @@ class StartHarvester(object):
                     running.add(repositoryId)
                 try:
                     readers, _, _ = select(list(processes.keys()), [], [])
-                except error as xxx_todo_changeme:
-                    (errno, description) = xxx_todo_changeme.args
+                except error as e:
+                    (errno, description) = e.args
                     if errno == EINTR:
                         pass
                     else:
@@ -193,18 +193,19 @@ class StartHarvester(object):
                         if e.errno == EAGAIN:
                             continue
                         raise
-                    if reader == process.stdout.fileno():
-                        stdout.write(pipeContent)
-                        stdout.flush()
-                    else:
-                        stderr.write(pipeContent)
-                        stderr.flush()
+
+                    poFileno = process.stdout.fileno()
+                    peFileno = process.stderr.fileno()
+
+                    strm = stdout if reader == poFileno else stderr
+                    strm.write(pipeContent.decode() if type(pipeContent) is bytes else pipeContent)
+                    strm.flush()
 
                     if process.poll() is not None:
                         exitstatus = t.stopScript(process)
                         running.remove(repositoryId)
-                        del processes[process.stdout.fileno()]
-                        del processes[process.stderr.fileno()]
+                        del processes[poFileno]
+                        del processes[peFileno]
                         if exitstatus == AGAIN_EXITCODE:
                             waiting.insert(0, repositoryId)
                         else:
