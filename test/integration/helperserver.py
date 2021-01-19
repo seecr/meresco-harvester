@@ -147,7 +147,8 @@ class BadOai(object):
         filepath = join(testdataDir, filename)
         if isfile(filepath):
             yield 'HTTP/1.0 200 Ok\r\nContent-Type: text/xml; charset=utf-8\r\n\r\n'
-            yield open(filepath).read()
+            with open(filepath) as fp:
+                yield fp.read()
         else:
             yield 'HTTP/1.0 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n'
             l = 'Error: file {} not found.'.format(repr(filepath))

@@ -40,7 +40,7 @@ class InternalServerProxyTest(SeecrTestCase):
         self.requests = []
         def _urlopen(url, data=None):
             if data:
-                self.requests.append((url, data))
+                self.requests.append((url, data.decode()))
             else:
                 self.requests.append(url)
             return StringIO(JsonDict(self.response).dumps())

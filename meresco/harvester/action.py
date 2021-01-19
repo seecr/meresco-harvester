@@ -37,11 +37,12 @@ from os import remove
 
 from weightless.core import be
 
-from .deleteids import DeleteIds, readIds, writeIds
+from .deleteids import DeleteIds
 from .eventlogger import CompositeLogger, EventLogger
 from .harvester import Harvester, NOTHING_TO_DO
 from .harvesterlog import HarvesterLog
 from .state import State
+from .ids import readIds, writeIds
 
 
 class Action(object):

@@ -36,24 +36,21 @@
 import sys
 from traceback import format_exception
 
-from escaping import escapeFilename, unescapeFilename
-
 from meresco.core import Observable
 
 from .mapping import Upload
-from .harvesterlog import idfilename
-
+from .ids import idfilename
 
 class DeleteIds(Observable):
     def __init__(self, repository, stateDir, batchSize=1000):
         Observable.__init__(self)
         self._stateDir = stateDir
         self._repository = repository
-        self._filename = idfilename(self._stateDir, self._repository.id)
         self._batchSize = batchSize
+        self._invalid = self._deleteIds = False
 
     def ids(self):
-        return readIds(self._filename)
+        return self.call.getIds(invalid=self._invalid, deleteIds=self._deleteIds)
 
     def delete(self):
         self.do.start()
@@ -63,8 +60,13 @@ class DeleteIds(Observable):
             self.do.stop()
 
     def deleteFile(self, filename):
-        self._filename = filename
-        self.delete()
+        self._invalid = filename.endswith("_invalid.ids")
+        self._deleteIds = filename.endswith(".delete")
+        try:
+            self.delete()
+        finally:
+            self._invalid = False
+            self._deleteIds = False
 
     def _delete(self):
         ids = self.ids()
@@ -76,38 +78,18 @@ class DeleteIds(Observable):
                     anUpload.id = id
                     self.do.notifyHarvestedRecord(anUpload.id)
                     self.do.delete(anUpload)
+                    if not self._invalid and not self._deleteIds:
+                        self.do.deleteIdentifier(id)
                     processed += 1
                     if processed % self._batchSize == 0 and processed > 0:
-                        self._writeIds(ids[processed:])
+                        self.call.flushIds(invalid=self._invalid, deleteIds=self._deleteIds)
                 except:
                     xtype, xval, xtb = sys.exc_info()
                     errorMessage = '|'.join(map(str.strip,format_exception(xtype, xval, xtb)))
                     self.do.logError(errorMessage, id=id)
                     raise
         finally:
-            self._writeIds(ids[processed:])
-
-    def _writeIds(self, remainingIDs):
-        writeIds(self._filename, remainingIDs)
+            self.call.flushIds(invalid=self._invalid, deleteIds=self._deleteIds)
 
     def markDeleted(self):
         self.do.markDeleted()
-
-
-def readIds(filename):
-    ids = []
-    uniqueIds = set()
-    with open(filename) as fp:
-        for id in (unescapeFilename(id) for id in fp):
-            if id[-1] == '\n':
-                id = id[:-1]
-            if id in uniqueIds:
-                continue
-            ids.append(id)
-            uniqueIds.add(id)
-    return ids
-
-def writeIds(filename, ids):
-    with open(filename,'w') as f:
-        for id in ids:
-            f.write("{}\n".format(escapeFilename(id)))

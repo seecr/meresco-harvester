@@ -33,7 +33,8 @@
 ## end license ##
 
 from seecr.test import SeecrTestCase
-from meresco.harvester.ids import Ids
+from meresco.harvester.ids import Ids, readIds, writeIds
+from os.path import join
 
 from contextlib import contextmanager
 @contextmanager
@@ -106,6 +107,36 @@ class IdsTest(SeecrTestCase):
             ids.remove('\n   id:1')
             ids.remove('   id:2')
             self.assertEqual([], list(ids))
+    
+    def testReadIds(self):
+        filename = join(self.tempdir, "test.ids")
+        with open(filename, "w") as fp:
+            fp.write("uploadId1\n%0A  uploadId2\n   uploadId3")
+
+        self.assertEqual(['uploadId1', '\n  uploadId2', '   uploadId3'], readIds(filename))
+
+    def testWriteIds(self):
+        filename = join(self.tempdir, "test.ids")
+        writeIds(filename, ['uploadId1', '\n  uploadId2', '   uploadId3'])
+        with open(filename) as fp:
+            self.assertEqual('uploadId1\n%0A  uploadId2\n   uploadId3\n', fp.read())
+
+    def testEscaping(self):
+        ids = Ids(self.tempdir, "pruebo")
+        try:
+            ids.add("needs_\n_escape")
+            with open(join(self.tempdir, "pruebo.ids")) as fp:
+                self.assertEqual('needs_%0A_escape\n', fp.read())
+            self.assertEqual(['needs_\n_escape'], ids.getIds())
+            ids.reopen()
+            with open(join(self.tempdir, "pruebo.ids")) as fp:
+                self.assertEqual('needs_%0A_escape\n', fp.read())
+            self.assertEqual(['needs_\n_escape'], ids.getIds())
+            ids.reopen()
+            self.assertEqual(['needs_\n_escape'], ids.getIds())
+        finally:
+            ids.close()
+
 
     def writeTestIds(self, name, ids):
         with open("{}/{}.ids".format(self.tempdir, name), 'w') as w:

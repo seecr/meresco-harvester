@@ -29,49 +29,60 @@
 
 from seecr.test import SeecrTestCase, CallTrace
 from meresco.components import Bucket
-from meresco.harvester.deleteids import readIds, writeIds, DeleteIds
+from meresco.harvester.deleteids import DeleteIds
+from meresco.harvester.ids import Ids, readIds
 from os.path import join
 
 class DeleteIdsTest(SeecrTestCase):
 
-    def testReadIds(self):
-        filename = join(self.tempdir, "test.ids")
-        with open(filename, "w") as fp:
-            fp.write("uploadId1\n%0A  uploadId2\n   uploadId3")
-
-        self.assertEqual(['uploadId1', '\n  uploadId2', '   uploadId3'], readIds(filename))
-
-    def testWriteIds(self):
-        filename = join(self.tempdir, "test.ids")
-        writeIds(filename, ['uploadId1', '\n  uploadId2', '   uploadId3'])
-        with open(filename) as fp:
-            self.assertEqual('uploadId1\n%0A  uploadId2\n   uploadId3\n', fp.read())
-
     def testDeleteWithError(self):
-        writeIds(join(self.tempdir, "test.ids"), ['id:{}'.format(i) for i in xrange(10)])
-        deleteIds = DeleteIds(Bucket(id='test'), self.tempdir)
-        def delete(anUpload):
-            if anUpload.id == 'id:7':
-                raise ValueError('fout')
-        observer = CallTrace(methods=dict(delete=delete))
-        deleteIds.addObserver(observer)
-        self.assertRaises(ValueError, lambda: deleteIds.delete())
-        self.assertEqual(['id:7', 'id:8','id:9'], readIds(join(self.tempdir, 'test.ids')))
-        self.assertEqual(8, len([m for m in observer.calledMethodNames() if m == 'delete']))
+        ids = Ids(self.tempdir, "test")
+        try:
+            for i in range(10):
+                ids.add('id:{}'.format(i))
+
+            deleteIds = DeleteIds(Bucket(id='test'), self.tempdir)
+
+            def delete(anUpload):
+                if anUpload.id == 'id:7':
+                    raise ValueError('fout')
+            observer = CallTrace(methods=dict(
+                getIds=lambda **kwargs: ids.getIds(),
+                delete=delete,
+                deleteIdentifier=ids.remove,
+                flushIds=lambda **kwargs: ids.reopen()))
+            deleteIds.addObserver(observer)
+            self.assertRaises(ValueError, lambda: deleteIds.delete())
+            self.assertEqual(['id:7', 'id:8','id:9'], readIds(join(self.tempdir, 'test.ids')))
+            self.assertEqual(8, len([m for m in observer.calledMethodNames() if m == 'delete']))
+        finally:
+            ids.close()
 
     def testDeleteWithBatches(self):
-        writeIds(join(self.tempdir, "test.ids"), ['id:{}'.format(i) for i in xrange(10)])
-        deleteIds = DeleteIds(Bucket(id='test'), self.tempdir, batchSize=3)
-        origWriteIds = deleteIds._writeIds
-        idBatches = []
-        def myWriteIds(ids):
-            idBatches.append(ids)
-            origWriteIds(ids)
-        deleteIds._writeIds = myWriteIds
         observer = CallTrace()
-        deleteIds.addObserver(observer)
-        deleteIds.delete()
-        self.assertEqual([], readIds(join(self.tempdir, 'test.ids')))
-        self.assertEqual(10, len([m for m in observer.calledMethodNames() if m == 'delete']))
-        self.assertEqual([7, 4, 1, 0], [len(b) for b in idBatches])
+        ids = Ids(self.tempdir, "test")
+        try:
+            for i in range(10):
+                ids.add('id:{}'.format(i))
+            deleteIds = DeleteIds(Bucket(id='test'), self.tempdir, batchSize=3)
 
+            batches = []
+            def reopen():
+                with open(join(self.tempdir, "test.ids")) as fp:
+                    batches.append(len(fp.readlines()))
+                ids.reopen()
+
+            observer = CallTrace(methods=dict(
+                getIds=lambda **kwargs: ids.getIds(),
+                deleteIdentifier=ids.remove,
+                flushIds=lambda **kwargs: reopen()))
+            deleteIds.addObserver(observer)
+
+            deleteIds.delete()
+            self.assertEqual(4, len([m for m in observer.calledMethodNames() if m == 'flushIds']))
+            self.assertEqual(10, len([m for m in observer.calledMethodNames() if m == 'delete']))
+            self.assertEqual(10, len([m for m in observer.calledMethodNames() if m == 'deleteIdentifier']))
+            self.assertEqual([], readIds(join(self.tempdir, 'test.ids')))
+            self.assertEqual([7, 4, 1, 0], batches)
+        finally:
+            ids.close()

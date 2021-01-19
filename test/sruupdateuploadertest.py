@@ -42,7 +42,7 @@ from http.client import SERVICE_UNAVAILABLE, OK as HTTP_OK
 from meresco.harvester.namespaces import xpathFirst, xpath
 
 def _parse(text):
-    return parse(BytesIO(bytes(text, encoding="utf-8")))
+    return parse(BytesIO(text if type(text) is bytes else bytes(text, encoding="utf-8")))
 
 class SruUpdateUploaderTest(SeecrTestCase):
     def setUp(self):
@@ -77,7 +77,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.assertEqual('info:srw/action/1/delete', xpathFirst(updateRequest, 'ucp:action/text()'))
 
     def testException(self):
-        possibleSRUError="""<?xml version="1.0" encoding="UTF-8"?>
+        possibleSRUError=b"""<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:operationStatus>fail</ucp:operationStatus>
@@ -99,7 +99,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
             self.assertEqual(self.upload.id, e.uploadId)
 
     def testInvalidDataException(self):
-        possibleSRUValidationError="""<?xml version="1.0" encoding="UTF-8"?>
+        possibleSRUValidationError=b"""<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:operationStatus>fail</ucp:operationStatus>
@@ -132,14 +132,14 @@ class SruUpdateUploaderTest(SeecrTestCase):
             return answer
 
         uploader._sendDataToRemote = sendDataToRemote
-        uploader._sendData(1, "HOW IS EVERYTHING")
+        uploader._sendData(1, b"HOW IS EVERYTHING")
 
         self.assertEqual(0, len(answers))
         self.assertEqual(1, len(datas))
 
         answers = [(SERVICE_UNAVAILABLE, ''), (HTTP_OK, SUCCES_RESPONSE)]
         datas = []
-        uploader._sendData(1, "HOW IS EVERYTHING")
+        uploader._sendData(1, b"HOW IS EVERYTHING")
 
         self.assertEqual(0, len(answers))
         self.assertEqual(2, len(datas))
@@ -202,7 +202,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.assertEqual("success", operationStatus)
         self.assertEqual(None, diagnostics)
 
-SUCCES_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
+SUCCES_RESPONSE = b"""<?xml version="1.0" encoding="UTF-8"?>
 <srw:updateResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:ucp="info:lc/xmlns/update-v1">
     <srw:version>1.0</srw:version>
     <ucp:operationStatus>success</ucp:operationStatus>

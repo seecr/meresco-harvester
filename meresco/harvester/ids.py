@@ -36,27 +36,46 @@
 import os
 
 from os import makedirs
-from os.path import isdir, join
+from os.path import isdir, join, basename
 from escaping import escapeFilename, unescapeFilename
 
 def idfilename(stateDir, name):
     isdir(stateDir) or makedirs(stateDir)
     return join(stateDir, name + '.ids')
 
+def readIds(filename):
+    uniqueIds = set()
+    ids = []
+    with open(filename, 'a+') as fp:
+        fp.seek(0)
+        for id in (unescapeFilename(id) for id in fp):
+            if id[-1] == '\n':
+                id = id[:-1]
+            if id in uniqueIds:
+                continue
+            ids.append(id)
+            uniqueIds.add(id)
+    return ids
+
+def writeIds(filename, ids):
+    idfilenew = open(filename + '.new', 'w')
+    try:
+        for anId in ids:
+            idfilenew.write('{}\n'.format(escapeFilename(anId)))
+    finally:
+        idfilenew.close()
+    os.rename(filename + '.new', filename)
+
 class Ids(object):
     def __init__(self, stateDir, name):
         self._filename = idfilename(stateDir, name)
-        self._ids = []
-        uniqueIds = set()
-        with open(self._filename, 'a+') as fp:
-            fp.seek(0)
-            for id in (id for id in fp):
-                if id[-1] == '\n':
-                    id = id[:-1]
-                if id  in uniqueIds:
-                    continue
-                self._ids.append(id)
-                uniqueIds.add(id)
+        self._idsfile = None
+        self._ids = None
+        self.reopen()
+
+    def reopen(self):
+        self._idsfile and self.close()
+        self._ids = readIds(self._filename)
         self.open()
 
     def __len__(self):
@@ -74,24 +93,23 @@ class Ids(object):
 
     def close(self):
         self._idsfile.close()
-        idfilenew = open(self._filename + '.new', 'w')
-        try:
-            for anId in self._ids:
-                idfilenew.write( anId + '\n')
-        finally:
-            idfilenew.close()
-        os.rename(self._filename + '.new', self._filename)
+        writeIds(self._filename, self._ids)
+
+    def getIds(self):
+        return self._ids[:] #[unescapeFilename(each) for each in self._ids[:]]
+
+    def getDeleteIds(self):
+        return readIds("{}.delete".format(self._filename))
+
 
     def add(self, uploadid):
-        uploadid = escapeFilename(uploadid)
         if uploadid in self._ids:
             return
         self._ids.append(uploadid)
-        self._idsfile.write( uploadid + '\n')
+        self._idsfile.write('{}\n'.format(escapeFilename(uploadid)))
         self._idsfile.flush()
 
     def remove(self, uploadid):
-        uploadid = escapeFilename(uploadid)
         if uploadid in self._ids:
             self._ids.remove(uploadid)
             self.close()

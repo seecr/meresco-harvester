@@ -212,7 +212,6 @@ class RepositoryTest(SeecrTestCase):
         self.repo.oairequest()
         self.assertEqual(((None,), {'userAgent': None, 'authorizationKey': None}), self.oaiRequestArgsKwargs)
 
-
 class MockAction(Action):
     def __init__(self, message = '', done = True, hasResumptionToken=False):
         self.message = message

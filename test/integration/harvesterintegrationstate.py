@@ -50,9 +50,9 @@ examplesPath = join(dirname(dirname(mydir)), 'examples')
 class HarvesterIntegrationState(IntegrationState):
     def __init__(self, stateName, tests=None, fastMode=False):
         IntegrationState.__init__(self, "harvester-"+stateName, tests=tests, fastMode=fastMode)
-        self.helperServerPortNumber = next(PortNumberGenerator)
-        self.harvesterInternalServerPortNumber = next(PortNumberGenerator)
-        self.gustosPort = next(PortNumberGenerator)
+        self.helperServerPortNumber = PortNumberGenerator.next()
+        self.harvesterInternalServerPortNumber = PortNumberGenerator.next()
+        self.gustosPort = PortNumberGenerator.next()
 
         self.helperDir = join(self.integrationTempdir, 'helper')
         self.dumpDir = join(self.helperDir, 'dump')

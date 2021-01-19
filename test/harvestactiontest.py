@@ -42,7 +42,7 @@ class HarvestActionTest(ActionTestCase):
         ActionTestCase.setUp(self)
         self.harvester = CallTrace("Harvester")
         self._original_createHarvester = HarvestAction._createHarvester
-        HarvestAction._createHarvester = lambda instance: self.harvester
+        HarvestAction._createHarvester = lambda instance: ([], self.harvester)
 
     def tearDown(self):
         HarvestAction._createHarvester = self._original_createHarvester

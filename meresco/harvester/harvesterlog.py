@@ -120,6 +120,18 @@ class HarvesterLog(object):
         self._ids.remove(uploadid)
         self._deletedCount += 1
 
+    def getIds(self, invalid=False, deleteIds=False):
+        if deleteIds:
+            return self._ids.getDeleteIds()
+        idsFile = self._invalidIds if invalid else self._ids
+        return idsFile.getIds()
+
+    def flushIds(self, invalid=False, deleteIds=False):
+        if deleteIds:
+            return
+        idsFile = self._invalidIds if invalid else self._ids
+        idsFile.reopen()
+
     def logInvalidData(self, uploadid, message):
         self._invalidIds.add(uploadid)
         filePath = self._invalidDataMessageFilePath(uploadid)

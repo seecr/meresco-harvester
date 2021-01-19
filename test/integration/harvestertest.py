@@ -316,8 +316,6 @@ class HarvesterTest(IntegrationTestCase):
         self.emptyDumpDir()
         self.assertEqual(0, self.sizeDumpDir())
         self.startHarvester(repository=REPOSITORY)
-        from time import sleep
-        sleep(1)
         self.assertEqual(len(deletesTodo), self.sizeDumpDir())
 
     def testRefreshWithIgnoredRecords(self):
@@ -374,7 +372,6 @@ class HarvesterTest(IntegrationTestCase):
         oldUploads = 4
         oldDeletes = 5
         oldInvalids = 6
-
         self.saveRepository(DOMAIN, REPOSITORY, REPOSITORYGROUP, action='clear')
 
         self.startHarvester(repository=REPOSITORY)
@@ -477,7 +474,7 @@ class HarvesterTest(IntegrationTestCase):
         t = Thread(target=lambda: self.startHarvester(concurrency=1, runOnce=True))
         t.start()
 
-        sleepWheel(4)
+        sleepWheel(5)
         self.assertEqual(errorCount + 1, len(self.gustosUdpListener.log()))
 
     def testConcurrencyAtLeastOne(self):
@@ -501,7 +498,6 @@ class HarvesterTest(IntegrationTestCase):
         self.assertEqual(15, self.sizeDumpDir())
 
     def testBadOai(self):
-        # raw_input(self.helperServerPortNumber)
         header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', metadataPrefix='prefix'))
         self.assertEqual('resume0', xpathFirst(data, '/oai:OAI-PMH/oai:ListRecords/oai:resumptionToken/text()'))
         header, data = getRequest(port=self.helperServerPortNumber, path='/badoai/responsedate', arguments=dict(verb='ListRecords', resumptionToken='resume0'))

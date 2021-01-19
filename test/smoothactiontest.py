@@ -38,7 +38,7 @@ from os.path import join
 from meresco.harvester.repository import Repository
 from meresco.harvester.action import SmoothAction, DONE
 from meresco.harvester.harvester import HARVESTED, NOTHING_TO_DO
-from meresco.harvester.deleteids import readIds
+from meresco.harvester.ids import readIds
 from meresco.harvester.eventlogger import NilEventLogger
 from seecr.test import CallTrace
 
