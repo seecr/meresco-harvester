@@ -30,7 +30,7 @@
 #
 ## end license ##
 
-from os.path import join
+from os.path import join, isfile
 from seecr.test import SeecrTestCase
 
 from meresco.harvester.harvesterdata import HarvesterData
@@ -79,7 +79,11 @@ class HarvesterDataTest(SeecrTestCase):
         for fname, data in DATA.items():
             with open(join(self.tempdir, fname), "w") as fp:
                 fp.write(data)
-        self.hd = HarvesterData(self.tempdir)
+        self.n = 0
+        def mock_id():
+            self.n+=1
+            return 'mock-id: %s' % self.n
+        self.hd = HarvesterData(self.tempdir, mock_id)
 
     def testGetRepositoryGroupIds(self):
         self.assertEqual(["Group1", "Group2"], self.hd.getRepositoryGroupIds(domainId="adomain"))
@@ -95,18 +99,20 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual({
             'identifier': 'Group1',
             'name': {'en': 'Group1', 'nl': 'Groep1'},
-            'repositoryIds': ['repository1', 'repository2']
+            'repositoryIds': ['repository1', 'repository2'],
+            '@id': 'mock-id: 1'
         }, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
 
     def testGetRepositoryGroups(self):
         self.assertEqual([
             {   'identifier': 'Group1',
                 'name': {'en': 'Group1', 'nl': 'Groep1'},
-                'repositoryIds': ['repository1', 'repository2']},
+                'repositoryIds': ['repository1', 'repository2'],
+                '@id': 'mock-id: 2'},
             {   'identifier': 'Group2',
                 'name': {'en': 'Group2', 'nl': 'Groep2'},
-                'repositoryIds': ['repository2_1', 'repository2_2']},
-
+                'repositoryIds': ['repository2_1', 'repository2_2'],
+                '@id': 'mock-id: 3'}
         ], self.hd.getRepositoryGroups(domainId='adomain'))
 
     def testGetRepositories(self):
@@ -114,19 +120,23 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqualsWS("""[
 {
     "identifier": "repository1",
-    "repositoryGroupId": "Group1"
+    "repositoryGroupId": "Group1",
+    "@id": "mock-id: 4"
 },
 {
     "identifier": "repository2",
-    "repositoryGroupId": "Group1"
+    "repositoryGroupId": "Group1",
+    "@id": "mock-id: 5"
 },
 {
     "identifier": "repository2_1",
-    "repositoryGroupId": "Group2"
+    "repositoryGroupId": "Group2",
+    "@id": "mock-id: 6"
 },
 {
     "identifier": "repository2_2",
-    "repositoryGroupId": "Group2"
+    "repositoryGroupId": "Group2",
+    "@id": "mock-id: 7"
 }
 ]""", result.dumps())
 
@@ -135,31 +145,33 @@ class HarvesterDataTest(SeecrTestCase):
             self.hd.getRepositories(domainId='adomain', repositoryGroupId='doesnotexist')
             self.fail()
         except ValueError as e:
-            self.assertEqual('idDoesNotExist', str(e))
+            self.assertEqual('adomain.doesnotexist.repositoryGroup', str(e))
 
         try:
             self.hd.getRepositories(domainId='baddomain')
             self.fail()
         except ValueError as e:
-            self.assertEqual('idDoesNotExist', str(e))
+            self.assertEqual('baddomain.domain', str(e))
 
     def testGetRepository(self):
         result = self.hd.getRepository(domainId='adomain', identifier='repository1')
         self.assertEqual({
-    "identifier": "repository1",
-    "repositoryGroupId": "Group1"
-}, result)
+            "identifier": "repository1",
+            "repositoryGroupId": "Group1",
+            '@id': 'mock-id: 1',
+        }, result)
 
     def testGetRepositoryWithErrors(self):
         try:
             self.hd.getRepository(domainId='adomain', identifier='repository12')
             self.fail()
         except ValueError as e:
-            self.assertEqual('idDoesNotExist', str(e))
+            self.assertEqual('adomain.repository12.repository', str(e))
 
     def testAddDomain(self):
         self.assertEqual(['adomain'], self.hd.getDomainIds())
         self.hd.addDomain(identifier="newdomain")
+        self.assertEqual({'@id': 'mock-id: 1', 'identifier': 'newdomain'}, self.hd.getDomain('newdomain'))
         self.assertEqual(['adomain', 'newdomain'], self.hd.getDomainIds())
         try:
             self.hd.addDomain(identifier="newdomain")
@@ -178,9 +190,15 @@ class HarvesterDataTest(SeecrTestCase):
             self.assertEqual('No name given.', str(e))
 
     def testUpdateDomain(self):
-        self.assertEqual('', self.hd.getDomain('adomain').get('description', ''))
+        d0 = self.hd.getDomain('adomain')
+        self.assertEqual('nono', d0.get('description', 'nono'))
+        self.assertTrue(d0.get('@id'))
         self.hd.updateDomain('adomain', description='Beschrijving')
-        self.assertEqual('Beschrijving', self.hd.getDomain('adomain').get('description', ''))
+        d1 = self.hd.getDomain('adomain')
+        self.assertEqual('Beschrijving', d1.get('description', 'nono'))
+        self.assertEqual('mock-id: 3', d1.get('@id'))
+        self.assertNotEqual(d0['@id'], d1['@id'])
+        self.assertTrue(isfile(join(self.tempdir, 'adomain.domain.%s' % d0['@id'])))
 
     def testAddRepositoryGroup(self):
         self.assertEqual(['Group1', 'Group2'], self.hd.getRepositoryGroupIds(domainId='adomain'))

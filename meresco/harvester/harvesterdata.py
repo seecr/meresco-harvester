@@ -32,6 +32,8 @@
 
 from os import listdir, remove
 from os.path import join, isfile
+from shutil import copy
+
 from re import compile as compileRe
 from uuid import uuid4
 
@@ -42,8 +44,9 @@ from meresco.harvester.mapping import Mapping
 
 
 class HarvesterData(object):
-    def __init__(self, dataPath):
+    def __init__(self, dataPath, id_fn=lambda: str(uuid4())):
         self._dataPath = dataPath
+        self.id_fn = id_fn
 
     #domain
     def getDomainIds(self):
@@ -52,12 +55,7 @@ class HarvesterData(object):
             )
 
     def getDomain(self, identifier):
-        domainFile = join(self._dataPath, '{0}.domain'.format(identifier))
-        try:
-            with open(domainFile) as fp:
-                return JsonDict.load(fp)
-        except IOError:
-            raise ValueError('idDoesNotExist')
+        return self._readJsonWithId('{0}.domain'.format(identifier))
 
     def addDomain(self, identifier):
         if identifier == '':
@@ -67,21 +65,35 @@ class HarvesterData(object):
         filename = "{}.domain".format(identifier)
         if self._exists(filename):
             raise ValueError('The domain already exists.')
-        self._save(JsonDict(dict(identifier=identifier)), filename)
+        self._save(JsonDict({'identifier': identifier, '@id': self.id_fn()}), filename)
 
     def updateDomain(self, identifier, description):
         domain = self.getDomain(identifier)
         domain['description'] = description
-        self._save(domain, "{}.domain".format(identifier))
+        self._writeJsonWithId("{}.domain".format(identifier), domain)
 
     #repositorygroup
     def getRepositoryGroupIds(self, domainId):
-        with open(join(self._dataPath, '%s.domain' % domainId)) as fp:
-            return JsonDict.load(fp).get('repositoryGroupIds',[])
+        return self.getDomain(domainId).get('repositoryGroupIds', [])
+
+    def _writeJsonWithId(self, filename, data):
+        copy(join(self._dataPath, filename), join(self._dataPath, filename) + data['@id'])
+        with open(join(self._dataPath, filename), 'w') as f:
+            data.update({'@id': self.id_fn(), '@base': data['@id']})
+            JsonDict(data).dump(f, indent=4, sort_keys=True)
+
+    def _readJsonWithId(self, filename):
+        try:
+            with open(join(self._dataPath, filename)) as f:
+                d = JsonDict.load(f)
+        except IOError:
+            raise ValueError(filename)
+        if '@id' not in d:
+            d['@id'] = self.id_fn()
+        return d
 
     def getRepositoryGroup(self, identifier, domainId):
-        with open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, identifier))) as fp:
-            return JsonDict.load(fp)
+        return self._readJsonWithId('%s.%s.repositoryGroup' % (domainId, identifier))
 
     def getRepositoryGroups(self, domainId):
         return [self.getRepositoryGroup(repositoryGroupId, domainId) for repositoryGroupId in self.getRepositoryGroupIds(domainId)]
@@ -95,7 +107,7 @@ class HarvesterData(object):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
         if identifier.lower() in [g.lower() for g in domain.get('repositoryGroupIds', [])]:
             raise ValueError('The repositoryGroup already exists.')
-        self._save(JsonDict(dict(identifier=identifier)), filename)
+        self._writeJsonWithId(filename, {'identifier': identifier})
         domain.setdefault('repositoryGroupIds', []).append(identifier)
         self._save(domain, "{}.domain".format(domainId))
 
@@ -115,14 +127,12 @@ class HarvesterData(object):
         result = JsonList()
         allIds = self.getRepositoryGroupIds(domainId) if repositoryGroupId is None else [repositoryGroupId]
         for repositoryGroupId in allIds:
-            with open(join(self._dataPath, '%s.%s.repositoryGroup' % (domainId, repositoryGroupId))) as fp:
-                jsonData = JsonDict.load(fp)
+            jsonData = self.getRepositoryGroup(repositoryGroupId, domainId)
             result.extend(jsonData.get('repositoryIds', []))
         return result
 
     def getRepositoryGroupId(self, domainId, repositoryId):
-        with open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))) as fp:
-            return JsonDict.load(fp)['repositoryGroupId']
+        return self.getRepository(repositoryId, domainId)['repositoryGroupId']
 
     def getRepositories(self, domainId, repositoryGroupId=None):
         try:
@@ -130,17 +140,10 @@ class HarvesterData(object):
         except IOError:
             raise ValueError("idDoesNotExist")
 
-        def _readRepository(repositoryId):
-            with open(join(self._dataPath, '%s.%s.repository' % (domainId, repositoryId))) as fp:
-                return JsonDict.load(fp)
-        return JsonList([_readRepository(repositoryId) for repositoryId in repositoryIds])
+        return JsonList([self.getRepository(repositoryId, domainId) for repositoryId in repositoryIds])
 
     def getRepository(self, identifier, domainId):
-        try:
-            with open(join(self._dataPath, '%s.%s.repository' % (domainId, identifier))) as fp:
-                return JsonDict.load(fp)
-        except IOError:
-            raise ValueError("idDoesNotExist")
+        return self._readJsonWithId('%s.%s.repository' % (domainId, identifier))
 
     def addRepository(self, identifier, domainId, repositoryGroupId):
         group = self.getRepositoryGroup(repositoryGroupId, domainId)
@@ -200,7 +203,7 @@ class HarvesterData(object):
         domain = self.getDomain(domainId)
         if not name:
             raise ValueError('No name given.')
-        identifier = str(uuid4())
+        identifier = self.id_fn()
         target = JsonDict(
                 name=name,
                 identifier=identifier,
@@ -241,7 +244,7 @@ class HarvesterData(object):
         domain = self.getDomain(domainId)
         if not name:
             raise ValueError('No name given.')
-        identifier = str(uuid4())
+        identifier = self.id_fn()
         mapping = JsonDict(
                 identifier=identifier,
                 name=name,
