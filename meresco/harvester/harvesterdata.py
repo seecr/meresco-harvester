@@ -30,8 +30,8 @@
 #
 ## end license ##
 
-from os import listdir, remove, rename
-from os.path import join, isfile
+from os import listdir, remove, rename, makedirs
+from os.path import join, isfile, isdir
 from shutil import copy
 
 from re import compile as compileRe
@@ -46,6 +46,8 @@ from meresco.harvester.mapping import Mapping
 class HarvesterData(object):
     def __init__(self, dataPath, id_fn=lambda: str(uuid4())):
         self._dataPath = dataPath
+        self._dataIdPath = join(dataPath, '_')
+        isdir(self._dataIdPath) or makedirs(self._dataIdPath)
         self.id_fn = id_fn
 
     #domain
@@ -284,7 +286,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
 
     def _writeJsonWithId(self, filename, data, newId=True):
         if '@id' in data and newId:
-            copy(join(self._dataPath, filename), join(self._dataPath, filename) + '.' + data['@id'])
+            copy(join(self._dataPath, filename), join(self._dataIdPath, filename) + '.' + data['@id'])
             data['@base'] = data['@id']
         with open(join(self._dataPath, filename), 'w') as f:
             if newId:
@@ -294,7 +296,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
     def _readJsonWithId(self, filename, id=None):
         fpath = join(self._dataPath, filename)
         if id is not None:
-            fpath += '.' + id
+            fpath = join(self._dataIdPath, filename) + '.' + id
         try:
             d = JsonDict.load(fpath)
         except IOError:
@@ -310,7 +312,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
     def _deleteWithId(self, filename):
         fpath = join(self._dataPath, filename)
         curId = JsonDict.load(fpath)['@id']
-        rename(fpath, fpath + '.' + curId)
+        rename(fpath, join(self._dataIdPath, filename) + '.' + curId)
 
 
 fn_domain = lambda domainId: "{}.domain".format(domainId)

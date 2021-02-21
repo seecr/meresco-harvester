@@ -199,7 +199,7 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual('Beschrijving', d1.get('description', 'nono'))
         self.assertEqual('mock-id: 2', d1.get('@id'))
         self.assertNotEqual(d0['@id'], d1['@id'])
-        self.assertTrue(isfile(join(self.tempdir, 'adomain.domain.%s' % id0)))
+        self.assertTrue(isfile(join(self.tempdir, '_', 'adomain.domain.%s' % id0)))
         self.assertEqual('nono', self.hd.getDomain('adomain', id=id0).get('description', 'nono'))
 
     def testGetDomainWithIdMostRecent(self):
