@@ -284,6 +284,10 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
         self._writeJsonWithId(fn_domain(domainId), domain)
         self._deleteWithId(fn_mapping(identifier))
 
+    def getPublicRecord(self, id):
+        "Retrieves a record given its uuid only"
+        pass
+
     def _writeJsonWithId(self, filename, data, newId=True):
         if '@id' in data and newId:
             copy(join(self._dataPath, filename), join(self._dataIdPath, filename) + '.' + data['@id'])

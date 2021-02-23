@@ -45,8 +45,8 @@ def setupDataRetrieve(exceptions={}, **returnValues):
     dataRetrieve.addObserver(mockHarvesterData)
     return dataRetrieve, mockHarvesterData
 
-def doRequest(dataRetrieve, **arguments):
-    result = asString(dataRetrieve.handleRequest(arguments=arguments))
+def doRequest(dataRetrieve, path=None, **arguments):
+    result = asString(dataRetrieve.handleRequest(path=path, arguments=arguments))
     header, body = result.split(CRLF*2,1)
     return header, body
 
@@ -100,5 +100,34 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         self.assertEqual([], mockHarvesterData.calledMethodNames())
 
     def testPublicJsonLd(self):
-        pass
-
+        "Integration test for HTTP API, retrieving, mapping and json-lding"
+        dataRetrieve, mockHarvesterData = setupDataRetrieve(
+                getRepository={
+                    '@id': 'an id',
+                    '@base': 'a base',
+                    'identifier': 'an identifier',
+                    'extra': {
+                        'name': 'a dataset',
+                        'creator': 'a creator',
+                        'publisher': 'a publisher',
+                        'license': 'a license',
+                        'description': 'a description',
+                        },
+                    'crap': 'not mapped',
+                    })
+        header, body = doRequest(dataRetrieve, path='/dataset/domain0/repositorygroup0/repository0')
+        self.assertEqual(okJson, header+CRLF*2)
+        self.assertEqual("""{
+  "@context": {
+    "@vocab": "http://schema.org/"
+  },
+  "@id": "an id",
+  "@type": "Dataset",
+  "creator": "a creator",
+  "description": "a description",
+  "identifier": "an identifier",
+  "isBasedOn": "a base",
+  "license": "a license",
+  "name": "a dataset",
+  "publisher": "a publisher"
+}""", body)

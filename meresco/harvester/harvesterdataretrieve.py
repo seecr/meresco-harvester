@@ -37,7 +37,12 @@ from meresco.components.json import JsonDict
 
 
 class HarvesterDataRetrieve(Observable):
-    def handleRequest(self, arguments, **kwargs):
+
+    #path, query, fragments, arguments
+    def handleRequest(self, arguments, path=None, **kwargs):
+        if path and path.startswith('/dataset'):
+            yield self.handlePublicData(arguments, path, **kwargs)
+            return
         yield okJson
         verb = arguments.get('verb', [None])[0]
         messageKwargs = dict((k,values[0]) for k,values in list(arguments.items()) if k != 'verb')
@@ -61,6 +66,29 @@ class HarvesterDataRetrieve(Observable):
             response['error'] = error(str(e), repr(e))
         yield response.dumps()
 
+    def handlePublicData(self, arguments, path, **kwargs):
+        """
+        Context: resolvable URI like: http://data.digitalecollectie.nl/dataset/natag/DiMCoN/dimcon_museum_amsterdam
+        Paths have form:
+          /dataset/domain/repositorygroup/repository which return the LASTEST or
+          /dataset/<uuid> which returns a specific version
+        IMPL NOTES:
+         1. alle data in een dir data/<uuid>.json schrijven (ivm lookup)
+         2. laatste versie in <domain>.<repositoryid>.repository is een (symbolic) link
+        """
+        yield okJson
+        subpaths = path.split('/')
+        if len(subpaths) == 5:
+            _, dataset, domain, repositorygroup, repository = subpaths
+            yield toJsonLd(
+                    toSchema(
+                        self.call.getRepository(repository, domain)))
+        elif len(subpaths) == 3:
+            _, public, uuid = subpaths
+            yield self.call.getPulicRecord(uuid) #TODO reorganise files and create getPublicRecord
+        else:
+            yield 'bugger'
+
 
 messages = {
     'badDomain': 'The domain does not exist.',
@@ -74,3 +102,24 @@ def error(code, alternative=None):
     if message is None:
         return {'code': 'unknown', 'message': alternative or code}
     return {'code':code, 'message': message}
+
+
+def toSchema(d):
+    e = d.get('extra', {})
+    return {
+        '@type': 'http://schema.org/Dataset',
+        '@id': d.get('@id'),
+        'http://schema.org/isBasedOn': d.get('@base'),
+        'http://schema.org/identifier' :d.get('identifier'),
+        'http://schema.org/name': e.get('name'),
+        'http://schema.org/creator': e.get('creator'),
+        'http://schema.org/publisher': e.get('publisher'),
+        'http://schema.org/license': e.get('license'),
+        'http://schema.org/description': e.get('description'),
+        }
+
+def toJsonLd(d):
+    # copied from NDECatalogTest.... @TODO make a lib from from it??
+    from pyld import jsonld
+    import json
+    return json.dumps(jsonld.compact(d, ctx={'@vocab': 'http://schema.org/'}), indent=2)
