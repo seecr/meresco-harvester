@@ -37,73 +37,68 @@ from meresco.components.json import JsonDict
 from meresco.harvester.harvesterdataretrieve import HarvesterDataRetrieve
 from weightless.core import asString, DeclineMessage
 
+
+def setupDataRetrieve(exceptions={}, **returnValues):
+    dataRetrieve = HarvesterDataRetrieve()
+    mockHarvesterData = CallTrace('mockHarvesterData', returnValues=returnValues)
+    mockHarvesterData.exceptions = exceptions
+    dataRetrieve.addObserver(mockHarvesterData)
+    return dataRetrieve, mockHarvesterData
+
+def doRequest(dataRetrieve, **arguments):
+    result = asString(dataRetrieve.handleRequest(arguments=arguments))
+    header, body = result.split(CRLF*2,1)
+    return header, body
+
+
 class HarvesterDataRetrieveTest(SeecrTestCase):
 
     def testGetSomethingIsAllowed(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer', returnValues=dict(getSomething='get something result', listSomething=['a', 'b']))
-        dataRetrieve.addObserver(observer)
-
-        result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetSomething'], argument=['value'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve(getSomething='get something result', listSomething=['a', 'b'])
+        header, body = doRequest(dataRetrieve, verb=['GetSomething'], argument=['value'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {
             'verb': 'GetSomething', 'argument': 'value',
             }, 'response': {'GetSomething': 'get something result'}}, JsonDict.loads(body))
-        self.assertEqual(['getSomething'], observer.calledMethodNames())
-        self.assertEqual({'argument': 'value'}, observer.calledMethods[0].kwargs)
+        self.assertEqual(['getSomething'], mockHarvesterData.calledMethodNames())
+        self.assertEqual({'argument': 'value'}, mockHarvesterData.calledMethods[0].kwargs)
 
     def testGetUnexisting(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer')
-        observer.exceptions=dict(getUnexisting=DeclineMessage())
-        dataRetrieve.addObserver(observer)
-        result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetUnexisting'], argument=['value'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve(exceptions={'getUnexisting': DeclineMessage()})
+        header, body = doRequest(dataRetrieve, verb=['GetUnexisting'], argument=['value'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {'verb': 'GetUnexisting', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEqual(['getUnexisting'], observer.calledMethodNames())
-        self.assertEqual({'argument': 'value'}, observer.calledMethods[0].kwargs)
+        self.assertEqual(['getUnexisting'], mockHarvesterData.calledMethodNames())
+        self.assertEqual({'argument': 'value'}, mockHarvesterData.calledMethods[0].kwargs)
 
     def testNoVerb(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer')
-        dataRetrieve.addObserver(observer)
-        result = asString(dataRetrieve.handleRequest(arguments=dict(argument=['value'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve()
+        header, body = doRequest(dataRetrieve, argument=['value'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEqual([], observer.calledMethodNames())
+        self.assertEqual([], mockHarvesterData.calledMethodNames())
 
     def testErrorInCall(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer')
-        observer.exceptions = dict(getError=Exception('Bad Bad Bad'))
-        dataRetrieve.addObserver(observer)
-        result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetError'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve(exceptions=dict(getError=Exception('Bad Bad Bad')))
+        header, body = doRequest(dataRetrieve, verb=['GetError'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': "Exception('Bad Bad Bad')", 'code': 'unknown'}}, JsonDict.loads(body))
-        self.assertEqual(['getError'], observer.calledMethodNames())
+        self.assertEqual(['getError'], mockHarvesterData.calledMethodNames())
 
     def testKnownCodeException(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer')
-        observer.exceptions = dict(getError=Exception('idDoesNotExist'))
-        dataRetrieve.addObserver(observer)
-        result = asString(dataRetrieve.handleRequest(arguments=dict(verb=['GetError'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve(exceptions=dict(getError=Exception('idDoesNotExist')))
+        header, body = doRequest(dataRetrieve, verb=['GetError'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {'verb': 'GetError'}, 'error': {'message': 'The value of an argument (id or key) is unknown or illegal.', 'code': 'idDoesNotExist'}}, JsonDict.loads(body))
-        self.assertEqual(['getError'], observer.calledMethodNames())
+        self.assertEqual(['getError'], mockHarvesterData.calledMethodNames())
 
     def testSomethingElseThanGetIsNotAllowed(self):
-        dataRetrieve = HarvesterDataRetrieve()
-        observer = CallTrace('observer')
-        dataRetrieve.addObserver(observer)
-        result = asString(dataRetrieve.handleRequest(arguments=dict(argument=['value'], verb=['AddObserver'])))
-        header, body = result.split(CRLF*2,1)
+        dataRetrieve, mockHarvesterData = setupDataRetrieve()
+        header, body = doRequest(dataRetrieve, argument=['value'], verb=['AddObserver'])
         self.assertEqual(okJson, header+CRLF*2)
         self.assertEqual({'request': {'verb': 'AddObserver', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
-        self.assertEqual([], observer.calledMethodNames())
+        self.assertEqual([], mockHarvesterData.calledMethodNames())
+
+    def testPublicJsonLd(self):
+        pass
 
