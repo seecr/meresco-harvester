@@ -53,7 +53,6 @@ from meresco.components.http.utils import ContentTypePlainText, okPlainText
 
 from .__version__ import VERSION_STRING, VERSION
 from .repositorystatus import RepositoryStatus
-from .harvesterdata import HarvesterData
 from .harvesterdataactions import HarvesterDataActions
 from .harvesterdataretrieve import HarvesterDataRetrieve
 from .timeslot import Timeslot
@@ -63,6 +62,7 @@ from .onlineharvest import OnlineHarvest
 from .useractions import UserActions
 from .filterfields import FilterFields
 from .fielddefinitions import loadDefinitions
+from .environment import createEnvironment
 
 from time import localtime, strftime, time
 
@@ -77,7 +77,8 @@ def dateSince(days):
 
 def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitionsFile, customerLogoUrl, **ignored):
     passwordFilename = join(dataPath, 'users.txt')
-    harvesterData = HarvesterData(dataPath)
+    environment = createEnvironment(dataPath)
+    harvesterData = environment.createHarvesterData()
     repositoryStatus = be(
         (RepositoryStatus(logPath, statePath),
             (harvesterData, )

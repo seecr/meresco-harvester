@@ -47,6 +47,7 @@ import unittest
 
 from deleteidstest import DeleteIdsTest
 from eventloggertest import EventLoggerTest
+from environmenttest import EnvironmentTest
 from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
 from harvesterdataactionstest import HarvesterDataActionsTest
