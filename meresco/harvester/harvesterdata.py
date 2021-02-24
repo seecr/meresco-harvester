@@ -42,72 +42,66 @@ from meresco.components.json import JsonList, JsonDict
 from meresco.harvester.controlpanel.tools import checkName
 from meresco.harvester.mapping import Mapping
 
+from .datastore import OldDataStore
 
 class HarvesterData(object):
-    def __init__(self, dataPath, id_fn=lambda: str(uuid4())):
-        self._dataPath = dataPath
-        self._dataIdPath = join(dataPath, '_')
-        isdir(self._dataIdPath) or makedirs(self._dataIdPath)
+    def __init__(self, dataPath, id_fn=lambda: str(uuid4()), datastore=None):
+        self._store = OldDataStore(dataPath, id_fn=id_fn) if datastore is None else datastore
         self.id_fn = id_fn
 
     #domain
     def getDomainIds(self):
-        return JsonList(
-                sorted([d.split('.domain',1)[0] for d in listdir(self._dataPath) if d.endswith('.domain')])
-            )
+        return JsonList(self._store.listForDatatype('domain'))
 
-    def getDomain(self, identifier, id=None):
-        return self._readJsonWithId(fn_domain(identifier), id=id)
+    def getDomain(self, identifier, guid=None):
+        return self._store.getData(identifier, 'domain', guid=guid)
 
     def addDomain(self, identifier):
         if identifier == '':
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
-        filename = fn_domain(identifier)
-        if isfile(join(self._dataPath, filename)):
+        if self._store.exists(identifier, 'domain'):
             raise ValueError('The domain already exists.')
-        self._writeJsonWithId(filename, JsonDict({'identifier': identifier}))
+        self._store.addData(identifier, 'domain', JsonDict({'identifier': identifier}))
 
     def updateDomain(self, identifier, description):
         domain = self.getDomain(identifier)
         domain['description'] = description
-        self._writeJsonWithId(fn_domain(identifier), domain)
+        self._store.addData(identifier, 'domain', domain)
 
     #repositorygroup
     def getRepositoryGroupIds(self, domainId):
         return self.getDomain(domainId).get('repositoryGroupIds', [])
 
-
-    def getRepositoryGroup(self, identifier, domainId, id=None):
-        return self._readJsonWithId(fn_repositoryGroup(domainId, identifier), id)
+    def getRepositoryGroup(self, identifier, domainId, guid=None):
+        return self._store.getData(id_combine(domainId, identifier), 'repositoryGroup', guid)
 
     def getRepositoryGroups(self, domainId):
         return [self.getRepositoryGroup(repositoryGroupId, domainId) for repositoryGroupId in self.getRepositoryGroupIds(domainId)]
 
     def addRepositoryGroup(self, identifier, domainId):
         domain = self.getDomain(domainId)
-        filename = fn_repositoryGroup(domainId, identifier)
         if identifier == '':
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
         if identifier.lower() in [g.lower() for g in domain.get('repositoryGroupIds', [])]:
             raise ValueError('The repositoryGroup already exists.')
-        self._writeJsonWithId(filename, {'identifier': identifier})
+        self._store.addData(id_combine(domainId, identifier), 'repositoryGroup', {'identifier': identifier})
         domain.setdefault('repositoryGroupIds', []).append(identifier)
-        self._writeJsonWithId(fn_domain(domainId), domain)
+        self._store.addData(domainId, 'domain', domain)
 
     def updateRepositoryGroup(self, identifier, domainId, name):
         group = self.getRepositoryGroup(identifier, domainId=domainId)
         group.setdefault('name', {}).update(name)
-        self._writeJsonWithId(fn_repositoryGroup(domainId, identifier), group)
+        self._store.addData(id_combine(domainId, identifier), 'repositoryGroup', group)
 
     def deleteRepositoryGroup(self, identifier, domainId):
         domain = self.getDomain(domainId)
         domain['repositoryGroupIds'].remove(identifier)
-        self._deleteWithId(fn_repositoryGroup(domainId, identifier))
-        self._writeJsonWithId(fn_domain(domainId), domain)
+        self._store.deleteData(id_combine(domainId, identifier), 'repositoryGroup')
+        self._store.addData(domainId, 'domain', domain)
 
     #repository
     def getRepositoryIds(self, domainId, repositoryGroupId=None):
@@ -129,32 +123,30 @@ class HarvesterData(object):
 
         return JsonList([self.getRepository(repositoryId, domainId) for repositoryId in repositoryIds])
 
-    def getRepository(self, identifier, domainId, id=None):
-        return self._readJsonWithId(fn_repository(domainId, identifier), id=id)
+    def getRepository(self, identifier, domainId, guid=None):
+        return self._store.getData(id_combine(domainId, identifier), 'repository', guid=guid)
 
     def addRepository(self, identifier, domainId, repositoryGroupId):
         group = self.getRepositoryGroup(repositoryGroupId, domainId)
-        filename = fn_repository(domainId, identifier)
         if identifier == '':
             raise ValueError('No name given.')
         elif not checkName(identifier):
             raise ValueError('Name is not valid. Only use alphanumeric characters.')
         if identifier.lower() in [r.lower() for r in group.get('repositoryIds', [])]:
             raise ValueError('The repository already exists.')
-        if isfile(join(self._dataPath, filename)):
+        if self._store.exists(id_combine(domainId, identifier), 'repository'):
             raise ValueError("Repository name already in use.")
 
-        self._writeJsonWithId(filename, JsonDict(dict(identifier=identifier, repositoryGroupId=repositoryGroupId)))
+        self._store.addData(id_combine(domainId, identifier), 'repository', JsonDict(dict(identifier=identifier, repositoryGroupId=repositoryGroupId)))
         group.setdefault('repositoryIds', []).append(identifier)
-        self._writeJsonWithId(fn_repositoryGroup(domainId, repositoryGroupId), group)
+        self._store.addData(id_combine(domainId, repositoryGroupId), 'repositoryGroup', group)
 
     def deleteRepository(self, identifier, domainId, repositoryGroupId):
         group = self.getRepositoryGroup(repositoryGroupId, domainId)
         group['repositoryIds'].remove(identifier)
         repo = self.getRepository(identifier, domainId)
-        fname = fn_repository(domainId, identifier)
-        self._deleteWithId(fname)
-        self._writeJsonWithId(fn_repositoryGroup(domainId, repositoryGroupId), group)
+        self._store.deleteData(id_combine(domainId, identifier), 'repository')
+        self._store.addData(id_combine(domainId, repositoryGroupId), 'repositoryGroup', group)
 
     def updateRepository(self, identifier, domainId, baseurl, set, metadataPrefix, mappingId, targetId, collection, maximumIgnore, use, continuous, complete, action, shopclosed, userAgent, authorizationKey, **kwargs):
         repository = self.getRepository(identifier, domainId)
@@ -173,16 +165,16 @@ class HarvesterData(object):
         repository['authorizationKey'] = authorizationKey
         repository['shopclosed'] = shopclosed
         repository.update(**kwargs)
-        self._writeJsonWithId(fn_repository(domainId, identifier), repository)
+        self._store.addData(id_combine(domainId, identifier), 'repository', repository)
 
     def repositoryDone(self, identifier, domainId):
         repository = self.getRepository(identifier, domainId)
         repository['action'] = None
-        self._writeJsonWithId(fn_repository(domainId, identifier), repository, newId=False)
+        self._store.addData(id_combine(domainId, identifier), 'repository', repository, newId=False)
 
     #target
-    def getTarget(self, identifier, id=None):
-        return self._readJsonWithId(fn_target(identifier), id=id)
+    def getTarget(self, identifier, guid=None):
+        return self._store.getData(identifier, 'target', guid=guid)
 
     def addTarget(self, name, domainId, targetType):
         domain = self.getDomain(domainId)
@@ -195,8 +187,8 @@ class HarvesterData(object):
                 targetType=targetType,
             )
         domain.setdefault('targetIds', []).append(identifier)
-        self._writeJsonWithId(fn_target(identifier), target)
-        self._writeJsonWithId(fn_domain(domainId), domain)
+        self._store.addData(identifier, 'target', target)
+        self._store.addData(domainId, 'domain', domain)
         return identifier
 
     def updateTarget(self, identifier, name, username, port, targetType, delegateIds, path, baseurl, oaiEnvelope):
@@ -209,17 +201,17 @@ class HarvesterData(object):
         target['path'] = path
         target['baseurl'] = baseurl
         target['oaiEnvelope'] = oaiEnvelope
-        self._writeJsonWithId(fn_target(identifier), target)
+        self._store.addData(identifier, 'target', target)
 
     def deleteTarget(self, identifier, domainId):
         domain = self.getDomain(domainId)
         domain['targetIds'].remove(identifier)
-        self._deleteWithId(fn_target(identifier))
-        self._writeJsonWithId(fn_domain(domainId), domain)
+        self._store.deleteData(identifier, 'target')
+        self._store.addData(domainId, 'domain', domain)
 
     #mapping
-    def getMapping(self, identifier, id=None):
-        return self._readJsonWithId(fn_mapping(identifier), id=id)
+    def getMapping(self, identifier, guid=None):
+        return self._store.getData(identifier, 'mapping', guid=guid)
 
     def addMapping(self, name, domainId):
         domain = self.getDomain(domainId)
@@ -261,8 +253,8 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
 """,
             )
         domain.setdefault('mappingIds', []).append(identifier)
-        self._writeJsonWithId(fn_mapping(identifier), mapping)
-        self._writeJsonWithId(fn_domain(domainId), domain)
+        self._store.addData(identifier, 'mapping', mapping)
+        self._store.addData(domainId, 'domain', domain)
         return identifier
 
     def updateMapping(self, identifier, name, description, code):
@@ -270,7 +262,7 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
         mapping['name'] = name
         mapping['description'] = description
         mapping['code'] = code
-        self._writeJsonWithId(fn_mapping(identifier), mapping)
+        self._store.addData(identifier, 'mapping', mapping)
         mapping = Mapping(identifier)
         mapping.setCode(code)
         try:
@@ -281,49 +273,14 @@ upload.parts['meta'] = """<meta xmlns="http://meresco.org/namespace/harvester/me
     def deleteMapping(self, identifier, domainId):
         domain = self.getDomain(domainId)
         domain['mappingIds'].remove(identifier)
-        self._writeJsonWithId(fn_domain(domainId), domain)
-        self._deleteWithId(fn_mapping(identifier))
+        self._store.deleteData(identifier, 'mapping')
+        self._store.addData(domainId, 'domain', domain)
 
-    def getPublicRecord(self, id):
+    def getPublicRecord(self, guid):
         "Retrieves a record given its uuid only"
-        pass
+        return self._store.getGuid(guid)
 
-    def _writeJsonWithId(self, filename, data, newId=True):
-        if '@id' in data and newId:
-            copy(join(self._dataPath, filename), join(self._dataIdPath, filename) + '.' + data['@id'])
-            data['@base'] = data['@id']
-        with open(join(self._dataPath, filename), 'w') as f:
-            if newId:
-                data['@id'] = self.id_fn()
-            JsonDict(data).dump(f, indent=4, sort_keys=True)
-
-    def _readJsonWithId(self, filename, id=None):
-        fpath = join(self._dataPath, filename)
-        if id is not None:
-            fpath = join(self._dataIdPath, filename) + '.' + id
-        try:
-            d = JsonDict.load(fpath)
-        except IOError:
-            if id is not None:
-                result = self._readJsonWithId(filename)
-                if result['@id'] == id:
-                    return result
-            raise ValueError(filename)
-        if id is None and '@id' not in d:
-            self._writeJsonWithId(filename, d)
-        return d
-
-    def _deleteWithId(self, filename):
-        fpath = join(self._dataPath, filename)
-        curId = JsonDict.load(fpath)['@id']
-        rename(fpath, join(self._dataIdPath, filename) + '.' + curId)
-
-
-fn_domain = lambda domainId: "{}.domain".format(domainId)
-fn_repositoryGroup = lambda domainId, repositoryGroupId: "{}.{}.repositoryGroup".format(domainId, repositoryGroupId)
-fn_repository = lambda domainId, repositoryId: "{}.{}.repository".format(domainId, repositoryId)
-fn_target = lambda targetId: "{}.target".format(targetId)
-fn_mapping = lambda mappingId: "{}.mapping".format(mappingId)
+id_combine = lambda *ids: '.'.join(ids)
 
 
 XMLHEADER = compileRe(r'(?s)^(?P<header>\<\?.*\?\>\s+)?(?P<body>.*)$')

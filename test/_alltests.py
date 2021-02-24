@@ -45,6 +45,7 @@ cleanup(__file__)                                       #DO_NOT_DISTRIBUTE
 
 import unittest
 
+from datastoretest import DataStoreTest
 from deleteidstest import DeleteIdsTest
 from eventloggertest import EventLoggerTest
 from environmenttest import EnvironmentTest
@@ -52,7 +53,7 @@ from filesystemuploadtest import FileSystemUploaderTest
 from harvestactiontest import HarvestActionTest
 from harvesterdataactionstest import HarvesterDataActionsTest
 from harvesterdataretrievetest import HarvesterDataRetrieveTest
-from harvesterdatatest import HarvesterDataTest
+from harvesterdatatest import HarvesterDataTest, HarvesterDataOldStyleTest
 from harvesterlogtest import HarvesterLogTest
 from harvestertest import HarvesterTest
 from idstest import IdsTest

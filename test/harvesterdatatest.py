@@ -34,6 +34,7 @@ from os.path import join, isfile
 from seecr.test import SeecrTestCase
 
 from meresco.harvester.harvesterdata import HarvesterData
+from meresco.harvester.datastore import OldDataStore, DataStore
 
 DATA = {
     'adomain.domain': """{
@@ -73,7 +74,7 @@ DATA = {
     "repositoryGroupId": "NoGroup"
 }"""}
 
-class HarvesterDataTest(SeecrTestCase):
+class _HarvesterDataTest(SeecrTestCase):
     def setUp(self):
         SeecrTestCase.setUp(self)
         for fname, data in DATA.items():
@@ -83,7 +84,7 @@ class HarvesterDataTest(SeecrTestCase):
         def mock_id():
             self.n+=1
             return 'mock-id: %s' % self.n
-        self.hd = HarvesterData(self.tempdir, mock_id)
+        self.hd = self.createHarvesterData(mock_id)
 
     def testGetRepositoryGroupIds(self):
         self.assertEqual(["Group1", "Group2"], self.hd.getRepositoryGroupIds(domainId="adomain"))
@@ -96,28 +97,35 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual("Group1", self.hd.getRepositoryGroupId(domainId="adomain", repositoryId="repository1"))
 
     def testGetRepositoryGroup(self):
-        self.assertEqual({
+        expected = {
             'identifier': 'Group1',
             'name': {'en': 'Group1', 'nl': 'Groep1'},
             'repositoryIds': ['repository1', 'repository2'],
-            '@id': 'mock-id: 1'
-        }, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
+        }
+        if self.with_id:
+            expected['@id'] = 'mock-id: 1'
+        self.assertEqual(expected, self.hd.getRepositoryGroup(identifier='Group1', domainId='adomain'))
 
     def testGetRepositoryGroups(self):
-        self.assertEqual([
+        expected =[
             {   'identifier': 'Group1',
                 'name': {'en': 'Group1', 'nl': 'Groep1'},
                 'repositoryIds': ['repository1', 'repository2'],
-                '@id': 'mock-id: 2'},
+            },
             {   'identifier': 'Group2',
                 'name': {'en': 'Group2', 'nl': 'Groep2'},
                 'repositoryIds': ['repository2_1', 'repository2_2'],
-                '@id': 'mock-id: 3'}
-        ], self.hd.getRepositoryGroups(domainId='adomain'))
+            }
+        ]
+        if self.with_id:
+            expected[0]['@id'] = 'mock-id: 2'
+            expected[1]['@id'] = 'mock-id: 3'
+        self.assertEqual(expected, self.hd.getRepositoryGroups(domainId='adomain'))
 
     def testGetRepositories(self):
         result = self.hd.getRepositories(domainId='adomain')
-        self.assertEqualsWS("""[
+        if self.with_id:
+            self.assertEqualsWS("""[
 {
     "identifier": "repository1",
     "repositoryGroupId": "Group1",
@@ -139,6 +147,25 @@ class HarvesterDataTest(SeecrTestCase):
     "@id": "mock-id: 7"
 }
 ]""", result.dumps())
+        else:
+            self.assertEqualsWS("""[
+{
+    "identifier": "repository1",
+    "repositoryGroupId": "Group1"
+},
+{
+    "identifier": "repository2",
+    "repositoryGroupId": "Group1"
+},
+{
+    "identifier": "repository2_1",
+    "repositoryGroupId": "Group2"
+},
+{
+    "identifier": "repository2_2",
+    "repositoryGroupId": "Group2"
+}
+]""", result.dumps())
 
     def testGetRepositoriesWithError(self):
         try:
@@ -155,11 +182,13 @@ class HarvesterDataTest(SeecrTestCase):
 
     def testGetRepository(self):
         result = self.hd.getRepository(domainId='adomain', identifier='repository1')
-        self.assertEqual({
+        expected = {
             "identifier": "repository1",
             "repositoryGroupId": "Group1",
-            '@id': 'mock-id: 1',
-        }, result)
+        }
+        if self.with_id:
+            expected['@id'] = 'mock-id: 1'
+        self.assertEqual(expected, result)
 
     def testGetRepositoryWithErrors(self):
         try:
@@ -171,7 +200,10 @@ class HarvesterDataTest(SeecrTestCase):
     def testAddDomain(self):
         self.assertEqual(['adomain'], self.hd.getDomainIds())
         self.hd.addDomain(identifier="newdomain")
-        self.assertEqual({'@id': 'mock-id: 1', 'identifier': 'newdomain'}, self.hd.getDomain('newdomain'))
+        if self.with_id:
+            self.assertEqual({'@id': 'mock-id: 1', 'identifier': 'newdomain'}, self.hd.getDomain('newdomain'))
+        else:
+            self.assertEqual({'identifier': 'newdomain'}, self.hd.getDomain('newdomain'))
         self.assertEqual(['adomain', 'newdomain'], self.hd.getDomainIds())
         try:
             self.hd.addDomain(identifier="newdomain")
@@ -191,32 +223,32 @@ class HarvesterDataTest(SeecrTestCase):
 
     def testUpdateDomain(self):
         d0 = self.hd.getDomain('adomain')
-        id0 = d0['@id']
         self.assertEqual('nono', d0.get('description', 'nono'))
-        self.assertTrue(id0)
+        if self.with_id:
+            id0 = d0['@id']
+            self.assertTrue(id0)
         self.hd.updateDomain('adomain', description='Beschrijving')
         d1 = self.hd.getDomain('adomain')
         self.assertEqual('Beschrijving', d1.get('description', 'nono'))
-        self.assertEqual('mock-id: 2', d1.get('@id'))
-        self.assertNotEqual(d0['@id'], d1['@id'])
-        self.assertTrue(isfile(join(self.tempdir, '_', 'adomain.domain.%s' % id0)))
-        self.assertEqual('nono', self.hd.getDomain('adomain', id=id0).get('description', 'nono'))
-
-    def testGetDomainWithIdMostRecent(self):
-        d0 = self.hd.getDomain('adomain')
-        id0 = d0['@id']
-        self.assertEqual(d0, self.hd.getDomain('adomain', id=id0))
+        if self.with_id:
+            self.assertEqual('mock-id: 2', d1.get('@id'))
+            self.assertNotEqual(d0['@id'], d1['@id'])
+            self.assertTrue(isfile(join(self.tempdir, '_', 'adomain.domain.%s' % id0)))
+            self.assertEqual('nono', self.hd.getDomain('adomain', guid=id0).get('description', 'nono'))
 
     def testAddRepositoryGroup(self):
         domain = self.hd.getDomain('adomain')
-        self.assertEqual('mock-id: 1', domain['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 1', domain['@id'])
         self.assertEqual(['Group1', 'Group2'], self.hd.getRepositoryGroupIds(domainId='adomain'))
         self.hd.addRepositoryGroup(identifier="newgroup", domainId='adomain')
         newgroup = self.hd.getRepositoryGroup(identifier='newgroup', domainId='adomain')
-        self.assertEqual('mock-id: 2', newgroup['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 2', newgroup['@id'])
         domain = self.hd.getDomain('adomain')
-        self.assertEqual('mock-id: 1', domain['@base'])
-        self.assertEqual('mock-id: 3', domain['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 1', domain['@base'])
+            self.assertEqual('mock-id: 3', domain['@id'])
         self.assertEqual(['Group1', 'Group2', 'newgroup'], self.hd.getRepositoryGroupIds(domainId='adomain'))
         try:
             self.hd.addRepositoryGroup(identifier="Group1", domainId='adomain')
@@ -242,36 +274,41 @@ class HarvesterDataTest(SeecrTestCase):
     def testUpdateRepositoryGroup(self):
         groep1 = self.hd.getRepositoryGroup('Group1', 'adomain')
         self.assertEqual('Groep1', groep1.get('name', {}).get('nl', ''))
-        self.assertEqual('mock-id: 1', groep1['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 1', groep1['@id'])
         self.hd.updateRepositoryGroup('Group1', domainId='adomain', name={"nl":"naam"})
         groep1 = self.hd.getRepositoryGroup('Group1', 'adomain')
-        self.assertEqual('mock-id: 2', groep1['@id'])
-        self.assertEqual('mock-id: 1', groep1['@base'])
+        if self.with_id:
+            self.assertEqual('mock-id: 2', groep1['@id'])
+            self.assertEqual('mock-id: 1', groep1['@base'])
         self.assertEqual('naam', self.hd.getRepositoryGroup('Group1', 'adomain')['name']['nl'])
         self.assertEqual('Group1', self.hd.getRepositoryGroup('Group1', 'adomain')['name']['en'])
 
     def testDeleteRepositoryGroup(self):
         domain = self.hd.getDomain('adomain')
-        self.assertEqual('mock-id: 1', domain['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 1', domain['@id'])
         self.assertEqual(['Group1', 'Group2'], self.hd.getRepositoryGroupIds(domainId='adomain'))
         group = self.hd.getRepositoryGroup('Group2', domainId='adomain')
-        self.assertEqual('mock-id: 2', group['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 2', group['@id'])
         self.hd.deleteRepositoryGroup('Group2', domainId='adomain')
         domain = self.hd.getDomain('adomain')
-        self.assertEqual('mock-id: 1', domain['@base'])
-        self.assertEqual('mock-id: 3', domain['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 1', domain['@base'])
+            self.assertEqual('mock-id: 3', domain['@id'])
         self.assertEqual(['Group1'], self.hd.getRepositoryGroupIds(domainId='adomain'))
-        self.assertRaises(ValueError, lambda: self.hd.getRepositoryGroup('Group2', domainId='adomain'))
-        group = self.hd.getRepositoryGroup('Group2', domainId='adomain', id='mock-id: 2')
-        self.assertEqual('mock-id: 2', group['@id'])
 
     def testAddRepository(self):
-        groep1id = self.hd.getRepositoryGroup('Group1', 'adomain')['@id']
+        if self.with_id:
+            groep1id = self.hd.getRepositoryGroup('Group1', 'adomain')['@id']
         self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.hd.addRepository(identifier="newrepo", domainId='adomain', repositoryGroupId='Group1')
-        self.assertNotEqual(groep1id, self.hd.getRepositoryGroup('Group1', 'adomain')['@id'])
+        if self.with_id:
+            self.assertNotEqual(groep1id, self.hd.getRepositoryGroup('Group1', 'adomain')['@id'])
         repo = self.hd.getRepository(identifier="newrepo", domainId='adomain')
-        self.assertEqual('mock-id: 2', repo['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 2', repo['@id'])
         self.assertEqual(['repository1', 'repository2', 'newrepo'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.assertEqual('Group1', self.hd.getRepository(identifier='newrepo', domainId='adomain')['repositoryGroupId'])
         try:
@@ -304,16 +341,19 @@ class HarvesterDataTest(SeecrTestCase):
 
 
     def testDeleteRepository(self):
-        repoid = self.hd.getRepository('repository2', 'adomain')['@id']
-        groupid = self.hd.getRepositoryGroup('Group1', 'adomain')['@id']
+        if self.with_id:
+            repoid = self.hd.getRepository('repository2', 'adomain')['@id']
+            groupid = self.hd.getRepositoryGroup('Group1', 'adomain')['@id']
         self.assertEqual(['repository1', 'repository2'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
         self.hd.deleteRepository(identifier="repository2", domainId='adomain', repositoryGroupId='Group1')
         self.assertEqual(['repository1'], self.hd.getRepositoryIds(domainId='adomain', repositoryGroupId='Group1'))
-        self.assertEqual(repoid, self.hd.getRepository('repository2', 'adomain', id=repoid)['@id'])
-        self.assertNotEqual(groupid, self.hd.getRepositoryGroup('Group1', 'adomain')['@id'])
+        if self.with_id:
+            self.assertEqual(repoid, self.hd.getRepository('repository2', 'adomain', guid=repoid)['@id'])
+            self.assertNotEqual(groupid, self.hd.getRepositoryGroup('Group1', 'adomain')['@id'])
 
     def testUpdateRepository(self):
-        repoid = self.hd.getRepository('repository1', 'adomain')['@id']
+        if self.with_id:
+            repoid = self.hd.getRepository('repository1', 'adomain')['@id']
         self.hd.updateRepository('repository1',
                 domainId='adomain',
                 baseurl='baseurl',
@@ -344,8 +384,9 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual(True, repository['continuous'])
         self.assertEqual('action', repository['action'])
         self.assertEqual(['40:1:09:55-40:1:10:00'], repository['shopclosed'])
-        self.assertEqual(repoid, repository['@base'])
-        self.assertNotEqual(repoid, repository['@id'])
+        if self.with_id:
+            self.assertEqual(repoid, repository['@base'])
+            self.assertNotEqual(repoid, repository['@id'])
 
     def testRepositoryDone(self):
         self.hd.updateRepository('repository1',
@@ -365,19 +406,23 @@ class HarvesterDataTest(SeecrTestCase):
                 userAgent='',
                 authorizationKey='',
             )
-        repoid = self.hd.getRepository('repository1', 'adomain')['@id']
+        if self.with_id:
+            repoid = self.hd.getRepository('repository1', 'adomain')['@id']
         self.hd.repositoryDone(identifier='repository1', domainId='adomain')
         repository = self.hd.getRepository('repository1', 'adomain')
         self.assertEqual(None, repository['action'])
-        self.assertEqual(repoid, repository['@id'])
+        if self.with_id:
+            self.assertEqual(repoid, repository['@id'])
 
     def testAddMapping(self):
         domain = self.hd.getDomain('adomain')
-        dId = domain['@id']
+        if self.with_id:
+            dId = domain['@id']
         self.assertEqual(['ignored MAPPING'], domain['mappingIds'])
         mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
         mappingIds = self.hd.getDomain('adomain')['mappingIds']
-        self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
+        if self.with_id:
+            self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
         self.assertEqual(2, len(mappingIds))
         mapping = self.hd.getMapping(mappingId)
         self.assertEqual(mappingId, mappingIds[-1])
@@ -395,33 +440,40 @@ class HarvesterDataTest(SeecrTestCase):
         mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
         mapping = self.hd.getMapping(mappingId)
         self.assertEqual(mappingId, mapping["identifier"])
-        mId = mapping['@id']
+        if self.with_id:
+            mId = mapping['@id']
         self.assertRaises(ValueError, lambda: self.hd.updateMapping(mappingId, name='newName', description="a description", code="new code"))
         self.assertEqual('newName', self.hd.getMapping(mappingId)['name'])
         self.assertEqual('a description', self.hd.getMapping(mappingId)['description'])
         self.assertEqual('new code', self.hd.getMapping(mappingId)['code'])
-        self.assertNotEqual(mId, self.hd.getMapping(mappingId)['@id'])
+        if self.with_id:
+            self.assertNotEqual(mId, self.hd.getMapping(mappingId)['@id'])
 
     def testDeleteMapping(self):
         mappingId = self.hd.addMapping(name='newMapping', domainId='adomain')
-        mId = self.hd.getMapping(mappingId)['@id']
-        dId = self.hd.getDomain('adomain')['@id']
+        if self.with_id:
+            mId = self.hd.getMapping(mappingId)['@id']
+            dId = self.hd.getDomain('adomain')['@id']
         self.assertEqual(['ignored MAPPING', mappingId], self.hd.getDomain('adomain')['mappingIds'])
         self.hd.deleteMapping(identifier=mappingId, domainId='adomain')
         self.assertEqual(['ignored MAPPING'], self.hd.getDomain('adomain')['mappingIds'])
-        self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
         self.assertRaises(ValueError, lambda: self.hd.getMapping(mappingId))
-        self.assertEqual('newMapping', self.hd.getMapping(mappingId, mId)['name'])
+        if self.with_id:
+            self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
+            self.assertEqual('newMapping', self.hd.getMapping(mappingId, mId)['name'])
 
     def testAddTarget(self):
-        dId = self.hd.getDomain('adomain')['@id']
+        if self.with_id:
+            dId = self.hd.getDomain('adomain')['@id']
         self.assertEqual(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
         targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
-        self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
+        if self.with_id:
+            self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
         targetIds = self.hd.getDomain('adomain')['targetIds']
         self.assertEqual(2, len(targetIds))
         target = self.hd.getTarget(targetId)
-        self.assertEqual('mock-id: 3', target['@id'])
+        if self.with_id:
+            self.assertEqual('mock-id: 3', target['@id'])
         self.assertEqual(targetId, targetIds[-1])
         self.assertEqual('new target', target['name'])
         self.assertEqual(targetId, target['identifier'])
@@ -433,7 +485,8 @@ class HarvesterDataTest(SeecrTestCase):
 
     def testUpdateTarget(self):
         targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
-        tId = self.hd.getTarget(targetId)['@id']
+        if self.with_id:
+            tId = self.hd.getTarget(targetId)['@id']
         self.hd.updateTarget(identifier=targetId,
                 name='updated target',
                 username='username',
@@ -453,18 +506,40 @@ class HarvesterDataTest(SeecrTestCase):
         self.assertEqual('path', target['path'])
         self.assertEqual('baseurl', target['baseurl'])
         self.assertEqual(False, target['oaiEnvelope'])
-        self.assertNotEqual(tId, target['@id'])
-        self.assertEqual('new target', self.hd.getTarget(targetId, tId)['name'])
+        if self.with_id:
+            self.assertNotEqual(tId, target['@id'])
+            self.assertEqual('new target', self.hd.getTarget(targetId, tId)['name'])
 
     def testDeleteTarget(self):
         targetId = self.hd.addTarget(name='new target', domainId='adomain', targetType='sruUpdate')
-        tId = self.hd.getTarget(targetId)['@id']
-        dId = self.hd.getDomain('adomain')['@id']
+        if self.with_id:
+            tId = self.hd.getTarget(targetId)['@id']
+            dId = self.hd.getDomain('adomain')['@id']
         self.assertEqual(['ignored TARGET', targetId], self.hd.getDomain('adomain')['targetIds'])
         self.hd.deleteTarget(targetId, domainId='adomain')
         self.assertEqual(['ignored TARGET'], self.hd.getDomain('adomain')['targetIds'])
-        self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
         self.assertRaises(ValueError, lambda: self.hd.getTarget(targetId))
-        self.assertEqual(targetId, self.hd.getTarget(targetId, id=tId)['identifier'])
+        if self.with_id:
+            self.assertNotEqual(dId, self.hd.getDomain('adomain')['@id'])
+            self.assertEqual(targetId, self.hd.getTarget(targetId, guid=tId)['identifier'])
 
+class HarvesterDataTest(_HarvesterDataTest):
+    with_id = True
+    def createHarvesterData(self, id_fn):
+        return HarvesterData(self.tempdir, id_fn=id_fn, datastore=DataStore(self.tempdir, id_fn=id_fn))
 
+    def testGetWithGuid(self):
+        self.assertTrue(self.hd.getDomain('adomain', 'mock-id: 1'))
+        self.assertTrue(self.hd.getRepositoryGroup('Group1', 'adomain', 'mock-id: 2'))
+        self.assertTrue(self.hd.getRepository('repository1', 'adomain', 'mock-id: 3'))
+
+    def testDeleteAndOldGuid(self):
+        gid = self.hd.getRepositoryGroup('Group1', 'adomain')['@id']
+        self.hd.deleteRepositoryGroup('Group1', 'adomain')
+        self.assertRaises(ValueError, lambda: self.hd.getRepositoryGroup('Group1', 'adomain'))
+        self.assertTrue(self.hd.getRepositoryGroup('Group1', 'adomain', gid))
+
+class HarvesterDataOldStyleTest(_HarvesterDataTest):
+    with_id = False
+    def createHarvesterData(self, id_fn):
+        return HarvesterData(self.tempdir, id_fn=id_fn, datastore=OldDataStore(self.tempdir, id_fn=id_fn))
