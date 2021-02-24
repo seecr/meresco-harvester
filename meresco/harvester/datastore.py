@@ -68,7 +68,7 @@ class OldDataStore(object):
         remove(fpath)
 
     def getGuid(self, guid):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
 class DataStore(object):
@@ -119,5 +119,5 @@ class DataStore(object):
         rename(fpath, join(self._dataIdPath, filename) + '.' + curId)
 
     def getGuid(self, guid):
-        return NotImplementedError()
+        raise NotImplementedError()
 

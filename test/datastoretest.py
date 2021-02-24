@@ -57,3 +57,6 @@ class DataStoreTest(SeecrTestCase):
         self.store.addData('nr:2', 'datatype', {'mijn':'data'})
         self.store.addData('nr:3', 'other', {'mijn':'data'})
         self.assertEqual(['nr:1', 'nr:2'], self.store.listForDatatype('datatype'))
+
+    def testGuid(self):
+        self.assertRaises(NotImplementedError, lambda: self.store.getGuid('someid'))
