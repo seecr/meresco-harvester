@@ -45,7 +45,9 @@ from meresco.harvester.mapping import Mapping
 from .datastore import OldDataStore
 
 class HarvesterData(object):
-    def __init__(self, dataPath, id_fn=lambda: str(uuid4()), datastore=None):
+    def __init__(self, dataPath=None, id_fn=lambda: str(uuid4()), datastore=None):
+        if dataPath is None and datastore is None:
+            raise TypeError('Missing dataPath or datastore')
         self._store = OldDataStore(dataPath, id_fn=id_fn) if datastore is None else datastore
         self.id_fn = id_fn
 
