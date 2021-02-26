@@ -39,19 +39,19 @@
 from seecrdeps import includeParentAndDeps       #DO_NOT_DISTRIBUTE
 includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
 
-from meresco.components import ParseArguments
+from argparse import ArgumentParser
 
 if __name__ == '__main__':
-    parser = ParseArguments()
-    parser.addOption('-p', '--port', help='Service portnumber', type=int, mandatory=True)
-    parser.addOption('', '--dataPath', help='Meresco harvester data directory', mandatory=True)
-    parser.addOption('', '--logPath', help='Meresco harvester log directory', mandatory=True)
-    parser.addOption('', '--statePath', help='Meresco harvester state directory', mandatory=True)
-    parser.addOption('', '--externalUrl', help='Url this harvester can be reached at', mandatory=True)
-    parser.addOption('', '--fieldDefinitionsFile', help='File containing additional fielddefinitions', mandatory=False)
-    parser.addOption('', '--customerLogoUrl', help='URL to logo of customer', mandatory=False)
+    parser = ArgumentParser()
+    parser.add_argument('-p', '--port', help='Service portnumber', type=int, required=True)
+    parser.add_argument('--dataPath', help='Meresco harvester data directory', required=True)
+    parser.add_argument('--logPath', help='Meresco harvester log directory', required=True)
+    parser.add_argument('--statePath', help='Meresco harvester state directory', required=True)
+    parser.add_argument('--externalUrl', help='Url this harvester can be reached at', required=True)
+    parser.add_argument('--fieldDefinitionsFile', help='File containing additional fielddefinitions')
+    parser.add_argument('--customerLogoUrl', help='URL to logo of customer')
 
-    options, arguments = parser.parse()
+    args = parser.parse_args()
 
     from meresco.harvester.server import startServer
-    startServer(**vars(options))
+    startServer(**vars(args))

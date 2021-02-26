@@ -250,13 +250,13 @@ def main(reactor, port, directory):
             list(compose(oaiJazz.delete(identifier=identifier)))
 
 if __name__== '__main__':
-    parser = ParseArguments()
-    parser.addOption('', '--port', mandatory=True, type=int)
-    parser.addOption('', '--directory', mandatory=True)
-    options, arguments = parser.parse()
+    parser = ArgumentParser()
+    parser.add_argument('--port', required=True, type=int)
+    parser.add_argument('--directory', required=True)
+    args = parser.parse_args()
 
     reactor = Reactor()
-    main(reactor, **vars(options))
+    main(reactor, **vars(args))
     print('Ready to rumble the dumpserver at', options.port)
     print('  - dumps are written to', join(options.directory, 'dump'))
     stdout.flush()
