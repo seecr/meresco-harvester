@@ -31,6 +31,7 @@ from os import getenv
 from importlib import import_module
 
 from .harvesterdata import HarvesterData
+from .harvesterdataretrieve import HarvesterDataRetrieve
 
 class Environment(object):
     def __init__(self, dataPath):
@@ -38,6 +39,9 @@ class Environment(object):
 
     def createHarvesterData(self):
         return HarvesterData(self._dataPath)
+
+    def createHarvesterDataRetrieve(self):
+        return HarvesterDataRetrieve()
 
 def createEnvironment(dataPath):
     envModuleName = getenv('MERESCO_HARVESTER_ENVIRONMENT_MODULE', 'meresco.harvester.environment')

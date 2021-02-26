@@ -99,35 +99,3 @@ class HarvesterDataRetrieveTest(SeecrTestCase):
         self.assertEqual({'request': {'verb': 'AddObserver', 'argument': 'value'}, 'error': {'message': 'Value of the verb argument is not a legal verb, the verb argument is missing, or the verb argument is repeated.', 'code': 'badVerb'}}, JsonDict.loads(body))
         self.assertEqual([], mockHarvesterData.calledMethodNames())
 
-    def testPublicJsonLd(self):
-        "Integration test for HTTP API, retrieving, mapping and json-lding"
-        dataRetrieve, mockHarvesterData = setupDataRetrieve(
-                getRepository={
-                    '@id': 'an id',
-                    '@base': 'a base',
-                    'identifier': 'an identifier',
-                    'extra': {
-                        'name': 'a dataset',
-                        'creator': 'a creator',
-                        'publisher': 'a publisher',
-                        'license': 'a license',
-                        'description': 'a description',
-                        },
-                    'crap': 'not mapped',
-                    })
-        header, body = doRequest(dataRetrieve, path='/dataset/domain0/repositorygroup0/repository0')
-        self.assertEqual(okJson, header+CRLF*2)
-        self.assertEqual("""{
-  "@context": {
-    "@vocab": "http://schema.org/"
-  },
-  "@id": "an id",
-  "@type": "Dataset",
-  "creator": "a creator",
-  "description": "a description",
-  "identifier": "an identifier",
-  "isBasedOn": "a base",
-  "license": "a license",
-  "name": "a dataset",
-  "publisher": "a publisher"
-}""", body)

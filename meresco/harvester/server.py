@@ -80,6 +80,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
     passwordFilename = join(dataPath, 'users.txt')
     environment = createEnvironment(dataPath)
     harvesterData = environment.createHarvesterData()
+    harvesterDataRetrieve = environment.createHarvesterDataRetrieve()
     repositoryStatus = be(
         (RepositoryStatus(logPath, statePath),
             (harvesterData, )
@@ -141,7 +142,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                 userActionsHelix
                             ),
                             (staticFiles,),
-                            (PathFilter('/', excluding=['/info/version', '/info/config', '/action', '/login.action', '/user.action'] + HarvesterDataRetrieve.paths + staticFilePaths),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/action', '/login.action', '/user.action'] + harvesterDataRetrieve.paths + staticFilePaths),
                                 (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],
@@ -178,8 +179,8 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                     (harvesterData,)
                                 ),
                             ),
-                            (PathFilter(HarvesterDataRetrieve.paths),
-                                (HarvesterDataRetrieve(),
+                            (PathFilter(harvesterDataRetrieve.paths),
+                                (harvesterDataRetrieve,
                                     (FilterFields(fieldDefinitions),
                                         (harvesterData,),
                                     ),
