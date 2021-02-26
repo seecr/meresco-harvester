@@ -144,7 +144,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                 )
                             ),
                             (staticFiles,),
-                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/get', '/login.action', '/user.action'] + staticFilePaths),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/login.action', '/user.action'] + HarvesterDataRetrieve.paths + staticFilePaths),
                                 (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],
@@ -181,7 +181,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                     (harvesterData,)
                                 ),
                             ),
-                            (PathFilter('/get'),
+                            (PathFilter(HarvesterDataRetrieve.paths),
                                 (HarvesterDataRetrieve(),
                                     (FilterFields(fieldDefinitions),
                                         (harvesterData,),

@@ -37,6 +37,7 @@ from meresco.components.json import JsonDict
 
 
 class HarvesterDataRetrieve(Observable):
+    paths = ['/dataset', '/get']
 
     #path, query, fragments, arguments
     def handleRequest(self, arguments, path=None, **kwargs):
@@ -85,7 +86,9 @@ class HarvesterDataRetrieve(Observable):
                         self.call.getRepository(repository, domain)))
         elif len(subpaths) == 3:
             _, public, uuid = subpaths
-            yield self.call.getPulicRecord(uuid) #TODO reorganise files and create getPublicRecord
+            yield toJsonLd(
+                    toSchema(
+                        self.call.getPublicRecord(uuid)))
         else:
             yield 'bugger'
 
