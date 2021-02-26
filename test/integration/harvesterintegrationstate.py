@@ -122,7 +122,7 @@ class HarvesterIntegrationState(IntegrationState):
 
     def getLogs(self):
         header, result = getRequest(self.helperServerPortNumber, '/log', {}, parse=False)
-        return list(self._getLogs(result))
+        return list(self._getLogs(str(result, encoding='utf-8')))
 
     @staticmethod
     def _getLogs(result):

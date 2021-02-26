@@ -35,6 +35,9 @@
 #
 ## end license ##
 
+from seecrdeps import includeParentAndDeps       #DO_NOT_DISTRIBUTE
+includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
+
 from glob import glob
 from sys import path
 from os.path import abspath, dirname, join, isfile
@@ -69,7 +72,7 @@ from meresco.sequentialstore import MultiSequentialStorage
 mydir = dirname(abspath(__file__))
 testdataDir = join(dirname(mydir), 'data', 'helper')
 
-notWordCharRE = compile('\W+')
+notWordCharRE = compile(r'\W+')
 
 class InvalidDataException(Exception):
     pass
@@ -81,10 +84,10 @@ class Dump(object):
         self._allInvalid = False
         self._raiseExceptionOnIds = set()
 
-    def handleRequest(self, Body='', **kwargs):
+    def handleRequest(self, Body=b'', **kwargs):
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml; charset=utf-8\r\n', ''])
         try:
-            updateRequest = XML(bytes(Body, encoding='utf-8'))
+            updateRequest = XML(Body)
             recordId = xpathFirst(updateRequest, 'ucp:recordIdentifier/text()')
             action = xpathFirst(updateRequest, 'ucp:action/text()')
             if self._allInvalid and action == "info:srw/action/1/replace":
@@ -241,7 +244,7 @@ def main(reactor, port, directory):
             identifier = 'oai:record:02/&gkn'
         else:
             identifier = 'oai:record:%02d' % i
-        oaiStorage.addData(identifier=identifier, name='oai_dc', data='''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % escapeXml(identifier))
+        oaiStorage.addData(identifier=identifier, name='oai_dc', data=bytes('''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % escapeXml(identifier), encoding='utf-8'))
         oaiJazz.addOaiRecord(identifier=identifier, metadataPrefixes=['oai_dc'])
         if i in [3,6]:
             list(compose(oaiJazz.delete(identifier=identifier)))
