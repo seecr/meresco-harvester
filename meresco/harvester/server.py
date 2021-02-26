@@ -48,7 +48,7 @@ from meresco.html import DynamicHtml
 from meresco.html.login import BasicHtmlLoginForm, PasswordFile, SecureZone
 from seecr.zulutime import ZuluTime
 
-from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, FileServer, PathRename, BasicHttpHandler, SessionHandler, CookieMemoryStore, StaticFiles
+from meresco.components.http import ApacheLogger, PathFilter, ObservableHttpServer, StringServer, BasicHttpHandler, SessionHandler, CookieMemoryStore, StaticFiles
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
 
 from .__version__ import VERSION_STRING, VERSION
@@ -66,10 +66,11 @@ from .environment import createEnvironment
 
 from time import localtime, strftime, time
 
-
 myPath = dirname(abspath(__file__))
-dynamicHtmlPath = join(myPath, 'controlpanel', 'html', 'dynamic')
-staticHtmlPath = join(myPath, 'controlpanel', 'html', 'static')
+usrSharePath = '/usr/share/meresco-harvester'
+usrSharePath = join(dirname(dirname(myPath)), 'usr-share') # DO_NOT_DISTRIBUTE
+dynamicHtmlPath = join(myPath, 'controlpanel', 'dynamic')
+staticHtmlPath = join(usrSharePath, 'controlpanel')
 
 
 def dateSince(days):
@@ -110,6 +111,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
             ('/js/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter'),
             ('/css/jquery-tablesorter', '/usr/share/javascript/jquery-tablesorter/css'),
             ('/js/autosize', '/usr/share/javascript/autosize'),
+            ('/static', staticHtmlPath),
             ]:
         staticFiles.addObserver(StaticFiles(libdir=libdir, path=path))
         staticFilePaths.append(path)
@@ -138,13 +140,8 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                             (PathFilter('/user.action'),
                                 userActionsHelix
                             ),
-                            (PathFilter("/static"),
-                                (PathRename(lambda name: name[len('/static/'):]),
-                                    (FileServer([staticHtmlPath]),)
-                                )
-                            ),
                             (staticFiles,),
-                            (PathFilter('/', excluding=['/info/version', '/info/config', '/static', '/action', '/login.action', '/user.action'] + HarvesterDataRetrieve.paths + staticFilePaths),
+                            (PathFilter('/', excluding=['/info/version', '/info/config', '/action', '/login.action', '/user.action'] + HarvesterDataRetrieve.paths + staticFilePaths),
                                 (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],

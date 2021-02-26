@@ -236,8 +236,8 @@ def renderDropdown(index, selectName, options, selectedValue, wildcardName=''):
 
 
 def renderTimeslot(index, timeslot):
-    weeks = map(lambda x: (str(x), x), range(1, 54))
-    hours = map(lambda x: (str(x), x), range(25))
+    weeks = list(map(lambda x: (str(x), x), range(1, 54)))
+    hours = list(map(lambda x: (str(x), x), range(25)))
     weekdays = list(enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']))
 
     yield '<td>'

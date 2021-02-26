@@ -41,6 +41,7 @@ removeDoNotDistribute tmp
 cp -r test tmp/test
 find tmp -type f -exec sed -r -e \
     "s,^binDir.*$,binDir='$SEECRTEST_USR_BIN',;
+    s,^usrSharePath.*$,usrSharePath='$mydir/tmp/usr/share/meresco-harvster',;
     s,^examplesPath.*$,examplesPath='$mydir/examples'," -i {} \;
 
 echo $PYTHONPATH

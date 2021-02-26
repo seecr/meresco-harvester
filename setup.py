@@ -36,11 +36,24 @@ from distutils.core import setup
 from os import walk
 from os.path import join
 
+data_files = []
+for path, dirs, files in walk('usr-share'):
+    data_files.append((path.replace('usr-share', '/usr/share/meresco-harvester', 1), [join(path, f) for f in files]))
+
 packages = []
 for path, dirs, files in walk('meresco'):
     if '__init__.py' in files and path != 'meresco':
         packagename = path.replace('/', '.')
         packages.append(packagename)
+
+package_data = {}
+for path, dirs, files in walk('meresco'):
+    suffix = '.sf'
+    if any(f.endswith(suffix) for f in files):
+        segments = path.split('/')
+        filepath = join(*(segments[2:] + ['*'+suffix]))
+        package_data.setdefault('meresco.harvester', []).append(filepath)
+
 scripts = []
 for path, dirs, files in walk('bin'):
     scripts.extend(join(path, f) for f in files if f not in ['start-mockoai', 'sitecustomize.py'])
@@ -50,16 +63,8 @@ setup(
     packages=[
         'meresco',                              #DO_NOT_DISTRIBUTE
     ] + packages,
-    package_data={
-        'meresco.harvester.controlpanel': [
-            'html/dynamic/*.sf',
-            'html/static/*.png',
-            'html/static/*.jpg',
-            'html/static/*.css',
-            'html/static/*.ico',
-            'html/static/*.js',
-        ]
-    },
+    package_data=package_data,
+    data_files=data_files,
     scripts=scripts,
     version='%VERSION%',
     url='http://www.meresco.org',

@@ -193,7 +193,7 @@ class HarvesterDataActions(PostActions):
             )
 
     def _repositoryDone(self, Body, **kwargs):
-        arguments = parse_qs(Body)
+        arguments = parse_qs(str(Body, encoding='utf-8'))
         identifier = arguments.pop('identifier', [None])[0]
         domainId = arguments.pop('domainId', [None])[0]
         self.call.repositoryDone(identifier=identifier, domainId=domainId)
@@ -203,7 +203,7 @@ class HarvesterDataActions(PostActions):
         self.registerAction(name, partial(self._do, actionMethod=actionMethod))
 
     def _do(self, actionMethod, Body, **kwargs):
-        arguments = parse_qs(Body)
+        arguments = parse_qs(str(Body, encoding='utf-8'))
         identifier = arguments.pop('identifier', [None])[0]
         referer = arguments.pop('referer', ['/error'])[0]
         redirectUri = arguments.pop('redirectUri', ['/'])[0]

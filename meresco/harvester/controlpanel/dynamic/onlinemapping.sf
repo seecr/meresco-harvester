@@ -37,7 +37,7 @@ def main(arguments, **kwargs):
     onlineHarvest = OnlineHarvest(strm)
     try:
         onlineHarvest.performMapping(mapping, urlString=inputurl)
-    except Exception, e:
+    except Exception as e:
         yield """There was an exception testing the mapping.
 
 {}""".format(str(e))

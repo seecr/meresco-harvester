@@ -36,6 +36,8 @@ from meresco.harvester.harvesterdata import HarvesterData
 from weightless.core import consume
 from urllib.parse import urlencode
 
+bUrlencode = lambda *args, **kwargs: urlencode(*args, **kwargs).encode()
+
 class HarvesterDataActionsTest(SeecrTestCase):
     def setUp(self):
         SeecrTestCase.setUp(self)
@@ -67,7 +69,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "numberOfTimeslots": "0",
             "extra_name": "Name for this object",
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual('group', repository["repositoryGroupId"])
         self.assertEqual("repository", repository["identifier"])
@@ -92,7 +94,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "identifier": "repository",
             "domainId": "domain",
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual('group', repository["repositoryGroupId"])
         self.assertEqual("repository", repository["identifier"])
@@ -121,7 +123,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             'shopclosedBegin_0': '7',
             'shopclosedEnd_0': '9',
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual([], repository['shopclosed'])
 
@@ -138,7 +140,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             'shopclosedEnd_0': '9',
             "addTimeslot": "button pressed",
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual(['*:*:7:0-*:*:9:0'], repository['shopclosed'])
 
@@ -163,7 +165,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             'shopclosedBegin_2': '9',
             'shopclosedEnd_2': '10',
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual(['3:*:17:0-3:*:19:0', '4:5:9:0-4:5:10:0',], repository['shopclosed'])
 
@@ -190,7 +192,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             'deleteTimeslot_1.x': '10',
             'deleteTimeslot_1.y': '20',
         }
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual(['4:5:9:0-4:5:10:0',], repository['shopclosed'])
 
@@ -200,7 +202,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
         self.assertEqual('refresh', repository['action'])
 
         data = dict(domainId='domain', identifier='repository')
-        consume(self.hda.handleRequest(Method='POST', path='/somewhere/repositoryDone', Body=urlencode(data, doseq=True)))
+        consume(self.hda.handleRequest(Method='POST', path='/somewhere/repositoryDone', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
         self.assertEqual(None, repository['action'])
 
