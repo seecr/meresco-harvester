@@ -85,7 +85,7 @@ def _content(arguments, **kwargs):
         options.append(("{}?{}".format(
             repository.get('baseurl'),
             urlencode(dict(arguments))), repository.get('identifier')))
-    yield common.dropdown("inputurl", sorted(options, key=lambda (_, identifier): identifier.lower()), selected=None)
+    yield common.dropdown("inputurl", sorted(options, key=lambda __identifier: __identifier[1].lower()), selected=None)
     yield """
             </td>
         </tr>

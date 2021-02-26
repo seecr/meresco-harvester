@@ -159,7 +159,7 @@ def _repository(tag, domain, repository):
                 yield ' '
                 if not export:
                     with tag('sup', title="Hidden in export"):
-                        yield u'\u24d8' # ⓘ
+                        yield '\u24d8' # ⓘ
             with tag("td"):
                 fieldName = 'extra_{}'.format(definition['name'])
                 if definition['type'] == "text":
@@ -236,8 +236,8 @@ def renderDropdown(index, selectName, options, selectedValue, wildcardName=''):
 
 
 def renderTimeslot(index, timeslot):
-    weeks = list(map(lambda x: (str(x), x), range(1, 54)))
-    hours = list(map(lambda x: (str(x), x), range(25)))
+    weeks = [(str(x), x) for x in range(1, 54)]
+    hours = [(str(x), x) for x in range(25)]
     weekdays = list(enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']))
 
     yield '<td>'

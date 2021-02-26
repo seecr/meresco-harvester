@@ -61,7 +61,7 @@ def _status(group, domainId):
 def _repositoryGroup(group, domainId):
     groupId = group.get('identifier')
     def _label(key, lang):
-        return unicode(group.get(key, {}).get(lang) or '')
+        return str(group.get(key, {}).get(lang) or '')
     yield """
 <div>
 <h3>Repository Group {groupId}</h3>
