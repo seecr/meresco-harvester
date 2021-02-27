@@ -56,11 +56,12 @@ from os import makedirs, remove
 from re import compile
 from traceback import format_exc
 from xml.sax.saxutils import escape as escapeXml
+from argparse import ArgumentParser
 
 from weightless.io import Reactor
 from weightless.core import compose, be
 
-from meresco.components import lxmltostring, ParseArguments
+from meresco.components import lxmltostring
 from meresco.components.http import ObservableHttpServer, PathFilter, StringServer
 from meresco.components.http.utils import ContentTypePlainText, okPlainText
 from meresco.components.sru.srurecordupdate import RESPONSE_XML, DIAGNOSTIC_XML
@@ -257,7 +258,7 @@ if __name__== '__main__':
 
     reactor = Reactor()
     main(reactor, **vars(args))
-    print('Ready to rumble the dumpserver at', options.port)
-    print('  - dumps are written to', join(options.directory, 'dump'))
+    print('Ready to rumble the dumpserver at', args.port)
+    print('  - dumps are written to', join(args.directory, 'dump'))
     stdout.flush()
     reactor.loop()
