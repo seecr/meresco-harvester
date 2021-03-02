@@ -61,7 +61,7 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.upload.id = 'some:id'
         self.upload.parts={
             'meta': '<meta>....</meta>',
-            'otherdata': '<stupidXML>abcdefgh'
+            'otherdata': '<stupidXML>ßabcdefgh'
         }
 
     def testOne(self):
@@ -73,6 +73,10 @@ class SruUpdateUploaderTest(SeecrTestCase):
         self.assertEqual('info:srw/action/1/replace', xpathFirst(updateRequest, 'ucp:action/text()'))
         documentParts = xpath(updateRequest, 'srw:record/srw:recordData/document:document/document:part')
         self.assertEqual(2, len(documentParts))
+        self.assertEqual('meta', documentParts[0].attrib['name'])
+        self.assertEqual('<meta>....</meta>', documentParts[0].text)
+        self.assertEqual('otherdata', documentParts[1].attrib['name'])
+        self.assertEqual('<stupidXML>ßabcdefgh', documentParts[1].text)
 
         self.uploader.delete(self.upload)
         updateRequest = _parse(self.sentData[1])
