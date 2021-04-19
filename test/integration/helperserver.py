@@ -90,6 +90,10 @@ class Dump(object):
         self._raiseExceptionOnIds = set()
 
     def handleRequest(self, Body=b'', **kwargs):
+        contentLength = kwargs['Headers'].get('Content-Length')
+        if contentLength:
+            Body = Body[:int(contentLength)]
+
         yield '\r\n'.join(['HTTP/1.0 200 Ok', 'Content-Type: text/xml; charset=utf-8\r\n', ''])
         try:
             updateRequest = XML(Body)
@@ -249,7 +253,7 @@ def main(reactor, port, directory):
             identifier = 'oai:record:02/&gkn'
         else:
             identifier = 'oai:record:%02d' % i
-        oaiStorage.addData(identifier=identifier, name='oai_dc', data=bytes('''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier></oai_dc:dc>''' % escapeXml(identifier), encoding='utf-8'))
+        oaiStorage.addData(identifier=identifier, name='oai_dc', data=bytes('''<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"><dc:identifier>%s</dc:identifier><dc:title>Title is √</dc:title></oai_dc:dc>''' % escapeXml(identifier), encoding='utf-8'))
         oaiJazz.addOaiRecord(identifier=identifier, metadataPrefixes=['oai_dc'])
         if i in [3,6]:
             list(compose(oaiJazz.delete(identifier=identifier)))

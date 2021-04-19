@@ -111,13 +111,14 @@ class SruUpdateUploader(VirtualUploader):
                 raise InvalidDataException(uploadId=uploadId, message=message)
 
     def _sendDataToRemote(self, data):
+        data = bytes(data, encoding='utf-8')
         connection = HTTPConnection(self._target.baseurl, self._target.port)
         connection.putrequest("POST", self._target.path)
         connection.putheader("Host", self._target.baseurl)
         connection.putheader("Content-Type", "text/xml; charset=\"utf-8\"")
         connection.putheader("Content-Length", str(len(data)))
         connection.endheaders()
-        connection.send(data.encode())
+        connection.send(data)
 
         result = connection.getresponse()
         message = result.read()
