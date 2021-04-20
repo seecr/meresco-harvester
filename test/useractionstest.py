@@ -109,7 +109,7 @@ class UserActionsTest(SeecrTestCase):
            Method="POST",
            path="/user.action/create",
            session=session,
-           Body=urlencode(dict(
+           Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                username="johan",
                domain="domein",
@@ -136,7 +136,7 @@ class UserActionsTest(SeecrTestCase):
            Method="POST",
            path="/user.action/create",
            session=session,
-           Body=urlencode(dict(
+           Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                errorUri="/oops",
                username="johan",
@@ -150,7 +150,7 @@ class UserActionsTest(SeecrTestCase):
            Method="POST",
            path="/user.action/create",
            session=session,
-           Body=urlencode(dict(
+           Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                errorUri="/oops",
                username="johan",
@@ -179,7 +179,7 @@ class UserActionsTest(SeecrTestCase):
         response = asString(dna.call.handleRequest(
             Method="POST",
             path="/user.action/delete",
-            Body=urlencode(dict(
+            Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                username="johan"))))
         self.assertEqual(1, len(action.listUsers()))
@@ -202,7 +202,7 @@ class UserActionsTest(SeecrTestCase):
         response = asString(dna.call.handleRequest(
             Method="POST",
             path="/user.action/update",
-            Body=urlencode(dict(
+            Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                username="johan",
                organization="Seecr"))))
@@ -213,8 +213,12 @@ class UserActionsTest(SeecrTestCase):
         response = asString(dna.call.handleRequest(
             Method="POST",
             path="/user.action/update",
-            Body=urlencode(dict(
+            Body=bUrlencode(dict(
                redirectUri="/go_here_now",
                username="johan",
                organization=""))))
         self.assertEqual("", action.getUser("johan").organization)
+
+def bUrlencode(*args, **kwargs):
+    return bytes(urlencode(*args, **kwargs), encoding='utf-8')
+

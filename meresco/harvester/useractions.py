@@ -163,4 +163,4 @@ class UserActions(PostActions):
 
 
 def _parseBody(Body, fieldList):
-    return dict((key, value[0]) for key, value in list(parse_qs(Body, keep_blank_values=1).items()) if key in fieldList)
+    return dict((key, value[0]) for key, value in list(parse_qs(str(Body, encoding="utf-8"), keep_blank_values=1).items()) if key in fieldList)
