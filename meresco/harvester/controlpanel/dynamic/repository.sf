@@ -208,12 +208,14 @@ def _repository(tag, domain, repository):
 <div>
     <h3>Useful links</h3>
     <ul>
+        <li><a target="_blank" href="{saharaGetUrl}">Sahara Get link</a>
         <li><a target="_blank" href="{listMetadataFormatsUrl}">List all metadata formats.</a></li>
         <li><a href="{testRepositoryLink}">Test mapping</a></li>
     </ul>
     <i>(You may need to save first.)</i>
 </div>
 <p><a href="{repositoryGroupEditLink}">Back to repositorygroup</a></p>""".format(
+        saharaGetUrl="/get?{}".format(urlencode(dict(domainId=domainId, verb="GetRepository", identifier=repository.get("identifier")))),
         listMetadataFormatsUrl="{}?{}".format(repository.get('baseurl'), urlencode(dict(verb="ListMetadataFormats"))),
         testRepositoryLink="/testrepository?{}".format(urlencode(
             dict(domainId=domainId, repositoryId=repository.get('identifier')))),
