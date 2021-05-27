@@ -31,7 +31,7 @@
 #
 ## end license ##
 
-from os.path import join, abspath, dirname
+from os.path import join, abspath, dirname, isfile
 from sys import stdout
 from xml.sax.saxutils import escape as escapeXml
 from io import StringIO
