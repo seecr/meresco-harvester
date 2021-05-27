@@ -116,6 +116,9 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
             ]:
         staticFiles.addObserver(StaticFiles(libdir=libdir, path=path))
         staticFilePaths.append(path)
+    tableSorterTheme = 'theme.default.min.css'
+    if not isfile(join('/usr/share/javascript/jquery-tablesorter/css', tableSorterTheme)):
+        tableSorterTheme = 'theme.default.css'
 
     userActions = UserActions(dataDir=dataPath)
     userActionsHelix = (userActions,
@@ -164,6 +167,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                                                 'xpathFirst': xpathFirst,
                                                 'fieldDefinitions': fieldDefinitions,
                                                 'customerLogoUrl': customerLogoUrl,
+                                                'tableSorterTheme': tableSorterTheme,
                                             },
                                             indexPage="/index",
                                         ),

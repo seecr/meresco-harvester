@@ -44,10 +44,10 @@ def header(session, **kwargs):
     <meta http-equiv="Cache-Control" content="no-cache"/>
     <meta http-equiv="Expires" content="-1"/>
   <link href="/static/stylesheet.css" rel="stylesheet" type="text/css"/>
-  <link href="/css/jquery-tablesorter/theme.default.css" rel="stylesheet" type="text/css"/>
+  <link href="/css/jquery-tablesorter/{tableSorterTheme}" rel="stylesheet" type="text/css"/>
   <link rel="shortcut icon" href="/static/favicon.ico" />
 </head>
-<body>""".format(version=VERSION)
+<body>""".format(version=VERSION, tableSorterTheme=tableSorterTheme)
     yield """
     <div class="header-logo-container">
         <div class="header-logo-block-50 customer">"""
@@ -55,7 +55,7 @@ def header(session, **kwargs):
         yield '<img src="{}"/>'.format(customerLogoUrl)
     yield """
         </div>
-        <div class="header-logo-block-50"><img class="header-logo-seecr" src="//cdn.seecr.nl/images/seecr_logo_transparant_bg.png"></div>
+        <div class="header-logo-block-50"><img class="header-logo-seecr" src="https://cdn.seecr.nl/images/seecr_logo_transparant_bg.png"></div>
     </div>"""
 
 
