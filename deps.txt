@@ -13,8 +13,6 @@ python3-meresco-html (>= 1.6.4)
 python3-meresco-html (<< 1.7)
 python3-seecr-zulutime (>= 0.3)
 python3-seecr-zulutime (<< 0.4)
-python3-seecr-datapublish (>= 0.1)
-python3-seecr-datapublish (<< 0.2)
 python3-simplejson
 python3-gustos2.3-common
 python3-gustos2.3-client
