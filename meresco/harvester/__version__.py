@@ -28,6 +28,6 @@
 #
 ## end license ##
 
-VERSION = '$Version: 9.0.x$'[9:-1].strip()
+VERSION = '$Version: 9.1.x$'[9:-1].strip()
 VERSION_STRING = """This is Meresco Harvester version %s.""" % VERSION
 
