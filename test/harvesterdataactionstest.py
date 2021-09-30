@@ -70,7 +70,7 @@ class HarvesterDataActionsTest(SeecrTestCase):
             "repositoryAction": "clear",
             "numberOfTimeslots": "0",
             "extra_name": "Name for this object",
-            "extra_choice_1": 'on'
+            "extra_choice_1": '1',
         }
         consume(self.hda.handleRequest(Method='POST', path='/somewhere/updateRepository', Body=bUrlencode(data, doseq=True)))
         repository = self.hd.getRepository('repository', 'domain')
