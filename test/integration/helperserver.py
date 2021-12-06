@@ -38,9 +38,12 @@
 from seecrdeps import includeParentAndDeps       #DO_NOT_DISTRIBUTE
 includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
 
-from lucene import initVM; initVM()
-from meresco_oai import initVM; initVM()
-from meresco_sequentialstore import initVM; initVM()
+try:
+    from seecr_initvm import initvm; initvm('meresco_oai', 'meresco_sequentialstore')
+except ImportError:
+    from lucene import initVM; initVM()
+    from meresco_oai import initVM; initVM()
+    from meresco_sequentialstore import initVM; initVM()
 
 from glob import glob
 from sys import path

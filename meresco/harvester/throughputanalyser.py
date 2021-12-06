@@ -42,7 +42,7 @@ from time import strptime
 from datetime import datetime
 NUMBERS_RE = re.compile(r'.*Harvested/Uploaded/Deleted/Total:\s*(\d+)/(\d+)/(\d+)/(\d+).*')
 
-from cgi import escape as escapeXml
+from xml.sax.saxutils import escape as escapeXml
 from os.path import isfile
 
 def parseToTime(dateString):
