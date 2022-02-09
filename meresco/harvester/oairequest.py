@@ -78,7 +78,12 @@ class OaiRequest(object):
     def request(self, args=None):
         args = {} if args is None else args
         try:
-            argslist = [(k,v) for k,v in list(args.items()) if v]
+            argslist = []
+            if 'verb' in args:
+                argslist.append(('verb', args['verb']))
+            for k, v in args.items():
+                if k != 'verb' and v:
+                    argslist.append((k,v))
             result = self._request(argslist)
         except Exception as e:
             raise OaiRequestException(self._buildRequestUrl(argslist), message=repr(e))

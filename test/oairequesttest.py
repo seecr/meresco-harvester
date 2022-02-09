@@ -125,15 +125,21 @@ class OaiRequestTest(SeecrTestCase):
             return parse(fp)
 
     def testListRecordArgs(self):
-        self.request.request = self.mockRequest
+        self.request._request = self.mockRequest
+
         self.request.listRecords(metadataPrefix='kaas')
-        self.assertEqual('kaas', self.mockRequest_args['metadataPrefix'])
-        self.assertTrue('resumptionToken' not in self.mockRequest_args)
+        kwargs = dict(self.mockRequest_args)
+        self.assertEqual('kaas', kwargs['metadataPrefix'])
+        self.assertTrue('resumptionToken' not in kwargs)
+        self.assertEqual(('verb', 'ListRecords'), self.mockRequest_args[0])
+
         self.request.listRecords(from_='from', until='until',set='set', metadataPrefix='prefix')
-        self.assertEqual('from', self.mockRequest_args['from'])
-        self.assertEqual('until', self.mockRequest_args['until'])
-        self.assertEqual('set', self.mockRequest_args['set'])
-        self.assertEqual('prefix', self.mockRequest_args['metadataPrefix'])
+        kwargs = dict(self.mockRequest_args)
+        self.assertEqual(('verb', 'ListRecords'), self.mockRequest_args[0])
+        self.assertEqual('from', kwargs['from'])
+        self.assertEqual('until', kwargs['until'])
+        self.assertEqual('set', kwargs['set'])
+        self.assertEqual('prefix', kwargs['metadataPrefix'])
 
     def testGetRecord(self):
         response = self.request.getRecord(identifier='oai:rep:12345', metadataPrefix='oai_dc')
