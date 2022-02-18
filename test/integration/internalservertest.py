@@ -187,3 +187,8 @@ class InternalServerTest(IntegrationTestCase):
         self.assertTrue("Exception: ERROR" in description, description)
         self.assertEqual('integrationtest:%s' % TODAY, ''.join(xpath(items[0], "guid/text()")).split('T')[0])
         self.assertEqual("http://localhost:9999/showHarvesterStatus?domainId=adomain&repositoryId=integrationtest", xpath(items[0], "link/text()")[0])
+
+    def testShowHarvesterStatus(self):
+        header, result = getRequest(self.harvesterInternalServerPortNumber, '/showHarvesterStatus', {'domainId': 'adomain'})
+        self.assertEqual('200', header['StatusCode'])
+

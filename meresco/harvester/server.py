@@ -125,6 +125,10 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
         (passwordFile, )
     )
 
+    allowedPaths = [
+        '/showHarvesterStatus',
+    ]
+
     return \
         (Observable(),
             (ObservableHttpServer(reactor, port),
@@ -146,7 +150,7 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
                             ),
                             (staticFiles,),
                             (PathFilter('/', excluding=['/info/version', '/info/config', '/action', '/login.action', '/user.action'] + harvesterDataRetrieve.paths + staticFilePaths),
-                                (SecureZone("/login", excluding="/index", defaultLanguage="nl"),
+                                (SecureZone("/login", excluding=["/index"] + allowedPaths, defaultLanguage="nl"),
                                     (DynamicHtml(
                                             [dynamicHtmlPath],
                                             reactor=reactor,
