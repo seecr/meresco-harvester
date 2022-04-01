@@ -12,10 +12,10 @@
 # Copyright (C) 2007-2011 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
 # Copyright (C) 2009 Tilburg University http://www.uvt.nl
-# Copyright (C) 2011, 2020-2021 Stichting Kennisnet https://www.kennisnet.nl
+# Copyright (C) 2011, 2020-2022 Stichting Kennisnet https://www.kennisnet.nl
 # Copyright (C) 2020-2021 Data Archiving and Network Services https://dans.knaw.nl
 # Copyright (C) 2020-2021 SURF https://www.surf.nl
-# Copyright (C) 2020-2021 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2020-2022 Seecr (Seek You Too B.V.) https://seecr.nl
 # Copyright (C) 2020-2021 The Netherlands Institute for Sound and Vision https://beeldengeluid.nl
 #
 # This file is part of "Meresco Harvester"
@@ -38,7 +38,8 @@
 
 from xml.sax.saxutils import escape as xmlEscape
 from .virtualuploader import VirtualUploader, UploaderException, InvalidDataException, InvalidComponentException
-from http.client import HTTPConnection, SERVICE_UNAVAILABLE, OK as HTTP_OK
+from http.client import SERVICE_UNAVAILABLE, OK as HTTP_OK
+from urllib.request import urlopen
 from lxml.etree import parse
 from io import BytesIO
 from meresco.harvester.namespaces import xpath
@@ -98,7 +99,7 @@ class SruUpdateUploader(VirtualUploader):
             self._logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
         if status != HTTP_OK:
-            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (status, message))
+            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (getattr(status, 'value', status), message))
 
         #version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(bytes(message, encoding="utf-8"))))
         version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(message)))
@@ -112,17 +113,9 @@ class SruUpdateUploader(VirtualUploader):
 
     def _sendDataToRemote(self, data):
         data = bytes(data, encoding='utf-8')
-        connection = HTTPConnection(self._target.baseurl, self._target.port)
-        connection.putrequest("POST", self._target.path)
-        connection.putheader("Host", self._target.baseurl)
-        connection.putheader("Content-Type", "text/xml; charset=\"utf-8\"")
-        connection.putheader("Content-Length", str(len(data)))
-        connection.endheaders()
-        connection.send(data)
-
-        result = connection.getresponse()
-        message = result.read()
-        return result.status, message
+        with urlopen(f'http://{self._target.baseurl}:{self._target.port}{self._target.path}', data=data) as u:
+            message = u.read()
+            return u.status, message
 
     def _parseMessage(self, message):
         version = xpath(message, "/srw:updateResponse/srw:version/text()")[0]
