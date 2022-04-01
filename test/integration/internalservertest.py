@@ -55,8 +55,6 @@ class InternalServerTest(IntegrationTestCase):
         self.controlHelper(action='allInvalid')
         self.startHarvester(repository=REPOSITORY)
         header, result = getRequest(self.harvesterInternalServerPortNumber, '/invalid', {'domainId': 'adomain', 'repositoryId': 'integrationtest'}, parse=True)
-        print(header)
-        print(result)
         self.assertEqual([
             'oai:record:08', 'oai:record:07',
             'oai:record:05', 'oai:record:04',

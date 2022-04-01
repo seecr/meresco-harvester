@@ -127,6 +127,10 @@ def dna(reactor, port, dataPath, logPath, statePath, externalUrl, fieldDefinitio
 
     allowedPaths = [
         '/showHarvesterStatus',
+        '/invalid',
+        '/invalidRecord',
+        '/rss',
+        '/running.rss',
     ]
 
     return \
