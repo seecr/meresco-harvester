@@ -98,7 +98,7 @@ class SruUpdateUploader(VirtualUploader):
             self._logWarning("Status 503, SERVICE_UNAVAILABLE received while trying to upload")
             tries += 1
         if status != HTTP_OK:
-            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (str(status.value), message))
+            raise UploaderException(uploadId=uploadId, message="HTTP %s: %s" % (status, message))
 
         #version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(bytes(message, encoding="utf-8"))))
         version, operationStatus, diagnostics = self._parseMessage(parse(BytesIO(message)))
