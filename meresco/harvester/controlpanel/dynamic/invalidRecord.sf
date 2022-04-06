@@ -40,7 +40,7 @@ def main(arguments, **kwargs):
 
     diagnosticsDetails = xpath(invalidRecord, '//diag:diagnostic/diag:details/text()')
     yield "<pre>%s</pre>" % escapeHtml(diagnosticsDetails[0] if diagnosticsDetails else "No error message.")
-    yield '<p><a href="/page/invalid/?%s">Back to invalid records</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))
+    yield '<p><a href="/showHarvesterStatus?%s">Back to status page</a></p>' % escapeHtml(urlencode(dict(domainId=domainId, repositoryId=repositoryId)))
     yield "</div>"""
 
 
